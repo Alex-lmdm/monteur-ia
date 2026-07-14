@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
-"""SOURCE UNIQUE des frontieres de section — Reel "7 codes secrets Claude".
+"""SOURCE UNIQUE des frontieres de section du Reel.
 
-Les frontieres viennent de <cut>_cuts.json (les VRAIS jump-cuts, mesures dans le fichier livre),
-JAMAIS d'une re-transcription Whisper (ses debuts de segment tombent ~0.1-0.25 s trop tot ->
-la fenetre du visage s'ouvre avant la coupe et on voit la fin de la prise precedente).
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ CE FICHIER EST ADAPTE A CHAQUE REEL.                                           ║
+║  - CUTS_PATH : pointe vers le <video>_cuts.json de TON derush (change ce path).║
+║  - LAYOUT    : la table des sections de TON Reel (une ligne = une section).    ║
+║ Le reste (asserts, face_windows) est generique : ne le touche pas.             ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Les frontieres viennent de <video>_cuts.json (les VRAIS jump-cuts, mesures dans le fichier
+livre par tools/cut_boundaries.py), JAMAIS d'une re-transcription Whisper (ses debuts de
+segment tombent ~0.1-0.25 s trop tot -> la fenetre du visage s'ouvre avant la coupe et on voit
+la fin de la prise precedente).
 
 Tout le montage lit ce module : les sous-compositions (durees), le master (data-start) et les
 sous-titres (snap + hauteur). Une seule source => impossible de les desynchroniser.
@@ -12,28 +20,38 @@ import json
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-CUTS = json.loads((ROOT / "derush/2026-07-14_codes-claude/codes_claude_cuts.json").read_text())
+
+# >>> A CHANGER A CHAQUE NOUVEAU REEL : le _cuts.json produit par tools/cut_boundaries.py.
+#     Ici : la demo du template (3 prises sur 8 s, cf derush/README-exemple.md).
+CUTS_PATH = ROOT / "derush/exemple_cuts.json"
+
+CUTS = json.loads(CUTS_PATH.read_text(encoding="utf-8"))
 TAKES = CUTS["takes"]
 DURATION = CUTS["duration"]
 
-# (id, format, [index des prises couvertes])
-#   split -> panneau motion 1080x920 en haut + visage en bas
-#   full  -> motion 1080x1920, le visage est couvert
+# >>> A REMPLIR A CHAQUE NOUVEAU REEL : la table des sections.
+#   (id, format, [index des prises couvertes])
+#     id     -> il DOIT exister un compositions/<id>.html du meme nom.
+#     split  -> panneau motion 1080x920 en HAUT + visage en BAS.
+#     full   -> motion 1080x1920 plein ecran, le visage est couvert.
+#   Les index pointent dans TAKES (0-based) et doivent couvrir TOUTES les prises, dans l'ordre,
+#   sans trou ni chevauchement (les asserts plus bas le verifient).
+#
+# DEMO : une seule section split "exemple-section" qui couvre les 3 prises (0 -> 8 s) et
+# correspond a compositions/exemple-section.html + a index.html livre.
+# Pour un vrai Reel tu auras plutot une alternance split/full, par exemple :
+#     ("s0-hook",   "split", [0]),
+#     ("s1a-intro", "split", [1]),  ("s1b-intro", "full", [2]),
+#     ...
 LAYOUT = [
-    ("s0-hook",       "split", [0]),
-    ("s1a-grill",     "split", [1]),   ("s1b-grill",     "full", [2]),
-    ("s2a-devil",     "split", [3]),   ("s2b-devil",     "full", [4]),
-    ("s3a-brief",     "split", [5]),   ("s3b-brief",     "full", [6]),
-    ("s4a-roast",     "split", [7]),   ("s4b-roast",     "full", [8]),
-    ("s5a-steal",     "split", [9]),   ("s5b-steal",     "full", [10]),
-    ("s6a-ghost",     "split", [11]),  ("s6b-ghost",     "full", [12]),
-    ("s7a-premortem", "split", [13]),  ("s7b-premortem", "full", [14, 15]),
-    ("s8-cta",        "split", [16, 17, 18]),
+    ("exemple-section", "split", [0, 1, 2]),
 ]
 
-# y du sous-titre selon le format de la section
-Y_SPLIT = 920    # pile a la jointure
-Y_FULL = 1500    # sous la fenetre Claude
+# y du sous-titre selon le format de la section.
+# NB : brand.config.json -> visual.captionsPosition decrit l'INTENTION ("split-jointure"),
+# pas une valeur en px. On garde donc ces constantes ; ajuste-les si ta marque cadre autrement.
+Y_SPLIT = 920    # pile a la jointure split (au ras du haut du visage)
+Y_FULL = 1500    # sous la fenetre plein ecran
 
 
 def sections():
@@ -67,7 +85,8 @@ def face_windows():
 
 if __name__ == "__main__":
     for s in sections():
-        print(f'{s["id"]:<14} {s["fmt"]:<5} {s["start"]:6.3f} -> {s["end"]:6.3f}  ({s["dur"]:5.3f}s)  y={s["y"]}')
+        print(f'{s["id"]:<16} {s["fmt"]:<5} {s["start"]:6.3f} -> {s["end"]:6.3f}  '
+              f'({s["dur"]:5.3f}s)  y={s["y"]}')
     print("\nfenetres visage (split) :")
     for st, d in face_windows():
         print(f"  {st:6.3f}  +{d:.3f}")

@@ -1,62 +1,58 @@
 #!/usr/bin/env python3
-"""Genere compositions/captions.html — Reel "7 codes secrets Claude".
+"""Genere les SOUS-TITRES (captions.html) depuis sections.py — 1er jet, a re-couper a la main.
 
-Decoupage MANUEL (une phrase du derush = une ligne de MANUAL, un chunk = un sous-titre),
-par UNITE GRAMMATICALE : nom+adjectif et groupe verbal insecables, jamais a cheval sur
-2 phrases, jamais de ponctuation finale, mot fort de chute isole.
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ CE FICHIER EST ADAPTE A CHAQUE REEL : remplis MANUAL avec le decoupage de TON  ║
+║ script (une ligne par phrase du derush, dans l'ordre des prises).              ║
+║                                                                                ║
+║ SORTIE :                                                                       ║
+║   Par defaut -> work/captions.generated.html (brouillon, pour inspection).     ║
+║   Avec --write -> ECRASE compositions/captions.html.                           ║
+║ compositions/captions.html livre est un EXEMPLE pedagogique : on ne l'ecrase   ║
+║ pas par defaut. Ce script donne le 1er jet ; RE-COUPE ensuite a la main        ║
+║ (2-3 mots, unite grammaticale, pas de ponctuation finale, cf skill §14.8).     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 
-SECTION-AWARE : un sous-titre ne deborde jamais d'une section et prend la hauteur de sa
-section (split -> 920 a la jointure ; plein-ecran motion -> 1500, sous la fenetre Claude).
+Decoupage par UNITE GRAMMATICALE : nom+adjectif et groupe verbal insecables, jamais a cheval
+sur 2 phrases, jamais de ponctuation finale, mot fort de chute isole.
+
+SECTION-AWARE : un sous-titre ne deborde jamais d'une section et prend la hauteur de sa section
+(split -> y=920 a la jointure ; plein-ecran motion -> y=1500, sous la fenetre plein ecran).
 """
 import html
+import pathlib
 import sys
-sys.path.insert(0, 'tools')
+
 from PIL import ImageFont
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import sections
 
-TTF  = 'assets/fonts/BowlbyOneSC-Regular.ttf'
-OUT  = 'compositions/captions.html'
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+TTF = str(ROOT / "assets/fonts/BowlbyOneSC-Regular.ttf")
 FONT = ImageFont.truetype(TTF, 50)
 MAXW_HARD = 900
 
 # Bornes de phrase = les VRAIES coupes (une prise = une phrase). Surtout PAS les timestamps
 # Whisper : ils demarrent trop tot et les sous-titres partaient avant la coupe.
-SEC   = sections.sections()
+SEC = sections.sections()
 TAKES = sections.TAKES
-DUR   = sections.DURATION
+DUR = sections.DURATION
 
 # =============================================================================
-# DECOUPAGE — une ligne par phrase de la timeline, dans l'ordre.
+# DECOUPAGE — une ligne par phrase de la timeline, dans l'ordre des prises.
+# >>> A REMPLACER par le decoupage de TON script.
+# DEMO : une ligne par prise de derush/exemple_cuts.json (3 prises).
 # =============================================================================
 MANUAL = [
-    ["7 codes secrets", "à utiliser", "sur Claude"],                                         # 0  hook
-    ["numéro 1", "/grill"],                                                                # 1
-    ["tu le mets", "à la fin", "de ta demande", "et Claude", "t'interroge d'abord",
-     "sur tout ce", "qui lui manque", "avant d'écrire", "une seule ligne"],                      # 2
-    ["numéro 2", "/devil"],                                                              # 3
-    ["Claude arrête", "de te flatter", "et attaque", "ton idée", "avec les meilleurs",
-     "arguments", "contre toi"],                                                                 # 4
-    ["numéro 3", "/brief"],                                                             # 5
-    ["une réponse", "en 3 lignes", "maximum", "fini les pavés"],                             # 6
-    ["numéro 4", "/roast"],                                                            # 7
-    ["par défaut", "Claude trouve", "tout génial", "là il te dit", "vraiment",
-     "ce qu'il trouve", "mauvais"],                                                              # 8
-    ["numéro 5", "/steal"],                                                              # 9
-    ["tu colles", "une pub", "ou un email", "qui a cartonné", "et il te ressort",
-     "les mécaniques", "exactes", "pour les réutiliser", "chez toi"],                            # 10
-    ["numéro 6", "/ghost"],                                                               # 11
-    ["il traque tout", "ce qui sonne IA", "dans ton texte", "les tirets longs",
-     "les formules", "toutes faites", "et il réécrit"],                                          # 12
-    ["et numéro 7", "/premortem"],                                                       # 13
-    ["Claude imagine", "que ton projet", "a échoué", "dans 6 mois", "et il te liste",
-     "toutes les raisons", "possibles"],                                                         # 14
-    ["tu vois", "les problèmes", "avant de les vivre"],                                          # 15
-    ["et si t'en veux", "9 autres", "commente CODES", "et je t'envoie",
-     "la liste complète", "directement en DM"],                                                  # 16  CTA
+    ["voici une", "section témoin"],          # take 0
+    ["duplique ce fichier", "pour la tienne"],  # take 1
+    ["garde les invariants", "un à sept"],     # take 2
 ]
-# 19 prises -> 17 phrases : les 3 dernieres prises (CTA) forment une seule phrase
-PHRASES = [{'start': t['start'], 'end': t['end']} for t in TAKES[:16]]
-PHRASES.append({'start': TAKES[16]['start'], 'end': TAKES[18]['end']})
+
+# Une phrase par prise (cas simple). Si plusieurs prises forment UNE phrase (ex. un CTA en
+# 3 bouts), fusionne-les ici : PHRASES.append({'start': TAKES[i]['start'], 'end': TAKES[j]['end']}).
+PHRASES = [{'start': t['start'], 'end': t['end']} for t in TAKES]
 assert len(MANUAL) == len(PHRASES), f"MANUAL={len(MANUAL)} != phrases={len(PHRASES)}"
 
 # SECTIONS = derivees de sections (meme source que le master) -> jamais desynchronisees
@@ -95,6 +91,7 @@ def y_for(start):
             y = yy
     return y
 
+
 over = [(c['text'], FONT.getbbox(c['text'])[2]) for c in caps if FONT.getbbox(c['text'])[2] > MAXW_HARD]
 if over:
     print("⚠ sous-titres trop larges :", over)
@@ -110,9 +107,13 @@ doc = f'''<!DOCTYPE html>
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1080, height=1920">
+    <!-- SOUS-TITRES — genere par tools/montage_captions.py depuis derush/<video>_cuts.json.
+         Regles : 2-3 mots par sous-titre, AUCUNE ponctuation finale, jamais a cheval sur 2 phrases. -->
     <script src="../assets/vendor/gsap.min.js"></script>
+    <link rel="stylesheet" href="../brand/tokens.css">
     <style>
       * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+      /* Pas de height en dur sur body : plein cadre 1920, scope sous #captions. */
       html, body {{ width: 100%; height: 100%; overflow: hidden; background: transparent; }}
       #captions {{ position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden; }}
       @font-face {{
@@ -122,9 +123,9 @@ doc = f'''<!DOCTYPE html>
       }}
       #captions .cap {{
         position: absolute; left: 50%; transform: translate(-50%, -50%);
-        font-family: 'BowlbyOneSC', sans-serif;
-        font-size: 50px; line-height: 1; color: #000;
-        background: #ffee00; padding: 8px 20px; white-space: nowrap;
+        font-family: var(--brand-font-captions, 'BowlbyOneSC', sans-serif);
+        font-size: 50px; line-height: 1; color: var(--brand-bg);
+        background: var(--brand-yellow); padding: 8px 20px; white-space: nowrap;
       }}
     </style>
   </head>
@@ -139,7 +140,17 @@ doc = f'''<!DOCTYPE html>
   </body>
 </html>
 '''
-open(OUT, 'w').write(doc)
-print(f'{len(caps)} sous-titres -> {OUT}  (largeur max {max(FONT.getbbox(c["text"])[2] for c in caps)}px)')
+
+if "--write" in sys.argv:
+    out = ROOT / "compositions/captions.html"
+else:
+    (ROOT / "work").mkdir(exist_ok=True)
+    out = ROOT / "work/captions.generated.html"
+
+out.write_text(doc, encoding="utf-8")
+maxw = max(FONT.getbbox(c["text"])[2] for c in caps)
+print(f'{len(caps)} sous-titres -> {out.relative_to(ROOT)}  (largeur max {maxw}px)')
+if "--write" not in sys.argv:
+    print("(brouillon ; re-coupe puis relance avec --write pour ecraser compositions/captions.html)")
 for c in caps:
     print(f'  {c["start"]:6.2f}->{c["end"]:6.2f} [y={y_for(c["start"])}]  {c["text"]}')
