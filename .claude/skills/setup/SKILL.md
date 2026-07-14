@@ -1,14 +1,14 @@
 ---
 name: setup
 description: >-
-  Le Clone Monteur — l'onboarding de personnalisation du Monteur IA. Lance-le UNE fois après
+  L'Empreinte — l'onboarding de personnalisation du Monteur IA. Lance-le UNE fois après
   l'installation pour transférer TON goût (ta voix, tes couleurs, ton funnel, ton cadrage) à ton
-  monteur. Use when the user says "setup", "configure mon système", "onboarding", "clone monteur",
+  monteur. Use when the user says "setup", "configure mon système", "onboarding", "empreinte",
   "personnalise mon monteur", "je viens d'installer", ou au tout premier lancement du template.
   Aussi : `/setup <bloc>` (identite, voix, funnel, visuel, derush, technique) pour refaire un bloc.
 ---
 
-# Le Clone Monteur — onboarding de personnalisation
+# L'Empreinte — onboarding de personnalisation
 
 > **Ce n'est pas configurer un logiciel. C'est transférer ton goût à une IA, une seule fois.**
 > À la fin, ton monteur écrit dans TA voix, monte à TES couleurs, cadre TON visage et parle à TON
@@ -85,7 +85,7 @@ validations) est dans **`references/questions.md`** — le lire avant d'animer u
 2. Regarder `setup.completedBlocks`.
 3. **Si un bloc précis est demandé** (`/setup voix`) → aller droit à ce bloc.
 4. **Sinon** → annoncer l'état et proposer le prochain bloc non fait. Un petit mot d'accueil au tout
-   premier lancement : présenter le Clone Monteur en 2 phrases (principe du transfert de goût), dire
+   premier lancement : présenter l'Empreinte en 2 phrases (ton monteur apprend ta voix, tes couleurs, ton cadrage : tu la déposes une fois, chaque vidéo la porte), dire
    que ça prend ~15 min et qu'on peut s'arrêter entre deux blocs (tout est sauvegardé).
 
 ---
@@ -105,7 +105,7 @@ Questions (détail + validations dans `references/questions.md`) :
 
 ---
 
-## Bloc B — Voix (le cœur du Clone Monteur)
+## Bloc B — Voix (le cœur de l'Empreinte)
 
 **Écrit :** le **Profil de voix** injecté entre les marqueurs `voice-profile` de
 `.claude/skills/reel-script/SKILL.md`, + le corpus copié dans
@@ -240,7 +240,7 @@ snapshot visuel.
 3. Afficher un **récapitulatif de TOUT ce qui a été personnalisé** : identité, voix (N patterns),
    funnel/CTA, couleurs + polices, dérush/audio, cadrage calibré. Format court et lisible.
 4. Conclure chaleureusement :
-   > « Ton Clone Monteur est prêt. Pour ton premier Reel : donne-moi ton idée de script, ou
+   > « Ton Empreinte est prête. Pour ton premier Reel : donne-moi ton idée de script, ou
    > lance-toi direct avec ta première vidéo brute. »
 
 Rappel du pipeline pour la suite (sans déborder) : Script → Tournage → Dérush → Montage → Review →

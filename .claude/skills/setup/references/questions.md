@@ -1,4 +1,4 @@
-# Questionnaire du Clone Monteur — formulations exactes, bloc par bloc
+# Questionnaire de l'Empreinte — formulations exactes, bloc par bloc
 
 Ce fichier est le **script du questionnaire**. Pour chaque question : la formulation exacte
 (tutoiement, simple, zéro jargon), le **champ config cible**, le **défaut** (« Entrée = »), et les

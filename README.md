@@ -55,7 +55,7 @@ Une fois installé, tape :
 /setup
 ```
 
-Le **Clone Monteur** te pose une vingtaine de questions (ta marque, ta voix, tes couleurs, ta caméra,
+Le **Empreinte** te pose une vingtaine de questions (ta marque, ta voix, tes couleurs, ta caméra,
 ta musique…) et adapte tout le système à toi. C'est à faire **une seule fois**.
 
 ---

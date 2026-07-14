@@ -1,6 +1,6 @@
 # Extraction de voix — comment lire un corpus et en tirer un Profil de voix
 
-C'est la méthode du **cœur du Clone Monteur** : à partir de 5-15 scripts de l'utilisateur, produire
+C'est la méthode du **cœur de l'Empreinte** : à partir de 5-15 scripts de l'utilisateur, produire
 un **Profil de voix** exploitable par le skill `reel-script` (celui-ci écrira ensuite dans sa voix).
 Le but n'est pas de résumer ses vidéos — c'est d'isoler **ce qui fait que ça sonne comme LUI**,
 indépendamment du sujet.
