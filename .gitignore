@@ -1,0 +1,42 @@
+# Le repo versionne le CERVEAU du système (skills, design system, tools, templates),
+# jamais les médias ni ce qui est propre à TON installation.
+
+# Personnalisation locale (générée par /setup — propre à chaque utilisateur)
+brand.config.json
+
+# Exports finaux (régénérés par ffmpeg depuis les compositions)
+renders/*
+!renders/.gitkeep
+
+# Rushes, proxys et médias bruts
+assets/video/*
+!assets/video/.gitkeep
+assets/music/*
+!assets/music/.gitkeep
+!assets/music/README.md
+assets/sfx/*
+!assets/sfx/.gitkeep
+!assets/sfx/README.md
+
+# Médias du dérush : on garde timeline.json / *_cuts.json (contrat d'interface),
+# on jette vidéos/audio
+derush/**/*.mp4
+derush/**/*.mov
+derush/**/*.mp3
+derush/**/*.wav
+derush/**/*.m4a
+
+# Fichiers de travail temporaires
+work/*
+!work/.gitkeep
+
+# Caches générés par le studio HyperFrames
+.thumbnails/
+.waveform-cache/
+snapshots/
+
+# Système
+.DS_Store
+node_modules/
+*.log
+__pycache__/

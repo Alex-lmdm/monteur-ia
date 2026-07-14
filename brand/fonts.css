@@ -1,0 +1,43 @@
+/* ==========================================================================
+   Design system — Polices (HyperFrames)
+   Poppins est la SEULE famille utilisée en motion (cf §0 du skill).
+   Hébergée EN LOCAL (assets/fonts/*.woff2, sous-ensemble latin = accents FR)
+   pour un rendu déterministe / offline. Plus aucun appel réseau.
+   Graisses : 400, 400 italic, 600, 700, 900.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/Poppins-Regular.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Poppins";
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/Poppins-Italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url("../assets/fonts/Poppins-SemiBold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url("../assets/fonts/Poppins-Bold.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("../assets/fonts/Poppins-Black.woff2") format("woff2");
+}

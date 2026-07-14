@@ -1,0 +1,143 @@
+/* ==========================================================================
+   Design system — Design tokens (HyperFrames / HTML+CSS)
+   Source de vérité : skill `motion-design`. Miroir de src/brand/tokens.ts
+   du projet Remotion. Palette, typo, motion strictement identiques.
+   ========================================================================== */
+
+:root {
+  /* --- Palette ------------------------------------------------------------ */
+  --brand-bg: #202022;            /* Fond principal. JAMAIS noir pur.          */
+  --brand-surface: #2b2b2d;       /* Cartes / blocs surélevés.                 */
+  --brand-surface-light: #d8d8d8; /* Surface claire (rare).                    */
+  --brand-white: #ffffff;         /* Texte principal sur fond sombre.          */
+  --brand-muted: #a6a6a0;         /* Texte secondaire (gris CHAUD).            */
+  --brand-yellow: #ffee00;        /* Accent unique. Jamais décoratif.          */
+  --brand-title-stroke: #000000;  /* Contour noir pur — titres uniquement.     */
+
+  /* Couleur d'erreur (croix) — hors palette de marque, usage dataviz/compare */
+  --brand-negative: #ff5050;
+
+  /* --- Typographies ------------------------------------------------------- */
+  /* Display (Coluna) listée pour mémoire — NON utilisée en motion (cf §0).   */
+  --brand-font-display: Coluna, Impact, Haettenschweiler, "Arial Narrow", sans-serif;
+  --brand-font-body: Poppins, "Avenir Next", Arial, system-ui, sans-serif;
+  --brand-font-mono: "Courier New", ui-monospace, monospace;
+
+  /* --- Motion : easings (CSS) --------------------------------------------- */
+  --brand-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);   /* in-out aggressive   */
+  --brand-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1); /* entrées punchy      */
+
+  /* --- Motion : durées (ms) ----------------------------------------------- */
+  --brand-dur-appear: 300ms;          /* apparition d'un élément (250-400)     */
+  --brand-dur-slide: 250ms;           /* slide transition rapide               */
+  --brand-dur-hold-hook: 1200ms;      /* hold d'un hook                        */
+  --brand-dur-hold-word: 400ms;       /* hold par mot                          */
+
+  /* --- Safe areas (px, base 1080×1920 Reels/Stories/TikTok) --------------- */
+  --brand-safe-top: 220px;
+  --brand-safe-bottom: 380px;
+  --brand-safe-x: 100px;   /* cotes : IG recadre -> 100px (54 = plancher) */
+}
+
+/* ==========================================================================
+   Utilitaires — à composer dans les compositions
+   ========================================================================== */
+
+/* Scène plein écran sur fond de marque (équivalent <AbsoluteFill>) */
+.brand-stage {
+  position: absolute;
+  inset: 0;
+  background: var(--brand-bg);
+  font-family: var(--brand-font-body);
+  color: var(--brand-white);
+  overflow: hidden;
+}
+
+/* Zone safe centrale (Reels) : padding latéral + marges interface IG */
+.brand-safe {
+  position: absolute;
+  left: var(--brand-safe-x);
+  right: var(--brand-safe-x);
+  top: var(--brand-safe-top);
+  bottom: var(--brand-safe-bottom);
+}
+
+/* Carte / bloc surélevé */
+.brand-surface {
+  background: var(--brand-surface);
+  border-radius: 18px;
+}
+
+/* --- Couleurs texte ------------------------------------------------------ */
+.brand-yellow { color: var(--brand-yellow); }
+.brand-muted  { color: var(--brand-muted); }
+
+/* --- Typo : labels Poppins (les SEULS textes autorisés en motion) -------- */
+/* Label de colonne / section title : Poppins Black UPPERCASE, 22-36px       */
+.brand-label {
+  font-family: var(--brand-font-body);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--brand-white);
+}
+
+/* Métadonnée / numérotation : Poppins SemiBold 20px */
+.brand-meta {
+  font-family: var(--brand-font-body);
+  font-weight: 600;
+  font-size: 20px;
+  color: var(--brand-white);
+}
+
+/* Valeur dans un schéma : Poppins SemiBold */
+.brand-value {
+  font-family: var(--brand-font-body);
+  font-weight: 600;
+}
+
+/* Mono : prompts / terminaux / valeurs techniques */
+.brand-mono {
+  font-family: var(--brand-font-mono);
+}
+
+/* ==========================================================================
+   Patterns motion transposables (états statiques — anim. via motion.js)
+   ========================================================================== */
+
+/* Ghost number : grand chiffre déco, blanc 10%, haut-droite. 1 = 1 entrée. */
+.brand-ghost {
+  position: absolute;
+  top: 0;
+  right: 24px;
+  font-family: var(--brand-font-body);
+  font-weight: 700;
+  font-size: 180px;
+  line-height: 1;
+  color: var(--brand-white);
+  opacity: 0.1;
+  user-select: none;
+}
+
+/* Yellow underline : trait jaune sous un mot-clé (largeur animée 0 -> 100%) */
+.brand-underline-wrap { position: relative; display: inline-block; }
+.brand-underline {
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  height: 6px;
+  width: 0; /* animé de gauche à droite via motion.js / GSAP */
+  background: var(--brand-yellow);
+  border-radius: 3px;
+}
+
+/* Circular cutout : cercle blanc bordé (logo / visage / preuve) */
+.brand-cutout {
+  border-radius: 50%;
+  border: 4px solid var(--brand-white);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-surface);
+}
