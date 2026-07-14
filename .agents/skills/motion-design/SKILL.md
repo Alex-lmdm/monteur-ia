@@ -1,7 +1,7 @@
 ---
 name: motion-design
 description: >-
-  Motion design et montage vidéo pour la marque du créateur ({{BRAND_HANDLE}} — Reels, Stories,
+  Motion design et montage vidéo pour la marque du créateur (Reels, Stories,
   TikTok, YouTube) : design system de marque + workflow HyperFrames. Use when: creating a
   composition, a clip or a motion graphic for the brand; monter une vidéo talking-head (split-screen,
   sections, export final ffmpeg); générer les sous-titres; poser les SFX et la musique. Entrée : un
@@ -11,7 +11,7 @@ description: >-
 
 # Motion Design System (marque du créateur)
 
-Identité visuelle de la marque ({{BRAND_NAME}} / {{BRAND_HANDLE}}) pour tout contenu vidéo / motion
+Identité visuelle de la marque pour tout contenu vidéo / motion
 design. Format-agnostique : 1080×1920 (Reels/Stories), 1920×1080 (YouTube), 1080×1080 (clips
 intégrables), 4K.
 
@@ -73,10 +73,10 @@ motion design doit **ajouter** une couche d'info, pas redire.
 
 Tout vient de `brand.config.json` :
 
-- **Compte** : `brand.name` ({{BRAND_NAME}})
-- **Handle** : `brand.handle` ({{BRAND_HANDLE}})
-- **Auteur signataire** : `brand.firstName` ({{FIRST_NAME}})
-- **Niche / positionnement** : `brand.niche` ({{NICHE}}). Ton direct et factuel, voix de « pote qui te
+- **Compte** : `brand.name`
+- **Handle** : `brand.handle`
+- **Auteur signataire** : `brand.firstName`
+- **Niche / positionnement** : `brand.niche`. Ton direct et factuel, voix de « pote qui te
   dit ce qui marche vraiment ». Pas de corporate speak.
 - **Assets perso** : `brand/assets/avatar.png`, `brand/assets/portrait.png` (à fournir par projet pour
   lower-thirds intro/outro).
@@ -95,7 +95,7 @@ Les hex ci-dessous sont les **défauts du template**.
 | Surface light    | `--brand-surface-light` | `#d8d8d8`     | Surface claire (rare, pour contraste).                        |
 | Blanc            | `--brand-white`     | `#ffffff`         | Texte principal sur fond sombre.                              |
 | Muted            | `--brand-muted`     | `#a6a6a0`         | Texte secondaire / métadonnées (gris **chaud**, pas froid).   |
-| **Accent**       | `--brand-yellow`    | `visual.accent` `#ffee00` `{{VISUAL_ACCENT}}` | L'accent unique de la marque. Hooks, mots-clés, chiffres, CTA. |
+| **Accent**       | `--brand-yellow`    | `visual.accent` (ex. `#ffee00`) | L'accent unique de la marque. Hooks, mots-clés, chiffres, CTA. |
 | Stroke titre     | `--brand-title-stroke` | `#000000`      | Contour noir pur 100% (**uniquement** pour le contour de gros titres). |
 
 ### Règles d'usage des couleurs (principes de méthode — conservés)
@@ -217,8 +217,8 @@ Plages et règles d'usage (ne figurent pas dans le JSON) :
 ### Lower-third (identité bas-gauche)
 - **Avatar** circulaire `brand/assets/avatar.png`, ≈ 76×85 px (×1.4 en 1080×1920).
 - **Texte sur 2 lignes** à droite de l'avatar :
-  - Ligne 1 : `brand.firstName` ({{FIRST_NAME}}) — SemiBold, blanc
-  - Ligne 2 : `brand.handle` ({{BRAND_HANDLE}}) — Regular, blanc ou muted `var(--brand-muted)`
+  - Ligne 1 : `brand.firstName` — SemiBold, blanc
+  - Ligne 2 : `brand.handle` — Regular, blanc ou muted `var(--brand-muted)`
 - **Position** : bottom-left, à 68 px du bord gauche (au-delà du minimum de 54 px, cf. safe areas).
 
 ### Watermark / signature
@@ -365,8 +365,8 @@ Valeurs par défaut du template ; `/setup` réécrit `colors`/`fonts`/`profile` 
     }
   },
   "profile": {
-    "name": "{{FIRST_NAME}}",
-    "handle": "{{BRAND_HANDLE}}"
+    "name": "<brand.firstName>",
+    "handle": "<brand.handle>"
   }
 }
 ```

@@ -55,7 +55,7 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 | # | Étape | {{FIRST_NAME}} dit… | Skill à charger AVANT d'agir | Terminé quand |
 |---|-------|-----------|------------------------------|----------------|
 | 1 | **Script** | « on brainstorm un script », « écris ma version », « voici mon script » | `reel-script` | Hook + corps + CTA, voix de {{FIRST_NAME}}, ~30-45 s, **validé**. Si CTA « commente [MOT] » → juste **noter le mot-clé** (le DM se rédige à l'étape 7, pas maintenant). |
-| 2 | **Tournage** | ({{FIRST_NAME}} tourne lui-même, puis) « voici la vidéo brute » | — | La vidéo brute est fournie. (Rappel : export **résolution MAX**, pas 1080p.) |
+| 2 | **Tournage** | ({{FIRST_NAME}} tourne la vidéo, puis) « voici la vidéo brute » | — | La vidéo brute est fournie. (Rappel : export **résolution MAX**, pas 1080p.) |
 | 3 | **Dérush** | « fais les cuts », « coupe les blancs / les ratés », « clean l'audio » | `derush` | Re-transcription du cut = le script, **aucun mot coupé/doublé**, souffle inter-cut ≈ 0,1 s. **Audio nettoyé** (méthode `audio.enhanceMethod` de `brand.config.json`). |
 | 4 | **Montage / motion** | « passe au montage », « mets les split-screens / le motion / les sous-titres » | `motion-design` (§14) | Chaque section montée : split-screen là où il faut, motion-first, visage net (pas de carré noir), sous-titres calés, safe-zones OK. |
 | 5 | **Review** | « là je veux plutôt ça », « mets cette vidéo/image ici », « ça en plein écran », « les sous-titres vont pas » | (rester dans `motion-design`) | {{FIRST_NAME}} a **tout validé section par section** après ses retours. **C'est la barrière avant les SFX.** |

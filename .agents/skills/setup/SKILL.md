@@ -154,8 +154,9 @@ Questions :
 - **Règle non négociable, à écrire :** on **n'écrit JAMAIS le mot « lien »** (risque de shadowban) →
   on utilise l'emoji `cta.linkEmoji` (défaut `🔗`).
 
-**Restitution + validation**, remplir `cta.*`, régénérer les zones `GENERATED: cta` des deux
-fichiers `design-system/`, marquer `C`, `node scripts/sync.mjs`.
+**Restitution + validation**, remplir `cta.*`, réécrire le contenu entre les marqueurs `<!-- BEGIN GENERATED: cta -->` /
+`<!-- END GENERATED: cta -->` des deux fichiers `design-system/` (si un fichier n'a pas
+encore ces marqueurs, les insérer après l'intro, en montrant l'emplacement à l'utilisateur), marquer `C`, `node scripts/sync.mjs`.
 
 ---
 

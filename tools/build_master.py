@@ -50,6 +50,7 @@ def load_config():
 
 CFG = load_config()
 SPLIT_TRANSFORM = (CFG.get("montage") or {}).get("splitTransform") or DEFAULT_SPLIT_TRANSFORM
+BG = (CFG.get("visual") or {}).get("bg") or "#202022"  # fond de marque (brand.config.json -> visual.bg)
 
 # --- calques visage : une <video> par fenetre split, source = ta base derushee ---------------
 faces = "\n".join(
@@ -82,7 +83,7 @@ doc = f'''<!DOCTYPE html>
     <link rel="stylesheet" href="brand/tokens.css">
     <style>
       * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-      html, body {{ width: 1080px; height: 1920px; overflow: hidden; background: #202022; }}
+      html, body {{ width: 1080px; height: 1920px; overflow: hidden; background: {BG}; }}
 
       /* Visage SPLIT-SCREEN : surface PLEIN CADRE clippee a la moitie basse (anti carre noir).
          Fond transparent obligatoire ; cadrage UNIQUEMENT via transform (jamais resize studio).
@@ -107,7 +108,7 @@ doc = f'''<!DOCTYPE html>
     <div id="root" data-composition-id="main" data-start="0" data-duration="{DUR}" data-fps="30" data-width="1080" data-height="1920">
 
       <!-- Fond de marque (seul aplat opaque autorise, tout en bas de la pile). -->
-      <div id="bgbase" class="clip" data-start="0" data-duration="{DUR}" data-track-index="0" style="position:absolute; inset:0; background:#202022;"></div>
+      <div id="bgbase" class="clip" data-start="0" data-duration="{DUR}" data-track-index="0" style="position:absolute; inset:0; background:{BG};"></div>
 
       <!-- Voix off : piste audio separee (les <video> sont muted). Source = la base derushee. -->
       <audio id="vo" src="assets/video/base.mp4" data-start="0" data-duration="{DUR}" data-track-index="13" data-volume="1"></audio>

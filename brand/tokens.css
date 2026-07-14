@@ -13,6 +13,7 @@
   --brand-white: #ffffff;         /* Texte principal sur fond sombre.          */
   --brand-muted: #a6a6a0;         /* Texte secondaire (gris CHAUD).            */
   --brand-yellow: #ffee00; /* Accent unique. Jamais décoratif.       */
+  --brand-accent: var(--brand-yellow); /* Alias lisible : préfère-le dans le nouveau code (l\'accent n\'est pas forcément jaune). */
   --brand-title-stroke: #000000;  /* Contour noir pur — titres uniquement.     */
 
   /* Couleur d'erreur (croix) — hors palette de marque, usage dataviz/compare */

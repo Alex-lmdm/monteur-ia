@@ -10,6 +10,11 @@ reste absent du JSON.
 Le mot « lien » est **interdit** partout : utiliser l'emoji `cta.linkEmoji` (défaut 🔗). C'est la
 signature visuelle du message.
 
+<!-- BEGIN GENERATED: cta -->
+_Section vide — lance `/setup` (bloc Funnel) : ton outil de DM, ton ouverture type et la ressource
+que tu livres seront décrits ici._
+<!-- END GENERATED: cta -->
+
 ## Voix et structure
 
 ### Ouverture

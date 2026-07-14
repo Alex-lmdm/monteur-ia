@@ -7,6 +7,12 @@ systématique — la légende fait partie du livrable au même titre que le cont
 Identité et ton viennent de `brand.config.json` (`brand.name`, `brand.handle`, `brand.niche`) ; l'offre
 et le funnel (ce vers quoi pointe le CTA) sont **définis par `/setup` (bloc Funnel)**.
 
+<!-- BEGIN GENERATED: cta -->
+_Section vide — lance `/setup` (bloc Funnel) pour la remplir : ton offre, ton CTA par défaut et
+le mot-clé éventuel seront décrits ici pour que chaque légende soit générée sans te reposer la
+question._
+<!-- END GENERATED: cta -->
+
 ## Le prompt source
 
 C'est le prompt de rédaction du créateur, appliqué tel quel. Il est fourni / calibré par `/setup`

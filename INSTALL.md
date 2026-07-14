@@ -38,11 +38,16 @@ Tu es mon assistant d'installation pour le projet « Monteur IA ». Installe tou
       - Windows : `winget install Gyan.FFmpeg`. Préviens-moi qu'il faut ROUVRIR un terminal
         pour que le PATH soit pris en compte. Si `winget` est introuvable, dis-moi de mettre à
         jour « App Installer » depuis le Microsoft Store, puis de relancer.
-   e) Whisper (transcription locale) : télécharge le binaire précompilé whisper.cpp adapté à
-      mon OS/architecture depuis les GitHub Releases de ggml-org/whisper.cpp, PLUS le modèle
-      `ggml-large-v3-turbo.bin`. PRÉVIENS-MOI que le modèle pèse ~1,6 Go AVANT de le
+   e) Whisper (transcription locale) — VÉRIFIE D'ABORD ce qui existe déjà :
+      - binaire : `which whisper-cli` (macOS) / `where whisper-cli` (Windows), et regarde
+        aussi si Homebrew l'a déjà (`brew list whisper-cpp` sur macOS) ;
+      - modèle : cherche un `ggml-*.bin` existant dans `~/.cache/monteur-ia/whisper/`,
+        `~/whisper-models/` et `~/.cache/whisper/` avant tout téléchargement.
+      Seulement si l'un des deux MANQUE : télécharge le binaire précompilé whisper.cpp adapté
+      à mon OS/architecture depuis les GitHub Releases de ggml-org/whisper.cpp, et/ou le
+      modèle `ggml-large-v3-turbo.bin`. PRÉVIENS-MOI que le modèle pèse ~1,6 Go AVANT de le
       télécharger, et propose le modèle `medium` en alternative si ma connexion est lente.
-      Range binaire et modèle dans le cache :
+      Range ce qui est téléchargé dans le cache :
         - macOS : ~/.cache/monteur-ia/whisper/
         - Windows : %USERPROFILE%\.cache\monteur-ia\whisper\
    f) Configuration : si `brand.config.json` n'existe pas, crée-le à partir de
@@ -59,12 +64,18 @@ Tu es mon assistant d'installation pour le projet « Monteur IA ». Installe tou
    et attends.
 
 4. DIAGNOSTIC FINAL, une fois tout installé :
-   - lance `npx hyperframes doctor` ;
+   - lance `npx hyperframes doctor`. IMPORTANT : doctor ne teste PAS whisper, et certains ✗
+     sont bénins pour nous — Docker absent (on ne rend pas via Docker), version hyperframes
+     plus récente disponible (on épingle volontairement la version), mémoire basse si
+     d'autres apps tournent. Seuls Node, FFmpeg/FFprobe et Chrome doivent être au vert ;
    - smoke test rendu : rends 2 secondes de la composition-témoin
      `compositions/exemple-section.html` et vérifie qu'un fichier vidéo est bien produit ;
    - smoke test transcription : génère un son de test avec
      `ffmpeg -f lavfi -i "sine=frequency=440:duration=5" work/test-whisper.wav`
-     puis transcris ce fichier avec whisper pour vérifier qu'il répond ;
+     puis transcris-le avec la commande exacte (adapte les chemins depuis
+     `brand.config.json` → env) :
+     `<whisperCli> -m <whisperModel> -f work/test-whisper.wav -l fr`
+     — n'importe quelle sortie texte (même « (bell ringing) ») prouve que whisper répond ;
    - affiche un TABLEAU récapitulatif avec ✅ / ❌ par composant (Node, npm, chrome-headless-shell,
      ffmpeg, whisper, config, doctor, rendu, transcription).
    Si tout est ✅, conclus par : « Installation terminée. Lance /setup pour personnaliser ton
@@ -162,7 +173,9 @@ brew install ffmpeg
 ✅ Succès : `ffmpeg -version` affiche un numéro de version.
 
 **5. Whisper (transcription locale)**
-Télécharge le binaire whisper.cpp pour **macOS Apple Silicon** depuis les Releases de
+Vérifie d'abord s'il est déjà là : `which whisper-cli` dans le Terminal, et cherche un fichier
+`ggml-*.bin` dans `~/whisper-models/` ou `~/.cache/`. Si les deux existent, passe à l'étape 6.
+Sinon : télécharge le binaire whisper.cpp pour **macOS Apple Silicon** depuis les Releases de
 `ggml-org/whisper.cpp` sur GitHub, plus le modèle `ggml-large-v3-turbo.bin` (~1,6 Go ; prends
 `medium` si ta connexion est lente). Place les deux dans :
 ```
@@ -182,7 +195,8 @@ Renseigne dans `brand.config.json` les chemins de ffmpeg et de whisper détecté
 ```bash
 npx hyperframes doctor
 ```
-✅ Succès : chaque ligne du doctor est au vert. Tu peux lancer `/setup`.
+✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker absent, version plus récente
+disponible ou mémoire basse = bénin, ce n'est pas un échec.) Tu peux lancer `/setup`.
 
 ### Windows
 
@@ -220,7 +234,9 @@ rouvre PowerShell et réessaie.
 ✅ Succès : après réouverture, `ffmpeg -version` affiche un numéro de version.
 
 **5. Whisper (transcription locale)**
-Télécharge le binaire whisper.cpp pour **Windows x64** depuis les Releases de
+Vérifie d'abord s'il est déjà là : `where whisper-cli` dans PowerShell, et cherche un fichier
+`ggml-*.bin` dans `%USERPROFILE%\.cache\`. Si les deux existent, passe à l'étape 6.
+Sinon : télécharge le binaire whisper.cpp pour **Windows x64** depuis les Releases de
 `ggml-org/whisper.cpp` sur GitHub, plus le modèle `ggml-large-v3-turbo.bin` (~1,6 Go ; prends
 `medium` si ta connexion est lente). Place les deux dans :
 ```
@@ -240,7 +256,8 @@ d'environnement `PRODUCER_FORCE_SCREENSHOT=true` (évite les rendus blancs/lents
 ```powershell
 npx hyperframes doctor
 ```
-✅ Succès : chaque ligne du doctor est au vert. Tu peux lancer `/setup`.
+✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker absent, version plus récente
+disponible ou mémoire basse = bénin, ce n'est pas un échec.) Tu peux lancer `/setup`.
 
 ---
 

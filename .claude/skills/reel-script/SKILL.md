@@ -1,11 +1,11 @@
 ---
 name: reel-script
 description: >-
-  Écrit le script parlé d'un Reel dans la voix du créateur ({{FIRST_NAME}} / {{BRAND_HANDLE}}),
+  Écrit le script parlé d'un Reel dans la voix du créateur,
   prêt à lire au prompteur (langue parlée, face caméra). Use whenever the user wants a short-form
   script in their voice: turning a reference transcript into "leur version", turning rough ideas or
   links into a finished script, or rewriting a draft so it sounds like them. Sujet typique : la
-  niche du créateur ({{NICHE}}). Produit du texte, pas d'image : le visuel relève de motion-design.
+  niche du créateur. Produit du texte, pas d'image : le visuel relève de motion-design.
 ---
 
 # Script de Reel (voix du créateur, prêt prompteur)
