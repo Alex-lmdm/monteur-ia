@@ -7,21 +7,21 @@
 
 :root {
   /* --- Palette ------------------------------------------------------------ */
-  --brand-bg: #202022;       /* Fond principal. JAMAIS noir pur.          */
-  --brand-surface: #2b2b2d; /* Cartes / blocs surélevés.             */
+  --brand-bg: {{VISUAL_BG}};       /* Fond principal. JAMAIS noir pur.          */
+  --brand-surface: {{VISUAL_SURFACE}}; /* Cartes / blocs surélevés.             */
   --brand-surface-light: #d8d8d8; /* Surface claire (rare).                    */
   --brand-white: #ffffff;         /* Texte principal sur fond sombre.          */
   --brand-muted: #a6a6a0;         /* Texte secondaire (gris CHAUD).            */
-  --brand-yellow: #ffee00; /* Accent unique. Jamais décoratif.       */
+  --brand-yellow: {{VISUAL_ACCENT}}; /* Accent unique. Jamais décoratif.       */
   --brand-title-stroke: #000000;  /* Contour noir pur — titres uniquement.     */
 
   /* Couleur d'erreur (croix) — hors palette de marque, usage dataviz/compare */
   --brand-negative: #ff5050;
 
   /* --- Typographies ------------------------------------------------------- */
-  --brand-font-display: Poppins, Impact, Haettenschweiler, "Arial Narrow", sans-serif;
-  --brand-font-body: Poppins, "Avenir Next", Arial, system-ui, sans-serif;
-  --brand-font-captions: BowlbyOneSC, "Arial Black", Impact, sans-serif;
+  --brand-font-display: {{FONT_DISPLAY}}, Impact, Haettenschweiler, "Arial Narrow", sans-serif;
+  --brand-font-body: {{FONT_BODY}}, "Avenir Next", Arial, system-ui, sans-serif;
+  --brand-font-captions: {{FONT_CAPTIONS}}, "Arial Black", Impact, sans-serif;
   --brand-font-mono: "Courier New", ui-monospace, monospace;
 
   /* --- Motion : easings (CSS) --------------------------------------------- */

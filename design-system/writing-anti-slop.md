@@ -8,7 +8,7 @@ direct et personnel. Jamais générique. Jamais corporate.
 expliquer. Si une phrase existe et que tu ne peux pas articuler pourquoi
 elle est là et ce qu'elle apporte, coupe-la.
 
-> Pour LMDM, applique ces règles à tout texte que tu écris : titres,
+> Applique ces règles à tout texte que tu écris pour la marque : titres,
 > headlines, body, bullets, cards, callouts, CTAs. Tout.
 
 ---
@@ -387,7 +387,7 @@ Ship.
 
 ## Adaptation par type de contenu
 
-### Carrousel Instagram (cas principal LMDM)
+### Carrousel Instagram
 
 - Chaque slide doit pouvoir tenir seule (cf.
   `slide-2-method.md` pour le slide 2).

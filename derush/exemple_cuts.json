@@ -1,0 +1,25 @@
+{
+  "source": "derush/exemple_enhanced.mp4",
+  "duration": 8.0,
+  "method": "scene-change detection (gt(scene,0.015)) recalé sur le cumul des ISLANDS",
+  "takes": [
+    {
+      "i": 0,
+      "start": 0.0,
+      "end": 2.667,
+      "text": "Voici une section témoin."
+    },
+    {
+      "i": 1,
+      "start": 2.667,
+      "end": 5.333,
+      "text": "Duplique ce fichier pour la tienne."
+    },
+    {
+      "i": 2,
+      "start": 5.333,
+      "end": 8.0,
+      "text": "Garde les invariants un à sept."
+    }
+  ]
+}

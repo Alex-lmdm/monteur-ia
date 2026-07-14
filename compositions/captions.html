@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <!--
+      SOUS-TITRES — généré normalement par tools/montage_captions.py depuis derush/<video>_cuts.json.
+      Ceci est un EXEMPLE du format attendu (calé sur exemple_cuts.json, 8 s, 6 sous-titres).
+      Règles : 2-3 mots par sous-titre, AUCUNE ponctuation finale, jamais à cheval sur 2 phrases.
+      Position Y (brand.config.json → visual.captionsPosition) : y=920 en split (jointure) ·
+      y≈1140 en plein visage · y≈1500 en plein motion.
+    -->
+    <script src="../assets/vendor/gsap.min.js"></script>
+    <link rel="stylesheet" href="../brand/tokens.css">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      /* Pas de height en dur sur body (cf sous-comps) : plein cadre 1920, scopé sous #captions. */
+      html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+      #captions { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden; }
+
+      /* Police des sous-titres : var(--brand-font-captions) est définie dans brand/tokens.css
+         (police d'affichage, ici on garde un fallback local BowlbyOneSC pour rester autonome). */
+      @font-face {
+        font-family: 'BowlbyOneSC';
+        src: url('../assets/fonts/BowlbyOneSC-Regular.ttf') format('truetype');
+        font-display: block;
+      }
+      #captions .cap {
+        position: absolute; left: 50%; transform: translate(-50%, -50%);
+        font-family: var(--brand-font-captions, 'BowlbyOneSC', sans-serif);
+        font-size: 50px; line-height: 1; color: var(--brand-bg);
+        background: var(--brand-yellow); padding: 8px 20px; white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="captions" data-composition-id="captions" data-start="0" data-duration="8" data-fps="30" data-width="1080" data-height="1920">
+      <!-- y=920 = jointure split (au ras du haut du visage). data-start/duration calés sur les takes. -->
+      <div id="cap-0" class="cap clip" style="top:920px" data-start="0.0"   data-duration="0.9"  data-track-index="0">VOICI UNE</div>
+      <div id="cap-1" class="cap clip" style="top:920px" data-start="0.9"   data-duration="1.767" data-track-index="1">SECTION TÉMOIN</div>
+      <div id="cap-2" class="cap clip" style="top:920px" data-start="2.667" data-duration="1.333" data-track-index="2">DUPLIQUE CE FICHIER</div>
+      <div id="cap-3" class="cap clip" style="top:920px" data-start="4.0"   data-duration="1.333" data-track-index="3">POUR LA TIENNE</div>
+      <div id="cap-4" class="cap clip" style="top:920px" data-start="5.333" data-duration="1.267" data-track-index="0">GARDE LES INVARIANTS</div>
+      <div id="cap-5" class="cap clip" style="top:920px" data-start="6.6"   data-duration="1.4"  data-track-index="1">UN À SEPT</div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["captions"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

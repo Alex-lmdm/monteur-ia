@@ -7,6 +7,7 @@ description: >-
   ("améliore l'audio", "le son grésille"). Entrée : un rush brut. Sortie : un MP4 1080x1920 serré
   + une timeline.json, consommée ensuite par le skill motion-design.
 ---
+<!-- Copie générée — éditer .claude/skills/derush/ puis npm run sync -->
 
 # Dérush automatique d'une vidéo brute
 

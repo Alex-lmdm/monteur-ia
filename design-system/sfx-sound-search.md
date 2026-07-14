@@ -5,8 +5,9 @@ a exposé un catalogue SFX via l'API externe HeyGen, recherchable en langage nat
 
 ## Règle de priorité
 
-1. **Toujours réutiliser d'abord les SFX déjà présents dans `assets/sfx/`** (fournis par Alex).
-   Ce sont les sons « maison », à privilégier pour tout ce qui est courant.
+1. **Toujours réutiliser d'abord les SFX déjà présents dans `assets/sfx/`** (la bibliothèque du
+   créateur, recopiée de projet en projet). Ce sont les sons « maison », à privilégier pour tout ce
+   qui est courant.
 2. **N'appeler l'API HeyGen que pour un besoin spécial** : un mouvement, une animation, un clic,
    une transition à l'écran qui n'a pas de son adéquat en local.
 

@@ -7,6 +7,7 @@ description: >-
   links into a finished script, or rewriting a draft so it sounds like them. Sujet typique : la
   niche du créateur ({{NICHE}}). Produit du texte, pas d'image : le visuel relève de motion-design.
 ---
+<!-- Copie générée — éditer .claude/skills/reel-script/ puis npm run sync -->
 
 # Script de Reel (voix du créateur, prêt prompteur)
 

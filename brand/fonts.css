@@ -41,3 +41,12 @@
   font-display: block;
   src: url("../assets/fonts/Poppins-Black.woff2") format("woff2");
 }
+
+/* Police des sous-titres par défaut (remplaçable via /setup, bloc D) */
+@font-face {
+  font-family: "BowlbyOneSC";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("../assets/fonts/BowlbyOneSC-Regular.ttf") format("truetype");
+}

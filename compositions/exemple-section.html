@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=920">
+    <!--
+      ╔══════════════════════════════════════════════════════════════════════════════╗
+      ║ SECTION-TÉMOIN — pattern « énumération split-screen avec ghost number »        ║
+      ╠══════════════════════════════════════════════════════════════════════════════╣
+      ║ POUR CRÉER TA PROCHAINE SECTION :                                              ║
+      ║  1. Duplique ce fichier (ex. compositions/ta-section.html).                    ║
+      ║  2. Renomme l'id PARTOUT : #exemple-section → #ta-section (CSS + JS + HTML +   ║
+      ║     data-composition-id + la clé window.__timelines[...]).                     ║
+      ║  3. Cale data-start / data-duration sur les frontières de                      ║
+      ║     derush/<video>_cuts.json (JAMAIS les timestamps Whisper).                  ║
+      ║  4. Garde les invariants [1]-[7] ci-dessous — ce sont les pièges qui cassent   ║
+      ║     le render au montage par couches.                                          ║
+      ║                                                                                ║
+      ║ Format : SPLIT-SCREEN (1080×920). Le motion vit dans le HAUT (cette comp) ;    ║
+      ║ le visage d'Alex occupe le BAS de l'écran (calque du master). Zone utile ici   ║
+      ║ = les ~920 px du haut.                                                         ║
+      ╚══════════════════════════════════════════════════════════════════════════════╝
+    -->
+    <script src="../assets/vendor/gsap.min.js"></script>
+    <script src="../assets/vendor/CustomEase.min.js"></script>
+    <!-- Polices + tokens de marque : indispensables pour que var(--brand-*) se résolve
+         dans le studio ET au render par couches. -->
+    <link rel="stylesheet" href="../brand/fonts.css">
+    <link rel="stylesheet" href="../brand/tokens.css">
+    <script src="../brand/motion.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      /* [7] ⛔ JAMAIS de hauteur en dur sur html/body (pas de `height: 920px`).
+         Au render, TOUTES les sous-comps sont injectées dans UN SEUL document : un
+         `height: 920px` d'un split écraserait le 1920 des plein-écrans → calque rogné.
+         La hauteur se pose sur la racine SCOPÉE (#exemple-section), jamais sur body. */
+      html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+
+      /* [2] Tout le CSS est SCOPÉ sous #exemple-section. Les classes internes (.label,
+         .item…) sont dupliquées entre sections : sans scope, la section suivante hérite
+         de ces styles au render (un seul document). JAMAIS d'id nu type #item (collision). */
+      #exemple-section {
+        position: absolute; left: 0; top: 0; width: 1080px; height: 920px; overflow: hidden;
+        font-family: var(--brand-font-body);
+      }
+
+      /* [5] Élément plein cadre AU-DESSUS du visage → fond TRANSPARENT (bug « carré noir »).
+         En split le motion ne couvre que le haut, mais on garde le réflexe : aucun aplat
+         opaque plein cadre ici. Le seul fond opaque autorisé = #bgbase du master. */
+      #exemple-section .panel { position: absolute; inset: 0; background: transparent; }
+
+      /* [6] Bloc de contenu dans les safe-zones :
+         - top: 200px  → rien d'important dans les ~150 px du haut (IG masque le haut).
+         - left/right: var(--brand-safe-x) → ~100 px des bords (IG recadre les côtés). */
+      #exemple-section .block {
+        position: absolute;
+        top: 200px;
+        left: var(--brand-safe-x);
+        right: var(--brand-safe-x);
+      }
+
+      /* [6] Ghost number : en HAUT À DROITE du bloc qu'il numérote (quitte à passer
+         derrière), JAMAIS collé au bord → décalé de var(--brand-safe-x). .brand-ghost
+         (tokens.css) est en right:24px ; on le repositionne pour respecter la safe-zone. */
+      #exemple-section .ghost {
+        top: -40px;
+        right: var(--brand-safe-x);
+        font-size: 200px;
+      }
+
+      #exemple-section .label {
+        font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;
+        font-size: 40px; color: var(--brand-white); margin-bottom: 36px;
+      }
+      #exemple-section .label .hl { color: var(--brand-yellow); }
+
+      #exemple-section .item {
+        display: flex; align-items: center; gap: 22px;
+        background: var(--brand-surface); border-radius: 18px;
+        padding: 26px 30px; margin-bottom: 20px;
+      }
+      #exemple-section .num {
+        flex: 0 0 auto; width: 56px; height: 56px; border-radius: 14px;
+        background: var(--brand-yellow); color: var(--brand-bg);
+        font-weight: 900; font-size: 30px;
+        display: flex; align-items: center; justify-content: center;
+      }
+      #exemple-section .txt { font-weight: 600; font-size: 38px; color: var(--brand-white); }
+    </style>
+  </head>
+  <body>
+    <!-- data-duration = durée de CETTE section, lue sur derush/exemple_cuts.json (0 → 8.0 s). -->
+    <div id="exemple-section" data-composition-id="exemple-section" data-start="0" data-duration="8" data-fps="30" data-width="1080" data-height="920">
+      <!-- [1] Élément timé visible → class="clip" + data-start / data-duration / data-track-index.
+           Sans class="clip", le framework ne contrôle pas sa visibilité (reste peint au render). -->
+      <div id="exemple-panel" class="panel clip" data-start="0" data-duration="8" data-track-index="0">
+        <div class="brand-ghost ghost">1</div>
+        <div class="block">
+          <div class="label">Section <span class="hl">témoin</span></div>
+          <div class="item item-1"><div class="num">1</div><div class="txt">Duplique le fichier</div></div>
+          <div class="item item-2"><div class="num">2</div><div class="txt">Renomme l'id partout</div></div>
+          <div class="item item-3"><div class="num">3</div><div class="txt">Cale le timing sur les cuts</div></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // [3] Timeline GSAP PAUSED, dans une IIFE, enregistrée sur window.__timelines["exemple-section"].
+      //     L'IIFE est OBLIGATOIRE : au render toutes les sous-comps partagent la portée globale ;
+      //     un `const tl` au top-level → "Identifier 'tl' has already been declared" sur la 2e
+      //     section → son script ne tourne jamais (timeline muette, éléments figés à l'état CSS).
+      (function () {
+        window.__timelines = window.__timelines || {};
+        var tl = gsap.timeline({ paused: true });
+        var E = window.BRAND.ease; // easings de marque (outExpo pour les entrées punchy)
+
+        // [4] Entrées animées via opacity + scale UNIQUEMENT — JAMAIS x/y : dans une sous-comp
+        //     posée par le studio, un translate x/y se cumule avec le translate du host → décalage.
+        //     fromTo() (et non from()) : au montage par couches, l'état de départ doit être explicite.
+        tl.fromTo("#exemple-section .ghost", { opacity: 0 }, { opacity: 0.1, duration: 0.4, ease: E.inOut }, 0.1);
+        tl.fromTo("#exemple-section .label", { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, transformOrigin: "0% 50%", duration: 0.34, ease: E.outExpo }, 0.0);
+
+        // Les 3 items entrent en stagger, calés sur les 3 prises de exemple_cuts.json (0 / 2.667 / 5.333).
+        tl.fromTo("#exemple-section .item-1", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, transformOrigin: "50% 50%", duration: 0.34, ease: E.outExpo }, 0.5);
+        tl.fromTo("#exemple-section .item-2", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, transformOrigin: "50% 50%", duration: 0.34, ease: E.outExpo }, 2.8);
+        tl.fromTo("#exemple-section .item-3", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, transformOrigin: "50% 50%", duration: 0.34, ease: E.outExpo }, 5.4);
+
+        window.__timelines["exemple-section"] = tl;
+      })();
+    </script>
+  </body>
+</html>

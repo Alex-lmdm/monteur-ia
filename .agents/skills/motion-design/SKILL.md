@@ -7,6 +7,7 @@ description: >-
   sections, export final ffmpeg); générer les sous-titres; poser les SFX et la musique. Entrée : un
   cut validé et la timeline.json produite par le skill derush.
 ---
+<!-- Copie générée — éditer .claude/skills/motion-design/ puis npm run sync -->
 
 # Motion Design System (marque du créateur)
 

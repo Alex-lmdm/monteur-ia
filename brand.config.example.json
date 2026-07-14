@@ -1,0 +1,10 @@
+{
+  "brand": { "name": "Le Monde Du Marketing (exemple)", "handle": "@toncompte", "firstName": "Prénom", "niche": "ex: marketing / IA / fitness", "language": "fr" },
+  "visual": { "bg": "#202022", "accent": "#ffee00", "surface": "#2b2b2d", "fontDisplay": "Poppins", "fontBody": "Poppins", "fontCaptions": "BowlbyOneSC", "captionsPosition": "split-jointure", "captionsLines": 1 },
+  "cta": { "types": ["keyword-dm"], "dmTool": "manychat", "defaultKeyword": null, "linkEmoji": "🔗" },
+  "audio": { "enhanceMethod": "adobe", "musicFile": null, "musicDb": -26.5 },
+  "derush": { "padStart": 0.04, "padEnd": 0.02, "silenceDb": -40, "islandDuration": 0.18, "camera": "dji", "whisperLanguage": "fr" },
+  "montage": { "splitTransform": null, "faceCrop": null, "splitByDefault": true },
+  "env": { "os": null, "agents": ["claude-code"], "ffmpegPath": null, "whisperCli": null, "whisperModel": null },
+  "setup": { "completedBlocks": [], "version": 1 }
+}

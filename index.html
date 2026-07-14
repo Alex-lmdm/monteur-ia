@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <script src="assets/vendor/gsap.min.js"></script>
+    <!-- PIÈGE N°1 : charger brand/fonts.css + brand/tokens.css DANS LE <head> DU MASTER.
+         Sans ça, au render par couches les var(--brand-*) et les polices des sous-comps ne se
+         résolvent pas → couleurs noires au lieu du jaune, police système au lieu de Poppins. -->
+    <link rel="stylesheet" href="brand/fonts.css">
+    <link rel="stylesheet" href="brand/tokens.css">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #202022; }
+
+      /* Visage SPLIT-SCREEN : surface PLEIN CADRE clippée à la moitié basse (anti carré noir).
+         Fond transparent obligatoire ; cadrage UNIQUEMENT via transform (jamais resize dans le studio).
+         Le transform ci-dessous est un DÉFAUT : il est calibré par /setup
+         (brand.config.json → montage.splitTransform) selon ta caméra / ton cadrage. */
+      .face-bottom { position: absolute; inset: 0; overflow: hidden; background: transparent; clip-path: inset(920px 0 0 0); }
+      .face-bottom video { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover;
+        transform-origin: 0 0; transform: translate(-240px, 380px) scale(1.40); }
+    </style>
+  </head>
+  <body>
+    <!--
+      MASTER de DÉMO (dev) — remplace-le par ta vidéo. Le VRAI master est GÉNÉRÉ par
+      tools/build_master.py : ses data-start / data-duration et les fenêtres du visage sont
+      DÉRIVÉS des vraies coupes du dérush (derush/exemple_cuts.json, mesurées par
+      tools/cut_boundaries.py), JAMAIS des timestamps Whisper (qui démarrent ~0,1-0,25 s trop tôt
+      → on verrait la fin de la prise précédente au passage plein-écran).
+
+      Démo : 1 section split-screen, 8 s, calée sur les 3 prises de exemple_cuts.json.
+      Ordre DOM = layering : bgbase < visage split < section < captions.
+
+      NB : assets/video/base.mp4 est GITIGNORÉ (assets/video/*). C'est voulu : les médias ne sont
+      pas versionnés. Un placeholder est généré localement à l'étape dérush (ta vidéo dérushée).
+    -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="8" data-fps="30" data-width="1080" data-height="1920">
+
+      <!-- Fond de marque (seul aplat opaque autorisé, tout en bas de la pile). -->
+      <div id="bgbase" class="clip" data-start="0" data-duration="8" data-track-index="0" style="position:absolute; inset:0; background:#202022;"></div>
+
+      <!-- Voix off : piste audio séparée (les <video> sont muted). Source = la base dérushée. -->
+      <audio id="vo" src="assets/video/base.mp4" data-start="0" data-duration="8" data-track-index="13" data-volume="1"></audio>
+
+      <!-- CALQUE VISAGE : <video> SANS class="clip" (exception documentée — la visibilité est
+           gérée par le framework via data-start/data-duration ; on n'anime jamais width/height
+           d'une <video>). src = assets/video/base.mp4 (ta vidéo dérushée, générée à l'étape dérush ;
+           transform du split calibré par /setup → brand.config.json → montage.splitTransform). -->
+      <div class="face-bottom">
+        <!-- data-layout-allow-overflow : la surface visage est VOLONTAIREMENT plein cadre (1080×1920)
+             puis clippée par .face-bottom (clip-path) — l'overflow est le pattern anti carré-noir, pas un bug. -->
+        <video id="face" src="assets/video/base.mp4" muted playsinline data-layout-allow-overflow
+               data-start="0" data-media-start="0" data-duration="8" data-track-index="10"></video>
+      </div>
+
+      <!-- CALQUE SECTION : host de la sous-comp. Chemin depuis la RACINE (jamais ../ : un chemin
+           qui remonte casse le montage des scripts au render → timelines muettes). -->
+      <div class="clip" data-composition-id="exemple-section" data-composition-src="compositions/exemple-section.html"
+           data-start="0" data-duration="8" data-track-index="2" data-width="1080" data-height="920"
+           style="position:absolute; left:0; top:0; width:1080px; height:920px; overflow:hidden;"></div>
+
+      <!-- CALQUE SOUS-TITRES (par-dessus tout). Chemin depuis la RACINE. -->
+      <div class="clip" data-composition-id="captions" data-composition-src="compositions/captions.html"
+           data-start="0" data-duration="8" data-track-index="14" data-width="1080" data-height="1920"
+           style="position:absolute; left:0; top:0; width:1080px; height:1920px; overflow:hidden;"></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>
