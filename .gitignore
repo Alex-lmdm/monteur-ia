@@ -11,6 +11,8 @@ renders/*
 # Rushes, proxys et médias bruts
 assets/video/*
 !assets/video/.gitkeep
+# Placeholder de démo (remplacé par TON dérush à la première vidéo)
+!assets/video/base.mp4
 assets/music/*
 !assets/music/.gitkeep
 !assets/music/README.md
