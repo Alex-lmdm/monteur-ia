@@ -12,7 +12,13 @@ Tu as deux voies :
 
 ## 🚀 La voie rapide — le prompt d'installation
 
-Ouvre **Claude Code** (ou **Codex**) à la racine de ce dossier, puis **copie-colle exactement le bloc ci-dessous**
+> **Encore plus simple ?** Ouvre ton agent dans n'importe quel dossier (Documents par exemple) et
+> dis-lui : « Télécharge le système https://github.com/Alex-lmdm/monteur-ia ici, puis suis les
+> instructions d'installation de son INSTALL.md. » Il fait tout. **À la fin, ferme et rouvre ton
+> agent DANS le dossier monteur-ia** : c'est là que vivent ses instructions, et c'est là que tu
+> travailleras.
+
+Sinon, ouvre **Claude Code** (ou **Codex**) à la racine de ce dossier, puis **copie-colle exactement le bloc ci-dessous**
 comme premier message :
 
 ```text
@@ -129,6 +135,20 @@ Ensuite : place-toi dans ce dossier et lance `claude`. Puis colle le prompt d'in
 bien sous ce scope). Sous Windows, ce mode terminal est encore expérimental : préfère l'app.
 
 Sous Codex, quand un skill est mentionné, ouvre le fichier `.agents/skills/<nom>/SKILL.md` indiqué.
+
+---
+
+## 💡 Marre des demandes de permission ?
+
+Par défaut, ton agent demande ton accord avant chaque action. Pour travailler sans interruption :
+
+- **Claude Code** : choisis le mode **Auto** (dans l'app : le sélecteur de mode de permission ;
+  dans le terminal : `claude --permission-mode acceptEdits` ou le mode Auto). Il saute presque
+  toutes les demandes mais garde un garde-fou contre les actions vraiment risquées.
+- **Codex (app ChatGPT)** : Réglages > Général > Permissions → active « Approve for me »
+  (Auto-review), puis choisis ce mode dans ta conversation.
+
+Évite les modes « accès total sans garde-fou » tant que tu débutes.
 
 ---
 
