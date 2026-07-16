@@ -181,15 +181,10 @@ function mirrorSkills(lockedNames) {
   for (const entry of entries) {
     const name = entry.name;
 
-    // Refus : un skill métier ne doit JAMAIS écraser un skill framework verrouillé.
-    if (lockedNames.has(name)) {
-      err(
-        `Skill métier « ${name} » en conflit avec un skill framework verrouillé ` +
-          `(skills-lock.json). Copie REFUSÉE. Renomme le dossier .claude/skills/${name}/.`
-      );
-      hadError = true;
-      continue;
-    }
+    // Un dossier au nom d'un skill framework verrouillé dans .claude/skills/ est une
+    // copie miroir (cf. mirrorFrameworkSkills) : on ne le repousse JAMAIS vers
+    // .agents/skills/ (le lock fait autorité là-bas). Skip silencieux.
+    if (lockedNames.has(name)) continue;
 
     const src = path.join(srcRoot, name);
     const dest = path.join(destRoot, name);
@@ -204,6 +199,35 @@ function mirrorSkills(lockedNames) {
         (hasSkillMd ? "" : "  (pas de SKILL.md — copié tel quel)")
     );
   }
+}
+
+/**
+ * Miroir inverse : les skills FRAMEWORK (.agents/skills/, gérés par skills-lock.json)
+ * sont copiés vers .claude/skills/ pour que Claude Code les découvre aussi
+ * (Claude Code ne lit que .claude/skills/ ; sans ça, /hyperframes etc. n'existent
+ * pas pour les utilisateurs Claude Code). Copie one-way, jamais l'inverse.
+ */
+function mirrorFrameworkSkills(lockedNames) {
+  const srcRoot = path.join(ROOT, ".agents", "skills");
+  const destRoot = path.join(ROOT, ".claude", "skills");
+
+  if (!fs.existsSync(srcRoot)) {
+    warn(".agents/skills/ introuvable — skills framework non miroirés.");
+    return;
+  }
+  fs.mkdirSync(destRoot, { recursive: true });
+
+  let count = 0;
+  for (const name of lockedNames) {
+    const src = path.join(srcRoot, name);
+    if (!fs.existsSync(src)) continue;
+
+    const dest = path.join(destRoot, name);
+    fs.rmSync(dest, { recursive: true, force: true });
+    fs.cpSync(src, dest, { recursive: true, force: true });
+    count++;
+  }
+  log(`  ${count} skills framework miroirés vers .claude/skills/ (découverte Claude Code).`);
 }
 
 // ---------------------------------------------------------------------------
@@ -222,6 +246,9 @@ function main() {
   const lockedNames = loadLockedSkillNames();
   log(`  ${lockedNames.size} skills framework verrouillés (jamais écrasés).`);
   mirrorSkills(lockedNames);
+
+  log("\nMiroir des skills framework (.agents -> .claude) :");
+  mirrorFrameworkSkills(lockedNames);
 
   log("");
   if (hadError) {
