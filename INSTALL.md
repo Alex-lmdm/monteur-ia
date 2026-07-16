@@ -117,18 +117,17 @@ Ensuite : place-toi dans ce dossier et lance `claude`. Puis colle le prompt d'in
 
 ### Option B — Codex (inclus dans ChatGPT Plus, ~20 €/mois)
 
-Codex a besoin de Node.js (voir étape Node.js plus bas si tu ne l'as pas encore).
+**Le plus simple : l'app ChatGPT sur ordinateur** (macOS et Windows). Codex est intégré dedans.
 
-1. Installe Codex :
-   ```bash
-   npm install -g @openai/codex
-   ```
-   (Attention au `@openai/` : le paquet est bien sous ce scope.)
-2. Succès : la commande `codex` répond.
-3. Sous **Windows**, le support natif est expérimental : s'il manque des runtimes
-   « Visual C++ » au lancement, installe-les, ou passe par **WSL2** en alternative.
+1. Télécharge l'app **ChatGPT** pour ordinateur depuis chatgpt.com (ou le Microsoft Store sur
+   Windows) et connecte-toi avec ton compte.
+2. En haut à gauche, bascule sur l'onglet **Codex** (à côté de Chat et Work).
+3. Ouvre ce dossier dans Codex, puis colle le prompt d'installation.
 
-Ensuite : place-toi dans ce dossier, lance `codex`, et colle le prompt d'installation.
+*Alternative pour les habitués du terminal :* Codex existe aussi en ligne de commande
+(`npm install -g @openai/codex`, nécessite Node.js — attention au `@openai/`, le paquet est
+bien sous ce scope). Sous Windows, ce mode terminal est encore expérimental : préfère l'app.
+
 Sous Codex, quand un skill est mentionné, ouvre le fichier `.agents/skills/<nom>/SKILL.md` indiqué.
 
 ---
