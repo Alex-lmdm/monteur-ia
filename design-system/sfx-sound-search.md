@@ -15,21 +15,21 @@ a exposé un catalogue SFX via l'API externe HeyGen, recherchable en langage nat
 
 ## Pack de démarrage livré (`assets/sfx/starter/`) — réutiliser en priorité
 
-Sons synthétiques originaux, versionnés dans le repo (libres de droits) : disponibles **hors-ligne,
-sans configuration**.
+7 sons réels sous licence **CC0** (Freesound), versionnés dans le repo donc redistribuables :
+disponibles **hors-ligne, sans configuration**. Provenance dans `assets/sfx/starter/README.md`.
 
 | Fichier (`assets/sfx/starter/`) | À utiliser pour                                        |
 | ------------------------------- | ------------------------------------------------------ |
 | `ui-click.mp3`                  | clic souris / bouton / petit tic                       |
-| `pop.mp3`                       | apparition d'un élément, bulle, petit « boup »         |
+| `keyboard.mp3`                  | un texte qui se tape (mot-clé du CTA, saisie…)         |
+| `pop.mp3`                       | apparition d'un élément, bulle, petit « plop »         |
 | `whoosh.mp3`                    | transition, swipe, changement de section               |
 | `riser.mp3`                     | montée de tension juste avant un reveal                |
 | `impact.mp3`                    | accent grave sur un mot fort / un chiffre qui tombe    |
 | `beep.mp3`                      | notification, validation, petit signal                 |
 
 > Ce pack est un **socle minimal**. Pour des sons plus riches ou spécifiques (variantes de shutter,
-> frappe clavier, cha-ching…), passer par l'API HeyGen ci-dessous. Régénérer le pack :
-> `bash scripts/gen-starter-sfx.sh`.
+> cha-ching, ambiances…), passer par l'API HeyGen ci-dessous, ou déposer tes propres MP3.
 
 ## L'endpoint
 
