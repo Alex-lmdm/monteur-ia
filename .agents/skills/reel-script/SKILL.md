@@ -152,13 +152,15 @@ Outils à piocher selon le sujet :
 ## 4. Profil de voix (banque de vocabulaire & tics du créateur)
 
 <!-- BEGIN GENERATED: voice-profile -->
-Section vide — lance **`/setup` (bloc Voix)** pour la générer à partir de tes propres scripts.
+**Profil de voix perso pas encore généré — et ce n'est pas grave : le skill écrit déjà tes scripts
+avec la méthode complète** (§2 règles de voix, §3 hooks/structure, `references/cta.md`). Tu obtiens un
+script prêt à lire dès maintenant.
 
-Le squelette de cette section vit dans `templates/voice-profile.md.tpl`. Une fois généré, ce bloc
-contient : les accroches/relances récurrentes du créateur, ses formules de vulgarisation, ses tics
-d'oralité, son vocabulaire de valeur, ses superlatifs signature et ses tournures de caveat. Tant
-qu'il est vide, appuie-toi uniquement sur les règles universelles de §2 et écris dans une voix
-directe, parlée et sobre.
+**Bonus (optionnel) :** pour que ton monteur attrape *ta* voix à toi (tes accroches, tes tics
+d'oralité, tes superlatifs signature), colle 5 à 15 de tes propres scripts via **`/setup` (bloc
+Voix)** — tu peux le faire quand tu veux, même après plusieurs vidéos. Le squelette généré vit dans
+`templates/voice-profile.md.tpl`. Tant que cette section est là, appuie-toi sur les règles
+universelles de §2 et écris dans une voix directe, parlée et sobre.
 <!-- END GENERATED: voice-profile -->
 
 ---

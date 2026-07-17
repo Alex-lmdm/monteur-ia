@@ -19,16 +19,20 @@ sous-titres, SFX et musique. Format **vertical 1080×1920, 30 fps**.
 
 ---
 
-## 🟢 Étape 0 — Setup (avant tout montage)
+## 🟢 Étape 0 — Setup (recommandé, pas bloquant)
 
-Avant de démarrer le pipeline, vérifie que l'installation est personnalisée :
+**Le système fonctionne dès l'installation.** Les skills embarquent déjà la méthode complète (écriture
+de script, dérush, montage, légende, DM) : tu peux monter une vidéo tout de suite, sans rien
+configurer. `/setup` ne débloque rien — il **personnalise** (ta voix, tes couleurs, ton funnel, ton
+cadrage) pour que le rendu te ressemble au lieu de rester générique.
 
-- Si **`brand.config.json` n'existe pas**, ou si **`setup.completedBlocks` est incomplet** (il manque
-  des blocs par rapport au schéma), **propose `/setup`** avant toute tâche de montage. Tant que le
-  setup n'est pas fait, les valeurs personnelles (marque, couleurs, musique, caméra…) ne sont pas
-  fiables et le rendu sera générique.
+- Si **`brand.config.json` n'existe pas**, ou si **`setup.completedBlocks` est incomplet**, tu peux
+  **proposer `/setup`** pour personnaliser — mais **ne bloque jamais un montage** pour ça. Si
+  Prénom veut monter direct, tu montes direct (la méthode par défaut suffit), et tu proposes
+  le setup après coup.
 - Les valeurs personnalisées (dérush, audio, visuel, CTA…) vivent dans **`brand.config.json`** :
-  c'est la source de vérité des réglages. Ce fichier renvoie systématiquement vers ses valeurs.
+  c'est la source de vérité des réglages. Tant qu'un réglage n'est pas personnalisé, on utilise le
+  défaut recommandé (éprouvé en production), jamais une valeur inventée.
 
 ---
 

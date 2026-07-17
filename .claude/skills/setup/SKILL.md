@@ -111,7 +111,12 @@ Questions (détail + validations dans `references/questions.md`) :
 `.claude/skills/reel-script/SKILL.md`, + le corpus copié dans
 `.claude/skills/reel-script/references/scripts-exemples.md`.
 
-C'est LE bloc qui vaut le produit : on apprend à écrire comme l'utilisateur.
+> **Dire à l'utilisateur d'entrée de jeu :** son monteur écrit **déjà** ses scripts avec la méthode
+> complète (le skill `reel-script` marche sans ce bloc). Ce bloc est un **bonus de personnalisation** :
+> il apprend à écrire **comme lui** (ses accroches, ses tics, ses superlatifs). C'est facultatif et
+> ça peut se faire plus tard — jamais un prérequis pour monter une vidéo. C'est aussi le bloc qui
+> tire le plus le produit vers le haut quand on le fait.
+
 Méthode d'analyse détaillée (quoi chercher, comment classer, pièges) →
 **`references/voice-extraction.md`** — le lire avant d'analyser.
 
@@ -144,6 +149,11 @@ Méthode d'analyse détaillée (quoi chercher, comment classer, pièges) →
 
 **Écrit :** `cta.*` + les zones générées de `design-system/manychat-dm.md` et
 `design-system/instagram-caption.md`.
+
+> **Dire à l'utilisateur :** la génération de sa **légende Instagram** et de son **DM ManyChat** est
+> **déjà active** (la méthode complète est embarquée, elle tourne à chaque publication sans réglage).
+> Ce bloc ne l'active pas — il **mémorise son offre et son mot-clé** pour que le monteur ne les lui
+> redemande plus à chaque post. Facultatif, personnalisation confort.
 
 Questions :
 - Tes types de CTA (mot-clé → DM · lien en bio · follow · partage). Plusieurs possibles → liste dans

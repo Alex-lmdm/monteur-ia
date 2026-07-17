@@ -11,8 +11,12 @@ Le mot « lien » est **interdit** partout : utiliser l'emoji `cta.linkEmoji` (d
 signature visuelle du message.
 
 <!-- BEGIN GENERATED: cta -->
-_Section vide — lance `/setup` (bloc Funnel) : ton outil de DM, ton ouverture type et la ressource
-que tu livres seront décrits ici._
+_La méthode ci-dessous est déjà active : dès qu'un CTA mot-clé est présent, le DM est rédigé sans
+configuration._
+
+_Bonus (optionnel) : lance `/setup` (bloc Funnel) pour mémoriser ton outil de DM, ton ouverture type
+et la ressource que tu livres — ils seront décrits ici. En attendant, le DM est écrit à partir du
+mot-clé et de la ressource du script, avec l'URL réelle (ou un placeholder `[LIEN À COMPLÉTER]`)._
 <!-- END GENERATED: cta -->
 
 ## Voix et structure

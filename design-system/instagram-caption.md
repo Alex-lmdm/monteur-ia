@@ -8,15 +8,18 @@ Identité et ton viennent de `brand.config.json` (`brand.name`, `brand.handle`, 
 et le funnel (ce vers quoi pointe le CTA) sont **définis par `/setup` (bloc Funnel)**.
 
 <!-- BEGIN GENERATED: cta -->
-_Section vide — lance `/setup` (bloc Funnel) pour la remplir : ton offre, ton CTA par défaut et
-le mot-clé éventuel seront décrits ici pour que chaque légende soit générée sans te reposer la
-question._
+_La méthode ci-dessous est déjà active : chaque légende est générée dès maintenant, sans configuration._
+
+_Bonus (optionnel) : lance `/setup` (bloc Funnel) pour mémoriser ton offre, ton CTA par défaut et ton
+mot-clé — ils seront décrits ici pour que le monteur ne te repose plus la question à chaque post. En
+attendant, il déduit le CTA du script (mot-clé s'il y en a un, sinon CTA léger)._
 <!-- END GENERATED: cta -->
 
 ## Le prompt source
 
-C'est le prompt de rédaction du créateur, appliqué tel quel. Il est fourni / calibré par `/setup`
-(bloc Funnel). Les blocs entre crochets sont les seuls inputs qui changent d'un post à l'autre.
+C'est le prompt de rédaction du créateur, **déjà actif et appliqué tel quel** (aucune configuration
+requise). `/setup` (bloc Funnel) peut ensuite l'ajuster à ton offre, mais il tourne sans. Les blocs
+entre crochets sont les seuls inputs qui changent d'un post à l'autre.
 
 ```text
 Role: Rédacteur expert en descriptions Instagram engageantes, spécialisé en
