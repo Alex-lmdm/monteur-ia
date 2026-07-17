@@ -98,10 +98,10 @@ sonne faux. » On n'écrit qu'après OK.
 | F2 | (auto) `which/where ffmpeg` | `env.ffmpegPath` | détecté | si absent → `INSTALL.md`, champ à compléter |
 | F3 | (auto) détecter la CLI whisper + modèle | `env.whisperCli`, `env.whisperModel` | détecté / exemple | si absent → `INSTALL.md` |
 | F4 | « Tu montes avec Claude Code, Codex, ou les deux ? » | `env.agents` (liste) | `["claude-code"]` | ≥ 1 |
-| F5 | « Envoie-moi un rush test de 10-20 s (toi face caméra, cadrage habituel). » | → `assets/video/base.mp4` | — | vidéo fournie ; transcoder SDR si HDR |
-| F6 | Calibration itérative du cadrage (voir `calibration-crop.md`) | `montage.splitTransform` | `translate(-216px,410px) scale(1.40)` | validé au snapshot par l'utilisateur |
-| F7 | (auto, dérivé de F6) crop ffmpeg du visage | `montage.faceCrop` | `crop=771:714:154:364,scale=1080:1000` | recalculé si `splitTransform` change |
-| — | (imposé) tout commence en split | `montage.splitByDefault` | `true` | booléen |
+| F5 | « Ton cadrage par défaut : **écran coupé en deux** (toi en bas, motion en haut) ou **toi en plein écran** avec les animations par-dessus ? C'est juste le point de départ, tu diriges section par section ensuite. » | `montage.defaultLayout` | `"split"` | `"split"` \| `"faceplein"` |
+| F6 | « Envoie-moi un rush test de 10-20 s (toi face caméra, cadrage habituel). » | → `assets/video/base.mp4` | — | vidéo fournie ; transcoder SDR si HDR |
+| F7 | Calibration itérative du cadrage **du mode choisi en F5** (voir `calibration-crop.md`) | `montage.splitTransform` (si `split`) ou `montage.fullFaceTransform` (si `faceplein`) | ex. `translate(-216px,410px) scale(1.40)` | validé au snapshot par l'utilisateur |
+| F8 | (auto, dérivé de F7) crop ffmpeg du visage | `montage.faceCrop` (si `split`) ou `montage.fullFaceCrop` (si `faceplein`) | ex. `crop=771:714:154:364,scale=1080:1000` | recalculé si le transform change |
 
 ---
 

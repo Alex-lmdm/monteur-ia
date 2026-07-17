@@ -4,7 +4,7 @@
   "cta": { "types": ["keyword-dm"], "dmTool": "manychat", "defaultKeyword": null, "linkEmoji": "🔗" },
   "audio": { "enhanceMethod": "adobe", "musicFile": null, "musicDb": -26.5 },
   "derush": { "padStart": 0.04, "padEnd": 0.02, "silenceDb": -40, "islandDuration": 0.18, "camera": "dji", "whisperLanguage": "fr" },
-  "montage": { "splitTransform": null, "faceCrop": null, "splitByDefault": true },
+  "montage": { "defaultLayout": "split", "splitTransform": null, "faceCrop": null, "fullFaceTransform": null, "fullFaceCrop": null },
   "env": { "os": null, "agents": ["claude-code"], "ffmpegPath": null, "whisperCli": null, "whisperModel": null },
   "setup": { "completedBlocks": [], "version": 1 }
 }

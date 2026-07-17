@@ -53,15 +53,24 @@ structure, pas le calque rendu). Lancer **`python3 tools/check_export.py`** sur 
 il vérifie (A) l'opacité du calque section par section et (B) que les timelines tournent vraiment
 (un élément posé à `opacity:0` par GSAP doit être invisible au début de sa section).
 
-## 1. La règle de format (par défaut = split-screen)
+## 1. La règle de format (le défaut vient de la config)
 
-Le défaut vient de `brand.config.json` → `montage.splitByDefault` (true = tout commence en split).
-- **Par défaut**, chaque section est en **split-screen** : motion design en HAUT (**1080×920**),
-  **visage en BAS**.
-- Sur demande du créateur, une section passe en **plein écran** (**1080×1920**) : le motion
-  **recouvre** entièrement le visage.
-- Donc 2 formats de section : `1080×920` (split) ou `1080×1920` (full). **On commence TOUT en split
-  par défaut**, puis le créateur dit section par section lesquelles passent en full.
+Le cadrage de départ vient de `brand.config.json` → `montage.defaultLayout`. Deux valeurs :
+
+- **`"split"`** (valeur par défaut du config) : chaque section démarre en **split-screen** —
+  motion design en HAUT (**1080×920**), **visage en BAS**. Le cadrage du visage = `montage.splitTransform`.
+- **`"faceplein"`** : chaque section démarre **visage en plein écran** (**1080×1920**, `.face-full`,
+  cadrage = `montage.fullFaceTransform`), et le motion/les visuels se posent **PAR-DESSUS** le visage
+  en **surimpression `background: transparent`** (jamais un panneau opaque qui coupe l'écran). On voit
+  le créateur en continu ; les animations flottent près de sa tête.
+
+**Dans les deux cas, le créateur dirige section par section** — il peut passer n'importe quelle
+section en : visage plein écran seul, visuel/motion plein écran seul (recouvre le visage), ou split.
+Formats techniques de section : `1080×920` (split) ou `1080×1920` (full). On commence TOUT sur le
+`defaultLayout` choisi, puis on ajuste au fil des retours.
+
+> Ancien nom : `montage.splitByDefault` (booléen) a été remplacé par `montage.defaultLayout`. Si tu
+> lis un vieux config avec `splitByDefault: true`, traite-le comme `defaultLayout: "split"`.
 
 ## 2. Master natif `index.html` (les pièges)
 

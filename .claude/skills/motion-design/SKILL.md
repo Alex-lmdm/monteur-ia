@@ -455,8 +455,9 @@ Les 7 étapes, dans l'ordre. Chaque étape n'est finie que quand son **critère*
 calées sur les timestamps. **Corriger les mots propres à ta niche mal transcrits** (noms de produits,
 jargon → cf. tes homophones connus).
 ✅ *Critère* : chaque section a un `start`/`end` en secondes issu des timestamps, la liste couvre 100 %
-de la durée sans trou ni chevauchement, et le format de chaque section est décidé (split par défaut si
-`montage.splitByDefault`, full si le créateur le demande — `references/montage-talking-head.md`).
+de la durée sans trou ni chevauchement, et le format de chaque section est décidé (cadrage de départ =
+`montage.defaultLayout` — `"split"` ou `"faceplein"` —, le créateur écarte du défaut section par
+section — `references/montage-talking-head.md`).
 
 **Étape 3 — Transcoder la vidéo → `assets/video/base.mp4`.**
 Cas courant **SDR** (`color_transfer=bt709`) : **aucun tonemap** — `scale` vers 1080×1920 si besoin,

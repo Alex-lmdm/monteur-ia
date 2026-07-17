@@ -8,7 +8,16 @@ visage → l'export final se fait en ffmpeg, donc le crop doit correspondre pixe
 
 Sortie : `montage.splitTransform` (le CSS validé) + `montage.faceCrop` (le filtre ffmpeg dérivé).
 
-> Format de référence : **1080×1920, 30 fps**. Split par défaut : motion en haut, **visage en bas**
+> **On calibre le cadrage du `montage.defaultLayout` choisi en F5.** Ce document décrit le cas
+> **`"split"`** (visage dans la moitié basse), la valeur par défaut du config. Si l'utilisateur a
+> choisi **`"faceplein"`**, on suit la même démarche mais on calibre le **visage plein écran**
+> (`.face-full` de `motion-design`, `transform: scale(...) ; transform-origin: center NN%` — la tête
+> assez haute pour laisser la place aux overlays et aux sous-titres), et on écrit
+> `montage.fullFaceTransform` + `montage.fullFaceCrop` (crop plein cadre `1080×1920`, overlay `0:0`)
+> au lieu des champs `split*`. L'autre cadrage peut rester à l'exemple par défaut jusqu'à la première
+> section qui l'utilise.
+
+> Format de référence : **1080×1920, 30 fps**. Split : motion en haut, **visage en bas**
 > (fenêtre écran `y = 920 → 1920`, soit **1000 px** de haut). Overlay ffmpeg à `0:920`.
 
 ---
@@ -101,11 +110,13 @@ la formule ci-dessus — un crop désaligné = un cadrage faux à l'export.
 
 ## 5. Écrire et valider
 
-Récapituler à l'utilisateur :
-- `montage.splitTransform` = le CSS validé au snapshot.
-- `montage.faceCrop` = le crop ffmpeg dérivé (préciser l'overlay `0:920`).
-- `montage.splitByDefault` = `true` (tout commence en split ; les passages plein écran se décident
+Récapituler à l'utilisateur (champs selon le `defaultLayout` choisi en F5) :
+- `montage.defaultLayout` = `"split"` ou `"faceplein"` (le point de départ ; les écarts se décident
   section par section au montage).
+- Mode `split` : `montage.splitTransform` = le CSS validé au snapshot · `montage.faceCrop` = le crop
+  ffmpeg dérivé (overlay `0:920`).
+- Mode `faceplein` : `montage.fullFaceTransform` = le CSS validé · `montage.fullFaceCrop` = le crop
+  dérivé (plein cadre `1080×1920`, overlay `0:0`).
 
 Après OK → écrire dans `brand.config.json`, marquer le bloc `F`, `node scripts/sync.mjs`.
 

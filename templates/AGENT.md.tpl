@@ -119,7 +119,7 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 **Montage / motion (`motion-design` §14)**
 - [ ] **Frontières de section = `<cut>_cuts.json`**, JAMAIS les timestamps Whisper (ils démarrent 0,1-0,25 s trop tôt → on voit la fin de la prise précédente au passage plein-écran → split). Master, sous-comps et sous-titres lisent **la même source**.
 - [ ] **MOTION FIRST, zéro redondance texte** : pas de gros texte qui redit la voix off / les sous-titres.
-- [ ] Tout commence en **split-screen** par défaut (`montage.splitByDefault`) ; {{FIRST_NAME}} dit ensuite quelles sections passent en plein écran.
+- [ ] Chaque section démarre sur le **cadrage par défaut** (`montage.defaultLayout` : `"split"` = visage en bas / motion en haut · `"faceplein"` = visage plein écran, motion en surimpression transparente) ; {{FIRST_NAME}} dit ensuite section par section ce qui passe en plein écran visage ou plein écran visuel.
 - [ ] **Bug « carré noir »** : tout élément plein cadre au-dessus du `<video>` visage = `background: transparent`. Visage = surface **plein cadre** + `clip-path` (jamais surface partielle).
 - [ ] Entrées d'éléments : animer **`opacity` + `scale` uniquement**, jamais `x/y` (sinon décalage avec le `translate` du studio).
 - [ ] **Safe-zone haute** : rien d'important dans les ~150 px du haut (Instagram cache le haut).

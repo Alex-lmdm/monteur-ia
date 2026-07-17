@@ -229,15 +229,36 @@ snapshot visuel.
    - **Si ffmpeg ou whisper manquent** → NE PAS installer ici : renvoyer vers `INSTALL.md` et
      marquer le champ à compléter, on pourra relancer `/setup technique` plus tard.
 2. **Agents** (`env.agents`) : demander lesquels il utilise — `claude-code`, `codex`, ou les deux.
-3. **CALIBRATION CROP** — procédure complète dans **`references/calibration-crop.md`** (la suivre
+
+3. **CADRAGE PAR DÉFAUT** (`montage.defaultLayout`) — **une vraie question, en langage simple.**
+   Poser le décor d'abord, sans jargon : « Quand ton monteur assemble une vidéo, il lui faut un point
+   de départ visuel — à quoi ressemble une section “normale” chez toi. **C'est juste le DÉFAUT** :
+   après, à chaque vidéo, tu lui diras section par section (“là je veux juste ma tête en grand”, “là
+   cette image en plein écran”…). Mais au départ, il part sur quoi ? » Deux choix :
+
+   - **1) Écran coupé en deux (split-screen)** — Ta tête occupe la **moitié basse** de l'écran, et la
+     **moitié haute** affiche les animations, les images, le motion design. On te voit tout le temps,
+     avec le visuel juste au-dessus de toi. → `montage.defaultLayout = "split"` (c'est la valeur
+     retenue si l'utilisateur ne tranche pas — présente-la neutre, sans la « recommander »).
+   - **2) Ta tête en plein écran, animations par-dessus** — on te voit **en grand sur tout l'écran**
+     en continu, et les animations/illustrations viennent **se poser par-dessus toi** (fond
+     transparent, près de ta tête), sans couper l'écran en deux. → `montage.defaultLayout = "faceplein"`.
+
+   **Toujours rappeler** : quel que soit le choix, il garde la main à 100 % — n'importe quelle section
+   pourra devenir sa tête seule en grand, ou un visuel/une vidéo qui prend tout l'écran. Ce réglage ne
+   fait que fixer **le point de départ** que l'IA applique sans qu'il ait à le redemander.
+
+4. **CALIBRATION CROP** — procédure complète dans **`references/calibration-crop.md`** (la suivre
    pas à pas). En résumé : rush test 10-20 s → poser `assets/video/base.mp4` (transcoder en SDR si
-   HDR, cf `motion-design`) → appliquer le `montage.splitTransform` par défaut → `npx hyperframes
-   snapshot` → montrer à l'utilisateur et **itérer** (« ton visage est-il centré dans la moitié
-   basse ? trop zoomé ? ») en ajustant `translate`/`scale` → une fois validé, **calculer le
-   `montage.faceCrop` ffmpeg** avec la formule de conversion (reprise depuis
-   `.claude/skills/motion-design/references/montage-talking-head.md`, redonnée dans
-   `references/calibration-crop.md`) → écrire `montage.splitTransform` + `montage.faceCrop`.
-   Écrire aussi `montage.splitByDefault` (défaut `true` : tout commence en split-screen).
+   HDR, cf `motion-design`) → **calibrer le cadrage du mode par défaut choisi en F3** :
+   - Si `defaultLayout = "split"` → itérer le `montage.splitTransform` (visage dans la moitié basse),
+     puis dériver `montage.faceCrop` (formule de conversion, cf `references/calibration-crop.md`).
+   - Si `defaultLayout = "faceplein"` → itérer le `montage.fullFaceTransform` (visage cadré plein
+     écran, tête assez haute pour laisser la place aux overlays et aux sous-titres), puis dériver
+     `montage.fullFaceCrop`.
+   `npx hyperframes snapshot` → montrer à l'utilisateur et **itérer** (« ton visage est-il bien cadré ?
+   trop zoomé ? ») en ajustant `translate`/`scale`. L'autre cadrage (celui qui n'est pas le défaut)
+   peut rester à l'exemple par défaut : on le calibrera à la première section qui l'utilise.
 
 **Restitution + validation**, écrire `env.*` + `montage.*`, marquer `F`, `node scripts/sync.mjs`.
 
