@@ -5,25 +5,31 @@ a exposé un catalogue SFX via l'API externe HeyGen, recherchable en langage nat
 
 ## Règle de priorité
 
-1. **Toujours réutiliser d'abord les SFX déjà présents dans `assets/sfx/`** (la bibliothèque du
-   créateur, recopiée de projet en projet). Ce sont les sons « maison », à privilégier pour tout ce
-   qui est courant.
-2. **N'appeler l'API HeyGen que pour un besoin spécial** : un mouvement, une animation, un clic,
-   une transition à l'écran qui n'a pas de son adéquat en local.
+1. **Toujours réutiliser d'abord les SFX déjà présents dans `assets/sfx/`** — le **pack de démarrage
+   livré** (`assets/sfx/starter/`, ci-dessous) et tout MP3 que le créateur a déposé lui-même à la
+   racine du dossier. À privilégier pour tout ce qui est courant.
+2. **N'appeler l'API HeyGen que pour un besoin spécial** : un mouvement, une animation, une
+   transition à l'écran qui n'a pas de son adéquat en local. Nécessite `npx hyperframes auth` (voir
+   plus bas) — si l'auth n'est pas faite, rester sur le pack de démarrage ou demander au créateur de
+   déposer son propre MP3.
 
-## SFX déjà disponibles en local (réutiliser en priorité)
+## Pack de démarrage livré (`assets/sfx/starter/`) — réutiliser en priorité
 
-| Fichier (`assets/sfx/`)                         | À utiliser pour                                  |
-| ----------------------------------------------- | ------------------------------------------------ |
-| `mouse single click 2.MP3`                      | clic souris                                      |
-| `Ballpoint pen click.MP3`                       | clic de stylo / petit tic                        |
-| `PC typing keyboard kacha.MP3`                  | frappe clavier / on tape une commande            |
-| `felt pen.MP3`                                  | trait de feutre (soulignement, dessin, surlignage) |
-| `Riser.MP3`                                     | montée de tension avant un reveal / transition   |
-| `camera shutter sound.MP3`                      | déclencheur photo / capture / screenshot         |
-| `Click (camera shutter sound single shot).MP3` | screenshot « net », one-shot                     |
-| `camera shutter sound analog.MP3`              | variante shutter, plus analogique                |
-| `camera shutter sound kashashka.MP3`           | variante shutter, plus marquée                   |
+Sons synthétiques originaux, versionnés dans le repo (libres de droits) : disponibles **hors-ligne,
+sans configuration**.
+
+| Fichier (`assets/sfx/starter/`) | À utiliser pour                                        |
+| ------------------------------- | ------------------------------------------------------ |
+| `ui-click.mp3`                  | clic souris / bouton / petit tic                       |
+| `pop.mp3`                       | apparition d'un élément, bulle, petit « boup »         |
+| `whoosh.mp3`                    | transition, swipe, changement de section               |
+| `riser.mp3`                     | montée de tension juste avant un reveal                |
+| `impact.mp3`                    | accent grave sur un mot fort / un chiffre qui tombe    |
+| `beep.mp3`                      | notification, validation, petit signal                 |
+
+> Ce pack est un **socle minimal**. Pour des sons plus riches ou spécifiques (variantes de shutter,
+> frappe clavier, cha-ching…), passer par l'API HeyGen ci-dessous. Régénérer le pack :
+> `bash scripts/gen-starter-sfx.sh`.
 
 ## L'endpoint
 

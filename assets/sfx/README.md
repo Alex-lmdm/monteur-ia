@@ -1,13 +1,18 @@
 # assets/sfx — tes effets sonores (SFX)
 
-Ce dossier est **volontairement vide** : les sons ne sont pas redistribuables (droits d'auteur),
-on ne peut donc pas les livrer dans le repo. À toi de le remplir.
+**Un pack de démarrage est déjà livré dans `starter/`** (6 sons générés, libres de droits) : « mets le
+sound effect » fonctionne **dès l'installation, hors-ligne**, sans rien configurer. Voir
+`starter/README.md`.
 
-Deux façons :
+La **racine** de ce dossier, elle, est volontairement vide : les sons de bibliothèques commerciales
+ne sont pas redistribuables (droits d'auteur), on ne peut donc pas les livrer ici. Pour aller au-delà
+du pack de démarrage, deux façons :
 
 - **Bibliothèque de sons HeyGen** — connecte-toi avec `npx hyperframes auth`, puis récupère les SFX
-  fournis (bonus de la formation Monteur IA).
+  fournis (bonus de la formation Monteur IA), recherchables en langage naturel (cf
+  `design-system/sfx-sound-search.md`).
 - **Tes propres MP3** — dépose ici tes effets exportés depuis ton outil habituel (par exemple CapCut).
+  Ils restent **privés** (non versionnés, cf `.gitignore`).
 
-Une fois tes MP3 déposés dans ce dossier, dis simplement à l'IA « mets le sound effect » à l'étape SFX
-(étape 6, après validation du montage) et elle les place aux bons endroits.
+Ensuite, dis simplement à l'IA « mets le sound effect » à l'étape SFX (étape 6, après validation du
+montage) et elle les place aux bons endroits.

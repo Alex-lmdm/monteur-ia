@@ -19,6 +19,9 @@ assets/music/*
 assets/sfx/*
 !assets/sfx/.gitkeep
 !assets/sfx/README.md
+# Pack de démarrage livré (SFX générés, libres de droits) — versionné, ça marche hors-ligne.
+# Tes propres SFX déposés à la racine de assets/sfx/ restent, eux, ignorés (droits d'auteur).
+!assets/sfx/starter/
 
 # Médias du dérush : on garde timeline.json / *_cuts.json (contrat d'interface),
 # on jette vidéos/audio
