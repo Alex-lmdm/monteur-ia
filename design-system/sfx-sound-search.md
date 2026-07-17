@@ -13,23 +13,23 @@ a exposé un catalogue SFX via l'API externe HeyGen, recherchable en langage nat
    plus bas) — si l'auth n'est pas faite, rester sur le pack de démarrage ou demander au créateur de
    déposer son propre MP3.
 
-## Pack de démarrage livré (`assets/sfx/starter/`) — réutiliser en priorité
+## Bibliothèque de démarrage livrée (`assets/sfx/starter/`) — réutiliser en priorité
 
-7 sons réels sous licence **CC0** (Freesound), versionnés dans le repo donc redistribuables :
-disponibles **hors-ligne, sans configuration**. Provenance dans `assets/sfx/starter/README.md`.
+**22 sons réels sous licence CC0** (Freesound + Kenney), versionnés dans le repo donc redistribuables,
+disponibles **hors-ligne, sans configuration**.
 
-| Fichier (`assets/sfx/starter/`) | À utiliser pour                                        |
-| ------------------------------- | ------------------------------------------------------ |
-| `ui-click.mp3`                  | clic souris / bouton / petit tic                       |
-| `keyboard.mp3`                  | un texte qui se tape (mot-clé du CTA, saisie…)         |
-| `pop.mp3`                       | apparition d'un élément, bulle, petit « plop »         |
-| `whoosh.mp3`                    | transition, swipe, changement de section               |
-| `riser.mp3`                     | montée de tension juste avant un reveal                |
-| `impact.mp3`                    | accent grave sur un mot fort / un chiffre qui tombe    |
-| `beep.mp3`                      | notification, validation, petit signal                 |
+> **L'index, avec une description « à utiliser quand… » par son, est dans
+> [`assets/sfx/starter/sounds.md`](../assets/sfx/starter/sounds.md).** À l'étape SFX, **lire cet index
+> et choisir le fichier dont la description colle le mieux au moment à l'écran** (clic → un son de
+> clic, transition → un whoosh, reveal → un riser, etc.). On ne pose pas tous les sons : on choisit le
+> bon, au bon endroit.
 
-> Ce pack est un **socle minimal**. Pour des sons plus riches ou spécifiques (variantes de shutter,
-> cha-ching, ambiances…), passer par l'API HeyGen ci-dessous, ou déposer tes propres MP3.
+Catégories couvertes : clics (souris, double, UI, select, tick, switch), feedback (confirmation,
+error), apparition (pop, drop), whoosh (fast/standard/long), riser (clair/dark), impact (accent/boom),
+notification (ding, notification), keyboard, cha-ching.
+
+> Pour un besoin **absent** de la bibliothèque (son très spécifique), passer par l'API HeyGen
+> ci-dessous, ou déposer ses propres MP3. Toujours **regarder d'abord dans `sounds.md`**.
 
 ## L'endpoint
 
