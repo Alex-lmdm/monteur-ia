@@ -4,9 +4,13 @@ réinitialise le plan de travail (compositions, index, derush, renders, work).
 
 Usage : python3 tools/close_reel.py <slug>            (ex. mon-premier-reel)
 
-Ce que fait le script, dans l'ordre :
-  1. refuse de tourner si le working tree n'est pas propre (commit d'abord) ;
-  2. tag `reel/<slug>` sur HEAD (sauté s'il existe déjà) — l'archive, c'est git ;
+Aucun compte GitHub ni push requis : tout se passe en local.
+  - git installé : le script initialise un repo local si besoin (git init), committe
+    lui-même l'état final du reel, puis le tague `reel/<slug>` — l'archive, c'est git ;
+  - git absent : l'archive se fait par COPIE du projet (compositions, index, cuts,
+    timelines) vers <Vidéos>/reels-publies/<slug>/projet/.
+
+Ensuite, dans les deux cas :
   3. copie les masters (renders/ contenant « FINAL ») vers <Vidéos>/reels-publies/<slug>/ ;
   4. vide renders/ et work/, purge les médias de derush/ (garde les fichiers d'exemple),
      supprime compositions/*.html (garde exemple-section.html) et assets/video/*
@@ -16,8 +20,8 @@ Ce que fait le script, dans l'ordre :
 
 Pourquoi : le studio HyperFrames scanne TOUT le projet — un vieux reel laissé dans le
 dossier pollue la sidebar de l'éditeur. Ne JAMAIS archiver un reel dans un sous-dossier
-du repo : tout ce qui est versionné reste récupérable via
-  git checkout reel/<slug> -- compositions/ index.html derush/
+du repo : tout reste récupérable via
+  git checkout reel/<slug> -- compositions/ index.html derush/   (ou le dossier projet/ copié)
 Les médias non versionnés (dérush, renders intermédiaires) sont perdus — c'est le but ;
 seuls les masters « FINAL » sont copiés en lieu sûr avant.
 """
@@ -76,20 +80,58 @@ def purge(directory: Path, keep: set) -> None:
         p.unlink() if p.is_file() else shutil.rmtree(p)
 
 
+
+
+def commit(message: str) -> None:
+    run("git", "add", "-A")
+    if not run("git", "status", "--porcelain").strip():
+        return
+    try:
+        run("git", "commit", "-m", message)
+    except subprocess.CalledProcessError:
+        # pas d'identité git configurée (client qui n'utilise pas git) : identité locale neutre
+        run("git", "-c", "user.name=Monteur IA", "-c", "user.email=monteur-ia@local",
+            "commit", "-m", message)
+
+
+def archive_with_git(slug: str, tag: str) -> bool:
+    """Archive l'état final via un repo git LOCAL (créé si besoin). False si git absent."""
+    if shutil.which("git") is None:
+        print("• git non installé — archive par copie de fichiers à la place")
+        return False
+    try:
+        run("git", "rev-parse", "--is-inside-work-tree")
+    except subprocess.CalledProcessError:
+        run("git", "init", "-q")
+        print("• repo git local initialisé (aucun compte GitHub requis)")
+    commit(f"reel: {slug} (état final du montage au moment du post)")
+    if tag in run("git", "tag", "--list", tag):
+        print(f"• tag {tag} déjà posé — ok")
+    else:
+        run("git", "tag", "-a", tag, "-m", f"Reel {slug} : état final du montage au moment du post")
+        print(f"• tag {tag} posé")
+    return True
+
+
+def archive_by_copy(slug: str) -> None:
+    """Sans git : copie le projet du reel (fichiers légers) vers l'archive."""
+    dest = ARCHIVE_BASE / slug / "projet"
+    dest.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ROOT / "index.html", dest / "index.html")
+    shutil.copytree(ROOT / "compositions", dest / "compositions", dirs_exist_ok=True)
+    for p in (ROOT / "derush").glob("*.json"):
+        shutil.copy2(p, dest / p.name)
+    print(f"• projet du reel copié vers {dest}")
+
 def main() -> None:
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     slug = sys.argv[1]
     tag = f"reel/{slug}"
 
-    if run("git", "status", "--porcelain").strip():
-        sys.exit("❌ Working tree pas propre : committer l'état final du reel AVANT la clôture.")
-
-    if tag in run("git", "tag", "--list", tag):
-        print(f"• tag {tag} déjà posé — ok")
-    else:
-        run("git", "tag", "-a", tag, "-m", f"Reel {slug} : état final du montage au moment du post")
-        print(f"• tag {tag} posé sur HEAD")
+    use_git = archive_with_git(slug, tag)
+    if not use_git:
+        archive_by_copy(slug)
 
     # Masters en lieu sûr
     dest = ARCHIVE_BASE / slug
@@ -119,9 +161,11 @@ def main() -> None:
     (ROOT / "index.html").write_text(SKELETON, encoding="utf-8")
     print("• index.html remplacé par le squelette")
 
-    run("git", "add", "-A")
-    run("git", "commit", "-m", f"chore: clôture reel {slug} (plan de travail réinitialisé, archive = tag {tag})")
-    print(f"✅ Reel {slug} clôturé. Récupération : git checkout {tag} -- <chemins>")
+    if use_git:
+        commit(f"chore: clôture reel {slug} (plan de travail réinitialisé, archive = tag {tag})")
+        print(f"✅ Reel {slug} clôturé. Récupération : git checkout {tag} -- <chemins>")
+    else:
+        print(f"✅ Reel {slug} clôturé. Archive : {ARCHIVE_BASE / slug}")
 
 
 if __name__ == "__main__":

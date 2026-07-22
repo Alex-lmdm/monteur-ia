@@ -71,13 +71,15 @@ barrière « terminé quand » à passer **avant de montrer le résultat à Pré
 > (voir checklist). Fichiers dans `renders/` + copie dans `~/Downloads`.
 
 > 🧹 **Étape 8 — Clôture (après publication).** Une fois le reel posté, on remet le plan de
-> travail à zéro : `python3 tools/close_reel.py <slug>` (working tree propre exigé). Le script
-> tague `reel/<slug>` (git = l'archive), copie les masters `renders/*FINAL*` vers le dossier
-> Vidéos (`reels-publies/<slug>/`), purge `renders/`, `work/`, les médias de `derush/`,
+> travail à zéro : `python3 tools/close_reel.py <slug>`. Le script archive l'état final
+> (**aucun compte GitHub ni push requis, tout est local** : avec git il committe et tague
+> `reel/<slug>` tout seul, en initialisant un repo local au besoin ; sans git il copie le
+> projet du reel vers le dossier Vidéos), copie les masters `renders/*FINAL*` vers
+> `reels-publies/<slug>/`, purge `renders/`, `work/`, les médias de `derush/`,
 > `compositions/*.html` et `assets/video/` (les fichiers d'exemple du template sont conservés),
 > et pose un `index.html` squelette. **Ne JAMAIS archiver un vieux reel dans un dossier du
-> repo** (le studio scanne tout le projet → il polluerait la sidebar de l'éditeur) : la
-> récupération se fait via `git checkout reel/<slug> -- <chemins>`.
+> projet** (le studio scanne tout le projet → il polluerait la sidebar de l'éditeur) : la
+> récupération se fait via `git checkout reel/<slug> -- <chemins>` (ou le dossier copié).
 
 Étapes annexes au besoin : **logos** → skill `thesvg` · **SFX à trouver** → `design-system/sfx-sound-search.md` · **texte long / anti-slop** → `design-system/writing-anti-slop.md`.
 
