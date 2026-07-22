@@ -60,7 +60,9 @@ Tu es mon assistant d'installation pour le projet « Monteur IA ». Installe tou
       `brand.config.example.json`. Écris-y les chemins réellement détectés (ffmpeg, binaire et
       modèle whisper). Sur Windows, ajoute la variable d'environnement
       PRODUCER_FORCE_SCREENSHOT=true (elle évite les rendus blancs/lents).
-   g) Skills : si le dossier `.agents/skills` est incomplet, lance `npx hyperframes skills`.
+   g) Skills : lance `npx hyperframes skills update` (installe/rafraîchit les skills officiels
+      HyperFrames en global dans `~/.claude/skills` et `~/.agents/skills` ; le repo embarque
+      déjà une copie fonctionnelle, cette commande garantit la dernière version).
    h) `npm run sync` (régénère CLAUDE.md / AGENTS.md et les skills).
 
 3. Ne PASSE JAMAIS à l'étape suivante si l'étape en cours a échoué. En cas d'échec :

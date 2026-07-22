@@ -121,6 +121,8 @@ barrière « terminé quand » à passer **avant de montrer le résultat à Pré
 - [ ] **MOTION FIRST, zéro redondance texte** : pas de gros texte qui redit la voix off / les sous-titres.
 - [ ] Chaque section démarre sur le **cadrage par défaut** (`montage.defaultLayout` : `"split"` = visage en bas / motion en haut · `"faceplein"` = visage plein écran, motion en surimpression transparente) ; Prénom dit ensuite section par section ce qui passe en plein écran visage ou plein écran visuel.
 - [ ] **Bug « carré noir »** : tout élément plein cadre au-dessus du `<video>` visage = `background: transparent`. Visage = surface **plein cadre** + `clip-path` (jamais surface partielle).
+- [ ] **Motion riche = partir d'un template du registry** (`hyperframes add <block>`, découverte via `hyperframes catalog` — skill `hyperframes-registry`) puis le personnaliser aux couleurs de la marque, plutôt que tout dessiner à la main : mieux fini, plus vite.
+- [ ] **Ajout de sections = risque de collision `data-track-index`** : garder les tracks visage / voix off / sous-titres **bien au-dessus** des tracks de sections (elles gardent leurs index bas). Deux éléments qui se chevauchent sur le même track = l'un des deux disparaît au render.
 - [ ] Entrées d'éléments : animer **`opacity` + `scale` uniquement**, jamais `x/y` (sinon décalage avec le `translate` du studio).
 - [ ] **Safe-zone haute** : rien d'important dans les ~150 px du haut (Instagram cache le haut).
 - [ ] **Safe-zone latérale** : rien d'important à moins de **~100 px** des bords gauche/droit — **en split ET en plein écran** (Instagram recadre les côtés). Le **ghost number** se pose en haut à droite du bloc qu'il numérote (quitte à passer derrière), **jamais collé au bord**.
@@ -135,6 +137,7 @@ barrière « terminé quand » à passer **avant de montrer le résultat à Pré
 - [ ] **2-3 mots** par sous-titre, **pas de ponctuation finale**, **jamais à cheval sur 2 phrases**, jamais finir sur un mot faible.
 - [ ] **Découper par unité grammaticale** : nom+adjectif et groupe verbal insécables ; **ne jamais orpheliner un adjectif ni fusionner deux unités** ; trop large → isoler le mot seul. `tools/montage_captions.py` = 1er jet, **re-couper avant de livrer** (§14.8 a le tableau d'exemples).
 - [ ] Position : jointure (`y=920`) en split · `y≈1140` en plein visage · `y≈1500` en plein motion.
+- [ ] **Sous-titres section-aware** : si une même prise est scindée en deux sections, le générateur raisonne **par section** (frontières du master), jamais par prise — sinon les sous-titres de la 2ᵉ section gardent la position/le timing de la 1ʳᵉ.
 - [ ] CTA : **ne JAMAIS écrire « lien »** → emoji 🔗 (risque de shadowban).
 
 **Export (`motion-design` §14.7)**
@@ -155,24 +158,41 @@ barrière « terminé quand » à passer **avant de montrer le résultat à Pré
 
 ---
 
-## Skills framework — À CHARGER AVANT DE CODER UNE COMPOSITION
+## Skills framework — couche TECHNIQUE (⚠️ ne remplace JAMAIS le pipeline de ce fichier)
 
-En plus des skills métier ci-dessus, ces skills encodent les patterns HyperFrames
-(`window.__timelines`, sémantique des `data-*`, CSS shader-compatible) absents des docs web
-génériques. **Sauter le skill = composition cassée.**
+> ⛔ **RÈGLE DE PRIORITÉ.** Pour TOUT montage de reel, le **pipeline en 7 étapes de ce fichier
+> est la seule route** : `reel-script` → `derush` → `motion-design`. Les skills officiels
+> HyperFrames ci-dessous sont une **RÉFÉRENCE TECHNIQUE à consulter** (« comment fait-on X dans
+> le framework »), **PAS un workflow de montage**. Ne JAMAIS router le montage d'un reel via le
+> skill `hyperframes` (son router) ni via un workflow générique du framework
+> (`talking-head-recut`, `product-launch-video`, `faceless-explainer`, `slideshow`,
+> `motion-graphics`, `general-video`…). Ces workflows ne servent QUE si Prénom demande
+> **explicitement** un autre type de projet, hors du workflow reel habituel.
+
+Ces skills encodent les patterns HyperFrames (`window.__timelines`, sémantique des `data-*`,
+media géré par le runtime, CSS shader-compatible) absents des docs web génériques. **Consulter
+le bon skill technique évite de tâtonner** (ex. une `<video>` a besoin d'un `id` sinon elle gèle
+au render ; le framework impose son cadrage sur les `<video>` → pré-cropper en ffmpeg pour un
+cadrage déterministe).
 
 | Skill                      | Command                   | Quand l'utiliser                                                                 |
 | -------------------------- | ------------------------- | -------------------------------------------------------------------------------- |
-| **hyperframes**            | `/hyperframes`            | Créer/éditer des compositions HTML, captions, TTS, animation audio-réactive      |
-| **hyperframes-cli**        | `/hyperframes-cli`        | Boucle dev CLI : init, lint, inspect, preview, render, doctor                     |
-| **hyperframes-media**      | `/hyperframes-media`      | Préprocessing des assets : tts (Kokoro), transcribe (Whisper), remove-background  |
+| **hyperframes**            | `/hyperframes`            | Router officiel (⛔ hors route pour les reels — voir règle de priorité)           |
+| **hyperframes-core**       | `/hyperframes-core`       | Contrat de composition : `data-*`, `class="clip"`, tracks, sous-compositions      |
+| **hyperframes-animation**  | `/hyperframes-animation`  | Animation (ex-`gsap`) : règles de motion, blueprints, GSAP/Lottie/CSS/WAAPI       |
+| **hyperframes-keyframes**  | `/hyperframes-keyframes`  | Keyframes seek-safe, FLIP, paths, masks, diagnostics `hyperframes keyframes`      |
+| **hyperframes-creative**   | `/hyperframes-creative`   | Direction créative : palettes, typo, beats, patterns de composition               |
+| **hyperframes-cli**        | `/hyperframes-cli`        | Boucle dev CLI : init, lint, check, preview, render, doctor                       |
 | **hyperframes-registry**   | `/hyperframes-registry`   | Installer des blocks/composants via `hyperframes add`                             |
+| **media-use**              | `/media-use`              | Médias (ex-`hyperframes-media`) : SFX, musique, images, TTS, transcription        |
+| **motion-doctrine / seam-craft / cut-the-curve** | `/<nom>`    | Doctrine motion : qualité du mouvement, transitions, courbes                      |
 | **website-to-hyperframes** | `/website-to-hyperframes` | Capturer une URL et la transformer en vidéo                                       |
-| **gsap**                   | `/gsap`                   | Animations GSAP — tweens, timelines, easing, perf                                |
 | **animejs / css-animations / lottie / three / waapi / tailwind** | `/<nom>` | Selon la techno d'animation utilisée                        |
 
-> **Skills absents ?** Lancer `npx hyperframes skills` puis redémarrer la
-> session, ou installer : `npx skills add heygen-com/hyperframes`.
+> **Mise à jour des skills framework** : `npx hyperframes skills update` (ils s'installent en
+> global dans `~/.claude/skills/` et `~/.agents/skills/`, et s'auto-mettent à jour — le repo
+> embarque une copie qui marche dès le clone, mais cette commande donne toujours la dernière
+> version). Skills absents ? Même commande, puis redémarrer la session.
 
 ## Commands
 
@@ -244,6 +264,8 @@ npx hyperframes keyframes compositions/<scene>.html --shot out.png [--selector "
 
 1. Tout élément timé porte `data-start`, `data-duration` et `data-track-index`.
 2. Les éléments timés visibles **DOIVENT** avoir `class="clip"` (contrôle de visibilité). Exception connue : le `<video>` visage n'a PAS `class="clip"` (voir `motion-design` §14.5).
+2bis. **Toute balise `<video>` porte un `id`** — sans `id`, le runtime ne pilote pas sa lecture et la vidéo est **gelée** au render (bug silencieux : la preview studio peut sembler correcte).
+2ter. **Le framework impose son cadrage (`object-fit`) sur les `<video>`** : pour un cadrage déterministe du visage, **pré-cropper le segment en ffmpeg** en amont ; pour un **zoom animé**, animer un `<div>` conteneur autour de la vidéo, jamais la `<video>` elle-même.
 3. Les timelines GSAP sont **paused** et enregistrées sur `window.__timelines` :
    ```js
    window.__timelines = window.__timelines || {};
