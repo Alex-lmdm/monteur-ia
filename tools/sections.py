@@ -34,6 +34,9 @@ DURATION = CUTS["duration"]
 #     id     -> il DOIT exister un compositions/<id>.html du meme nom.
 #     split  -> panneau motion 1080x920 en HAUT + visage en BAS.
 #     full   -> motion 1080x1920 plein ecran, le visage est couvert.
+#     face   -> VISAGE plein ecran, aucun motion (pas de compositions/<id>.html a creer).
+#               Sert a casser le rythme : on enleve tout le decor et on revient sur toi.
+#               Cadrage = brand.config.json -> montage.fullFaceTransform (calibre par /setup).
 #
 #   {"media": "fichier.mp4"} -> la section n'est PAS une sous-composition : c'est une <video>
 #   posee directement dans le master (couche video NATIVE, compositee ensuite par ffmpeg).
@@ -60,6 +63,8 @@ LAYOUT = [
 # NB : brand.config.json -> visual.captionsPosition decrit l'INTENTION ("split-jointure"),
 # pas une valeur en px. On garde donc ces constantes ; ajuste-les si ta marque cadre autrement.
 Y_SPLIT = 920    # pile a la jointure split (au ras du haut du visage)
+Y_FACE = 1140    # visage plein ecran : un peu SOUS le centre, sinon le sous-titre tombe sur la
+                 # bouche. (Plus le nombre est GRAND, plus le sous-titre est BAS.)
 Y_FULL = 1500    # sous la fenetre plein ecran (motion / images)
 Y_MEDIA = 1100   # b-roll plein ecran : juste SOUS le milieu. A 1500 le sous-titre tombe sur le
                  # bas de l'image (souvent la partie inutile : bureau, clavier, decor).
@@ -73,7 +78,12 @@ def sections():
         media = opts.get("media")
         start = TAKES[idx[0]]["start"]
         end = TAKES[idx[-1]]["end"]
-        y = Y_SPLIT if fmt == "split" else (Y_MEDIA if media else Y_FULL)
+        if fmt == "split":
+            y = Y_SPLIT
+        elif fmt == "face":
+            y = Y_FACE
+        else:
+            y = Y_MEDIA if media else Y_FULL
         out.append({"id": sid, "fmt": fmt, "takes": idx, "media": media,
                     "start": round(start, 3), "end": round(end, 3),
                     "dur": round(end - start, 3),
@@ -85,17 +95,26 @@ def sections():
     return out
 
 
-def face_windows():
-    """Fenetres ou le visage est visible (split) — les splits contigus sont fusionnes."""
+def _merge_windows(fmt):
     wins = []
     for s in sections():
-        if s["fmt"] != "split":
+        if s["fmt"] != fmt:
             continue
         if wins and abs(wins[-1][1] - s["start"]) < 1e-6:
             wins[-1] = (wins[-1][0], s["end"])
         else:
             wins.append((s["start"], s["end"]))
     return [(round(a, 3), round(b - a, 3)) for a, b in wins]
+
+
+def face_windows():
+    """Fenetres visage SPLIT (moitie basse) — les splits contigus sont fusionnes."""
+    return _merge_windows("split")
+
+
+def facefull_windows():
+    """Fenetres visage PLEIN ECRAN (sections 'face') — contigues fusionnees."""
+    return _merge_windows("face")
 
 
 if __name__ == "__main__":
@@ -105,3 +124,8 @@ if __name__ == "__main__":
     print("\nfenetres visage (split) :")
     for st, d in face_windows():
         print(f"  {st:6.3f}  +{d:.3f}")
+    ff = facefull_windows()
+    if ff:
+        print("fenetres visage (plein ecran) :")
+        for st, d in ff:
+            print(f"  {st:6.3f}  +{d:.3f}")

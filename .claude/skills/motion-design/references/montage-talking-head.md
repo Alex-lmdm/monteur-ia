@@ -195,12 +195,29 @@ source visible est `src_x = (0 .. 1080 - Tx) / S`, `src_y = (920 - Ty .. 1920 - 
 `crop=w:h:x:y` puis `scale=1080:1000`. C'est ce crop qui est stocké dans `montage.faceCrop`. Si le
 transform change, recalculer le crop avec cette formule.
 
+### 3bis. Le format `face` — visage plein écran
+
+Une section peut valoir `"face"` dans `tools/sections.py` : **le visage seul, en grand, sans aucun
+motion** (pas de `compositions/<id>.html` à créer). C'est le pattern « pattern break » : on enlève
+tout le décor pour revenir sur la personne, une phrase, puis on repart.
+
+- Cadrage : `montage.fullFaceTransform` (+ `montage.fullFaceOrigin`), calibrés par `/setup`.
+  Zoom modéré sur la tête ; **un `transform-origin` en % plus GRAND = visage plus HAUT**.
+- `build_master.py` pose ces `<video>` **après** les sections (l'ordre DOM fait le layering) dans
+  un wrapper `.face-full` à **fond transparent** — un fond opaque redéclenche le carré noir.
+- Sous-titre : **`Y_FACE = 1140`**, un peu SOUS le centre. Au centre il tomberait sur la bouche.
+
 ## 4. Export final = ffmpeg, PAS le render HyperFrames (qualité visage)
 
 **Le render HyperFrames RASTERISE/ramollit la couche vidéo** (visage flou : la même frame depuis
 `base.mp4` est nette, depuis le render HyperFrames elle est floue). Donc :
 - **Studio HyperFrames** = preview/édition live uniquement (visage doux dans l'aperçu = normal).
 - **Export final** = **compositer en ffmpeg** (couche vidéo native, zéro rasterisation) → visage net.
+- ✅ **C'est fait par `python3 tools/build_final.py`** — ne réécris pas la commande à la main. Le
+  script lit les fenêtres du visage dans `tools/sections.py`, les b-rolls, et surtout le **crop**
+  dans `montage.faceCrop` / `montage.fullFaceCrop` ; s'ils sont absents il le **calcule** depuis le
+  `transform` avec la formule ci-dessous (`transform-origin` compris). Un crop retrouvé à la main
+  est la source d'erreur n°1 : le cadrage est bon dans le studio et faux à l'export.
   Modèle (split S1 + sections plein écran S2–S8 en overlay, audio de la base) :
 ```bash
 ffmpeg -y -i assets/video/base.mp4 -i sections/s1.mp4 -i sections/s2.mp4 ... \

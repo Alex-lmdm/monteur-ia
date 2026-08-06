@@ -119,6 +119,8 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 **Dérush (`derush`)**
 - [ ] **Souffle inter-cut ≈ 0,1 s**, régulier : **resserrer les FINS de cut, JAMAIS les débuts** (attaques de voyelle fragiles). Coupes franches. *Valeurs exactes → `derush` §5 + bloc `derush` de `brand.config.json`.*
 - [ ] Couper **dans les silences** (`silencedetect`), **jamais** sur un timestamp Whisper/LLM (ils dérivent).
+- [ ] **Jamais `-v error` avec `silencedetect` / `volumedetect`** : ces filtres loguent en *info*, `-v error` renvoie zéro ligne et on croit qu'il n'y a aucun silence.
+- [ ] **Ne pas recopier les prises à la main** : `tools/cut_boundaries.py` lit les `ISLANDS` de `derush/build_derush.py` s'il existe — une seule source, impossible de les désynchroniser.
 - [ ] Selon la caméra (`derush.camera` = `{{CAMERA}}`) : certaines vidéos (ex. DJI) ont un 2ᵉ flux mjpeg (vignette) → mapper `[0:v:0]` explicitement.
 - [ ] **Re-transcrire le cut final** pour vérifier : lecture = script, zéro mot coupé/doublé.
 - [ ] **Mesurer les VRAIS points de coupe** (`<cut>_cuts.json`, détection scene-change sur le fichier livré) — cf `derush` §7bis.
@@ -143,21 +145,33 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
   - **scoper** CSS et sélecteurs GSAP sous `#<composition-id>` (un `#win` nu attrape celui d'une autre section) ; ids internes → **classes** ; timeline dans une **IIFE**.
   - le **calque d'export doit être à la RACINE** (`compositions/…`, jamais `../compositions/…`) : sinon les `<script>` des sous-comps ne sont pas montés et **aucune animation ne tourne**.
 - [ ] **`python3 tools/check_export.py` après chaque rendu du calque** : `npm run check` ne voit pas ces bugs, lui si.
+- [ ] **Un B-ROLL vit dans le MASTER, jamais dans une sous-comp** (`{"media": "…"}` dans `tools/sections.py`) : le `data-start="0"` d'une `<video>` de sous-comp est lu en **absolu** → elle s'affiche dès 0 s et recouvre les autres sections.
+- [ ] **Les `<script src>` d'une sous-comp ne sont PAS chargés en composition par couches** → toute lib tierce (three.js, plugins) va dans le `<head>` du **master**.
+- [ ] **`tl.seek()` supprime les callbacks GSAP** → un `onUpdate` qui redessine un canvas ne tourne pas en preview studio ; doubler d'un `gsap.ticker.add()` (sûr si le dessin est analytique).
+- [ ] **UN SEUL sélecteur par tween** : `tl.to([sel1, sel2], …)` est **silencieusement ignoré** dans une sous-comp (console : `GSAP target … not found`).
+- [ ] Canvas / WebGL → **`preserveDrawingBuffer: true`** (sinon snapshot et render tout **noirs**) et `setPixelRatio` fixe.
+- [ ] **Console du navigateur AVANT de deviner** : ces bugs sont invisibles au lint et n'apparaissent souvent qu'en preview.
 
 **Sous-titres (`motion-design` §14.8)**
 - [ ] **2-3 mots** par sous-titre, **pas de ponctuation finale**, **jamais à cheval sur 2 phrases**, jamais finir sur un mot faible.
 - [ ] **Découper par unité grammaticale** : nom+adjectif et groupe verbal insécables ; **ne jamais orpheliner un adjectif ni fusionner deux unités** ; trop large → isoler le mot seul. `tools/montage_captions.py` = 1er jet, **re-couper avant de livrer** (§14.8 a le tableau d'exemples).
 - [ ] Position : jointure (`y=920`) en split · `y≈1140` en plein visage · `y≈1500` en plein motion.
+- [ ] **Timing = les VRAIS MOTS** : lancer `python3 tools/build_words.py` une fois, sinon le timing est proportionnel au texte et **dérive** (jusqu'à +0,35 s de retard sur la voix).
+- [ ] **Snap aux DEUX bords de section** : le 1er sous-titre démarre à `section.start`, le dernier finit à `section.end` (sinon il bave sur la section suivante).
+- [ ] Plein écran **B-ROLL** → `y≈1100` · section **`face`** (visage plein écran) → `y≈1140`.
 - [ ] **Sous-titres section-aware** : si une même prise est scindée en deux sections, le générateur raisonne **par section** (frontières du master), jamais par prise — sinon les sous-titres de la 2ᵉ section gardent la position/le timing de la 1ʳᵉ.
 - [ ] CTA : **ne JAMAIS écrire « lien »** → emoji 🔗 (risque de shadowban).
 
 **Export (`motion-design` §14.7)**
 - [ ] Export = **ffmpeg**, **PAS `npm run render`** (le render HyperFrames ramollit le visage).
+- [ ] L'export final se lance avec **`python3 tools/build_final.py`** : il dérive le crop du visage de `brand.config.json` (ou le calcule depuis le `transform`, `transform-origin` compris). Ne pas réécrire la commande ffmpeg à la main — un crop faux passe inaperçu jusqu'à l'export.
 
 **SFX + musique (`motion-design` §14.10) — étape 6, après validation**
 - [ ] **Seulement après validation complète du montage (étape 5).** Jamais au fil de l'eau.
 - [ ] « mets le sound effect et la musique » = les SFX d'`assets/sfx/` + la musique `{{MUSIC_FILE}}` à **{{MUSIC_DB}} dB**, sauf indication contraire.
 - [ ] Volumes SFX **rééquilibrés par niveau perçu** (pas un dB uniforme).
+- [ ] **Un son étalé (riser) sort bien plus bas qu'un son percussif (shutter) au même dB** : vérifié, un riser posé au niveau des shutters passait **sous** la musique de fond.
+- [ ] Contrôle sans écoute = **`python3 tools/build_sfx.py --probe`** (piste SFX seule, **48 kHz**). Ni soustraction de deux MP4 (erreur d'encodage AAC), ni mesure en 16 kHz (tue les aigus).
 
 **Publication (`design-system/`) — étape 7, la dernière**
 - [ ] Légende IG (`instagram-caption.md`) : si CTA « commente [MOT] », le CTA est la **1ʳᵉ ligne**. Aucun hashtag.

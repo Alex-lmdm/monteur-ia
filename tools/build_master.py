@@ -33,10 +33,15 @@ import sections
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SEC = sections.sections()
 DUR = sections.DURATION
-FACES = sections.face_windows()
+FACES = sections.face_windows()          # visage en split (moitie basse)
+FACEFULL = sections.facefull_windows()   # visage PLEIN ECRAN (sections "face")
 
 # Transform par defaut du visage en split (calibre par /setup -> montage.splitTransform).
 DEFAULT_SPLIT_TRANSFORM = "translate(-240px, 380px) scale(1.40)"
+# Transform du visage PLEIN ECRAN (calibre par /setup -> montage.fullFaceTransform).
+# Zoom modere sur la tete : le visage remonte, les sous-titres passent dessous.
+DEFAULT_FULLFACE_TRANSFORM = "scale(1.4)"
+DEFAULT_FULLFACE_ORIGIN = "center 34%"
 
 
 def load_config():
@@ -50,6 +55,8 @@ def load_config():
 
 CFG = load_config()
 SPLIT_TRANSFORM = (CFG.get("montage") or {}).get("splitTransform") or DEFAULT_SPLIT_TRANSFORM
+FULLFACE_TRANSFORM = (CFG.get("montage") or {}).get("fullFaceTransform") or DEFAULT_FULLFACE_TRANSFORM
+FULLFACE_ORIGIN = (CFG.get("montage") or {}).get("fullFaceOrigin") or DEFAULT_FULLFACE_ORIGIN
 BG = (CFG.get("visual") or {}).get("bg") or "#202022"  # fond de marque (brand.config.json -> visual.bg)
 
 # --- calques visage : une <video> par fenetre split, source = ta base derushee ---------------
@@ -59,6 +66,13 @@ faces = "\n".join(
     f'data-start="{st}" data-media-start="{st}" data-duration="{d}" data-track-index="10"></video>'
     for i, (st, d) in enumerate(FACES))
 
+# --- calque visage PLEIN ECRAN : une <video> par section "face" ------------------------------
+faces_full = "\n".join(
+    f'        <video id="facefull{i}" src="assets/video/base.mp4" muted playsinline '
+    f'data-layout-allow-overflow '
+    f'data-start="{st}" data-media-start="{st}" data-duration="{d}" data-track-index="11"></video>'
+    for i, (st, d) in enumerate(FACEFULL))
+
 # --- sections : une sous-comp par ligne de LAYOUT --------------------------------------------
 # ⛔ Une section MEDIA (b-roll) est une <video> POSEE ICI, pas une sous-comp : dans une sous-comp
 # le `data-start="0"` de la video est relatif a la compo mais le runtime media le lit en ABSOLU
@@ -66,6 +80,8 @@ faces = "\n".join(
 # n'a PAS class="clip" : sa fenetre vient de data-start/data-duration.
 rows, track = [], {"split": 2, "full": 3}
 for s in SEC:
+    if s["fmt"] == "face":
+        continue          # section "face" = juste le visage plein ecran, aucune sous-comp a monter
     h = 920 if s["fmt"] == "split" else 1920
     ti = track[s["fmt"]]
     if s.get("media"):
@@ -102,6 +118,11 @@ doc = f'''<!DOCTYPE html>
       .face-bottom {{ position: absolute; inset: 0; overflow: hidden; background: transparent; clip-path: inset(920px 0 0 0); }}
       .face-bottom video {{ position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover;
         transform-origin: 0 0; transform: {SPLIT_TRANSFORM}; }}
+      /* Visage PLEIN ECRAN (sections "face") : surface plein cadre, fond TRANSPARENT
+         obligatoire (sinon carre noir), zoom sur la tete depuis montage.fullFaceTransform. */
+      .face-full {{ position: absolute; inset: 0; overflow: hidden; background: transparent; }}
+      .face-full video {{ position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover;
+        transform: {FULLFACE_TRANSFORM}; transform-origin: {FULLFACE_ORIGIN}; }}
       /* B-roll : pre-cadre a la zone par ffmpeg (fond flou compris) -> aucun recadrage ici. */
       .media-full {{ position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; }}
       .media-split {{ position: absolute; left: 0; top: 0; width: 1080px; height: 920px; object-fit: cover; }}
@@ -134,6 +155,12 @@ doc = f'''<!DOCTYPE html>
 
       <!-- ===== SECTIONS ===== -->
 {chr(10).join(rows)}
+
+      <!-- VISAGE plein ecran : APRES les sections. L'ordre DOM fait le layering : place avant,
+           une section pourrait peindre par-dessus le visage meme hors de sa fenetre. -->
+      <div class="face-full">
+{faces_full}
+      </div>
 
       <!-- Sous-titres (par-dessus tout). Chemin depuis la RACINE (jamais ../). -->
       <div class="clip" data-composition-id="captions" data-composition-src="compositions/captions.html" data-start="0" data-duration="{DUR}" data-track-index="14" data-width="1080" data-height="1920" style="position:absolute; left:0; top:0; width:1080px; height:1920px; overflow:hidden;"></div>
