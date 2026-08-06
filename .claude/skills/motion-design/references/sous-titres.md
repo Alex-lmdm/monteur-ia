@@ -104,6 +104,9 @@ un `id="cap-N"` à chaque (sinon warning `studio_missing_editable_id` + non édi
 - **Plein écran VISAGE** → sous-titre **à ~59 %** (`y≈1140`, un peu sous le centre ; « plus bas » = %
   plus GRAND).
 - **Plein écran MOTION / IMAGES** → **plus bas** (centre `y≈1500`), sous le visuel pour ne pas le couvrir.
+- **Plein écran B-ROLL** (une vidéo filmée qui occupe tout le cadre) → **`y≈1100`**, juste SOUS
+  le milieu. À 1500 le sous-titre tombe sur le bas de l'image, souvent la zone inutile
+  (bureau, clavier, décor). Géré par `Y_MEDIA` dans `tools/sections.py`.
 
 **Implémentation** : compo dédiée `compositions/captions.html` (fond transparent, un
 `<div class="cap clip" id="cap-N">` par sous-titre, `position:absolute; left:50%;
@@ -115,4 +118,19 @@ transform:translate(-50%,-50%); top:Ypx`). Branchée 2 fois :
   `ffmpeg -i FINAL.mp4 -i captions.mov -filter_complex "[0:v][1:v]overlay[v]" -map "[v]" -map 0:a ... renders/FINAL_CAP.mp4`.
 
 **Mot « lien » dans un CTA** → interdit (shadowban) : utiliser l'emoji `cta.linkEmoji` (défaut 🔗).
+**⚠️ TIMING — sur les VRAIS MOTS, jamais au prorata du texte.**
+Par défaut `tools/montage_captions.py` répartit chaque phrase **proportionnellement au nombre de
+caractères** de ses chunks. Ça DÉRIVE : les premiers durent trop et tous les suivants arrivent en
+retard (mesuré sur un hook de 3,7 s : jusqu'à **+0,35 s**). Ça s'entend — « le sous-titre arrive
+un peu après ma voix » — sans qu'on sache le nommer.
+→ Lancer **une fois** `python3 tools/build_words.py` : il transcrit le cut **mot à mot**
+(whisper-cli `-ml 1 -sow`, **prise par prise** — sur le fichier entier ce mode hallucine) et écrit
+`derush/<video>_words.json`. `montage_captions.py` le détecte tout seul et cale chaque sous-titre
+sur **son 1er mot** (alignement `difflib`, robuste aux variantes « 4 »/« quatre »).
+
+**⚠️ SNAP aux frontières — les DEUX bords.** Snapper le début ne suffit pas : sans borner la
+**durée** à `section.end`, le dernier sous-titre d'une section reste affiché ~0,5 s **sur la
+section suivante** (il « bave » sur le plan d'après — très visible quand on passe du split au
+plein écran).
+
 Détail dans `references/patterns.md`.

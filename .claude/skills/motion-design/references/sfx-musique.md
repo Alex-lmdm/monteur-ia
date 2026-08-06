@@ -60,3 +60,17 @@ réf `work/sfx.py` (liste d'events `(fichier, start, volume_dB, trim|None)`) :
 - Recette : ajouter au mix une entrée `[m:a]atrim=0:DUR,volume=<audio.musicDb>dB,aformat=channel_layouts=stereo:sample_rates=48000,afade=t=in:st=0:d=0.4,afade=t=out:st=DUR-1.2:d=1.2[music]`
   et l'inclure dans l'`amix` (cf `work/mix.py`). `alimiter=limit=0.97` en fin de chaîne évite toute
   saturation.
+
+**Vérifier le placement SANS ÉCOUTER — la seule méthode fiable.**
+`python3 tools/build_sfx.py --probe` écrit `renders/sfx-only.wav` : la piste **SFX + musique
+SEULE** (mêmes événements, sans la voix), en **48 kHz**. Comparer ensuite le pic de chaque
+événement au pic de la musique de fond (viser **+4 dB** minimum). Deux méthodes qui mentent :
+- ❌ **soustraire deux MP4** (avec / sans SFX) : deux encodages AAC indépendants laissent
+  l'erreur de quantification de la voix (~-6 dB), très au-dessus des SFX → inexploitable ;
+- ❌ **mesurer en 16 kHz** : coupe au-dessus de 8 kHz et **sous-estime massivement** risers et
+  clics, qui vivent dans les aigus → on croit un SFX absent alors qu'il est bien là.
+
+**Rééquilibrer par niveau PERÇU, pas par dB égal.** Un son dont l'énergie est **étalée** (riser :
+une montée de ~0,75 s) sort beaucoup plus bas qu'un son percussif (shutter : 30 ms) au même
+réglage. Mesuré : un riser posé au même dB que les shutters ressortait **5 dB SOUS la musique de
+fond**, donc inaudible. Toujours vérifier au `--probe` après avoir posé les niveaux.

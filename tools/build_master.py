@@ -60,10 +60,21 @@ faces = "\n".join(
     for i, (st, d) in enumerate(FACES))
 
 # --- sections : une sous-comp par ligne de LAYOUT --------------------------------------------
+# ⛔ Une section MEDIA (b-roll) est une <video> POSEE ICI, pas une sous-comp : dans une sous-comp
+# le `data-start="0"` de la video est relatif a la compo mais le runtime media le lit en ABSOLU
+# -> le b-roll s'affiche des 0 s et recouvre les autres sections. Comme le <video> visage, elle
+# n'a PAS class="clip" : sa fenetre vient de data-start/data-duration.
 rows, track = [], {"split": 2, "full": 3}
 for s in SEC:
     h = 920 if s["fmt"] == "split" else 1920
     ti = track[s["fmt"]]
+    if s.get("media"):
+        rows.append(
+            f'      <video id="{s["id"]}" class="media-{"split" if h == 920 else "full"}" '
+            f'src="assets/video/{s["media"]}" muted playsinline '
+            f'data-start="{s["start"]}" data-media-start="0" data-duration="{s["dur"]}" '
+            f'data-track-index="{ti}"></video>')
+        continue
     rows.append(
         f'      <div class="clip" data-composition-id="{s["id"]}" '
         f'data-composition-src="compositions/{s["id"]}.html" '
@@ -91,6 +102,9 @@ doc = f'''<!DOCTYPE html>
       .face-bottom {{ position: absolute; inset: 0; overflow: hidden; background: transparent; clip-path: inset(920px 0 0 0); }}
       .face-bottom video {{ position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover;
         transform-origin: 0 0; transform: {SPLIT_TRANSFORM}; }}
+      /* B-roll : pre-cadre a la zone par ffmpeg (fond flou compris) -> aucun recadrage ici. */
+      .media-full {{ position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; }}
+      .media-split {{ position: absolute; left: 0; top: 0; width: 1080px; height: 920px; object-fit: cover; }}
     </style>
   </head>
   <body>

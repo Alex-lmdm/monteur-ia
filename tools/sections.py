@@ -30,10 +30,19 @@ TAKES = CUTS["takes"]
 DURATION = CUTS["duration"]
 
 # >>> A REMPLIR A CHAQUE NOUVEAU REEL : la table des sections.
-#   (id, format, [index des prises couvertes])
+#   (id, format, [index des prises couvertes], {options})
 #     id     -> il DOIT exister un compositions/<id>.html du meme nom.
 #     split  -> panneau motion 1080x920 en HAUT + visage en BAS.
 #     full   -> motion 1080x1920 plein ecran, le visage est couvert.
+#
+#   {"media": "fichier.mp4"} -> la section n'est PAS une sous-composition : c'est une <video>
+#   posee directement dans le master (couche video NATIVE, compositee ensuite par ffmpeg).
+#   ⛔ NE JAMAIS mettre un b-roll dans une sous-composition : le `data-start="0"` de la <video>
+#   y est relatif a la compo, mais le runtime media le lit en ABSOLU -> la video s'affiche des
+#   0 s, sur toute la timeline, et RECOUVRE les autres sections. Symptome : « je vois une video
+#   figee au debut du reel, et mes autres sections sont noires ». En prime, passer un b-roll par
+#   le render HyperFrames le rasterise (perte de nettete) alors que ffmpeg le garde intact.
+#   Exemple :  ("s3-demo", "full", [3], {"media": "demo-broll-v1.mp4"}),
 #   Les index pointent dans TAKES (0-based) et doivent couvrir TOUTES les prises, dans l'ordre,
 #   sans trou ni chevauchement (les asserts plus bas le verifient).
 #
@@ -51,18 +60,24 @@ LAYOUT = [
 # NB : brand.config.json -> visual.captionsPosition decrit l'INTENTION ("split-jointure"),
 # pas une valeur en px. On garde donc ces constantes ; ajuste-les si ta marque cadre autrement.
 Y_SPLIT = 920    # pile a la jointure split (au ras du haut du visage)
-Y_FULL = 1500    # sous la fenetre plein ecran
+Y_FULL = 1500    # sous la fenetre plein ecran (motion / images)
+Y_MEDIA = 1100   # b-roll plein ecran : juste SOUS le milieu. A 1500 le sous-titre tombe sur le
+                 # bas de l'image (souvent la partie inutile : bureau, clavier, decor).
 
 
 def sections():
     out = []
-    for sid, fmt, idx in LAYOUT:
+    for entry in LAYOUT:
+        sid, fmt, idx = entry[0], entry[1], entry[2]
+        opts = entry[3] if len(entry) > 3 else {}
+        media = opts.get("media")
         start = TAKES[idx[0]]["start"]
         end = TAKES[idx[-1]]["end"]
-        out.append({"id": sid, "fmt": fmt, "takes": idx,
+        y = Y_SPLIT if fmt == "split" else (Y_MEDIA if media else Y_FULL)
+        out.append({"id": sid, "fmt": fmt, "takes": idx, "media": media,
                     "start": round(start, 3), "end": round(end, 3),
                     "dur": round(end - start, 3),
-                    "y": Y_SPLIT if fmt == "split" else Y_FULL})
+                    "y": y})
     assert out[0]["start"] == 0.0, "la 1re section doit demarrer a 0"
     assert abs(out[-1]["end"] - DURATION) < 0.01, "la derniere section doit finir a la fin du cut"
     for a, b in zip(out, out[1:]):

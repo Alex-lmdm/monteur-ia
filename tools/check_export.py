@@ -60,12 +60,21 @@ for s in sections.sections():
     a = frame(round(s["start"] + s["dur"] * 0.6, 2)).split()[3]
     m = lambda b: round(sum(a.crop(b).getdata()) / ((b[2] - b[0]) * (b[3] - b[1])))
     top, bot = m((0, 0, 1080, 920)), m((0, 920, 1080, 1920))
-    ok = (top == 255 and bot == 255) if s["fmt"] == "full" else bot < 40
+    if s.get("media"):
+        # Section MEDIA : le b-roll vit dans le master en couche video native et ne passe PAS
+        # par le calque -> le calque DOIT y etre vide. L'inverse serait le bug.
+        ok = top == 0 and bot == 0
+    elif s["fmt"] == "full":
+        ok = top == 255 and bot == 255
+    else:
+        ok = bot < 40
     ko += not ok
     print(f"   {s['id']:<16} haut={top:3} bas={bot:3}  {'OK' if ok else '!! KO (calque rogne / non opaque)'}")
 
 print("\nB) les timelines des sections tournent (elements a opacity:0 caches au debut d'un plein ecran)")
-fulls = [s for s in sections.sections() if s["fmt"] == "full"]
+# Les sections MEDIA n'ont aucune animation a verifier (leur 1er quart de seconde est deja
+# l'image, souvent claire) -> sans cette exclusion le test criait « JS MUET » sur chaque b-roll.
+fulls = [s for s in sections.sections() if s["fmt"] == "full" and not s.get("media")]
 if not fulls:
     print("   (aucune section 'full' dans LAYOUT — garde B sans objet pour ce Reel)")
 for s in fulls:

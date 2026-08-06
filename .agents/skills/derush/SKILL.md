@@ -69,6 +69,9 @@ et `[0:a:0]`. Si `derush.camera` n'est pas une caméra à double flux, ignorer.
 ```bash
 ffmpeg -i work/d_audio.wav -af silencedetect=noise=-32dB:d=0.3 -f null - 2>&1 | grep silence_
 ```
+⚠️ **JAMAIS `-v error` avec `silencedetect`** : ce filtre logue au niveau *info*, donc `-v error`
+renvoie **zéro ligne** et on conclut à tort « aucun silence détecté ». Même piège avec
+`volumedetect`. (`ffprobe -v error` reste correct : c'est `ffmpeg` + filtre de mesure qui pose problème.)
 → donne la liste `silence_start` / `silence_end`. Les **îlots de parole** = le complément
 (entre `silence_end[i]` et `silence_start[i+1]`). Chaque îlot = une prise candidate.
 

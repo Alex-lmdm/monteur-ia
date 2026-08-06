@@ -23,6 +23,11 @@ import html
 import pathlib
 import sys
 
+import difflib
+import json
+import re
+import unicodedata
+
 from PIL import ImageFont
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -59,27 +64,102 @@ assert len(MANUAL) == len(PHRASES), f"MANUAL={len(MANUAL)} != phrases={len(PHRAS
 SECTIONS = [(x['start'], x['y']) for x in SEC]
 BOUNDS = [s[0] for s in SECTIONS[1:]]
 
-# --- timing : interpole dans chaque phrase (proportionnel au nb de caracteres) ---
+# --- timing : sur les VRAIS MOTS si <video>_words.json existe, sinon approximation ---
+# Le prorata de caracteres DERIVE : les premiers chunks durent trop et tous les suivants
+# arrivent en retard. Lance `python3 tools/build_words.py` une fois : les sous-titres
+# demarrent alors PILE sur le mot qu'ils affichent.
+WORDS_PATH = sections.CUTS_PATH.with_name(
+    sections.CUTS_PATH.name.replace('_cuts.json', '_words.json'))
+WORDS = json.loads(WORDS_PATH.read_text(encoding='utf-8')) if WORDS_PATH.exists() else None
+if WORDS is None:
+    print(f"  ⚠ {WORDS_PATH.name} absent -> timing APPROXIMATIF (proportionnel au texte).")
+    print("    Lance `python3 tools/build_words.py` pour caler les sous-titres sur la voix.")
+
+
+def _norm(w):
+    """minuscules, sans accents ni ponctuation : les deux sources doivent matcher malgre les
+    variantes de Whisper (« 4 » / « quatre », « 100 % » / « 100% »)."""
+    w = unicodedata.normalize('NFD', w.lower())
+    w = ''.join(c for c in w if unicodedata.category(c) != 'Mn')
+    return re.sub(r'[^a-z0-9%]', '', w)
+
+
+def _align(words, chunks):
+    """start de chaque chunk = start de son 1er mot. difflib plutot qu'un compteur : robuste
+    quand Whisper decoupe autrement que le decoupage manuel."""
+    wnorm = [_norm(w['w']) for w in words]
+    cwords, owner = [], []
+    for k, c in enumerate(chunks):
+        for piece in c.split():
+            n = _norm(piece)
+            if n:
+                cwords.append(n)
+                owner.append(k)
+    first = {}
+    for i, j, size in difflib.SequenceMatcher(a=wnorm, b=cwords, autojunk=False).get_matching_blocks():
+        for d in range(size):
+            k = owner[j + d]
+            if k not in first:
+                first[k] = words[i + d]['start']
+    return first
+
+
 caps = []
 for pi, ph in enumerate(PHRASES):
     chunks = MANUAL[pi]
     t0, t1 = ph['start'], ph['end']
-    lens = [max(len(c), 1) for c in chunks]
-    tot = sum(lens); acc = 0
-    for c, L in zip(chunks, lens):
-        caps.append({'start': round(t0 + (acc / tot) * (t1 - t0), 3), 'text': c.upper()})
-        acc += L
 
-# 1) SNAP sur les frontieres de section (aucun sous-titre ne bave sur la section suivante)
+    starts = None
+    if WORDS:
+        wins = [w for w in WORDS if t0 - 1e-6 <= w['start'] < t1]
+        first = _align(wins, chunks)
+        if first:
+            starts = []
+            for k in range(len(chunks)):
+                if k in first:
+                    starts.append(max(t0, first[k]))
+                else:                       # mot introuvable : on interpole entre les voisins cales
+                    prev = starts[-1] if starts else t0
+                    nxt = next((first[j] for j in range(k + 1, len(chunks)) if j in first), t1)
+                    starts.append(prev + (nxt - prev) / 2)
+            for k in range(1, len(starts)):  # croissance stricte
+                starts[k] = max(starts[k], starts[k - 1] + 0.08)
+            starts = [min(t, t1 - 0.05) for t in starts]
+
+    if starts is None:                       # fallback : proportionnel au nb de caracteres
+        lens = [max(len(c), 1) for c in chunks]
+        tot = sum(lens); acc = 0
+        starts = []
+        for L in lens:
+            starts.append(t0 + (acc / tot) * (t1 - t0))
+            acc += L
+
+    for c, t in zip(chunks, starts):
+        caps.append({'start': round(t, 3), 'text': c.upper()})
+
+# 1) SNAP sur les frontieres de section : le sous-titre le plus proche demarre PILE dessus
 for B in BOUNDS:
     i = min(range(len(caps)), key=lambda k: abs(caps[k]['start'] - B))
     if abs(caps[i]['start'] - B) < 0.6:
         caps[i]['start'] = round(B, 3)
 caps.sort(key=lambda c: c['start'])
 
-# 2) fins recalculees (timing continu)
+# 2) fins recalculees (timing continu), BORNEES A LA FIN DE LA SECTION.
+#    Sans cette borne, le dernier sous-titre d'une section reste affiche sur la suivante :
+#    il « bave » une demi-seconde sur le plan d'apres (bug classique, tres visible au montage).
+SECTION_ENDS = [x['end'] for x in SEC]
+
+
+def _section_end(t):
+    for x in SEC:
+        if x['start'] - 1e-6 <= t < x['end']:
+            return x['end']
+    return DUR
+
+
 for j in range(len(caps)):
-    end = caps[j + 1]['start'] if j + 1 < len(caps) else DUR
+    nxt = caps[j + 1]['start'] if j + 1 < len(caps) else DUR
+    end = min(nxt, _section_end(caps[j]['start']))
     caps[j]['end'] = round(end, 3)
     caps[j]['dur'] = round(end - caps[j]['start'], 3)
 

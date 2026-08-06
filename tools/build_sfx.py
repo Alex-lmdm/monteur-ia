@@ -103,6 +103,27 @@ mixin.append("[music]")
 filters.append(f"{''.join(mixin)}amix=inputs={len(mixin)}:normalize=0:dropout_transition=0,"
                f"alimiter=limit=0.97[aout]")
 
+# --probe : ecrit la piste SFX+musique SEULE (sans la voix) en WAV 48 kHz, pour VERIFIER LE
+# PLACEMENT SANS ECOUTER. Comparer ensuite le pic de chaque evenement au pic de la musique de
+# fond (viser +4 dB minimum). Deux methodes qui MENTENT, a ne pas utiliser :
+#   - soustraire le MP4 final et le MP4 sans SFX : deux encodages AAC independants laissent
+#     l'erreur de quantification de la voix (~-6 dB), tres au-dessus des SFX -> inexploitable ;
+#   - mesurer en 16 kHz : coupe au-dessus de 8 kHz et sous-estime massivement risers et clics
+#     (qui vivent dans les aigus) -> on croit un SFX absent alors qu'il est bien la.
+if "--probe" in sys.argv:
+    probe_mix = [m for m in mixin if m != "[0:a]"]
+    probe_filters = filters[:-1] + [f"{''.join(probe_mix)}amix=inputs={len(probe_mix)}:"
+                                    f"normalize=0:dropout_transition=0[aout]"]
+    probe_out = ROOT / "renders/sfx-only.wav"
+    r = subprocess.run(["ffmpeg", "-y", "-v", "error"] + inputs +
+                       ["-filter_complex", ";".join(probe_filters), "-map", "[aout]",
+                        "-ar", "48000", "-ac", "1", str(probe_out)],
+                       capture_output=True, text=True)
+    print("probe exit:", r.returncode, "->", probe_out.relative_to(ROOT))
+    if r.returncode:
+        print(r.stderr[-1200:])
+    raise SystemExit(0 if r.returncode == 0 else 1)
+
 cmd = (["ffmpeg", "-y", "-v", "error"] + inputs +
        ["-filter_complex", ";".join(filters), "-map", "0:v", "-c:v", "copy",
         "-map", "[aout]", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(OUT)])

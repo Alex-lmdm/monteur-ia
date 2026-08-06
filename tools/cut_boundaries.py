@@ -50,6 +50,23 @@ ISLANDS = [
 
 # Pads appliques au derush (brand.config.json -> derush.padStart / padEnd).
 PAD_START, PAD_END = 0.04, 0.02
+
+# Si derush/build_derush.py existe, ses ISLANDS ecrasent la liste ci-dessus : UNE SEULE source
+# de verite. Recopier les prises a la main est le meilleur moyen de les desynchroniser (une
+# borne modifiee d'un cote, oubliee de l'autre -> les frontieres de section sont fausses).
+_BUILD = ROOT / "derush/build_derush.py"
+if _BUILD.exists():
+    import ast as _ast
+    _consts = {t.id: _ast.literal_eval(n.value)
+               for n in _ast.parse(_BUILD.read_text(encoding="utf-8")).body
+               if isinstance(n, _ast.Assign)
+               for t in n.targets if isinstance(t, _ast.Name)
+               and t.id in ("ISLANDS", "PAD_START", "PAD_END")}
+    if "ISLANDS" in _consts:
+        ISLANDS = _consts["ISLANDS"]
+        PAD_START = _consts.get("PAD_START", PAD_START)
+        PAD_END = _consts.get("PAD_END", PAD_END)
+        print(f"prises lues depuis {_BUILD.relative_to(ROOT)} ({len(ISLANDS)} prises)")
 TOL = 0.35   # fenetre de rapprochement theorique <-> detecte
 
 if not CUT.exists():

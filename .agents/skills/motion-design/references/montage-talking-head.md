@@ -53,6 +53,56 @@ structure, pas le calque rendu). Lancer **`python3 tools/check_export.py`** sur 
 il vérifie (A) l'opacité du calque section par section et (B) que les timelines tournent vraiment
 (un élément posé à `opacity:0` par GSAP doit être invisible au début de sa section).
 
+## 0ter. Les 5 pièges SILENCIEUX de la composition par couches
+
+> Aucun n'est détecté par le lint, et certains ne se voient QUE dans le studio (le rendu final,
+> lui, peut être correct). Réflexe : **lire la console du navigateur AVANT de deviner** — elle
+> nomme le problème en quelques secondes.
+
+**a) Un B-ROLL ne va JAMAIS dans une sous-composition.**
+Dans une sous-comp, le `data-start="0"` d'une `<video>` est relatif à la compo, mais le
+**runtime média le lit en ABSOLU** → la vidéo s'affiche **dès 0 s**, sur toute la timeline, et
+**recouvre les autres sections**. Symptôme : « une vidéo figée au début du reel, et mes autres
+sections sont noires ».
+→ Le b-roll est une `<video>` **dans le master**, sans `class="clip"` (comme le `<video>` visage),
+avec des `data-start` **absolus**. Déclare-le dans `tools/sections.py` :
+`("s3-demo", "full", [3], {"media": "demo-broll-v1.mp4"})`. Bonus : il reste en couche native et
+c'est ffmpeg qui le composite, au lieu du render HyperFrames qui le rasteriserait.
+
+**b) Les `<script src>` d'une sous-comp NE SONT PAS chargés en composition par couches.**
+Une lib tierce (three.js, un plugin GSAP) référencée dans une sous-comp reste `undefined` quand
+le master monte les couches → le panneau sort **vide**. → La charger dans le **`<head>` du master**.
+La garder aussi dans la sous-comp si tu veux pouvoir la snapshoter isolément.
+
+**c) `tl.seek()` SUPPRIME les callbacks GSAP.**
+Le studio déplace la tête de lecture avec `seek()` → un `onUpdate` qui redessine un canvas
+(2D ou WebGL) **n'est jamais appelé en preview**, alors qu'il l'est au render. Panneau vide dans
+le studio, correct dans l'export.
+→ Doubler l'`onUpdate` d'un `gsap.ticker.add()` qui redessine quand `tl.time()` a changé. Sans
+risque **si et seulement si** la fonction de dessin est **analytique** (l'image ne dépend que de `t`).
+
+**d) `tl.to([sel1, sel2], …)` n'est PAS résolu dans une sous-comp.**
+Un tween visant plusieurs sélecteurs d'un coup est **silencieusement ignoré** (console :
+`GSAP target … not found`) : l'élément qui devait disparaître reste à l'écran, la couleur qui
+devait changer ne change pas.
+→ **UN SEUL sélecteur (chaîne) par tween.** Répéter l'appel autant de fois que nécessaire.
+
+**e) Un `<script type="application/json">` d'une sous-comp n'est pas monté.**
+`getElementById(...).textContent` → `null`. → Mettre les données en **littéral JS** dans le script.
+
+**Bonus canvas / WebGL** : `new THREE.WebGLRenderer({ …, preserveDrawingBuffer: true })` est
+**obligatoire**, sinon le buffer est vidé avant que le capteur de frames lise le canvas →
+**snapshot et render tout noirs**. Et fixer `setPixelRatio(2)` en dur (jamais
+`window.devicePixelRatio`, qui varie d'une machine à l'autre et casse le déterminisme).
+
+**Bonus lint** : pas de commentaire HTML entre deux `<script src>` du `<head>` — le lint le parse
+comme du script inline (`invalid_inline_script_syntax`).
+
+**Bonus snapshot** : `hyperframes snapshot` prend un **DOSSIER**, pas un fichier. Pour snapshoter
+une sous-comp isolée : un dossier `probe/` avec `index.html` = copie de la compo **+ symlinks
+`probe/assets` et `probe/lmdm`** (sans eux les `../assets` partent en 404), puis **supprimer
+`probe/`** (deux compositions racines = erreur de lint).
+
 ## 1. La règle de format (le défaut vient de la config)
 
 Le cadrage de départ vient de `brand.config.json` → `montage.defaultLayout`. Deux valeurs :
