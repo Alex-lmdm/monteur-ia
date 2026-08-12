@@ -30,11 +30,12 @@ prêt (« appuie sur Entrée pour garder le réglage recommandé »).
    `/setup <bloc>` refait un bloc isolé : `a`/`identite`, `b`/`voix`, `c`/`funnel`, `d`/`visuel`,
    `e`/`derush`, `f`/`technique`.
 
-   ⛔ **Le bloc D (Visuel) est le seul BLOQUANT.** Tant qu'il n'est pas fait
-   (`setup.styleChosen` ≠ `true`), le monteur refuse de monter une vidéo : il sortirait le style
-   d'usine « neutre », identique pour tout le monde. Si l'utilisateur arrive en disant « monte ma
-   vidéo » sans avoir fait le setup, **fais le bloc D seul** (2 minutes, 3 questions), puis monte.
-   Les 5 autres blocs restent optionnels et se font quand il veut.
+   🎨 **Le bloc D (Visuel) passe TOUJOURS en premier**, quel que soit l'ordre habituel. C'est le
+   seul réglage qu'on ne peut pas deviner : le style de départ « Papier » (noir & blanc) rend bien,
+   mais ne contient aucune couleur à lui. Si l'utilisateur arrive en disant « monte ma vidéo » sans
+   setup, **propose le bloc D** (2 minutes, 3 questions) — et **s'il préfère voir d'abord, monte en
+   Papier sans insister**, puis repropose une fois la vidéo livrée. Les 5 autres blocs restent
+   optionnels et se font quand il veut.
 
 2. **`brand.config.json` = source de vérité unique.** Au démarrage : lire `brand.config.json` à la
    racine. **S'il n'existe pas**, le créer en copiant `brand.config.example.json` (défauts
@@ -99,10 +100,10 @@ validations) est dans **`references/questions.md`** — le lire avant d'animer u
 1. Lire `brand.config.json` (ou le créer depuis `brand.config.example.json`).
 2. Regarder `setup.completedBlocks` et **`setup.styleChosen`**.
 3. **Si un bloc précis est demandé** (`/setup voix`) → aller droit à ce bloc.
-4. **Si `setup.styleChosen` est `false` → faire le bloc D EN PREMIER**, quel que soit l'ordre
-   habituel. C'est le seul bloquant : tant qu'il n'est pas fait, aucune vidéo ne peut être montée.
-   Annoncer franchement : « on commence par tes couleurs et tes sous-titres, 2 minutes — après tu
-   peux monter, et on fera le reste quand tu veux ».
+4. **Si `setup.styleChosen` est `false` → proposer le bloc D EN PREMIER**, quel que soit l'ordre
+   habituel. Annoncer franchement : « on commence par tes couleurs et tes sous-titres, 2 minutes —
+   après tu peux monter, et on fera le reste quand tu veux ». S'il préfère voir d'abord une vidéo
+   sortir, **c'est OK** : le style de départ « Papier » tient la route, on repropose après.
 5. **Sinon** → annoncer l'état et proposer le prochain bloc non fait. Un petit mot d'accueil au tout
    premier lancement : présenter l'Empreinte en 2 phrases (ton monteur apprend ta voix, tes couleurs, ton cadrage : tu la déposes une fois, chaque vidéo la porte), dire
    que ça prend ~15 min et qu'on peut s'arrêter entre deux blocs (tout est sauvegardé).
@@ -188,15 +189,21 @@ encore ces marqueurs, les insérer après l'intro, en montrant l'emplacement à 
 
 ---
 
-## Bloc D — Visuel `visual.*`  ⛔ LE SEUL BLOC BLOQUANT
+## Bloc D — Visuel `visual.*`  🎨 LE PREMIER BLOC, TOUJOURS
 
 **Écrit :** `visual.*`, `setup.styleChosen`, puis `node scripts/sync.mjs` régénère
 `brand/tokens.css` + `brand/fonts.css`.
 
-> **Pourquoi celui-là bloque, et pas les autres.** Le fond, l'accent et la police de sous-titres
-> sont ce qui rend un compte reconnaissable en une seconde. Sans choix, tout le monde sort le
-> même style d'usine. Dis-le simplement : « c'est le seul réglage que je ne peux pas deviner à ta
-> place ».
+> **Pourquoi celui-là passe en premier.** Le fond, l'accent et la police de sous-titres sont ce qui
+> rend un compte reconnaissable en une seconde. Dis-le simplement : « c'est le seul réglage que je
+> ne peux pas deviner à ta place ».
+
+> **Et s'il ne sait pas encore ?** C'est fréquent, et c'est légitime. Le style de départ
+> « Papier » (noir & blanc, sans couleur) est propre et utilisable tel quel : **propose de monter
+> d'abord, de voir le rendu, et de choisir après**. Ne force jamais un choix esthétique à quelqu'un
+> qui n'a pas encore vu une seule de ses vidéos sortir — il choisira mal, et changera de toute
+> façon. Redis-lui que **rien n'est définitif** : `/setup visuel` se relance à tout moment, tout le
+> système suit, aucune vidéo déjà montée n'est cassée.
 
 **Format : 3 questions, 2 minutes.** Pas d'inventaire de nuancier, pas de cours de design.
 Le questionnaire détaillé (formulations exactes, validations) est dans `references/questions.md`.
@@ -207,9 +214,14 @@ Lire `templates/style-presets.json` et **présenter les presets par leur `label`
 sans jargon, en disant clairement que c'est un **point de départ modifiable**, pas un moule.
 
 > « J'ai 5 styles prêts. Tu en prends un, et on ajuste ce que tu veux après. Ou tu me donnes tes
-> propres couleurs si tu les as déjà. »
+> propres couleurs si tu les as déjà. Et si tu ne sais pas encore, on garde le noir & blanc, tu
+> montes une vidéo, et tu choisis en voyant le résultat. »
 
-- Ne PAS lister le preset `neutral` comme une option : c'est l'état « non choisi ».
+- **Toujours offrir la 3e porte** (« je ne sais pas encore ») : laisser `visual.stylePreset` à
+  `null`, ne PAS mettre `styleChosen` à `true`, monter en Papier, et reproposer après la vidéo.
+  Un choix forcé avant d'avoir vu un rendu est un choix qui sera refait.
+- Ne PAS présenter `neutral` comme un style parmi les autres : c'est le point de départ, il est
+  déjà actif.
 - **S'il a déjà une identité** (site, logo, chaîne existante) → prendre SES couleurs directement,
   c'est toujours mieux qu'un preset. Écrire `visual.bg` / `visual.accent` / `visual.surface`.
 - Écrire `visual.stylePreset` = l'`id` choisi. Les valeurs du preset s'appliquent, et **toute clé

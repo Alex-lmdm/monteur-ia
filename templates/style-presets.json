@@ -28,19 +28,19 @@
   "presets": [
     {
       "id": "neutral",
-      "label": "Neutre (non choisi)",
-      "description": "Gris sombre, accent gris clair. Volontairement sans caractère : c'est l'état AVANT que tu aies choisi ton style. Si tes vidéos sortent comme ça, c'est que le bloc D n'a pas été fait.",
+      "label": "Papier (le style de départ)",
+      "description": "Fond blanc cassé, texte noir, aucune couleur. Propre, éditorial, ça marche tout de suite — mais c'est un point de départ, pas une identité : il n'y a aucune couleur à toi dedans. Le jour où tu poses la tienne, tout le système la reprend.",
       "isUnset": true,
       "visual": {
-        "bg": "#17171a",
-        "surface": "#232327",
-        "text": "#ffffff",
-        "muted": "#a1a1aa",
-        "accent": "#d4d4d8",
-        "fontDisplay": "Inter",
+        "bg": "#f7f7f5",
+        "surface": "#e8e8e4",
+        "text": "#131313",
+        "muted": "#6e6e68",
+        "accent": "#131313",
+        "fontDisplay": "Anton",
         "fontBody": "Inter",
         "fontCaptions": "Inter",
-        "captionsSkin": "plate",
+        "captionsSkin": "block",
         "captionsPosition": "split-jointure",
         "captionsLines": 1
       },

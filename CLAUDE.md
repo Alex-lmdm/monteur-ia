@@ -12,8 +12,8 @@ Ce projet sert **un seul format** : les Reels Instagram de {{FIRST_NAME}} ({{BRA
 **vraie vidéo talking-head + motion design {{BRAND_NAME}} par-dessus, section par section**, avec
 sous-titres, SFX et musique. Format **vertical 1080×1920, 30 fps**.
 
-> 🎨 **Style visuel actif : AUCUN — style non choisi** — fond `#17171a`, accent `#d4d4d8`,
-> sous-titres Inter, skin « plate », cadrage par défaut `split`.
+> 🎨 **Style visuel actif : Papier (le style de départ) — PAS ENCORE PERSONNALISÉ** — fond `#f7f7f5`, accent `#131313`,
+> sous-titres Inter, skin « block », cadrage par défaut `split`.
 > Ces valeurs viennent de `brand.config.json` et vivent dans `brand/tokens.css` (généré).
 > **Ne jamais écrire une couleur, une police ou une taille de sous-titre en dur dans une compo** :
 > toujours `var(--brand-*)`. Un hex en dur survit au changement de style et casse la cohérence.
@@ -30,29 +30,39 @@ sous-titres, SFX et musique. Format **vertical 1080×1920, 30 fps**.
 **La méthode fonctionne dès l'installation** (écriture de script, dérush, montage, légende, DM).
 `/setup` ne débloque pas la méthode : il pose **l'identité** par-dessus.
 
-### ⛔ Le style visuel est le SEUL réglage bloquant
+### 🎨 Le style visuel : la question à poser AVANT le premier montage
 
-**Si `setup.styleChosen` est `false` (ou `brand.config.json` absent), tu ne montes RIEN avant
-d'avoir fait choisir le style.** Ce n'est pas une préférence de confort : sans ce choix, la vidéo
-sort dans le style d'usine « neutre » — et toutes les vidéos de tous les utilisateurs se
-ressemblent. **Une identité visuelle par défaut, ce n'est plus une identité.**
+**Si `setup.styleChosen` est `false` (ou `brand.config.json` absent), pose la question avant de
+monter — mais n'impose rien.** Le style de départ (« Papier » : noir & blanc, sans couleur) rend
+très bien tel quel : {{FIRST_NAME}} peut parfaitement monter sa première vidéo avec, pour voir
+tourner le système. Ce qu'il ne doit pas faire, c'est **le garder sans le savoir** — c'est un point
+de départ, il ne contient aucune couleur à lui.
 
-Ce que tu fais, exactement, quand {{FIRST_NAME}} demande un montage sans style choisi :
+Ce que tu dis, exactement, au premier montage :
 
-> « Avant de monter, il me faut 3 réponses — 2 minutes, une seule fois. Après, je ne te les
-> redemande plus jamais. »
+> « Avant de partir : je peux te monter ça en noir & blanc, le style de départ, c'est propre et
+> ça marche direct. Ou on pose tes couleurs d'abord — 3 questions, 2 minutes, une seule fois.
+> Tu préfères quoi ? »
 
-Puis tu lances **`/setup visuel`** (le bloc D seul, 3 questions : style, accent, sous-titres).
-Tu montes dès que c'est fait. **N'invente jamais des couleurs « en attendant ».**
+- **Il choisit maintenant** → `/setup visuel` (bloc D), puis tu montes.
+- **Il dit "plus tard" / "je sais pas encore" / "montre-moi d'abord"** → **tu montes**, en style
+  Papier, sans insister. Et **une fois la vidéo livrée**, tu reproposes une fois :
+  « Maintenant que tu vois le rendu, on met tes couleurs ? `/setup visuel`. »
+- **Il a déjà une identité** (site, logo, chaîne) → prends SES couleurs, ne propose pas de preset.
 
-Le reste du setup (voix, funnel, dérush, cadrage) reste **optionnel et non bloquant** : si
-{{FIRST_NAME}} veut monter tout de suite après le bloc D, tu montes, et tu proposes la suite après.
+⛔ **N'invente jamais une couleur ni une police « en attendant ».** Le style de départ existe pour
+ça : s'il n'a pas choisi, tu utilises le style Papier tel quel, tu n'improvises pas un jaune ou un
+bleu de ton cru. Une couleur inventée devient sa marque par accident.
+
+Le reste du setup (voix, funnel, dérush, cadrage) est **optionnel** et se fait quand il veut.
 
 - Les valeurs personnalisées (dérush, audio, visuel, CTA…) vivent dans **`brand.config.json`** :
   c'est la source de vérité des réglages. Tant qu'un réglage n'est pas personnalisé, on utilise le
   défaut recommandé (éprouvé en production), jamais une valeur inventée.
-- **Signal d'alerte à vérifier avant chaque montage** : si `brand.config.json` est absent, ou si
-  `visual.stylePreset` vaut `neutral`, dis-le clairement plutôt que de monter en silence.
+- **Changer de style plus tard ne casse rien** : `/setup visuel` réécrit `brand.config.json`,
+  `npm run sync` régénère le design system, et les compos suivent automatiquement (elles ne
+  contiennent que des `var(--brand-*)`). Le dire à {{FIRST_NAME}} s'il hésite : **rien n'est
+  définitif**.
 
 ---
 

@@ -7,7 +7,8 @@
  *
  * Aucune identité visuelle n'est versionnée : tokens.css et fonts.css sont GÉNÉRÉS.
  * Tant que le style n'est pas choisi (`/setup visuel`), on retombe sur le preset
- * `neutral` — volontairement fade, pour que « je n'ai rien choisi » se voie.
+ * `neutral` (« Papier ») : noir & blanc, propre, utilisable tel quel — mais sans
+ * aucune couleur de marque, donc sans identité empruntée à qui que ce soit.
  *
  * Node pur, zéro dépendance, cross-platform.
  */
@@ -175,7 +176,7 @@ function generateTokensCss(style, presetsFile) {
   const v = style.visual;
   const caption = buildCaptionCss(v.captionsSkin);
   const map = {
-    STYLE_PRESET_ID: style.chosen ? style.preset.id : `${style.preset.id} (AUCUN STYLE CHOISI — lance /setup visuel)`,
+    STYLE_PRESET_ID: style.chosen ? style.preset.id : `${style.preset.id} — style de départ, pas encore personnalisé (/setup visuel)`,
     VISUAL_BG: v.bg,
     VISUAL_SURFACE: v.surface,
     VISUAL_SURFACE_CONTRAST: v.surfaceContrast,
@@ -268,7 +269,7 @@ function buildPlaceholderMap(config, style) {
     MUSIC_FILE: audio.musicFile ?? "(aucune — à fournir)",
     MUSIC_DB: audio.musicDb,
     CAMERA: derush.camera,
-    STYLE_PRESET: style.chosen ? style.preset.label : "AUCUN — style non choisi",
+    STYLE_PRESET: style.chosen ? style.preset.label : `${style.preset.label} — PAS ENCORE PERSONNALISÉ`,
     STYLE_ACCENT: style.visual.accent,
     STYLE_BG: style.visual.bg,
     STYLE_CAPTIONS: `${style.visual.fontCaptions}, skin « ${style.visual.captionsSkin} »`,
@@ -489,13 +490,13 @@ function main() {
   if (!style.chosen) {
     log("✅ Sync terminé.\n");
     log("┌──────────────────────────────────────────────────────────────────────┐");
-    log("│  ⚠️  AUCUN STYLE VISUEL CHOISI                                        │");
+    log("│  🎨  Style de départ : « Papier » — noir & blanc, sans couleur.       │");
     log("│                                                                      │");
-    log("│  Tes vidéos sortiront dans le style « neutre » : gris, sans accent,   │");
-    log("│  sans caractère. C'est fait exprès — c'est un réglage d'usine, pas    │");
-    log("│  une identité.                                                       │");
+    log("│  Il rend bien tel quel, tu peux monter tout de suite. Mais il ne      │");
+    log("│  contient aucune couleur à toi : deux comptes qui le gardent se       │");
+    log("│  ressemblent.                                                        │");
     log("│                                                                      │");
-    log("│      Lance  /setup visuel  (2 minutes) pour choisir le tien.          │");
+    log("│      /setup visuel  (2 min) — 5 styles au choix, ou tes couleurs.     │");
     log("└──────────────────────────────────────────────────────────────────────┘");
     return;
   }

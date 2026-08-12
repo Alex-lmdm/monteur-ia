@@ -150,6 +150,9 @@
   transform: translate(-50%, -50%);
   font-family: var(--brand-font-captions);
   font-size: var(--brand-cap-size);
+  /* Graisse maximale : règle de lisibilité en short-form (écran petit, lecture en 1 s),
+     pas un choix d'identité. Sans effet sur une police à graisse unique (Anton…). */
+  font-weight: 900;
   line-height: 1.35;
   white-space: nowrap;
   text-transform: uppercase;
