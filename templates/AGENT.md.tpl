@@ -12,6 +12,12 @@ Ce projet sert **un seul format** : les Reels Instagram de {{FIRST_NAME}} ({{BRA
 **vraie vidéo talking-head + motion design {{BRAND_NAME}} par-dessus, section par section**, avec
 sous-titres, SFX et musique. Format **vertical 1080×1920, 30 fps**.
 
+> 🎨 **Style visuel actif : {{STYLE_PRESET}}** — fond `{{STYLE_BG}}`, accent `{{STYLE_ACCENT}}`,
+> sous-titres {{STYLE_CAPTIONS}}, cadrage par défaut `{{STYLE_LAYOUT}}`.
+> Ces valeurs viennent de `brand.config.json` et vivent dans `brand/tokens.css` (généré).
+> **Ne jamais écrire une couleur, une police ou une taille de sous-titre en dur dans une compo** :
+> toujours `var(--brand-*)`. Un hex en dur survit au changement de style et casse la cohérence.
+
 > ⚠️ **À FAIRE AVANT TOUTE TÂCHE DE MONTAGE.** Ce fichier est le seul toujours chargé.
 > Il ne remplace pas les skills : il **aiguille** vers eux et rappelle les règles qu'on oublie.
 > Pour chaque étape : **charge le skill de l'étape et relis sa checklist AVANT d'écrire une seule
@@ -19,20 +25,44 @@ sous-titres, SFX et musique. Format **vertical 1080×1920, 30 fps**.
 
 ---
 
-## 🟢 Étape 0 — Setup (recommandé, pas bloquant)
+## 🟢 Étape 0 — Setup
 
-**Le système fonctionne dès l'installation.** Les skills embarquent déjà la méthode complète (écriture
-de script, dérush, montage, légende, DM) : tu peux monter une vidéo tout de suite, sans rien
-configurer. `/setup` ne débloque rien — il **personnalise** (ta voix, tes couleurs, ton funnel, ton
-cadrage) pour que le rendu te ressemble au lieu de rester générique.
+**La méthode fonctionne dès l'installation** (écriture de script, dérush, montage, légende, DM).
+`/setup` ne débloque pas la méthode : il pose **l'identité** par-dessus.
 
-- Si **`brand.config.json` n'existe pas**, ou si **`setup.completedBlocks` est incomplet**, tu peux
-  **proposer `/setup`** pour personnaliser — mais **ne bloque jamais un montage** pour ça. Si
-  {{FIRST_NAME}} veut monter direct, tu montes direct (la méthode par défaut suffit), et tu proposes
-  le setup après coup.
+### 🎨 Le style visuel : la question à poser AVANT le premier montage
+
+**Si `setup.styleChosen` est `false` (ou `brand.config.json` absent), pose la question avant de
+monter — mais n'impose rien.** Le style de départ (« Papier » : noir & blanc, sans couleur) rend
+très bien tel quel : {{FIRST_NAME}} peut parfaitement monter sa première vidéo avec, pour voir
+tourner le système. Ce qu'il ne doit pas faire, c'est **le garder sans le savoir** — c'est un point
+de départ, il ne contient aucune couleur à lui.
+
+Ce que tu dis, exactement, au premier montage :
+
+> « Avant de partir : je peux te monter ça en noir & blanc, le style de départ, c'est propre et
+> ça marche direct. Ou on pose tes couleurs d'abord — 3 questions, 2 minutes, une seule fois.
+> Tu préfères quoi ? »
+
+- **Il choisit maintenant** → `/setup visuel` (bloc D), puis tu montes.
+- **Il dit "plus tard" / "je sais pas encore" / "montre-moi d'abord"** → **tu montes**, en style
+  Papier, sans insister. Et **une fois la vidéo livrée**, tu reproposes une fois :
+  « Maintenant que tu vois le rendu, on met tes couleurs ? `/setup visuel`. »
+- **Il a déjà une identité** (site, logo, chaîne) → prends SES couleurs, ne propose pas de preset.
+
+⛔ **N'invente jamais une couleur ni une police « en attendant ».** Le style de départ existe pour
+ça : s'il n'a pas choisi, tu utilises le style Papier tel quel, tu n'improvises pas un jaune ou un
+bleu de ton cru. Une couleur inventée devient sa marque par accident.
+
+Le reste du setup (voix, funnel, dérush, cadrage) est **optionnel** et se fait quand il veut.
+
 - Les valeurs personnalisées (dérush, audio, visuel, CTA…) vivent dans **`brand.config.json`** :
   c'est la source de vérité des réglages. Tant qu'un réglage n'est pas personnalisé, on utilise le
   défaut recommandé (éprouvé en production), jamais une valeur inventée.
+- **Changer de style plus tard ne casse rien** : `/setup visuel` réécrit `brand.config.json`,
+  `npm run sync` régénère le design system, et les compos suivent automatiquement (elles ne
+  contiennent que des `var(--brand-*)`). Le dire à {{FIRST_NAME}} s'il hésite : **rien n'est
+  définitif**.
 
 ---
 

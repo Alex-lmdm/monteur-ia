@@ -3,10 +3,29 @@
 > Lu quand des sous-titres sont à produire. Le découpage se décide **par unité grammaticale**, pas par
 > largeur : lire ce fichier AVANT d'écrire le moindre chunk.
 
-Police = `brand.config.json` → `visual.fontCaptions` (défaut **Bowlby One SC**, Google Font ; vendre en
-local `assets/fonts/`). Style : **texte noir**, **fond accent `var(--brand-yellow)` plein** (opacité
-100%, **pas d'arrondi**), padding léger (`8px 20px`), **une seule ligne** (`visual.captionsLines`,
-défaut 1), `font-size:50px` (UPPERCASE small-caps).
+## Apparence : ne rien décider, tout hériter
+
+**Tu n'écris JAMAIS le style d'un sous-titre.** Police, couleurs, fond, contour, arrondi : tout est
+déjà résolu dans `brand/tokens.css` (généré depuis `brand.config.json` + le preset de style). Une
+compo de sous-titres charge `brand/fonts.css` + `brand/tokens.css`, pose `class="cap"`, et c'est
+tout.
+
+- Police : `visual.fontCaptions` · Apparence : `visual.captionsSkin`, parmi **5 skins** —
+  `block` (fond plein dans l'accent), `outline` (contour, sans fond), `plate` (plaque arrondie),
+  `shadow` (ombre portée), `underline` (souligné). Description de chacun dans `captionSkins` de
+  `templates/style-presets.json`.
+- Nombre de lignes : `visual.captionsLines` (défaut 1) · Taille : `--brand-cap-size` (50 px).
+- Pour **essayer** un autre skin sur une seule compo : ajouter `cap-skin-<nom>` à un `.cap`.
+  Pour **changer le défaut** de toutes les vidéos : `/setup visuel`, jamais une règle CSS en dur.
+
+⛔ **Un `background`, une `color` ou un `font-family` écrit en dur dans une compo de sous-titres est
+un bug**, pas un raccourci : il survit au changement de style et fait sortir la vidéo suivante avec
+l'apparence de la précédente. Si le créateur veut modifier l'allure de ses sous-titres, la réponse
+est `/setup visuel` ou un nouveau skin, jamais un patch local.
+
+---
+
+## Découpage (c'est ça, la méthode — et elle, elle est commune)
 
 **Découpage — RÈGLES DÉTERMINISTES** (depuis `transcript.json`, mesurer la largeur avec
 `PIL.ImageFont.truetype` sur le vrai TTF pour garantir 1 ligne ; corriger les mots propres à ta niche
@@ -109,10 +128,10 @@ un `id="cap-N"` à chaque (sinon warning `studio_missing_editable_id` + non édi
   (bureau, clavier, décor). Géré par `Y_MEDIA` dans `tools/sections.py`.
 
 **Implémentation** : compo dédiée `compositions/captions.html` (fond transparent, un
-`<div class="cap clip" id="cap-N">` par sous-titre, `position:absolute; left:50%;
-transform:translate(-50%,-50%); top:Ypx`). Branchée 2 fois :
-- dans le master `index.html` comme overlay (track-index élevé) **+ `@font-face` de `visual.fontCaptions`
-  dans le head du master** → visible/éditable dans le studio ;
+`<div class="cap clip" id="cap-N">` par sous-titre, positionné par `top:Ypx` — le reste du
+positionnement vient de `.cap` dans `tokens.css`). Branchée 2 fois :
+- dans le master `index.html` comme overlay (track-index élevé) **+ `brand/fonts.css` et
+  `brand/tokens.css` dans le head du master** → visible/éditable dans le studio ;
 - rendue en overlay transparent `hyperframes render -c compositions/captions.html --format mov -o
   renders/captions.mov`, puis compositée en ffmpeg par-dessus `FINAL.mp4` :
   `ffmpeg -i FINAL.mp4 -i captions.mov -filter_complex "[0:v][1:v]overlay[v]" -map "[v]" -map 0:a ... renders/FINAL_CAP.mp4`.

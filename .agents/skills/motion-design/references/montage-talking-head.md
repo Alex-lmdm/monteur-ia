@@ -99,15 +99,16 @@ devait changer ne change pas.
 comme du script inline (`invalid_inline_script_syntax`).
 
 **Bonus snapshot** : `hyperframes snapshot` prend un **DOSSIER**, pas un fichier. Pour snapshoter
-une sous-comp isolée : un dossier `probe/` avec `index.html` = copie de la compo **+ symlinks
-`probe/assets` et `probe/lmdm`** (sans eux les `../assets` partent en 404), puis **supprimer
+une sous-comp isolée : un dossier `probe/` avec `index.html` = copie de la compo **+ un symlink
+`probe/assets` et un symlink `probe/brand`** (sans eux les `../assets` et `../brand` partent en 404), puis **supprimer
 `probe/`** (deux compositions racines = erreur de lint).
 
 ## 1. La règle de format (le défaut vient de la config)
 
-Le cadrage de départ vient de `brand.config.json` → `montage.defaultLayout`. Deux valeurs :
+Le cadrage de départ vient de `brand.config.json` → `montage.defaultLayout` (posé par le preset
+de style, ajustable au bloc F du setup). Deux valeurs :
 
-- **`"split"`** (valeur par défaut du config) : chaque section démarre en **split-screen** —
+- **`"split"`** : chaque section démarre en **split-screen** —
   motion design en HAUT (**1080×920**), **visage en BAS**. Le cadrage du visage = `montage.splitTransform`.
 - **`"faceplein"`** : chaque section démarre **visage en plein écran** (**1080×1920**, `.face-full`,
   cadrage = `montage.fullFaceTransform`), et le motion/les visuels se posent **PAR-DESSUS** le visage
@@ -127,7 +128,7 @@ Formats techniques de section : `1080×920` (split) ou `1080×1920` (full). On c
 - 1080×1920, `data-duration` = durée vidéo. **Charger `brand/fonts.css` + `brand/tokens.css` dans le
   `<head>` du master** — SINON les `var(--brand-*)` et les polices des sous-comps **ne se résolvent
   pas** dans la composition par couches (→ couleurs noires au lieu de l'accent, police par défaut).
-  Diag : une couleur en dur `#ffee00` marche mais `var(--brand-yellow)` non.
+  Diag : une couleur en dur (le temps du test) s'affiche, mais `var(--brand-accent)` non.
 - `<audio src="assets/video/base.mp4" data-volume="1" data-start="0" data-duration="DUREE" data-track-index="9">` = voix off (toute la durée).
 - Sections via `data-composition-src` avec **style explicite `width/height/overflow`** (sinon la
   sous-compo se rend en plein écran et recouvre tout). Split → host `1080×920` `top:0` ; full → host
@@ -158,7 +159,11 @@ la caméra et la distance de tournage). Les valeurs ci-dessous sont un **exemple
 type DJI Osmo Pocket 3, cadrage habituel) — reprendre la STRUCTURE, remplacer les nombres par ceux de
 la config.
 
-**Pattern par défaut — reprendre TEL QUEL (nombres = `montage.splitTransform`) :**
+**Reprendre la STRUCTURE telle quelle — mais JAMAIS les nombres.** Les valeurs de `transform`
+ci-dessous décrivent une caméra et une distance de tournage précises : recopiées sans calibration,
+elles donnent le cadrage de quelqu'un d'autre. Elles se lisent dans `montage.splitTransform` /
+`montage.fullFaceTransform`, calibrés par `/setup technique`.
+
 ```css
 /* Wrapper plein cadre, clippé à la moitié basse (clip en espace écran, wrapper non transformé) */
 .face-bottom { position:absolute; inset:0; overflow:hidden; background:transparent; clip-path: inset(920px 0 0 0); }

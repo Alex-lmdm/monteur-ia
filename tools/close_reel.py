@@ -50,13 +50,13 @@ SKELETON = """<!DOCTYPE html>
     <link rel="stylesheet" href="brand/tokens.css">
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #202022; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--brand-bg); }
     </style>
   </head>
   <body>
     <!-- MASTER SQUELETTE (reel précédent clôturé) — régénéré par tools/build_master.py au prochain reel. -->
     <div id="root" data-composition-id="main" data-start="0" data-duration="10" data-fps="30" data-width="1080" data-height="1920">
-      <div id="bgbase" class="clip" data-start="0" data-duration="10" data-track-index="0" style="position:absolute; inset:0; background:#202022;"></div>
+      <div id="bgbase" class="clip" data-start="0" data-duration="10" data-track-index="0" style="position:absolute; inset:0; background:var(--brand-bg);"></div>
     </div>
     <script>
       window.__timelines = window.__timelines || {};

@@ -4,6 +4,12 @@
 # Personnalisation locale (générée par /setup — propre à chaque utilisateur)
 brand.config.json
 
+# Design system GÉNÉRÉ depuis templates/*.tpl + brand.config.json (npm run sync).
+# Versionner ces fichiers reviendrait à livrer l'identité visuelle de quelqu'un d'autre
+# comme réglage d'usine : c'est exactement ce qu'on ne veut pas.
+brand/tokens.css
+brand/fonts.css
+
 # Exports finaux (régénérés par ffmpeg depuis les compositions)
 renders/*
 !renders/.gitkeep

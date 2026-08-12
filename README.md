@@ -47,7 +47,7 @@ L'IA détecte ton système, installe ce qui manque, et vérifie que tout marche.
 
 Tu n'as jamais installé Claude Code ou Codex ? INSTALL.md t'explique aussi ça, avant le prompt.
 
-### 3. Personnalise le système à ta marque
+### 3. Choisis ton style (2 minutes)
 
 Une fois installé, tape :
 
@@ -55,8 +55,22 @@ Une fois installé, tape :
 /setup
 ```
 
-Le **Empreinte** te pose une vingtaine de questions (ta marque, ta voix, tes couleurs, ta caméra,
-ta musique…) et adapte tout le système à toi. C'est à faire **une seule fois**.
+L'**Empreinte** commence par la seule chose qu'on ne peut pas deviner à ta place : **tes couleurs,
+ta police et l'allure de tes sous-titres**. Tu choisis parmi 5 styles prêts, ou tu donnes tes
+propres couleurs si tu les as déjà. **2 minutes, une seule fois.**
+
+**Et si tu ne sais pas encore ?** Tu montes quand même. Le style de départ, « Papier », est en
+noir et blanc : propre, lisible, ça rend bien tel quel. Tu fais ta première vidéo, tu vois le
+système tourner, et tu choisis tes couleurs en connaissance de cause. **Rien n'est définitif** :
+`/setup visuel` se relance à tout moment et tout le montage suit.
+
+Ce qu'il ne faut pas faire, c'est le garder par défaut sans y penser. « Papier » ne contient
+aucune couleur à toi — c'est un point de départ, pas une identité. Ce système ne te donne pas le
+look de quelqu'un d'autre, il t'aide à poser le tien.
+
+Le reste de l'Empreinte (ta voix, ton funnel, ta caméra, ta musique, le cadrage de ton visage)
+est **optionnel** et se fait quand tu veux — mais c'est ce qui tire le résultat le plus haut.
+Compte ~15 minutes en tout, et tu peux t'arrêter entre deux blocs.
 
 ---
 
@@ -86,6 +100,17 @@ Oui, Windows 10/11 64-bit. Mac Apple Silicon reste le plus confortable. INSTALL.
 
 **Combien ça coûte ?**
 Le repo est gratuit. Il te faut un abonnement IA — Claude Pro ou ChatGPT Plus, ~20 €/mois. C'est tout.
+
+**Mes vidéos vont ressembler à celles des autres utilisateurs ?**
+Non, et le système est construit pour l'empêcher. **Aucune couleur de marque n'est livrée** : les
+couleurs, les polices et l'allure des sous-titres sont générées depuis ton `/setup`, et le style
+de départ est volontairement en noir et blanc — beau, mais neutre, et il te le rappelle. Ce qui
+est partagé, c'est la **méthode** : le rythme des coupes, le découpage des sous-titres, les safe
+zones Instagram, les règles de motion. Ça, c'est ce que tu es venu chercher. Le reste est à toi.
+
+**Je peux changer de style après avoir fait des vidéos ?**
+Oui, sans rien casser. Les compositions ne contiennent aucune couleur en dur : tout passe par des
+variables. Tu relances `/setup visuel`, et tes prochains montages sortent dans le nouveau style.
 
 **Quel type de vidéos ?**
 Un seul format : le Reel Instagram **talking-head vertical** (toi face caméra, 1080×1920).

@@ -61,19 +61,35 @@ sonne faux. » On n'écrit qu'après OK.
 
 ---
 
-## Bloc D — Visuel
+## Bloc D — Visuel  🎨 TOUJOURS EN PREMIER
+
+> **Aucun défaut proposé pour D1.** C'est volontaire : un défaut accepté par réflexe, c'est
+> exactement le problème qu'on veut éviter. D2 à D12 ont, eux, les valeurs du preset choisi en
+> D1 — on les saute si le preset convient tel quel.
+>
+> **« Je ne sais pas encore » est une réponse valable à D1** : laisser `visual.stylePreset` à
+> `null` et `styleChosen` à `false`, monter en style « Papier » (noir & blanc, propre), et
+> reproposer le bloc D une fois la première vidéo livrée. Quelqu'un qui n'a jamais vu une de ses
+> vidéos sortir choisit mal — autant le laisser voir d'abord.
 
 | # | Question | Champ | Défaut | Validation |
 |---|---|---|---|---|
-| D1 | « Ta couleur de fond ? (donne-moi un code hex, ex. #202022) » | `visual.bg` | `#202022` | hex valide `#rgb`/`#rrggbb` ; **refuser `#000000`/`#000`** → proposer `#202022` |
-| D2 | « Ta couleur d'accent ? (celle qui ressort, ex. jaune #ffee00) » | `visual.accent` | `#ffee00` | hex valide ; **contraste** : ratio accent/fond ET accent/blanc — si faible, avertir + proposer 2-3 alternatives |
-| D3 | « La couleur des blocs/cartes (un poil plus clair que le fond) ? » | `visual.surface` | `#2b2b2d` | hex valide |
-| D4 | « On garde Poppins, ou tu veux une autre police pour les titres ? » | `visual.fontDisplay` | `Poppins` | si autre → demander les fichiers `.woff2`/`.ttf` (→ `assets/fonts/`), jamais Google Fonts |
-| D5 | « Et pour le texte courant ? » | `visual.fontBody` | `Poppins` | idem D4 |
-| D6 | « Pour les sous-titres ? » | `visual.fontCaptions` | `Poppins` | idem D4 |
-| D7 | « Tes sous-titres, sur 1 ou 2 lignes ? » | `visual.captionsLines` | `2` | `1` ou `2` |
-| D8 | « Où tu les places par défaut ? (bas / centre-bas) » | `visual.captionsPosition` | valeur exemple | libellé simple |
-| D9 | « Tu as un logo ou un avatar à intégrer ? (facultatif) » | (→ `assets/images/`) | aucun | fichier image si fourni |
+| D1 | « J'ai 5 styles prêts, tu en choisis un et on ajuste après. Ou tu me donnes tes couleurs si tu les as déjà. Et si tu ne sais pas encore, on garde le noir & blanc et tu choisis en voyant ta 1re vidéo. » puis lister `label` + `description` des presets | `visual.stylePreset` | **aucun** | l'`id` doit exister ; **ne pas présenter `neutral` comme une option** (il est déjà actif) ; s'il a déjà une identité (site, logo, chaîne), prendre SES couleurs plutôt qu'un preset ; « je ne sais pas » → laisser `null`, monter en Papier, reproposer après |
+| D2 | « Tu veux ajuster la couleur de fond ? » | `visual.bg` | celle du preset | hex valide `#rgb`/`#rrggbb` ; **refuser `#000000`/`#000`** → proposer un quasi-noir teinté de sa couleur |
+| D3 | « Et la couleur d'accent, celle qui ressort ? » | `visual.accent` | celle du preset | hex valide ; `npm run sync` calcule les ratios de contraste et avertit — **relayer l'avertissement**, proposer 2-3 alternatives, laisser trancher |
+| D4 | « La couleur des blocs/cartes (un peu plus contrastée que le fond) ? » | `visual.surface` | celle du preset | hex valide |
+| D5 | « Police des titres ? » | `visual.fontDisplay` | celle du preset | Inter / Anton / ArchivoBlack livrées ; si autre → fichiers dans `assets/fonts/` + déclaration dans la table `fonts` de `templates/style-presets.json`. **Jamais Google Fonts en ligne** |
+| D6 | « Et pour le texte courant ? » | `visual.fontBody` | celle du preset | idem D5 |
+| D7 | « Pour les sous-titres ? C'est ce qui te rend reconnaissable le plus vite — si tu as ta police, c'est le moment. » | `visual.fontCaptions` | celle du preset | idem D5, **plus** : un `.ttf` de mesure (`measureFile`) est obligatoire, PIL ne lit pas le woff2 |
+| D8 | « Tes sous-titres, ils ressemblent à quoi ? » puis lister les 5 skins de `captionSkins` en une ligne chacun | `visual.captionsSkin` | celui du preset | `block`/`outline`/`plate`/`shadow`/`underline` |
+| D9 | « Sur 1 ou 2 lignes ? » | `visual.captionsLines` | `1` | `1` ou `2` |
+| D10 | « Où tu les places par défaut ? (jointure du split / centre-bas) » | `visual.captionsPosition` | celui du preset | libellé simple |
+| D11 | « Le style de ta section CTA ? (facultatif) » puis lister `ctaStyles` | `cta.style` | celui du preset | id existant |
+| D12 | « Tu as un logo ou un avatar à intégrer ? (facultatif) » | (→ `assets/images/`) | aucun | fichier image si fourni |
+
+**Après écriture** : `setup.styleChosen = true`, puis `node scripts/sync.mjs`. Relire sa sortie :
+tout avertissement (contraste faible, police absente de la table, `.ttf` de mesure manquant) doit
+être dit à l'utilisateur avant de conclure.
 
 ---
 

@@ -55,7 +55,7 @@
     },
 
     /**
-     * Anime le yellow underline de gauche à droite (width 0 -> targetPx).
+     * Anime l'underline d'accent de gauche à droite (width 0 -> targetPx).
      * @param {gsap.core.Timeline} tl
      * @param {string} selector  sélecteur de .brand-underline
      * @param {number} targetPx  largeur finale en px

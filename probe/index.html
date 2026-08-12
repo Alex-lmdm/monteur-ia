@@ -10,14 +10,14 @@
       Position Y (brand.config.json → visual.captionsPosition) : y=920 en split (jointure) ·
       y≈1140 en plein visage · y≈1500 en plein motion.
     -->
-    <script src="../assets/vendor/gsap.min.js"></script>
+    <script src="assets/vendor/gsap.min.js"></script>
     <!-- L'apparence de .cap (police, couleurs, skin) vient ENTIÈREMENT de brand/tokens.css,
          généré depuis ton style (`/setup visuel`). Ne redéfinis rien ici : une règle en dur
          survivrait à un changement de style et casserait la cohérence de la vidéo.
          Pour essayer un autre skin sur cette compo seulement, ajoute une classe à un `.cap` :
          cap-skin-block · cap-skin-outline · cap-skin-plate · cap-skin-shadow · cap-skin-underline -->
-    <link rel="stylesheet" href="../brand/fonts.css">
-    <link rel="stylesheet" href="../brand/tokens.css">
+    <link rel="stylesheet" href="brand/fonts.css">
+    <link rel="stylesheet" href="brand/tokens.css">
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       /* Pas de height en dur sur body (cf sous-comps) : plein cadre 1920, scopé sous #captions. */

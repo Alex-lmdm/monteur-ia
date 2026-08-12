@@ -15,10 +15,18 @@ Identité visuelle de la marque pour tout contenu vidéo / motion
 design. Format-agnostique : 1080×1920 (Reels/Stories), 1920×1080 (YouTube), 1080×1080 (clips
 intégrables), 4K.
 
-Toutes les valeurs d'identité (couleurs, polices, position sous-titres, offre) se lisent dans
-`brand.config.json` (bloc `visual`, `cta`, `audio`) et les fichiers du dossier **`brand/`**
-(`tokens.css`, `fonts.css`, `motion.js`, `atoms.html`). Les hex/polices cités ci-dessous sont les
-**valeurs par défaut du template** : `/setup` les remplace par celles de la marque.
+Toutes les valeurs d'identité (couleurs, polices, skin de sous-titres, offre) se lisent dans
+`brand.config.json` (blocs `visual`, `cta`, `audio`) et vivent dans **`brand/tokens.css`**, qui est
+**généré** (`npm run sync`) depuis cette config et le preset de style choisi.
+
+⛔ **Aucune couleur, police ou taille en dur dans une compo.** Toujours `var(--brand-*)`. Un hex en
+dur survit au changement de style : la vidéo suivante sortira avec l'apparence de la précédente.
+Les tokens : `--brand-bg` · `--brand-surface` · `--brand-surface-contrast` · `--brand-text` ·
+`--brand-muted` · `--brand-accent` · `--brand-contrast` (à poser SUR l'accent) · `--brand-stroke`
+(contour de lisibilité) · `--brand-negative` (dataviz seulement).
+`--brand-white` / `--brand-yellow` sont des **alias historiques** de `--brand-text` /
+`--brand-accent` : ne pas les employer dans du code neuf, leur nom ment dès que le style n'est ni
+sombre ni jaune.
 
 **Références (chargées à la demande, selon la branche) :**
 
@@ -61,7 +69,7 @@ motion design doit **ajouter** une couche d'info, pas redire.
 
 ### Conséquence pour les polices
 
-- **Une seule famille body partout** (`visual.fontBody`, défaut Poppins) pour les labels du motion.
+- **Une seule famille body partout** (`visual.fontBody`) pour les labels du motion.
 - **Pas de police display en motion.** Le body porte tout, hooks compris (en graisse Black). La
   police display (`visual.fontDisplay`) est réservée aux formats statiques
   (`references/coluna-statique.md`) : en vidéo, elle n'a aucune utilité (pas de gros pavé de texte).
@@ -85,18 +93,22 @@ Tout vient de `brand.config.json` :
 
 ## 2. Palette de couleurs
 
-Source de vérité = `brand/tokens.css` (variables `--brand-*`), alimenté par `visual.*` de la config.
-Les hex ci-dessous sont les **défauts du template**.
+Source de vérité = `brand/tokens.css` (variables `--brand-*`), **généré** depuis `visual.*` de la
+config. **Aucun hex n'est cité ici : il n'y a pas de « bonne » couleur, il y a la sienne.**
 
-| Rôle             | Variable            | Défaut (config)   | Usage                                                          |
+| Rôle             | Variable            | Source            | Usage                                                          |
 |------------------|---------------------|-------------------|----------------------------------------------------------------|
-| Background       | `--brand-bg`        | `visual.bg` `#202022`     | Fond principal. Légère teinte grise. **JAMAIS noir pur.** |
-| Surface          | `--brand-surface`   | `visual.surface` `#2b2b2d` | Cartes / blocs surélevés sur le fond.                   |
-| Surface light    | `--brand-surface-light` | `#d8d8d8`     | Surface claire (rare, pour contraste).                        |
-| Blanc            | `--brand-white`     | `#ffffff`         | Texte principal sur fond sombre.                              |
-| Muted            | `--brand-muted`     | `#a6a6a0`         | Texte secondaire / métadonnées (gris **chaud**, pas froid).   |
-| **Accent**       | `--brand-yellow`    | `visual.accent` (ex. `#ffee00`) | L'accent unique de la marque. Hooks, mots-clés, chiffres, CTA. |
-| Stroke titre     | `--brand-title-stroke` | `#000000`      | Contour noir pur 100% (**uniquement** pour le contour de gros titres). |
+| Background       | `--brand-bg`        | `visual.bg`       | Fond principal. **JAMAIS noir pur** (ça bave à l'écran).       |
+| Surface          | `--brand-surface`   | `visual.surface`  | Cartes / blocs surélevés sur le fond.                          |
+| Surface contrast | `--brand-surface-contrast` | dérivée    | Surface qui tranche avec le fond (rare).                       |
+| Texte            | `--brand-text`      | `visual.text`     | Texte principal. Lisible sur le fond, clair OU sombre.         |
+| Muted            | `--brand-muted`     | dérivée           | Texte secondaire / métadonnées.                                |
+| **Accent**       | `--brand-accent`    | `visual.accent`   | L'accent unique. Hooks, mots-clés, chiffres, CTA.              |
+| Sur l'accent     | `--brand-contrast`  | dérivée           | Ce qu'on pose SUR un aplat d'accent (calculé pour le contraste).|
+| Contour          | `--brand-stroke`    | dérivée           | Contour de lisibilité (sous-titres, gros titres).              |
+
+Les valeurs « dérivée » sont calculées par `scripts/sync.mjs` à partir du fond, du texte et de
+l'accent (ratios WCAG) : ne jamais les demander à l'utilisateur, ni les écrire à la main.
 
 ### Règles d'usage des couleurs (principes de méthode — conservés)
 
@@ -106,8 +118,8 @@ Les hex ci-dessous sont les **défauts du template**.
 - L'accent est **plat, mat, brut** : aplat pur, jamais de gradient.
 - L'accent s'applique **en texte brut sur fond sombre** : pas de pills translucides à bord, pas de
   cards à bord accent pour des labels.
-- **Le fond est toujours `var(--brand-bg)`** ; le noir pur `#000` sert **uniquement** au stroke de
-  titre (jamais en aplat).
+- **Le fond est toujours `var(--brand-bg)`.** Le contour de titre passe par `var(--brand-stroke)`,
+  jamais par un noir écrit en dur (il devient illisible sur un style à fond clair).
 
 ### Couleurs autorisées
 
@@ -120,13 +132,13 @@ Les hex ci-dessous sont les **défauts du template**.
 
 ## 3. Typographies
 
-### Polices (défauts, remplacés par `visual.fontBody` / `visual.fontDisplay`)
+### Polices (entièrement issues de `visual.fontBody` / `fontDisplay` / `fontCaptions`)
 
 ```
-Body     → var(--brand-font-body) (défaut Poppins, Avenir Next, Arial, system-ui, sans-serif)
+Body     → var(--brand-font-body)  (la police du créateur, déclarée dans brand/fonts.css)
             Usage : TOUS les textes. Hooks, sous-titres, paragraphes, lower-thirds, captions.
 
-Mono     → var(--brand-font-mono) (défaut Courier New, ui-monospace, monospace)
+Mono     → var(--brand-font-mono)  (Courier New / ui-monospace — technique, pas identitaire)
             Usage : code, prompts, terminaux, valeurs techniques.
 ```
 
@@ -271,21 +283,25 @@ Réflexe à chaque média d'une compo : « est-ce que ça remplit toute la zone 
 
 ---
 
-## 6. Patterns motion transposables
+## 6. Patterns motion transposables (un CATALOGUE, pas une signature)
+
+> Ces patterns sont des options. Les poser tous, à chaque vidéo, dans le même ordre, c'est ce qui
+> rend deux comptes indistinguables. Avant d'en placer un : « est-ce que cette section en a besoin,
+> ou est-ce que je le mets parce qu'il est écrit ici ? »
 
 ### Le "ghost number"
-- Grand chiffre décoratif, **Bold 180 px**, **blanc à 10% d'opacité**, en haut à droite.
+- Grand chiffre décoratif, **Bold 180 px**, `var(--brand-text)` **à 10% d'opacité**, en haut à droite.
 - **Usage strict** : un ghost = une entrée d'énumération (raison 1, outil 2, étape 3).
 - Pas de ghost sur cover, intro, transition, synthèse, CTA.
 - En vidéo : repère visuel d'un chapitre/section, respecter "une entrée numérotée = un ghost".
 
-### Le "yellow underline" (underline accent)
+### L'underline d'accent
 - Texte en blanc, Black ~44 px.
-- Soulignement accent `var(--brand-yellow)` épais (≈ 6 px) sous un mot-clé.
+- Soulignement `var(--brand-accent)` épais (≈ 6 px) sous un mot-clé.
 - **En motion** : animer un trait accent qui se trace **de gauche à droite** sur 300-400 ms.
 
 ### Le "circular cutout"
-- Cercle blanc bordé contenant un logo, un visage, ou une preuve.
+- Cercle bordé (`var(--brand-text)`) contenant un logo, un visage, ou une preuve.
 - Posé sur une image principale comme focus visuel news-style.
 - En vidéo : overlay d'invité, citation d'auteur, mini-screenshot.
 
@@ -327,22 +343,25 @@ crucial · fondamental · indéniablement · incontournable · primordial · ré
 
 ## 8. Tokens techniques (à exporter dans chaque projet)
 
-Valeurs par défaut du template ; `/setup` réécrit `colors`/`fonts`/`profile` depuis `visual.*` et
-`brand.*`. Miroir CSS : `brand/tokens.css`.
+**Schéma** des tokens, pas des valeurs : les couleurs et polices réelles se lisent dans
+`brand/tokens.css` (généré). Les seules valeurs en dur ci-dessous sont la **typographie** et le
+**motion** — elles relèvent de la méthode, pas de l'identité, et sont identiques pour tout le monde.
 
 ```json
 {
   "colors": {
-    "background": "#202022",
-    "surface": "#2b2b2d",
-    "surfaceLight": "#d8d8d8",
-    "white": "#ffffff",
-    "muted": "#a6a6a0",
-    "accent": "#ffee00",
-    "titleStroke": "#000000"
+    "background": "<visual.bg>",
+    "surface": "<visual.surface>",
+    "surfaceContrast": "<dérivée>",
+    "text": "<visual.text>",
+    "muted": "<dérivée>",
+    "accent": "<visual.accent>",
+    "contrast": "<dérivée — à poser SUR l'accent>",
+    "stroke": "<dérivée — contour de lisibilité>"
   },
   "fonts": {
-    "body": "Poppins, Avenir Next, Arial, system-ui, sans-serif",
+    "body": "<visual.fontBody>, system-ui, sans-serif",
+    "captions": "<visual.fontCaptions>, sans-serif",
     "mono": "Courier New, ui-monospace, monospace"
   },
   "typography": {
@@ -390,8 +409,9 @@ Valeurs par défaut du template ; `/setup` réécrit `colors`/`fonts`/`profile` 
 - [ ] Aucun mot/expression de la blacklist (§7) dans les overlays.
 - [ ] Accents propres partout (selon `brand.language`).
 - [ ] Pas de tirets longs (—) dans les overlays texte.
-- [ ] L'accent `var(--brand-yellow)` est utilisé sur **1 mot/chiffre maximum par plan**.
-- [ ] Aucune police display : tout est en `visual.fontBody`, hooks compris (graisse Black).
+- [ ] L'accent `var(--brand-accent)` est utilisé sur **1 mot/chiffre maximum par plan**.
+- [ ] Aucune police display : tout est en `var(--brand-font-body)`, hooks compris (graisse Black).
+- [ ] **Aucun hex, aucun nom de police écrit en dur** dans la compo : uniquement des `var(--brand-*)`.
 - [ ] Le corps est en Regular avec 1-3 mots en Black pour les ancres.
 - [ ] Le fond est `var(--brand-bg)`, pas du noir pur (ou transparent pour clip intégrable).
 - [ ] Aucun emoji décoratif sans utilité (pas de ✨ 🚀 💯 génériques). Si emoji : Apple/iOS style, 1-2 par moment max.
@@ -405,11 +425,12 @@ Valeurs par défaut du template ; `/setup` réécrit `colors`/`fonts`/`profile` 
 HyperFrames = HTML + CSS + GSAP, raisonnement en **secondes** (pas en frames). Le design system se
 branche via 4 fichiers dans **`brand/`** :
 
-- `brand/tokens.css` — variables CSS (`--brand-bg`, `--brand-yellow`, easings, durées, safe areas) +
+- `brand/tokens.css` — **généré** : variables CSS (`--brand-bg`, `--brand-accent`, easings, durées,
+  safe areas, skins de sous-titres) +
   classes utilitaires (`.brand-stage`, `.brand-surface`, `.brand-label`, `.brand-ghost`,
   `.brand-underline`, `.brand-cutout`).
-- `brand/fonts.css` — la police body en **`@font-face` local** (`assets/fonts/*.woff2`). **Jamais** de
-  `@import` Google Fonts : appel réseau qui casse le rendu déterministe.
+- `brand/fonts.css` — **généré** : les `@font-face` locaux des polices du style (`assets/fonts/`).
+  **Jamais** de `@import` Google Fonts : appel réseau qui casse le rendu déterministe.
 - `brand/motion.js` — `window.BRAND.ease` (`inOut`/`outExpo` via CustomEase, fallback
   `power2.inOut`/`expo.out`), `window.BRAND.dur` (secondes), helpers `drawStroke` / `traceUnderline`
   / `enterFromLeft`.

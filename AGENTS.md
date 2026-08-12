@@ -1,4 +1,4 @@
-# HyperFrames — Reels Le Monde Du Marketing (exemple) (@toncompte)
+# HyperFrames — Reels {{BRAND_NAME}} ({{BRAND_HANDLE}})
 
 > ⚠️ **FICHIER GÉNÉRÉ** depuis `templates/AGENT.md.tpl` — ne pas éditer directement ;
 > éditer le `.tpl` puis lancer `npm run sync`. (`CLAUDE.md` est lu par Claude Code, `AGENTS.md`
@@ -8,9 +8,15 @@
 > **Charger un skill** :
 > Codex — **ouvre le fichier** `.agents/skills/<nom>/SKILL.md` indiqué et relis-le.
 
-Ce projet sert **un seul format** : les Reels Instagram de Prénom (@toncompte) =
-**vraie vidéo talking-head + motion design Le Monde Du Marketing (exemple) par-dessus, section par section**, avec
+Ce projet sert **un seul format** : les Reels Instagram de {{FIRST_NAME}} ({{BRAND_HANDLE}}) =
+**vraie vidéo talking-head + motion design {{BRAND_NAME}} par-dessus, section par section**, avec
 sous-titres, SFX et musique. Format **vertical 1080×1920, 30 fps**.
+
+> 🎨 **Style visuel actif : Papier (le style de départ) — PAS ENCORE PERSONNALISÉ** — fond `#f7f7f5`, accent `#131313`,
+> sous-titres Inter, skin « block », cadrage par défaut `split`.
+> Ces valeurs viennent de `brand.config.json` et vivent dans `brand/tokens.css` (généré).
+> **Ne jamais écrire une couleur, une police ou une taille de sous-titre en dur dans une compo** :
+> toujours `var(--brand-*)`. Un hex en dur survit au changement de style et casse la cohérence.
 
 > ⚠️ **À FAIRE AVANT TOUTE TÂCHE DE MONTAGE.** Ce fichier est le seul toujours chargé.
 > Il ne remplace pas les skills : il **aiguille** vers eux et rappelle les règles qu'on oublie.
@@ -19,20 +25,44 @@ sous-titres, SFX et musique. Format **vertical 1080×1920, 30 fps**.
 
 ---
 
-## 🟢 Étape 0 — Setup (recommandé, pas bloquant)
+## 🟢 Étape 0 — Setup
 
-**Le système fonctionne dès l'installation.** Les skills embarquent déjà la méthode complète (écriture
-de script, dérush, montage, légende, DM) : tu peux monter une vidéo tout de suite, sans rien
-configurer. `/setup` ne débloque rien — il **personnalise** (ta voix, tes couleurs, ton funnel, ton
-cadrage) pour que le rendu te ressemble au lieu de rester générique.
+**La méthode fonctionne dès l'installation** (écriture de script, dérush, montage, légende, DM).
+`/setup` ne débloque pas la méthode : il pose **l'identité** par-dessus.
 
-- Si **`brand.config.json` n'existe pas**, ou si **`setup.completedBlocks` est incomplet**, tu peux
-  **proposer `/setup`** pour personnaliser — mais **ne bloque jamais un montage** pour ça. Si
-  Prénom veut monter direct, tu montes direct (la méthode par défaut suffit), et tu proposes
-  le setup après coup.
+### 🎨 Le style visuel : la question à poser AVANT le premier montage
+
+**Si `setup.styleChosen` est `false` (ou `brand.config.json` absent), pose la question avant de
+monter — mais n'impose rien.** Le style de départ (« Papier » : noir & blanc, sans couleur) rend
+très bien tel quel : {{FIRST_NAME}} peut parfaitement monter sa première vidéo avec, pour voir
+tourner le système. Ce qu'il ne doit pas faire, c'est **le garder sans le savoir** — c'est un point
+de départ, il ne contient aucune couleur à lui.
+
+Ce que tu dis, exactement, au premier montage :
+
+> « Avant de partir : je peux te monter ça en noir & blanc, le style de départ, c'est propre et
+> ça marche direct. Ou on pose tes couleurs d'abord — 3 questions, 2 minutes, une seule fois.
+> Tu préfères quoi ? »
+
+- **Il choisit maintenant** → `/setup visuel` (bloc D), puis tu montes.
+- **Il dit "plus tard" / "je sais pas encore" / "montre-moi d'abord"** → **tu montes**, en style
+  Papier, sans insister. Et **une fois la vidéo livrée**, tu reproposes une fois :
+  « Maintenant que tu vois le rendu, on met tes couleurs ? `/setup visuel`. »
+- **Il a déjà une identité** (site, logo, chaîne) → prends SES couleurs, ne propose pas de preset.
+
+⛔ **N'invente jamais une couleur ni une police « en attendant ».** Le style de départ existe pour
+ça : s'il n'a pas choisi, tu utilises le style Papier tel quel, tu n'improvises pas un jaune ou un
+bleu de ton cru. Une couleur inventée devient sa marque par accident.
+
+Le reste du setup (voix, funnel, dérush, cadrage) est **optionnel** et se fait quand il veut.
+
 - Les valeurs personnalisées (dérush, audio, visuel, CTA…) vivent dans **`brand.config.json`** :
   c'est la source de vérité des réglages. Tant qu'un réglage n'est pas personnalisé, on utilise le
   défaut recommandé (éprouvé en production), jamais une valeur inventée.
+- **Changer de style plus tard ne casse rien** : `/setup visuel` réécrit `brand.config.json`,
+  `npm run sync` régénère le design system, et les compos suivent automatiquement (elles ne
+  contiennent que des `var(--brand-*)`). Le dire à {{FIRST_NAME}} s'il hésite : **rien n'est
+  définitif**.
 
 ---
 
@@ -44,7 +74,7 @@ une étape en avance.** Erreurs déjà commises à ne pas refaire :
 - ❌ Proposer la **légende / le DM** pendant le script, le dérush ou le montage.
   → La publication (légende + DM) est **l'étape 7, la TOUTE DERNIÈRE**, seulement **après** montage
   validé **et** SFX/musique posés.
-- ❌ Poser les **SFX / la musique** avant que Prénom ait **validé tout le montage** (étape 6 après 5).
+- ❌ Poser les **SFX / la musique** avant que {{FIRST_NAME}} ait **validé tout le montage** (étape 6 après 5).
 
 **Réflexe de début de session montage** : situer où on en est dans le pipeline, annoncer **la
 prochaine étape (une seule)**, et ne pas déborder dessus.
@@ -54,15 +84,15 @@ prochaine étape (une seule)**, et ne pas déborder dessus.
 ## 🧭 Le pipeline en 7 étapes (aiguilleur)
 
 Le détail de chaque étape vit dans son skill (source de vérité). Ici : quoi charger, quand, et la
-barrière « terminé quand » à passer **avant de montrer le résultat à Prénom / passer à l'étape suivante**.
+barrière « terminé quand » à passer **avant de montrer le résultat à {{FIRST_NAME}} / passer à l'étape suivante**.
 
-| # | Étape | Prénom dit… | Skill à charger AVANT d'agir | Terminé quand |
+| # | Étape | {{FIRST_NAME}} dit… | Skill à charger AVANT d'agir | Terminé quand |
 |---|-------|-----------|------------------------------|----------------|
-| 1 | **Script** | « on brainstorm un script », « écris ma version », « voici mon script » | `reel-script` | Hook + corps + CTA, voix de Prénom, ~30-45 s, **validé**. Si CTA « commente [MOT] » → juste **noter le mot-clé** (le DM se rédige à l'étape 7, pas maintenant). |
-| 2 | **Tournage** | (Prénom tourne la vidéo, puis) « voici la vidéo brute » | — | La vidéo brute est fournie. (Rappel : export **résolution MAX**, pas 1080p.) |
+| 1 | **Script** | « on brainstorm un script », « écris ma version », « voici mon script » | `reel-script` | Hook + corps + CTA, voix de {{FIRST_NAME}}, ~30-45 s, **validé**. Si CTA « commente [MOT] » → juste **noter le mot-clé** (le DM se rédige à l'étape 7, pas maintenant). |
+| 2 | **Tournage** | ({{FIRST_NAME}} tourne la vidéo, puis) « voici la vidéo brute » | — | La vidéo brute est fournie. (Rappel : export **résolution MAX**, pas 1080p.) |
 | 3 | **Dérush** | « fais les cuts », « coupe les blancs / les ratés », « clean l'audio » | `derush` | Re-transcription du cut = le script, **aucun mot coupé/doublé**, souffle inter-cut ≈ 0,1 s. **Audio nettoyé** (méthode `audio.enhanceMethod` de `brand.config.json`). |
 | 4 | **Montage / motion** | « passe au montage », « mets les split-screens / le motion / les sous-titres » | `motion-design` (§14) | Chaque section montée : split-screen là où il faut, motion-first, visage net (pas de carré noir), sous-titres calés, safe-zones OK. |
-| 5 | **Review** | « là je veux plutôt ça », « mets cette vidéo/image ici », « ça en plein écran », « les sous-titres vont pas » | (rester dans `motion-design`) | Prénom a **tout validé section par section** après ses retours. **C'est la barrière avant les SFX.** |
+| 5 | **Review** | « là je veux plutôt ça », « mets cette vidéo/image ici », « ça en plein écran », « les sous-titres vont pas » | (rester dans `motion-design`) | {{FIRST_NAME}} a **tout validé section par section** après ses retours. **C'est la barrière avant les SFX.** |
 | 6 | **SFX + musique** | « mets le sound effect et la musique » | `motion-design` §14.10 | **Uniquement APRÈS validation étape 5.** SFX d'`assets/sfx/` placés + musique posée. |
 | 7 | **Publication** | « la légende », « le message DM » | `design-system/instagram-caption.md` + `manychat-dm.md` | **Toute fin.** Légende IG + (si CTA) DM prêts. Le mot « lien » **jamais écrit** → emoji 🔗. |
 
@@ -121,7 +151,7 @@ barrière « terminé quand » à passer **avant de montrer le résultat à Pré
 - [ ] Couper **dans les silences** (`silencedetect`), **jamais** sur un timestamp Whisper/LLM (ils dérivent).
 - [ ] **Jamais `-v error` avec `silencedetect` / `volumedetect`** : ces filtres loguent en *info*, `-v error` renvoie zéro ligne et on croit qu'il n'y a aucun silence.
 - [ ] **Ne pas recopier les prises à la main** : `tools/cut_boundaries.py` lit les `ISLANDS` de `derush/build_derush.py` s'il existe — une seule source, impossible de les désynchroniser.
-- [ ] Selon la caméra (`derush.camera` = `dji`) : certaines vidéos (ex. DJI) ont un 2ᵉ flux mjpeg (vignette) → mapper `[0:v:0]` explicitement.
+- [ ] Selon la caméra (`derush.camera` = `{{CAMERA}}`) : certaines vidéos (ex. DJI) ont un 2ᵉ flux mjpeg (vignette) → mapper `[0:v:0]` explicitement.
 - [ ] **Re-transcrire le cut final** pour vérifier : lecture = script, zéro mot coupé/doublé.
 - [ ] **Mesurer les VRAIS points de coupe** (`<cut>_cuts.json`, détection scene-change sur le fichier livré) — cf `derush` §7bis.
 
@@ -132,7 +162,7 @@ barrière « terminé quand » à passer **avant de montrer le résultat à Pré
 **Montage / motion (`motion-design` §14)**
 - [ ] **Frontières de section = `<cut>_cuts.json`**, JAMAIS les timestamps Whisper (ils démarrent 0,1-0,25 s trop tôt → on voit la fin de la prise précédente au passage plein-écran → split). Master, sous-comps et sous-titres lisent **la même source**.
 - [ ] **MOTION FIRST, zéro redondance texte** : pas de gros texte qui redit la voix off / les sous-titres.
-- [ ] Chaque section démarre sur le **cadrage par défaut** (`montage.defaultLayout` : `"split"` = visage en bas / motion en haut · `"faceplein"` = visage plein écran, motion en surimpression transparente) ; Prénom dit ensuite section par section ce qui passe en plein écran visage ou plein écran visuel.
+- [ ] Chaque section démarre sur le **cadrage par défaut** (`montage.defaultLayout` : `"split"` = visage en bas / motion en haut · `"faceplein"` = visage plein écran, motion en surimpression transparente) ; {{FIRST_NAME}} dit ensuite section par section ce qui passe en plein écran visage ou plein écran visuel.
 - [ ] **Bug « carré noir »** : tout élément plein cadre au-dessus du `<video>` visage = `background: transparent`. Visage = surface **plein cadre** + `clip-path` (jamais surface partielle).
 - [ ] **Motion riche = partir d'un template du registry** (`hyperframes add <block>`, découverte via `hyperframes catalog` — skill `hyperframes-registry`) puis le personnaliser aux couleurs de la marque, plutôt que tout dessiner à la main : mieux fini, plus vite.
 - [ ] **Ajout de sections = risque de collision `data-track-index`** : garder les tracks visage / voix off / sous-titres **bien au-dessus** des tracks de sections (elles gardent leurs index bas). Deux éléments qui se chevauchent sur le même track = l'un des deux disparaît au render.
@@ -191,7 +221,7 @@ barrière « terminé quand » à passer **avant de montrer le résultat à Pré
 > le framework »), **PAS un workflow de montage**. Ne JAMAIS router le montage d'un reel via le
 > skill `hyperframes` (son router) ni via un workflow générique du framework
 > (`talking-head-recut`, `product-launch-video`, `faceless-explainer`, `slideshow`,
-> `motion-graphics`, `general-video`…). Ces workflows ne servent QUE si Prénom demande
+> `motion-graphics`, `general-video`…). Ces workflows ne servent QUE si {{FIRST_NAME}} demande
 > **explicitement** un autre type de projet, hors du workflow reel habituel.
 
 Ces skills encodent les patterns HyperFrames (`window.__timelines`, sémantique des `data-*`,

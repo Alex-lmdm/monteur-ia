@@ -4,8 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node scripts/sync.mjs --style-only",
     "dev": "hyperframes preview",
+    "precheck": "node scripts/sync.mjs --style-only",
     "check": "hyperframes lint && hyperframes validate && hyperframes inspect",
+    "prerender": "node scripts/sync.mjs --style-only",
     "render": "hyperframes render",
     "sync": "node scripts/sync.mjs",
     "postinstall": "node scripts/sync.mjs || true"

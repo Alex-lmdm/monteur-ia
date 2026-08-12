@@ -57,7 +57,10 @@ CFG = load_config()
 SPLIT_TRANSFORM = (CFG.get("montage") or {}).get("splitTransform") or DEFAULT_SPLIT_TRANSFORM
 FULLFACE_TRANSFORM = (CFG.get("montage") or {}).get("fullFaceTransform") or DEFAULT_FULLFACE_TRANSFORM
 FULLFACE_ORIGIN = (CFG.get("montage") or {}).get("fullFaceOrigin") or DEFAULT_FULLFACE_ORIGIN
-BG = (CFG.get("visual") or {}).get("bg") or "#202022"  # fond de marque (brand.config.json -> visual.bg)
+# Le fond n'est JAMAIS ecrit en dur ici : le master charge brand/tokens.css, donc
+# `var(--brand-bg)` suffit et suit le style de chacun. C'est aussi le motif que
+# tools/build_overlay.py cherche pour fabriquer le calque alpha.
+BG = "var(--brand-bg)"
 
 # --- calques visage : une <video> par fenetre split, source = ta base derushee ---------------
 faces = "\n".join(

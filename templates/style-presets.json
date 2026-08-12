@@ -1,0 +1,181 @@
+{
+  "_comment": [
+    "Presets de STYLE livrés avec le monteur. Un preset = un point de départ visuel complet",
+    "(palette + polices + skin de sous-titres + cadrage par défaut + style de CTA).",
+    "Le bloc D de /setup en fait choisir un, PUIS l'utilisateur ajuste ce qu'il veut.",
+    "Aucun preset ne reproduit l'identité d'un créateur existant : le premier de la liste",
+    "('neutral') est volontairement fade — c'est le signal 'tu n'as pas encore choisi'.",
+    "Ajouter un preset = ajouter une entrée ici. Rien d'autre à toucher."
+  ],
+
+  "captionSkins": {
+    "_comment": "Skin = l'apparence du bandeau de sous-titres. Rendu par templates/tokens.css.tpl.",
+    "block": "Bloc plein : fond dans la couleur d'accent, texte dans la couleur de fond, angles droits. Très lisible, très marqué.",
+    "outline": "Texte seul avec un gros contour sombre, sans fond. Le style le plus courant en short-form.",
+    "plate": "Plaque sombre arrondie, légèrement translucide, texte clair. Discret, se pose sur n'importe quelle image.",
+    "shadow": "Texte clair avec une ombre portée dure décalée dans l'accent. Pas de fond.",
+    "underline": "Texte clair souligné d'une barre pleine dans l'accent. Pas de fond."
+  },
+
+  "ctaStyles": {
+    "_comment": "Style de la section CTA 'commente un mot-clé' (cf. motion-design/references/patterns.md).",
+    "comment-field": "Champ de commentaire de réseau social : le mot-clé s'y tape tout seul.",
+    "keyword-stamp": "Le mot-clé seul, en très gros, qui vient se tamponner à l'écran.",
+    "chat-bubble": "Bulle de conversation type messagerie, avec le mot-clé envoyé puis la réponse.",
+    "none": "Pas de section CTA animée : le mot-clé passe uniquement en sous-titre et en légende."
+  },
+
+  "presets": [
+    {
+      "id": "neutral",
+      "label": "Papier (le style de départ)",
+      "description": "Fond blanc cassé, texte noir, aucune couleur. Propre, éditorial, ça marche tout de suite — mais c'est un point de départ, pas une identité : il n'y a aucune couleur à toi dedans. Le jour où tu poses la tienne, tout le système la reprend.",
+      "isUnset": true,
+      "visual": {
+        "bg": "#f7f7f5",
+        "surface": "#e8e8e4",
+        "text": "#131313",
+        "muted": "#6e6e68",
+        "accent": "#131313",
+        "fontDisplay": "Anton",
+        "fontBody": "Inter",
+        "fontCaptions": "Inter",
+        "captionsSkin": "block",
+        "captionsPosition": "split-jointure",
+        "captionsLines": 1
+      },
+      "montage": { "defaultLayout": "split" },
+      "cta": { "style": "comment-field" }
+    },
+    {
+      "id": "midnight",
+      "label": "Minuit",
+      "description": "Bleu nuit profond, accent bleu clair lumineux. Sérieux, tech, lisible. Sous-titres en contour, sans fond.",
+      "visual": {
+        "bg": "#0d1220",
+        "surface": "#182036",
+        "text": "#ffffff",
+        "muted": "#9aa7c2",
+        "accent": "#58a6ff",
+        "fontDisplay": "Inter",
+        "fontBody": "Inter",
+        "fontCaptions": "Inter",
+        "captionsSkin": "outline",
+        "captionsPosition": "split-jointure",
+        "captionsLines": 1
+      },
+      "montage": { "defaultLayout": "split" },
+      "cta": { "style": "chat-bubble" }
+    },
+    {
+      "id": "pulse",
+      "label": "Pulse",
+      "description": "Presque noir, accent magenta électrique. Nerveux, jeune, orienté divertissement. Sous-titres en bloc plein.",
+      "visual": {
+        "bg": "#121012",
+        "surface": "#1e1a1e",
+        "text": "#ffffff",
+        "muted": "#b0a5ac",
+        "accent": "#ff2e7e",
+        "fontDisplay": "ArchivoBlack",
+        "fontBody": "Inter",
+        "fontCaptions": "ArchivoBlack",
+        "captionsSkin": "block",
+        "captionsPosition": "split-jointure",
+        "captionsLines": 1
+      },
+      "montage": { "defaultLayout": "faceplein" },
+      "cta": { "style": "keyword-stamp" }
+    },
+    {
+      "id": "forest",
+      "label": "Forêt",
+      "description": "Vert très sombre, accent vert clair. Calme, naturel, posé. Sous-titres avec ombre portée, sans fond.",
+      "visual": {
+        "bg": "#0f1e18",
+        "surface": "#172c23",
+        "text": "#ffffff",
+        "muted": "#9fb5aa",
+        "accent": "#6ee7a8",
+        "fontDisplay": "Anton",
+        "fontBody": "Inter",
+        "fontCaptions": "Inter",
+        "captionsSkin": "shadow",
+        "captionsPosition": "split-jointure",
+        "captionsLines": 1
+      },
+      "montage": { "defaultLayout": "split" },
+      "cta": { "style": "comment-field" }
+    },
+    {
+      "id": "ink",
+      "label": "Encre",
+      "description": "Fond papier clair, texte noir, accent rouge. À l'opposé du short-form classique : éditorial, presse, tranché. Sous-titres soulignés.",
+      "visual": {
+        "bg": "#f2efe6",
+        "surface": "#e3ded0",
+        "text": "#141210",
+        "muted": "#6b6559",
+        "accent": "#d7263d",
+        "fontDisplay": "Anton",
+        "fontBody": "Inter",
+        "fontCaptions": "Anton",
+        "captionsSkin": "underline",
+        "captionsPosition": "split-jointure",
+        "captionsLines": 1
+      },
+      "montage": { "defaultLayout": "split" },
+      "cta": { "style": "keyword-stamp" }
+    },
+    {
+      "id": "mono",
+      "label": "Mono",
+      "description": "Noir et blanc strict, zéro couleur. L'accent est le blanc pur. Le plus sobre, le plus intemporel. Sous-titres en contour.",
+      "visual": {
+        "bg": "#101010",
+        "surface": "#1c1c1c",
+        "text": "#ffffff",
+        "muted": "#8f8f8f",
+        "accent": "#ffffff",
+        "fontDisplay": "Anton",
+        "fontBody": "Inter",
+        "fontCaptions": "Anton",
+        "captionsSkin": "outline",
+        "captionsPosition": "split-jointure",
+        "captionsLines": 1
+      },
+      "montage": { "defaultLayout": "faceplein" },
+      "cta": { "style": "chat-bubble" }
+    }
+  ],
+
+  "fonts": {
+    "_comment": [
+      "Polices livrées en local dans assets/fonts/ (licence SIL OFL, redistribuables).",
+      "`faces` = ce que brand/fonts.css déclare pour le rendu (woff2 de préférence).",
+      "`measureFile` = un .ttf de la MÊME police, lu par PIL dans tools/montage_captions.py pour",
+      "mesurer la largeur d'un sous-titre. PIL ne sait pas lire le woff2 : sans ce .ttf, le",
+      "découpage ne peut plus garantir une seule ligne. Obligatoire pour une police de sous-titres.",
+      "Une police absente de cette table = l'utilisateur fournit ses fichiers, /setup les ajoute ici",
+      "et les dépose dans assets/fonts/. JAMAIS de Google Fonts en ligne (rendu non déterministe)."
+    ],
+    "Inter": {
+      "measureFile": "Inter-900.ttf",
+      "faces": [
+        { "weight": 400, "style": "normal", "file": "Inter-400.woff2", "format": "woff2" },
+        { "weight": 400, "style": "italic", "file": "Inter-400-italic.woff2", "format": "woff2" },
+        { "weight": 600, "style": "normal", "file": "Inter-600.woff2", "format": "woff2" },
+        { "weight": 700, "style": "normal", "file": "Inter-700.woff2", "format": "woff2" },
+        { "weight": 900, "style": "normal", "file": "Inter-900.woff2", "format": "woff2" }
+      ]
+    },
+    "Anton": {
+      "measureFile": "Anton-400.ttf",
+      "faces": [{ "weight": 400, "style": "normal", "file": "Anton-400.woff2", "format": "woff2" }]
+    },
+    "ArchivoBlack": {
+      "measureFile": "ArchivoBlack-400.ttf",
+      "faces": [{ "weight": 400, "style": "normal", "file": "ArchivoBlack-400.woff2", "format": "woff2" }]
+    }
+  }
+}
