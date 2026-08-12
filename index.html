@@ -6,12 +6,15 @@
     <script src="assets/vendor/gsap.min.js"></script>
     <!-- PIÈGE N°1 : charger brand/fonts.css + brand/tokens.css DANS LE <head> DU MASTER.
          Sans ça, au render par couches les var(--brand-*) et les polices des sous-comps ne se
-         résolvent pas → couleurs noires au lieu du jaune, police système au lieu de Poppins. -->
+         résolvent pas → couleurs noires au lieu de l'accent, police système au lieu de la tienne.
+         Ces deux fichiers sont GÉNÉRÉS par `npm run sync` depuis brand.config.json. -->
     <link rel="stylesheet" href="brand/fonts.css">
     <link rel="stylesheet" href="brand/tokens.css">
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #202022; }
+      /* Jamais de couleur en dur ici : tools/build_overlay.py neutralise ce fond par
+         substitution de `var(--brand-bg)` pour produire le calque alpha. */
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--brand-bg); }
 
       /* Visage SPLIT-SCREEN : surface PLEIN CADRE clippée à la moitié basse (anti carré noir).
          Fond transparent obligatoire ; cadrage UNIQUEMENT via transform (jamais resize dans le studio).
@@ -39,7 +42,7 @@
     <div id="root" data-composition-id="main" data-start="0" data-duration="8" data-fps="30" data-width="1080" data-height="1920">
 
       <!-- Fond de marque (seul aplat opaque autorisé, tout en bas de la pile). -->
-      <div id="bgbase" class="clip" data-start="0" data-duration="8" data-track-index="0" style="position:absolute; inset:0; background:#202022;"></div>
+      <div id="bgbase" class="clip" data-start="0" data-duration="8" data-track-index="0" style="position:absolute; inset:0; background:var(--brand-bg);"></div>
 
       <!-- Voix off : piste audio séparée (les <video> sont muted). Source = la base dérushée. -->
       <audio id="vo" src="assets/video/base.mp4" data-start="0" data-duration="8" data-track-index="13" data-volume="1"></audio>

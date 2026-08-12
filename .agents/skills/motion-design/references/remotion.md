@@ -1,22 +1,23 @@
 # Usage avec Remotion (legacy — les projets vidéo actuels sont en HyperFrames)
 
-Pour un projet Remotion, créer un fichier `src/brand-tokens.ts` qui réexpose les tokens (source unique
-des valeurs : le JSON de tokens du SKILL, §8 ; valeurs par défaut du template, réécrites par `/setup`
-depuis `visual.*`) :
+Pour un projet Remotion, créer un fichier `src/brand-tokens.ts` qui réexpose les tokens.
+⚠️ **Les valeurs ne s'écrivent pas à la main** : les lire dans `brand/tokens.css` (généré) ou dans
+`brand.config.json`. Les `<…>` ci-dessous sont des emplacements, pas des couleurs à recopier.
 
 ```typescript
 export const BRAND = {
   colors: {
-    background: '#202022',
-    surface: '#2b2b2d',
-    white: '#ffffff',
-    muted: '#a6a6a0',
-    accent: '#ffee00',
-    titleStroke: '#000000',
+    background: '<visual.bg>',
+    surface: '<visual.surface>',
+    text: '<visual.text>',
+    muted: '<dérivée>',
+    accent: '<visual.accent>',
+    contrast: '<dérivée — à poser SUR l'accent>',
+    stroke: '<dérivée — contour de lisibilité>',
   },
   fonts: {
     // pas de police display en motion : le body en Black porte les hooks
-    body: 'Poppins, Avenir Next, Arial, system-ui, sans-serif',
+    body: '<visual.fontBody>, system-ui, sans-serif',
     mono: 'Courier New, ui-monospace, monospace',
   },
   motion: {

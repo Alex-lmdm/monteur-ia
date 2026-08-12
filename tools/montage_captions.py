@@ -31,11 +31,22 @@ import unicodedata
 from PIL import ImageFont
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import brand_style
 import sections
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-TTF = str(ROOT / "assets/fonts/BowlbyOneSC-Regular.ttf")
-FONT = ImageFont.truetype(TTF, 50)
+
+# La police de sous-titres vient du style resolu (preset + brand.config.json), jamais en dur :
+# c'est elle qui rend un compte reconnaissable en une seconde, elle doit appartenir a l'utilisateur.
+STYLE = brand_style.style()
+if STYLE.captions_font_file is None:
+    raise SystemExit(
+        f"ERREUR : aucun .ttf de mesure pour la police de sous-titres « {STYLE.font_captions} ».\n"
+        "PIL ne lit pas le woff2 : sans .ttf, impossible de garantir une seule ligne.\n"
+        "Depose le .ttf dans assets/fonts/, declare-le en `measureFile` dans "
+        "templates/style-presets.json, puis relance."
+    )
+FONT = ImageFont.truetype(str(STYLE.captions_font_file), 50)
 MAXW_HARD = 900
 
 # Bornes de phrase = les VRAIES coupes (une prise = une phrase). Surtout PAS les timestamps
@@ -190,23 +201,16 @@ doc = f'''<!DOCTYPE html>
     <!-- SOUS-TITRES — genere par tools/montage_captions.py depuis derush/<video>_cuts.json.
          Regles : 2-3 mots par sous-titre, AUCUNE ponctuation finale, jamais a cheval sur 2 phrases. -->
     <script src="../assets/vendor/gsap.min.js"></script>
+    <!-- L'apparence de .cap (police, couleurs, skin « {STYLE.captions_skin} ») vient ENTIEREMENT
+         de brand/tokens.css, genere depuis TON style. Ne rien redefinir ici : une regle en dur
+         dans ce fichier survivrait a un changement de style et casserait la coherence. -->
+    <link rel="stylesheet" href="../brand/fonts.css">
     <link rel="stylesheet" href="../brand/tokens.css">
     <style>
       * {{ margin: 0; padding: 0; box-sizing: border-box; }}
       /* Pas de height en dur sur body : plein cadre 1920, scope sous #captions. */
       html, body {{ width: 100%; height: 100%; overflow: hidden; background: transparent; }}
       #captions {{ position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden; }}
-      @font-face {{
-        font-family: 'BowlbyOneSC';
-        src: url('../assets/fonts/BowlbyOneSC-Regular.ttf') format('truetype');
-        font-display: block;
-      }}
-      #captions .cap {{
-        position: absolute; left: 50%; transform: translate(-50%, -50%);
-        font-family: var(--brand-font-captions, 'BowlbyOneSC', sans-serif);
-        font-size: 50px; line-height: 1; color: var(--brand-bg);
-        background: var(--brand-yellow); padding: 8px 20px; white-space: nowrap;
-      }}
     </style>
   </head>
   <body>

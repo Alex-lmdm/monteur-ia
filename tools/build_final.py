@@ -31,6 +31,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import brand_style
 import sections
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -127,7 +128,8 @@ def enable(wins):
     return "+".join(f"between(t,{a:.3f},{a + d:.3f})" for a, d in wins)
 
 
-BG = ((load_config().get("visual") or {}).get("bg") or "#202022").lstrip("#")
+# Fond de l'export : resolu par brand_style (preset + brand.config.json), jamais en dur.
+BG = brand_style.style().bg_hex
 parts = [f"color=c=0x{BG}:s=1080x1920:r=30000/1001:d={DUR}[bg];"]
 
 # --- le visage, croppe depuis base.mp4 -------------------------------------------------------

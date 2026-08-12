@@ -11,26 +11,18 @@
       y≈1140 en plein visage · y≈1500 en plein motion.
     -->
     <script src="../assets/vendor/gsap.min.js"></script>
+    <!-- L'apparence de .cap (police, couleurs, skin) vient ENTIÈREMENT de brand/tokens.css,
+         généré depuis ton style (`/setup visuel`). Ne redéfinis rien ici : une règle en dur
+         survivrait à un changement de style et casserait la cohérence de la vidéo.
+         Pour essayer un autre skin sur cette compo seulement, ajoute une classe à un `.cap` :
+         cap-skin-block · cap-skin-outline · cap-skin-plate · cap-skin-shadow · cap-skin-underline -->
+    <link rel="stylesheet" href="../brand/fonts.css">
     <link rel="stylesheet" href="../brand/tokens.css">
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       /* Pas de height en dur sur body (cf sous-comps) : plein cadre 1920, scopé sous #captions. */
       html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
       #captions { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden; }
-
-      /* Police des sous-titres : var(--brand-font-captions) est définie dans brand/tokens.css
-         (police d'affichage, ici on garde un fallback local BowlbyOneSC pour rester autonome). */
-      @font-face {
-        font-family: 'BowlbyOneSC';
-        src: url('../assets/fonts/BowlbyOneSC-Regular.ttf') format('truetype');
-        font-display: block;
-      }
-      #captions .cap {
-        position: absolute; left: 50%; transform: translate(-50%, -50%);
-        font-family: var(--brand-font-captions, 'BowlbyOneSC', sans-serif);
-        font-size: 50px; line-height: 1.35; color: var(--brand-bg);
-        background: var(--brand-yellow); padding: 8px 20px; white-space: nowrap;
-      }
     </style>
   </head>
   <body>

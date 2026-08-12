@@ -1,20 +1,34 @@
 /* ==========================================================================
    Design system — Design tokens (HyperFrames / HTML+CSS)
-   FICHIER GÉNÉRÉ depuis templates/tokens.css.tpl par /setup.
-   Les VALEURS de marque (couleurs, polices) sont injectées depuis brand.config.json.
-   Les structures (easings, durées, safe areas, utilitaires) sont FIXES.
+
+   ⚠️ FICHIER GÉNÉRÉ. Ne pas éditer : il est réécrit à chaque `npm run sync`.
+   Source : templates/tokens.css.tpl + brand.config.json (+ templates/style-presets.json).
+   Pour changer une valeur : `/setup visuel`, ou édite brand.config.json puis `npm run sync`.
+
+   Les VALEURS d'identité (couleurs, polices, skin de sous-titres) viennent de la config.
+   Les STRUCTURES (easings, durées, safe areas, utilitaires) sont fixes : c'est la méthode,
+   elle est la même pour tout le monde.
+
+   Style actif : {{STYLE_PRESET_ID}}
    ========================================================================== */
 
 :root {
   /* --- Palette ------------------------------------------------------------ */
-  --brand-bg: {{VISUAL_BG}};       /* Fond principal. JAMAIS noir pur.          */
-  --brand-surface: {{VISUAL_SURFACE}}; /* Cartes / blocs surélevés.             */
-  --brand-surface-light: #d8d8d8; /* Surface claire (rare).                    */
-  --brand-white: #ffffff;         /* Texte principal sur fond sombre.          */
-  --brand-muted: #a6a6a0;         /* Texte secondaire (gris CHAUD).            */
-  --brand-yellow: {{VISUAL_ACCENT}}; /* Accent unique. Jamais décoratif.       */
-  --brand-accent: var(--brand-yellow); /* Alias lisible : préfère-le dans le nouveau code (l\'accent n\'est pas forcément jaune). */
-  --brand-title-stroke: #000000;  /* Contour noir pur — titres uniquement.     */
+  --brand-bg: {{VISUAL_BG}};            /* Fond principal. Jamais noir pur.            */
+  --brand-surface: {{VISUAL_SURFACE}};  /* Cartes / blocs surélevés.                   */
+  --brand-text: {{VISUAL_TEXT}};        /* Texte principal, lisible sur le fond.       */
+  --brand-muted: {{VISUAL_MUTED}};      /* Texte secondaire / métadonnées.             */
+  --brand-accent: {{VISUAL_ACCENT}};    /* Accent unique. Jamais décoratif.            */
+  --brand-contrast: {{VISUAL_CONTRAST}};/* Couleur lisible POSÉE SUR l'accent.         */
+  --brand-stroke: {{VISUAL_STROKE}};    /* Contour de lisibilité (sous-titres, titres).*/
+  --brand-surface-contrast: {{VISUAL_SURFACE_CONTRAST}}; /* Surface qui tranche (rare).*/
+
+  /* Alias de compatibilité — du code plus ancien parle encore de `white`/`yellow`/`light`.
+     Ils suivent maintenant le style choisi : ne PAS les utiliser dans du code neuf. */
+  --brand-white: var(--brand-text);
+  --brand-yellow: var(--brand-accent);
+  --brand-surface-light: var(--brand-surface-contrast);
+  --brand-title-stroke: var(--brand-stroke);
 
   /* Couleur d'erreur (croix) — hors palette de marque, usage dataviz/compare */
   --brand-negative: #ff5050;
@@ -25,7 +39,13 @@
   --brand-font-captions: {{FONT_CAPTIONS}}, "Arial Black", Impact, sans-serif;
   --brand-font-mono: "Courier New", ui-monospace, monospace;
 
+  /* --- Sous-titres : réglages du skin « {{CAPTIONS_SKIN}} » ---------------- */
+  --brand-cap-size: 50px;
+  --brand-cap-stroke-width: 8px;   /* skins outline / shadow                    */
+  --brand-cap-radius: 14px;        /* skins plate / block arrondi               */
+
   /* --- Motion : easings (CSS) --------------------------------------------- */
+  /* Fixes : c'est le rythme de la méthode, pas une préférence de marque.      */
   --brand-ease-inout: cubic-bezier(0.65, 0, 0.35, 1);   /* in-out aggressive   */
   --brand-ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1); /* entrées punchy      */
 
@@ -40,6 +60,12 @@
   --brand-safe-top: 220px;
   --brand-safe-bottom: 380px;
   --brand-safe-x: 100px;   /* cotes : IG recadre -> 100px (54 = plancher) */
+
+  /* --- Sous-titres : hauteurs par contexte (dérivées du cadrage) ---------- */
+  --brand-cap-y-split: 920px;    /* jointure du split-screen                   */
+  --brand-cap-y-face: 1140px;    /* plein écran visage                         */
+  --brand-cap-y-media: 1100px;   /* plein écran b-roll filmé                   */
+  --brand-cap-y-motion: 1500px;  /* plein écran motion / images                */
 }
 
 /* ==========================================================================
@@ -52,7 +78,7 @@
   inset: 0;
   background: var(--brand-bg);
   font-family: var(--brand-font-body);
-  color: var(--brand-white);
+  color: var(--brand-text);
   overflow: hidden;
 }
 
@@ -72,8 +98,9 @@
 }
 
 /* --- Couleurs texte ------------------------------------------------------ */
-.brand-yellow { color: var(--brand-yellow); }
+.brand-accent { color: var(--brand-accent); }
 .brand-muted  { color: var(--brand-muted); }
+.brand-yellow { color: var(--brand-accent); } /* alias historique */
 
 /* --- Typo : labels body (les SEULS textes autorisés en motion) ----------- */
 /* Label de colonne / section title : Black UPPERCASE, 22-36px               */
@@ -82,7 +109,7 @@
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--brand-white);
+  color: var(--brand-text);
 }
 
 /* Métadonnée / numérotation : SemiBold 20px */
@@ -90,7 +117,7 @@
   font-family: var(--brand-font-body);
   font-weight: 600;
   font-size: 20px;
-  color: var(--brand-white);
+  color: var(--brand-text);
 }
 
 /* Valeur dans un schéma : SemiBold */
@@ -110,10 +137,39 @@
 }
 
 /* ==========================================================================
-   Patterns motion transposables (états statiques — anim. via motion.js)
+   SOUS-TITRES — base commune + skin actif
+
+   `.cap` porte le skin CHOISI ({{CAPTIONS_SKIN}}). Les 5 skins restent disponibles
+   en classes `.cap-skin-<nom>` : pour en essayer un autre sur une compo, ajoute la
+   classe. Pour changer le défaut de toutes tes vidéos : `/setup visuel`.
    ========================================================================== */
 
-/* Ghost number : grand chiffre déco, blanc 10%, haut-droite. 1 = 1 entrée. */
+.cap {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--brand-font-captions);
+  font-size: var(--brand-cap-size);
+  line-height: 1.35;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* Skin actif (injecté depuis le style choisi) */
+{{CAPTIONS_SKIN_ACTIVE_CSS}}
+
+/* Les 5 skins, nommés — pour override ponctuel sur une compo */
+{{CAPTIONS_SKINS_ALL_CSS}}
+
+/* ==========================================================================
+   Patterns motion transposables (états statiques — anim. via motion.js)
+
+   Ce sont des OPTIONS du catalogue, pas une signature obligatoire : n'en pose un
+   que s'il sert la section. Trois patterns identiques dans toutes tes vidéos, c'est
+   ce qui rend deux comptes indistinguables.
+   ========================================================================== */
+
+/* Ghost number : grand chiffre déco, texte 10%, haut-droite. 1 = 1 entrée. */
 .brand-ghost {
   position: absolute;
   top: 0;
@@ -122,12 +178,12 @@
   font-weight: 700;
   font-size: 180px;
   line-height: 1;
-  color: var(--brand-white);
+  color: var(--brand-text);
   opacity: 0.1;
   user-select: none;
 }
 
-/* Yellow underline : trait accent sous un mot-clé (largeur animée 0 -> 100%) */
+/* Accent underline : trait accent sous un mot-clé (largeur animée 0 -> 100%) */
 .brand-underline-wrap { position: relative; display: inline-block; }
 .brand-underline {
   position: absolute;
@@ -135,14 +191,14 @@
   bottom: -8px;
   height: 6px;
   width: 0; /* animé de gauche à droite via motion.js / GSAP */
-  background: var(--brand-yellow);
+  background: var(--brand-accent);
   border-radius: 3px;
 }
 
-/* Circular cutout : cercle blanc bordé (logo / visage / preuve) */
+/* Circular cutout : cercle bordé (logo / visage / preuve) */
 .brand-cutout {
   border-radius: 50%;
-  border: 4px solid var(--brand-white);
+  border: 4px solid var(--brand-text);
   overflow: hidden;
   display: flex;
   align-items: center;

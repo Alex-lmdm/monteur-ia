@@ -86,8 +86,10 @@ Tu es mon assistant d'installation pour le projet « Monteur IA ». Installe tou
      — n'importe quelle sortie texte (même « (bell ringing) ») prouve que whisper répond ;
    - affiche un TABLEAU récapitulatif avec ✅ / ❌ par composant (Node, npm, chrome-headless-shell,
      ffmpeg, whisper, config, doctor, rendu, transcription).
-   Si tout est ✅, conclus par : « Installation terminée. Lance /setup pour personnaliser ton
-   Monteur IA. » S'il reste un ❌, explique-moi précisément quoi faire.
+   Si tout est ✅, conclus par : « Installation terminée. Lance /setup — les 2 premières minutes
+   posent tes couleurs et tes sous-titres, et c'est obligatoire avant de monter : sans ça tes
+   vidéos sortiraient dans le style d'usine, identique pour tout le monde. »
+   S'il reste un ❌, explique-moi précisément quoi faire.
 ```
 
 C'est tout. Laisse l'IA travailler et réponds-lui quand elle te pose une question.
@@ -217,7 +219,9 @@ Renseigne dans `brand.config.json` les chemins de ffmpeg et de whisper détecté
 npx hyperframes doctor
 ```
 ✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker absent, version plus récente
-disponible ou mémoire basse = bénin, ce n'est pas un échec.) Tu peux lancer `/setup`.
+disponible ou mémoire basse = bénin, ce n'est pas un échec.) Lance maintenant `/setup` : les
+2 premières minutes (tes couleurs, ta police, tes sous-titres) sont **obligatoires** avant de
+monter ta première vidéo.
 
 ### Windows
 
@@ -278,7 +282,9 @@ d'environnement `PRODUCER_FORCE_SCREENSHOT=true` (évite les rendus blancs/lents
 npx hyperframes doctor
 ```
 ✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker absent, version plus récente
-disponible ou mémoire basse = bénin, ce n'est pas un échec.) Tu peux lancer `/setup`.
+disponible ou mémoire basse = bénin, ce n'est pas un échec.) Lance maintenant `/setup` : les
+2 premières minutes (tes couleurs, ta police, tes sous-titres) sont **obligatoires** avant de
+monter ta première vidéo.
 
 ---
 

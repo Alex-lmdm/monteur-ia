@@ -41,8 +41,14 @@ if not INDEX.exists():
 src = INDEX.read_text(encoding="utf-8")
 out = src
 
-# fond transparent (le fond de marque est repose par ffmpeg, sous la couche visage)
-out = out.replace("background: #202022; }", "background: transparent; }", 1)
+# fond transparent (le fond de marque est repose par ffmpeg, sous la couche visage).
+# On matche la VARIABLE, jamais une couleur en dur : un hex ici casserait le calque alpha
+# de tous ceux dont le fond n'est pas celui du template.
+out, n_bg = re.subn(r"background:\s*var\(--brand-bg\);\s*\}", "background: transparent; }", out, count=1)
+if n_bg == 0:
+    print("ERREUR : fond du master introuvable — index.html doit poser "
+          "`html, body { ... background: var(--brand-bg); }` (jamais une couleur en dur).")
+    sys.exit(1)
 # retirer fond de marque / voix off / toutes les <video> (visage + b-roll natif)
 out = re.sub(r"\n *<!-- Fond de marque.*?</div>\n", "\n", out, flags=re.S)
 out = re.sub(r"\n *<!-- Voix off.*?</audio>\n", "\n", out, flags=re.S)

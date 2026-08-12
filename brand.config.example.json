@@ -1,10 +1,11 @@
 {
-  "brand": { "name": "Le Monde Du Marketing (exemple)", "handle": "@toncompte", "firstName": "Prénom", "niche": "ex: marketing / IA / fitness", "language": "fr" },
-  "visual": { "bg": "#202022", "accent": "#ffee00", "surface": "#2b2b2d", "fontDisplay": "Poppins", "fontBody": "Poppins", "fontCaptions": "BowlbyOneSC", "captionsPosition": "split-jointure", "captionsLines": 1 },
-  "cta": { "types": ["keyword-dm"], "dmTool": "manychat", "defaultKeyword": null, "linkEmoji": "🔗" },
+  "_comment": "Copié en brand.config.json au premier /setup. Les valeurs à null = pas encore réglées : le monteur retombe alors sur le preset de style (templates/style-presets.json). Toute valeur renseignée ici gagne sur le preset.",
+  "brand": { "name": null, "handle": null, "firstName": null, "niche": null, "language": "fr" },
+  "visual": { "stylePreset": null, "bg": null, "accent": null, "surface": null, "text": null, "fontDisplay": null, "fontBody": null, "fontCaptions": null, "captionsSkin": null, "captionsPosition": null, "captionsLines": null },
+  "cta": { "types": ["keyword-dm"], "style": null, "dmTool": null, "defaultKeyword": null, "linkEmoji": "🔗" },
   "audio": { "enhanceMethod": "adobe", "musicFile": null, "musicDb": -26.5 },
-  "derush": { "padStart": 0.04, "padEnd": 0.02, "silenceDb": -40, "islandDuration": 0.18, "camera": "dji", "whisperLanguage": "fr" },
-  "montage": { "defaultLayout": "split", "splitTransform": null, "faceCrop": null, "fullFaceTransform": null, "fullFaceOrigin": null, "fullFaceCrop": null },
+  "derush": { "padStart": 0.04, "padEnd": 0.02, "silenceDb": -40, "islandDuration": 0.18, "camera": null, "whisperLanguage": null },
+  "montage": { "defaultLayout": null, "splitTransform": null, "faceCrop": null, "fullFaceTransform": null, "fullFaceOrigin": null, "fullFaceCrop": null },
   "env": { "os": null, "agents": ["claude-code"], "ffmpegPath": null, "whisperCli": null, "whisperModel": null },
-  "setup": { "completedBlocks": [], "version": 1 }
+  "setup": { "completedBlocks": [], "styleChosen": false, "version": 2 }
 }

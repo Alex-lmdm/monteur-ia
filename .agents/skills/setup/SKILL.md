@@ -31,6 +31,12 @@ prêt (« appuie sur Entrée pour garder le réglage recommandé »).
    `/setup <bloc>` refait un bloc isolé : `a`/`identite`, `b`/`voix`, `c`/`funnel`, `d`/`visuel`,
    `e`/`derush`, `f`/`technique`.
 
+   ⛔ **Le bloc D (Visuel) est le seul BLOQUANT.** Tant qu'il n'est pas fait
+   (`setup.styleChosen` ≠ `true`), le monteur refuse de monter une vidéo : il sortirait le style
+   d'usine « neutre », identique pour tout le monde. Si l'utilisateur arrive en disant « monte ma
+   vidéo » sans avoir fait le setup, **fais le bloc D seul** (2 minutes, 3 questions), puis monte.
+   Les 5 autres blocs restent optionnels et se font quand il veut.
+
 2. **`brand.config.json` = source de vérité unique.** Au démarrage : lire `brand.config.json` à la
    racine. **S'il n'existe pas**, le créer en copiant `brand.config.example.json` (défauts
    recommandés, éprouvés en production : pads 0.04/0.02, silence -40 dB, musique -26,5 dB ; le
@@ -47,7 +53,14 @@ prêt (« appuie sur Entrée pour garder le réglage recommandé »).
 
 5. **Écritures déterministes, régénérées depuis les templates.** On ne patche jamais un fichier
    ligne par ligne. On remplit `brand.config.json`, puis on **régénère** les zones concernées depuis
-   `templates/*.tpl` + le config. Les zones générées sont encadrées par des marqueurs :
+   `templates/*.tpl` + le config.
+
+   **Cas particulier du design system** : `brand/tokens.css` et `brand/fonts.css` sont
+   **entièrement générés** par `node scripts/sync.mjs` (ils ne sont pas versionnés). On ne les
+   édite JAMAIS à la main, ni par marqueurs : on écrit `visual.*` dans `brand.config.json` et on
+   lance le sync. Toute couleur écrite à la main dans ces fichiers sera perdue au sync suivant.
+
+   Pour les fichiers markdown, les zones générées sont encadrées par des marqueurs :
    ```
    <!-- BEGIN GENERATED: <clef> -->
    ...contenu régénéré...
@@ -70,10 +83,12 @@ prêt (« appuie sur Entrée pour garder le réglage recommandé »).
 
 > **Périmètre.** Ce skill écrit dans : `brand.config.json`, `.claude/skills/reel-script/SKILL.md`
 > (+ `references/scripts-exemples.md`), `design-system/manychat-dm.md`,
-> `design-system/instagram-caption.md`, `brand/tokens.css`, `brand/fonts.css`, `assets/…`.
+> `design-system/instagram-caption.md`, `templates/style-presets.json` (table `fonts`, quand
+> l'utilisateur fournit SA police), `assets/…`.
 > Il **lit** `templates/`, `scripts/sync.mjs`, `brand.config.example.json`,
-> `.claude/skills/motion-design/references/montage-talking-head.md`. Il n'installe RIEN (ffmpeg,
-> whisper, polices → renvoyer vers `INSTALL.md`).
+> `.claude/skills/motion-design/references/montage-talking-head.md`.
+> ⛔ Il **n'écrit jamais** `brand/tokens.css` ni `brand/fonts.css` : ces deux fichiers sont générés
+> par `node scripts/sync.mjs`. Il n'installe RIEN (ffmpeg, whisper, polices → `INSTALL.md`).
 
 Le **questionnaire complet** (formulation exacte de chaque question, champ config cible, défaut,
 validations) est dans **`references/questions.md`** — le lire avant d'animer un bloc.
@@ -83,9 +98,13 @@ validations) est dans **`references/questions.md`** — le lire avant d'animer u
 ## Démarrage (à chaque appel `/setup`)
 
 1. Lire `brand.config.json` (ou le créer depuis `brand.config.example.json`).
-2. Regarder `setup.completedBlocks`.
+2. Regarder `setup.completedBlocks` et **`setup.styleChosen`**.
 3. **Si un bloc précis est demandé** (`/setup voix`) → aller droit à ce bloc.
-4. **Sinon** → annoncer l'état et proposer le prochain bloc non fait. Un petit mot d'accueil au tout
+4. **Si `setup.styleChosen` est `false` → faire le bloc D EN PREMIER**, quel que soit l'ordre
+   habituel. C'est le seul bloquant : tant qu'il n'est pas fait, aucune vidéo ne peut être montée.
+   Annoncer franchement : « on commence par tes couleurs et tes sous-titres, 2 minutes — après tu
+   peux monter, et on fera le reste quand tu veux ».
+5. **Sinon** → annoncer l'état et proposer le prochain bloc non fait. Un petit mot d'accueil au tout
    premier lancement : présenter l'Empreinte en 2 phrases (ton monteur apprend ta voix, tes couleurs, ton cadrage : tu la déposes une fois, chaque vidéo la porte), dire
    que ça prend ~15 min et qu'on peut s'arrêter entre deux blocs (tout est sauvegardé).
 
@@ -170,29 +189,75 @@ encore ces marqueurs, les insérer après l'intro, en montrant l'emplacement à 
 
 ---
 
-## Bloc D — Visuel `visual.*`
+## Bloc D — Visuel `visual.*`  ⛔ LE SEUL BLOC BLOQUANT
 
-**Écrit :** `visual.*` + régénère `brand/tokens.css` (depuis `templates/tokens.css.tpl`) et, si
-besoin, `brand/fonts.css`.
+**Écrit :** `visual.*`, `setup.styleChosen`, puis `node scripts/sync.mjs` régénère
+`brand/tokens.css` + `brand/fonts.css`.
 
-Questions + garde-fous :
-- **Couleur de fond** (`visual.bg`) : hex valide. **Garde-fou : jamais noir pur `#000000`** (ça bave
-  à l'écran) → si l'utilisateur donne `#000`, proposer `#202022` ou un quasi-noir.
-- **Couleur d'accent** (`visual.accent`) : hex valide. **Garde-fou contraste** — vérifier le ratio
-  accent/fond ET accent/blanc ; si un ratio est faible (peu lisible), **avertir** et proposer 2-3
-  alternatives plus contrastées. Ne pas écrire une couleur illisible sans l'avoir signalé.
-- **Surface** (`visual.surface`) : bloc surélevé, légèrement plus clair que le fond (défaut proposé).
-- **Polices** (`visual.fontDisplay`, `fontBody`, `fontCaptions`) : garder **Poppins** (recommandé,
-  déjà en local) ou fournir une autre police. Si autre police → expliquer simplement : « donne-moi
-  les fichiers `.woff2`/`.ttf`, je les mets dans `assets/fonts/` et je les déclare dans
-  `brand/fonts.css` ». **JAMAIS de Google Fonts en ligne** (rendu non déterministe / hors-ligne
-  cassé). Tant que les fichiers ne sont pas fournis, garder Poppins.
-- **Sous-titres** (`visual.captionsLines` 1 ou 2 lignes, `visual.captionsPosition`) : style et
-  position par défaut.
+> **Pourquoi celui-là bloque, et pas les autres.** Le fond, l'accent et la police de sous-titres
+> sont ce qui rend un compte reconnaissable en une seconde. Sans choix, tout le monde sort le
+> même style d'usine. Dis-le simplement : « c'est le seul réglage que je ne peux pas deviner à ta
+> place ».
+
+**Format : 3 questions, 2 minutes.** Pas d'inventaire de nuancier, pas de cours de design.
+Le questionnaire détaillé (formulations exactes, validations) est dans `references/questions.md`.
+
+### D1 — Le style de départ (la seule question vraiment importante)
+
+Lire `templates/style-presets.json` et **présenter les presets par leur `label` + `description`**,
+sans jargon, en disant clairement que c'est un **point de départ modifiable**, pas un moule.
+
+> « J'ai 5 styles prêts. Tu en prends un, et on ajuste ce que tu veux après. Ou tu me donnes tes
+> propres couleurs si tu les as déjà. »
+
+- Ne PAS lister le preset `neutral` comme une option : c'est l'état « non choisi ».
+- **S'il a déjà une identité** (site, logo, chaîne existante) → prendre SES couleurs directement,
+  c'est toujours mieux qu'un preset. Écrire `visual.bg` / `visual.accent` / `visual.surface`.
+- Écrire `visual.stylePreset` = l'`id` choisi. Les valeurs du preset s'appliquent, et **toute clé
+  renseignée dans `visual.*` gagne sur le preset** (c'est le mécanisme d'ajustement).
+
+### D2 — Les couleurs (seulement si ajustement)
+
+Si le preset lui va tel quel, **passer**. Sinon :
+- **Fond** (`visual.bg`) : **jamais noir pur `#000000`** (ça bave à l'écran) → proposer un quasi-noir
+  teinté de sa couleur.
+- **Accent** (`visual.accent`) : `npm run sync` vérifie automatiquement les ratios de contraste et
+  avertit si l'accent ou le texte passe mal sur le fond. **Relayer l'avertissement**, proposer 2-3
+  alternatives plus contrastées, et laisser trancher : c'est son goût, pas le tien.
+- `visual.surface`, `visual.text` : dérivés du preset, on n'en parle que s'il le demande.
+
+### D3 — Les sous-titres (le marqueur d'identité le plus visible)
+
+Deux réglages, deux phrases :
+- **La police** (`visual.fontCaptions`) : Inter, Anton ou Archivo Black sont livrées. **Si tu as la
+  tienne, c'est mieux** — c'est ce qui te distingue le plus vite. Fichiers `.woff2`/`.ttf` dans
+  `assets/fonts/`, déclarés dans la table `fonts` de `templates/style-presets.json`.
+  ⚠️ Une police de sous-titres a besoin d'un **`.ttf` de mesure** (`measureFile`) : PIL ne lit pas
+  le woff2, et sans lui `tools/montage_captions.py` ne peut plus garantir une seule ligne.
+  **JAMAIS de Google Fonts en ligne** (rendu non déterministe / hors-ligne cassé).
+- **Le skin** (`visual.captionsSkin`) : les 5 apparences sont décrites dans `captionSkins` de
+  `templates/style-presets.json` — `block` (fond plein), `outline` (contour), `plate` (plaque
+  arrondie), `shadow` (ombre portée), `underline` (souligné). Les nommer en une ligne chacun,
+  laisser choisir.
+- `visual.captionsLines` (1 ou 2) et `visual.captionsPosition` : garder les défauts sauf demande.
+
+### D4 — Style du CTA et cadrage (optionnel, proposer sans insister)
+
+- `cta.style` : les options sont dans `ctaStyles` de `templates/style-presets.json`. Le preset en a
+  déjà posé un.
+- `montage.defaultLayout` : `split` ou `faceplein`. **Détail complet au bloc F3** (avec la
+  calibration du cadrage) — ici on ne fait que confirmer celui du preset.
 - **Logo / avatar** (optionnel) : si fourni → le déposer dans `assets/images/`.
 
-**Restitution + validation**, écrire `visual.*`, régénérer `brand/tokens.css` (+ `fonts.css` si
-police custom), marquer `D`, `node scripts/sync.mjs`.
+### Écriture
+
+**Restitution + validation**, puis écrire `visual.*` (+ `cta.style` si touché), mettre
+`setup.styleChosen = true`, marquer `D` dans `completedBlocks`, et lancer **`node scripts/sync.mjs`**
+— c'est lui, et lui seul, qui écrit `brand/tokens.css` et `brand/fonts.css`.
+
+**Contrôle final obligatoire** : relire la sortie du sync. S'il avertit sur un contraste faible ou
+une police manquante, **le dire à l'utilisateur** avant de conclure. Ne jamais annoncer « c'est
+prêt » sur un sync qui a averti.
 
 ---
 

@@ -12,6 +12,12 @@ Ce projet sert **un seul format** : les Reels Instagram de {{FIRST_NAME}} ({{BRA
 **vraie vidéo talking-head + motion design {{BRAND_NAME}} par-dessus, section par section**, avec
 sous-titres, SFX et musique. Format **vertical 1080×1920, 30 fps**.
 
+> 🎨 **Style visuel actif : {{STYLE_PRESET}}** — fond `{{STYLE_BG}}`, accent `{{STYLE_ACCENT}}`,
+> sous-titres {{STYLE_CAPTIONS}}, cadrage par défaut `{{STYLE_LAYOUT}}`.
+> Ces valeurs viennent de `brand.config.json` et vivent dans `brand/tokens.css` (généré).
+> **Ne jamais écrire une couleur, une police ou une taille de sous-titre en dur dans une compo** :
+> toujours `var(--brand-*)`. Un hex en dur survit au changement de style et casse la cohérence.
+
 > ⚠️ **À FAIRE AVANT TOUTE TÂCHE DE MONTAGE.** Ce fichier est le seul toujours chargé.
 > Il ne remplace pas les skills : il **aiguille** vers eux et rappelle les règles qu'on oublie.
 > Pour chaque étape : **charge le skill de l'étape et relis sa checklist AVANT d'écrire une seule
@@ -19,20 +25,34 @@ sous-titres, SFX et musique. Format **vertical 1080×1920, 30 fps**.
 
 ---
 
-## 🟢 Étape 0 — Setup (recommandé, pas bloquant)
+## 🟢 Étape 0 — Setup
 
-**Le système fonctionne dès l'installation.** Les skills embarquent déjà la méthode complète (écriture
-de script, dérush, montage, légende, DM) : tu peux monter une vidéo tout de suite, sans rien
-configurer. `/setup` ne débloque rien — il **personnalise** (ta voix, tes couleurs, ton funnel, ton
-cadrage) pour que le rendu te ressemble au lieu de rester générique.
+**La méthode fonctionne dès l'installation** (écriture de script, dérush, montage, légende, DM).
+`/setup` ne débloque pas la méthode : il pose **l'identité** par-dessus.
 
-- Si **`brand.config.json` n'existe pas**, ou si **`setup.completedBlocks` est incomplet**, tu peux
-  **proposer `/setup`** pour personnaliser — mais **ne bloque jamais un montage** pour ça. Si
-  {{FIRST_NAME}} veut monter direct, tu montes direct (la méthode par défaut suffit), et tu proposes
-  le setup après coup.
+### ⛔ Le style visuel est le SEUL réglage bloquant
+
+**Si `setup.styleChosen` est `false` (ou `brand.config.json` absent), tu ne montes RIEN avant
+d'avoir fait choisir le style.** Ce n'est pas une préférence de confort : sans ce choix, la vidéo
+sort dans le style d'usine « neutre » — et toutes les vidéos de tous les utilisateurs se
+ressemblent. **Une identité visuelle par défaut, ce n'est plus une identité.**
+
+Ce que tu fais, exactement, quand {{FIRST_NAME}} demande un montage sans style choisi :
+
+> « Avant de monter, il me faut 3 réponses — 2 minutes, une seule fois. Après, je ne te les
+> redemande plus jamais. »
+
+Puis tu lances **`/setup visuel`** (le bloc D seul, 3 questions : style, accent, sous-titres).
+Tu montes dès que c'est fait. **N'invente jamais des couleurs « en attendant ».**
+
+Le reste du setup (voix, funnel, dérush, cadrage) reste **optionnel et non bloquant** : si
+{{FIRST_NAME}} veut monter tout de suite après le bloc D, tu montes, et tu proposes la suite après.
+
 - Les valeurs personnalisées (dérush, audio, visuel, CTA…) vivent dans **`brand.config.json`** :
   c'est la source de vérité des réglages. Tant qu'un réglage n'est pas personnalisé, on utilise le
   défaut recommandé (éprouvé en production), jamais une valeur inventée.
+- **Signal d'alerte à vérifier avant chaque montage** : si `brand.config.json` est absent, ou si
+  `visual.stylePreset` vaut `neutral`, dis-le clairement plutôt que de monter en silence.
 
 ---
 
