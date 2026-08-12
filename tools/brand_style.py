@@ -151,7 +151,7 @@ def style() -> Style:
 
 if __name__ == "__main__":
     s = style()
-    print(f"style      : {s.preset_id}{'' if s.chosen else '  (AUCUN STYLE CHOISI — /setup visuel)'}")
+    print(f"style      : {s.preset_id}{'' if s.chosen else '  (style de depart, pas encore personnalise — /setup visuel)'}")
     print(f"couleurs   : fond {s.bg} · accent {s.accent} · texte {s.text}")
     print(f"polices    : body {s.font_body} · sous-titres {s.font_captions} (skin {s.captions_skin})")
     print(f"cadrage    : {s.default_layout} · CTA {s.cta_style}")
