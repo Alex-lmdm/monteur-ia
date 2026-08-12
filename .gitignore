@@ -41,6 +41,10 @@ derush/**/*.m4a
 work/*
 !work/.gitkeep
 
+# Dossier de test jetable pour snapshoter une sous-compo isolée (cf. motion-design).
+# Il contient un HTML racine : versionné, il casserait le lint (multiple_root_compositions).
+probe/
+
 # Caches générés par le studio HyperFrames
 .thumbnails/
 .waveform-cache/
