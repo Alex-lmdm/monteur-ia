@@ -3,7 +3,7 @@
   "brand": { "name": null, "handle": null, "firstName": null, "niche": null, "language": "fr" },
   "visual": { "stylePreset": null, "bg": null, "accent": null, "surface": null, "text": null, "fontDisplay": null, "fontBody": null, "fontCaptions": null, "captionsSkin": null, "captionsPosition": null, "captionsLines": null },
   "cta": { "types": ["keyword-dm"], "style": null, "dmTool": null, "defaultKeyword": null, "linkEmoji": "🔗" },
-  "audio": { "enhanceMethod": "adobe", "musicFile": null, "musicDb": -26.5 },
+  "audio": { "musicFile": null, "musicDb": -26.5 },
   "derush": { "padStart": 0.04, "padEnd": 0.02, "silenceDb": -40, "islandDuration": 0.18, "camera": null, "whisperLanguage": null },
   "montage": { "defaultLayout": null, "splitTransform": null, "faceCrop": null, "fullFaceTransform": null, "fullFaceOrigin": null, "fullFaceCrop": null },
   "env": { "os": null, "agents": ["claude-code"], "ffmpegPath": null, "whisperCli": null, "whisperModel": null },

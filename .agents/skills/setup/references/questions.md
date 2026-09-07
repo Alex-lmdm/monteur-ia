@@ -98,7 +98,7 @@ tout avertissement (contraste faible, police absente de la table, `.ttf` de mesu
 | # | Question | Champ | Défaut | Validation |
 |---|---|---|---|---|
 | E1 | « Tu filmes avec quoi ? (DJI, iPhone, webcam, autre) » | `derush.camera` | `iPhone` | si `DJI` → noter règle flux mjpeg + rappel SDR/mode Normal |
-| E2 | « Comment on nettoie ta voix ? Adobe Podcast (2 clics à la main, meilleur son) ou 100% auto ffmpeg (un peu moins bon) ? » | `audio.enhanceMethod` | `adobe` | `adobe`/`ffmpeg` |
+| E2 | (pas de question) Annoncer : « ta voix sera nettoyée avec Adobe Podcast Enhance au dérush, tu glisses un fichier, je fais le reste » | aucun | Adobe Enhance, toujours | ne proposer aucune alternative |
 | E3 | « Tu as une musique de fond ? Colle/dépose ton MP3, je le range. » | `audio.musicFile` (→ `assets/music/`) | aucun | MP3 si fourni |
 | E4 | « Le volume de la musique, on garde le réglage recommandé ? » | `audio.musicDb` | `-26.5` | nombre (dB) |
 | E5 | « Le rythme des coupes, on garde les réglages recommandés ? (conseillé) » | `derush.padStart`/`padEnd`/`silenceDb`/`islandDuration` | `0.04`/`0.02`/`-40`/`0.18` | ne changer que sur demande explicite |

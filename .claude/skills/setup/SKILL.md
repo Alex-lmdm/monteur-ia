@@ -280,9 +280,10 @@ Questions :
 - **Caméra** (`derush.camera` : DJI / iPhone / webcam / autre). Si **DJI** → noter la règle du 2ᵉ
   flux mjpeg (vignette) qu'il faudra mapper au dérush, et rappeler de filmer en **SDR / mode Normal**
   (pas HDR/HLG, sinon tonemap obligatoire au transcodage).
-- **Nettoyage audio** (`audio.enhanceMethod`) : **`adobe`** (recommandé — Adobe Podcast Enhance, 2
-  clics à la main, meilleure qualité ; renvoyer au skill `derush` pour le process) ou **`ffmpeg`**
-  (100 % automatique, un peu moins bon). Expliquer le compromis en une phrase.
+- **Nettoyage audio** : pas de question. La voix est **toujours** nettoyée avec Adobe Podcast
+  Enhance (gratuit, compte Adobe), le process vit dans le skill `derush` §7. Le dire en une phrase
+  (« au dérush, tu glisseras un fichier sur Adobe Enhance, je fais le reste »), sans proposer
+  d'alternative.
 - **Musique de fond** : l'utilisateur fournit son MP3 → le déposer dans `assets/music/`, écrire
   `audio.musicFile`. Volume par défaut `audio.musicDb` = **-26,5 dB**.
 - **Rythme des coupes** (`derush.padStart`, `padEnd`, `silenceDb`, `islandDuration`) : garder les

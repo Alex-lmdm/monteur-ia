@@ -159,55 +159,37 @@ ffmpeg -ss <a> -to <b> -i work/d_audio.wav -af silencedetect=noise=-44dB:d=0.05 
 On voit alors les deux occurrences → ne garder que la **dernière** (complète), ajuster la borne de
 l'îlot, rebuild, re-vérifier (a) + (b), régénérer la timeline.
 
-### 7. Amélioration audio → `brand.config.json` → `audio.enhanceMethod`
+### 7. Nettoyage de la voix → Adobe Podcast Enhance (toujours, pas d'alternative)
 
-L'audio brut grésille. Deux variantes documentées ; le choix vient de `audio.enhanceMethod`.
+L'audio brut grésille. Le nettoyage passe **toujours** par Adobe Podcast Enhance (gratuit, compte
+Adobe requis) : c'est la seule méthode du système. **Ne propose jamais une autre méthode** (pas de
+filtre ffmpeg, pas de « je peux le faire moi-même ») : l'utilisateur fait deux gestes dans son
+navigateur, tu fais tout le reste.
 
-D'abord, extraire la voix du cut :
+1. Extraire la voix du cut :
 ```bash
 ffmpeg -y -i <projet>/derush/<cut>.mp4 -vn -c:a libmp3lame -b:a 320k <projet>/derush/<cut>_voice.mp3
 ```
-
-#### Variante `adobe` — Adobe Podcast Enhance (manuel, meilleure qualité)
-
-Rendu haut de gamme, mais passe par le navigateur (upload manuel).
-
-1. Révéler le MP3 pour le créateur :
+2. Révéler le MP3 pour le créateur :
    - macOS : `open -R <projet>/derush/<cut>_voice.mp3`
    - Windows : `explorer /select,"<projet>\derush\<cut>_voice.mp3"`
-2. Via le navigateur (extension Chrome / `mcp__claude-in-chrome__*`) : ouvrir
-   `https://podcast.adobe.com/enhance` (le créateur doit être connecté à Adobe).
-3. **Demander au créateur de glisser le MP3** sur la zone « Optimiser ».
-   ⚠️ **L'agent NE PEUT PAS uploader lui-même** : le sélecteur de fichiers ouvre la fenêtre native de
-   l'OS, hors de la page → l'upload reste manuel (1 glisser).
-4. Attendre le traitement → cliquer **« Télécharger »** → le fichier arrive dans le dossier de
-   téléchargements (`~/Downloads` / `%USERPROFILE%\Downloads`).
-5. Remux (vidéo intacte + audio amélioré, sync préservé car même durée) :
+3. Lui donner **exactement** ces trois consignes, en un seul message, puis attendre :
+   > « Ouvre https://podcast.adobe.com/enhance (connecté à ton compte Adobe), glisse le fichier
+   > `<cut>_voice.mp3` que je viens de te montrer sur la zone « Optimiser », attends la fin du
+   > traitement, clique « Télécharger », puis dis-moi "c'est téléchargé". »
+   ⚠️ **Tu ne peux pas faire l'upload à sa place** : le sélecteur de fichiers ouvre la fenêtre
+   native de l'OS, hors de portée de n'importe quel agent. N'essaie pas, ne le contourne pas.
+4. Quand il dit que c'est téléchargé : récupérer le fichier le plus récent du dossier de
+   téléchargements (`~/Downloads` / `%USERPROFILE%\Downloads`) dont le nom commence par
+   `<cut>_voice` (Adobe le renomme, par ex. `<cut>_voice-optimisé.mp3` ou `<cut>_voice (enhanced).mp3`),
+   puis le copier en `<projet>/derush/<cut>_voice_enhanced.mp3`. S'il n'y en a aucun, le dire et
+   redonner la consigne du point 3, sans improviser une autre méthode.
+5. Vérifier que les durées correspondent (`ffprobe -v error -show_entries format=duration -of csv=p=0 <fichier>`
+   sur le MP4 et sur le MP3 : écart < 0,1 s), puis remuxer (vidéo intacte + voix nettoyée) :
 ```bash
-cp ~/Downloads/"<cut>_voice-optimisé.mp3" <projet>/derush/<cut>_voice_enhanced.mp3
 ffmpeg -y -i <projet>/derush/<cut>.mp4 -i <projet>/derush/<cut>_voice_enhanced.mp3 -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest <projet>/derush/<cut>_enhanced.mp4
 ```
-> Le remux ci-dessus est écrit en **une seule ligne** exprès (collable tel quel, y compris sous
-> PowerShell). Toujours vérifier que les durées vidéo/audio matchent (`ffprobe ... format=duration`)
-> avant remux.
-
-#### Variante `ffmpeg` — débruitage 100 % local (automatisable, zéro geste)
-
-Pas d'upload, entièrement scriptable. Chaîne raisonnable : passe-haut (coupe les basses parasites) +
-débruitage adaptatif + réduction de bruit non-local + normalisation loudness. Une seule ligne :
-```bash
-ffmpeg -y -i <projet>/derush/<cut>.mp4 -c:v copy -af "highpass=f=90,afftdn=nf=-25,anlmdn=s=4:p=0.002:r=0.006,loudnorm=I=-16:TP=-1.5:LRA=11" -c:a aac -b:a 256k <projet>/derush/<cut>_enhanced.mp4
-```
-- `highpass=f=90` : enlève le ronflement/rumble sous 90 Hz.
-- `afftdn=nf=-25` : débruitage spectral (monter `nf` vers -20 si le souffle persiste, descendre vers
-  -30 si la voix devient métallique).
-- `anlmdn` : réduction de bruit non-locale (léger, préserve les transitoires de la voix).
-- `loudnorm=I=-16` : niveau cible standard réseaux sociaux.
-- Alternative RNNoise si un modèle est dispo : remplacer `afftdn,anlmdn` par
-  `arnndn=m=<chemin_modele>.rnnn`.
-
-Adobe reste la meilleure qualité perçue ; le mode `ffmpeg` est le défaut quand on veut un pipeline
-sans intervention.
+> Le remux est écrit en **une seule ligne** exprès (collable tel quel, y compris sous PowerShell).
 
 ### 7bis. MESURER LES VRAIS POINTS DE COUPE → `<cut>_cuts.json` (OBLIGATOIRE)
 
