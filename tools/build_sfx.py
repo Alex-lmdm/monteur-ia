@@ -4,7 +4,8 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║ CE FICHIER EST ADAPTE A CHAQUE REEL.                                           ║
 ║  - La MUSIQUE vient de brand.config.json -> audio.musicFile + audio.musicDb.   ║
-║  - Les SFX sont les fichiers presents dans assets/sfx/.                        ║
+║  - Les SFX sont les fichiers de assets/sfx/ ET de ses sous-dossiers            ║
+║    (starter/, pack/...) : on les nomme par chemin relatif, ex. starter/pop.mp3.║
 ║  - Le MAPPING/PLACEMENT (quel SFX, a quel instant, a quel volume) est PILOTE   ║
 ║    PAR L'AGENT : remplis la liste EVENTS ci-dessous, un evenement par SFX.     ║
 ║ La demo place un SFX de transition sur chaque frontiere de section — c'est un  ║
@@ -63,13 +64,17 @@ if not SRC.exists():
     die(f"{SRC.relative_to(ROOT)} manquant — rends d'abord la video finale (etape export ffmpeg).")
 
 # --- SFX disponibles ---------------------------------------------------------------------------
-available = sorted(p.name for p in SFX_DIR.glob("*")
-                   if p.suffix.lower() in (".mp3", ".wav", ".m4a", ".aif", ".aiff"))
+# Racine ET sous-dossiers : la bibliotheque de demarrage vit dans starter/. Chemins relatifs a
+# assets/sfx/ (ex. "starter/whoosh.mp3"), c'est ce qu'on ecrit dans EVENTS.
+available = sorted(p.relative_to(SFX_DIR).as_posix() for p in SFX_DIR.rglob("*")
+                   if p.is_file() and p.suffix.lower() in (".mp3", ".wav", ".m4a", ".aif", ".aiff"))
 if not available:
     die(f"aucun SFX dans {SFX_DIR.relative_to(ROOT)} — depose tes effets (cf assets/sfx/README.md).")
 
 # =============================================================================
 # EVENTS = (fichier_sfx, start_s, volume_dB, trim|None)  -> A REMPLIR PAR L'AGENT.
+#   fichier_sfx : chemin relatif a assets/sfx/ (ex. "starter/pop.mp3"), ou chemin absolu.
+#   trim : None, une duree (on garde 0 -> trim), ou un tuple (t0, t1) (on garde t0 -> t1).
 # Ci-dessous : un EXEMPLE generique — un SFX de transition sur chaque debut de section
 # (sauf la premiere). On alterne les SFX disponibles pour ne jamais jouer 2x le meme d'affilee.
 # =============================================================================
@@ -86,8 +91,11 @@ for i, (f, start, vol, trim) in enumerate(events, start=1):
     inputs += ["-i", str(SFX_DIR / f)]
     ch = f"[{i}:a]"
     if trim:
-        ch_f = (f"atrim=0:{trim},volume={vol}dB,aformat=channel_layouts=stereo:sample_rates=48000,"
-                f"afade=t=out:st={max(trim - 0.06, 0):.3f}:d=0.06,adelay={int(start * 1000)}:all=1")
+        t0, t1 = (float(trim[0]), float(trim[1])) if isinstance(trim, (tuple, list)) else (0.0, float(trim))
+        keep = t1 - t0
+        ch_f = (f"atrim={t0}:{t1},asetpts=PTS-STARTPTS,volume={vol}dB,"
+                f"aformat=channel_layouts=stereo:sample_rates=48000,"
+                f"afade=t=out:st={max(keep - 0.06, 0):.3f}:d=0.06,adelay={int(start * 1000)}:all=1")
     else:
         ch_f = (f"volume={vol}dB,aformat=channel_layouts=stereo:sample_rates=48000,"
                 f"adelay={int(start * 1000)}:all=1")

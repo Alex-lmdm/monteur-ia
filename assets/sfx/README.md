@@ -1,6 +1,6 @@
 # assets/sfx — tes effets sonores (SFX)
 
-**Un pack de démarrage est déjà livré dans `starter/`** (7 sons réels sous licence **CC0**, donc
+**Un pack de démarrage est déjà livré dans `starter/`** (22 sons réels sous licence **CC0**, donc
 redistribuables) : « mets le sound effect » fonctionne **dès l'installation, hors-ligne**, sans rien
 configurer. Voir `starter/README.md` (liste + provenance Freesound).
 

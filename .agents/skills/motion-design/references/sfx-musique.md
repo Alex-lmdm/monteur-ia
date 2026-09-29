@@ -41,13 +41,13 @@ ajuster au son réel) :
   **-14/-15 dB**
 - (À -20 uniforme, les sons doux — felt pen, typing, clics — sont inaudibles ; les remonter.)
 
-**Recette ffmpeg** (mix par-dessus `renders/FINAL_CAP.mp4`, **vidéo copiée** donc rapide) — script de
-réf `work/sfx.py` (liste d'events `(fichier, start, volume_dB, trim|None)`) :
+**Recette ffmpeg** (mix par-dessus `renders/FINAL.mp4`, **vidéo copiée** donc rapide) — script de
+réf `tools/build_sfx.py` (liste d'events `(fichier, start, volume_dB, trim|None)`, fichier = chemin
+relatif à `assets/sfx/`, ex. `starter/pop.mp3`) :
 - par SFX : `[i:a]atrim=0:DUR(si rogné),volume=XdB,aformat=channel_layouts=stereo:sample_rates=48000,afade=t=out:st=DUR-0.06:d=0.06(si rogné),adelay=START_ms:all=1[ei]`
 - mix : `[voice][e0][e1]…amix=inputs=N+1:normalize=0:dropout_transition=0,alimiter=limit=0.97[aout]`
 - `-map 0:v -c:v copy -map [aout] -c:a aac -b:a 192k`. Sortie `renders/FINAL_SFX.mp4`.
-- Vérif placement sans écoute : `showwavespic` (comparer voix seule vs voix+SFX, les pics SFX doivent
-  apparaître aux bons temps).
+- Vérif placement sans écoute : `python3 tools/build_sfx.py --probe` (voir plus bas, la seule méthode fiable).
 
 **Musique de fond par défaut** : `brand.config.json` → `audio.musicFile` (fichier dans
 `assets/music/`, recopié de projet en projet), au volume `audio.musicDb`.
@@ -58,7 +58,7 @@ réf `work/sfx.py` (liste d'events `(fichier, start, volume_dB, trim|None)`) :
 - **VOCABULAIRE** : quand le créateur dit « **mets le sound effect ET la musique** » → ça veut dire les
   SFX **+ cette musique de fond par défaut**, sauf indication contraire.
 - Recette : ajouter au mix une entrée `[m:a]atrim=0:DUR,volume=<audio.musicDb>dB,aformat=channel_layouts=stereo:sample_rates=48000,afade=t=in:st=0:d=0.4,afade=t=out:st=DUR-1.2:d=1.2[music]`
-  et l'inclure dans l'`amix` (cf `work/mix.py`). `alimiter=limit=0.97` en fin de chaîne évite toute
+  et l'inclure dans l'`amix` (déjà fait par `tools/build_sfx.py`). `alimiter=limit=0.97` en fin de chaîne évite toute
   saturation.
 
 **Vérifier le placement SANS ÉCOUTER — la seule méthode fiable.**
