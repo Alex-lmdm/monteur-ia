@@ -22,7 +22,7 @@ Ensuite, dans les deux cas :
   6. commit « chore: clôture reel <slug> ».
 
 Ne touche jamais aux réglages du client : brand.config.json, brand/, assets/ hors
-assets/video/ (images, logos, musique, SFX), reels-publies/.
+assets/video/ (images, logos, musique, SFX), l'archive <Vidéos>/reels-publies/.
 
 Pourquoi remettre les outils : le pipeline les adapte à chaque reel (CUTS_PATH, LAYOUT, MANUAL,
 EVENTS…). Laissés tels quels, le reel suivant repartirait des réglages de l'ancien, et

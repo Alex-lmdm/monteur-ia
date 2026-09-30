@@ -47,8 +47,11 @@ ou besoin réel de dépannage. Ne confonds pas une liste d'outils manquants avec
 ## 🟢 Première vidéo : tout monter d'une traite, puis apprendre de ses retours
 
 **État : première vidéo {{FIRST_VIDEO_STATUS}}.** C'est la première vidéo tant que
-`setup.firstVideoDone` n'est pas `true` dans `brand.config.json` **et** que `reels-publies/`
-ne contient aucun reel. Le setup n'est jamais un prérequis.
+`setup.firstVideoDone` n'est pas `true` dans `brand.config.json`, **sauf** si une vidéo a déjà
+été livrée : archive des reels clôturés non vide (`~/Movies/reels-publies/` sur Mac,
+`~/Videos/reels-publies/` sur Windows, hors du projet) ou `work/premiere-video.md` qui annonce
+« débrief à faire ». Dans ces deux cas, la vidéo suivante suit l'ordre verrouillé normal.
+Le setup n'est jamais un prérequis.
 
 Un débutant ne sait pas décrire son style ; devant sa propre vidéo montée, il sait dire ce qu'il
 aime ou pas. Donc : **aucune question avant**, un montage complet avec les réglages de base,
@@ -59,7 +62,7 @@ puis un **débrief** où il dit ce qu'il aurait fait autrement, et tu retiens to
    > coupes, sous-titres, animations, bruitages. Habillage noir et blanc, ta vidéo reste en
    > couleur. Ça me prend un moment, tu peux faire autre chose. Quand c'est prêt, tu me diras
    > tout ce que tu aurais fait autrement, et j'apprendrai ton style pour les prochaines. »
-2. **Monte d'une traite** : dérush (3) → montage (4) → SFX (6) → export. **Exception à l'ordre
+2. **Monte d'une traite** : dérush (3) → montage (4) → export → SFX (6). **Exception à l'ordre
    verrouillé, pour cette vidéo seulement** : pas d'écoute du dérush, pas de revue section par
    section, pas d'accord avant les SFX. Les **contrôles automatiques restent obligatoires**
    (re-transcription = texte prononcé, `_cuts.json`, `npm run check`, snapshots,
@@ -142,7 +145,7 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 > (**aucun compte GitHub ni push requis, tout est local** : avec git il committe et tague
 > `reel/<slug>` tout seul, en initialisant un repo local au besoin ; sans git il copie le
 > projet du reel vers le dossier Vidéos), copie les masters `renders/*FINAL*` vers
-> `reels-publies/<slug>/`, vide `renders/`, `work/`, `derush/`, `compositions/`,
+> `~/Movies/reels-publies/<slug>/` (Windows : `~/Videos/…`, hors du projet), vide `renders/`, `work/`, `derush/`, `compositions/`,
 > `assets/video/` et les restes à la racine (`snapshots/`, `probe/`, `overlay.html`), en gardant
 > une note « débrief à faire » si le débrief de la première vidéo n'a pas eu lieu, puis
 > remet les fichiers livrés depuis `templates/demo/` (master d'aperçu, placeholder `base.mp4`,
@@ -194,11 +197,12 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 - [ ] **Ne pas recopier les prises à la main** : `tools/cut_boundaries.py` lit les `ISLANDS` de `derush/build_derush.py` s'il existe — une seule source, impossible de les désynchroniser.
 - [ ] Selon la caméra (`derush.camera` = `{{CAMERA}}`) : certaines vidéos (ex. DJI) ont un 2ᵉ flux mjpeg (vignette) → mapper `[0:v:0]` explicitement.
 - [ ] **Re-transcrire le cut final** pour vérifier : lecture = script, zéro mot coupé/doublé.
+- [ ] **Dérush en pleine résolution** (template : pas de `scale`, crf 14) : l'export recadre le visage dedans. Le réduire en 1080 dès le dérush divise par ~2,5 le détail du visage.
 - [ ] **Mesurer les VRAIS points de coupe** (`<cut>_cuts.json`, détection scene-change sur le fichier livré) — cf `derush` §7bis.
 
 **Transcodage (`motion-design/references/transcodage-video.md`)**
 - [ ] Vérifier `color_transfer` **AVANT** de transcoder : `bt709` = SDR direct (rien à faire) / `arib-std-b67` = HDR → tonemap obligatoire.
-- [ ] `base.mp4` en **crf 14**, export final en **crf 16** (visage net).
+- [ ] `base.mp4` = le dérush **réduit en 1080×1920**, crf 14 (studio + son) ; export final en **crf 16**, visage relu dans le dérush pleine résolution par `build_final.py`.
 
 **Montage / motion (`motion-design` + `references/montage-talking-head.md`)**
 - [ ] **Frontières de section = `<cut>_cuts.json`**, JAMAIS les timestamps Whisper (ils démarrent 0,1-0,25 s trop tôt → on voit la fin de la prise précédente au passage plein-écran → split). Master, sous-comps et sous-titres lisent **la même source**.

@@ -2,7 +2,7 @@
 """
 Template de montage derush.
 Remplir SRC, OUT et la liste ISLANDS (prises gardees, bornes = silences reels).
-Genere le filter_complex (trim/atrim + scale + concat) et encode.
+Genere le filter_complex (trim/atrim + concat) et encode, SANS reduire la resolution du rush.
 Valeurs par defaut (PAD_START/PAD_END/silenceDb/islandDuration) = brand.config.json -> derush.
 
 Workflow :
@@ -26,20 +26,24 @@ ISLANDS = [
 
 PAD_START = 0.04   # brand.config.json -> derush.padStart. Debut : garder l'elan d'attaque (negatif bouffe les voyelles)
 PAD_END   = 0.02   # brand.config.json -> derush.padEnd. Fin : resserree. Bornes sur ilots -40dB:d=0.18 -> ~0.10s inter-cut
-SCALE     = "1080:1920"
 FPS       = "30000/1001"
+# PLEINE RESOLUTION, quasi sans perte : a l'export, le visage est recadre DANS ce fichier puis
+# agrandi (tools/build_final.py). Reduire ici en 1080x1920 (ancien reglage, crf 20 veryfast)
+# ne laissait qu'un tiers du detail du visage ; garde tel quel, il en conserve ~80 %.
+# Le passage en 1080x1920 pour le studio se fait plus tard (base.mp4, motion-design etape 3).
+CRF       = 14
 
 parts, concat_in, kept = [], "", 0.0
 for i, (s, e, _txt) in enumerate(ISLANDS):
     a = max(s - PAD_START, 0.0); b = e + PAD_END; kept += (b - a)
-    parts.append(f"[0:v:0]trim=start={a:.3f}:end={b:.3f},setpts=PTS-STARTPTS,scale={SCALE}[v{i}];")
+    parts.append(f"[0:v:0]trim=start={a:.3f}:end={b:.3f},setpts=PTS-STARTPTS[v{i}];")
     parts.append(f"[0:a:0]atrim=start={a:.3f}:end={b:.3f},asetpts=PTS-STARTPTS[a{i}];")
     concat_in += f"[v{i}][a{i}]"
 filtg = "".join(parts) + f"{concat_in}concat=n={len(ISLANDS)}:v=1:a=1[v][a]"
 
 cmd = ["ffmpeg", "-y", "-i", SRC, "-filter_complex", filtg,
        "-map", "[v]", "-map", "[a]", "-r", FPS,
-       "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p",
+       "-c:v", "libx264", "-crf", str(CRF), "-pix_fmt", "yuv420p",
        "-c:a", "aac", "-b:a", "192k", OUT]
 
 print(f"Prises : {len(ISLANDS)}  |  duree estimee : {kept:.1f}s")

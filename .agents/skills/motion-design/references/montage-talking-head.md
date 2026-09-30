@@ -184,8 +184,8 @@ vidéo) — et **sous-titres à ~59 % (`y≈1140`, sous le centre)** (cf `refere
 `<video>` plein cadre n'a PAS le bug du split (il est déjà plein cadre).
 
 Les `<video>` visage : **SANS `class="clip"`** (le framework gère leur visibilité via les data-attrs ;
-ne jamais animer width/height/top/left d'une `<video>`), `src="assets/video/base-proxy.mp4"` (jamais un
-fichier séparé → ne se compose pas), `data-start`/`data-duration`/`data-media-start`/`data-track-index`
+ne jamais animer width/height/top/left d'une `<video>`), `src="assets/video/base.mp4"` (la même source
+que la voix off, jamais un fichier séparé → ne se compose pas), `data-start`/`data-duration`/`data-media-start`/`data-track-index`
 (track au-dessus des sections).
 
 **Ajustement du cadrage = UNIQUEMENT via `transform`** : `scale` = zoom · **2e valeur de `translate`**
@@ -223,6 +223,10 @@ tout le décor pour revenir sur la personne, une phrase, puis on repart.
   dans `montage.faceCrop` / `montage.fullFaceCrop` ; s'ils sont absents il le **calcule** depuis le
   `transform` avec la formule ci-dessous (`transform-origin` compris). Un crop retrouvé à la main
   est la source d'erreur n°1 : le cadrage est bon dans le studio et faux à l'export.
+- **Le visage est relu dans le dérush pleine résolution**, pas dans `base.mp4` : même zone (crop
+  mis à l'échelle, ×1,6 pour une DJI 1728×3072), mêmes images aux mêmes instants, 2 à 2,5× plus de
+  détail sur le visage. La première ligne affichée par le script dit d'où vient le visage ; un
+  « ⚠️ visage moins net » donne la raison du repli sur `base.mp4`.
   Modèle (split S1 + sections plein écran S2–S8 en overlay, audio de la base) :
 ```bash
 ffmpeg -y -i assets/video/base.mp4 -i sections/s1.mp4 -i sections/s2.mp4 ... \

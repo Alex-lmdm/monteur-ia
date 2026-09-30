@@ -21,14 +21,15 @@ Usage : python3 tools/build_words.py
 Puis relance tools/montage_captions.py : il detecte le fichier et cale tout dessus.
 """
 import json
+import os
 import pathlib
-import json
 import re
 import subprocess
 import sys
 import tempfile
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import brand_style
 import sections
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -37,37 +38,30 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 CUT = ROOT / "derush/exemple_enhanced.mp4"
 OUT = sections.CUTS_PATH.with_name(sections.CUTS_PATH.name.replace("_cuts.json", "_words.json"))
 
-
-
-def load_config():
-    for name in ("brand.config.json", "brand.config.example.json"):
-        p = ROOT / name
-        if p.exists():
-            return json.loads(p.read_text(encoding="utf-8"))
-    return {}
-
-
 # Whisper : binaire, modele et langue de brand.config.json (renseignes a l'installation), jamais
 # un chemin en dur. Les modeles `.en` ne marchent pas en francais.
-CFG = load_config()
+CFG = brand_style._load_config()
 ENV = CFG.get("env") or {}
+# Sans env.whisperModel : le plus precis des modeles trouves (jamais le premier par ordre
+# alphabetique, qui prendrait ggml-base avant ggml-large-v3-turbo).
+PREFERES = ("large-v3-turbo", "large-v3", "large", "medium", "small", "base", "tiny")
 
 
 def find_model():
     if ENV.get("whisperModel"):
         return pathlib.Path(ENV["whisperModel"]).expanduser()
     for d in (".cache/monteur-ia/whisper", ".cache/hyperframes/whisper/models", "whisper-models", ".cache/whisper"):
-        found = sorted((pathlib.Path.home() / d).glob("ggml-*.bin"))
-        found = [f for f in found if ".en." not in f.name]
+        found = [f for f in (pathlib.Path.home() / d).glob("ggml-*.bin") if ".en." not in f.name]
         if found:
-            return found[0]
+            return min(found, key=lambda f: next((i for i, m in enumerate(PREFERES) if m in f.name),
+                                                 len(PREFERES)))
     return pathlib.Path.home() / ".cache/monteur-ia/whisper/ggml-large-v3-turbo.bin"
 
 
 MODEL = find_model()
 CLI = pathlib.Path(ENV["whisperCli"]).expanduser() if ENV.get("whisperCli") else None
 if CLI is not None and CLI.is_dir():
-    CLI = CLI / "whisper-cli"
+    CLI = CLI / ("whisper-cli.exe" if os.name == "nt" else "whisper-cli")
 WHISPER = str(CLI) if CLI is not None and CLI.exists() else "whisper-cli"
 LANG = (CFG.get("derush") or {}).get("whisperLanguage") or (CFG.get("brand") or {}).get("language") or "fr"
 

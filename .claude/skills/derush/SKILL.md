@@ -4,8 +4,8 @@ description: >-
   Dérush d'un rush brut face-cam lu au prompteur : garde la meilleure prise de chaque phrase, coupe
   les blancs et les ratés, nettoie la voix. Use when the user hands a raw talking-head video and
   wants it rough-cut ("dérush", "monte la vidéo brute", "coupe les blancs") or its audio cleaned
-  ("améliore l'audio", "le son grésille"). Entrée : un rush brut. Sortie : un MP4 1080x1920 serré
-  + une timeline.json, consommée ensuite par le skill motion-design.
+  ("améliore l'audio", "le son grésille"). Entrée : un rush brut. Sortie : un MP4 serré en pleine
+  résolution + une timeline.json, consommée ensuite par le skill motion-design.
 ---
 
 # Dérush automatique d'une vidéo brute
@@ -44,8 +44,9 @@ Tous les binaires et le modèle Whisper se lisent dans `brand.config.json` → `
 - **Modèle Whisper** : `env.whisperModel`
   - **Défaut recommandé : `ggml-large-v3-turbo`** (plus léger, rapide, quasi aussi précis).
     Alternative haute qualité : `ggml-large-v3` (plus lourd).
-  - macOS : `~/.cache/hyperframes/whisper/models/ggml-large-v3-turbo.bin`
-  - Windows : `%USERPROFILE%\.cache\hyperframes\whisper\models\ggml-large-v3-turbo.bin`
+  - Le chemin réel est celui de `env.whisperModel`, renseigné à l'installation. Emplacement posé
+    par `INSTALL.md` : `~/.cache/monteur-ia/whisper/ggml-large-v3-turbo.bin` (Windows :
+    `%USERPROFILE%\.cache\monteur-ia\whisper\`). Un modèle déjà présent ailleurs est gardé tel quel.
 - **Langue de transcription** : `brand.config.json` → `derush.whisperLanguage` (noté `<LANG>` ci-dessous).
 - Script de montage paramétrable : `references/build_derush_template.py`.
 
@@ -115,7 +116,7 @@ Lire la liste segments + silences et, en s'appuyant sur le **script connu** :
 ### 5. Construire le montage
 
 Utiliser `references/build_derush_template.py` : y coller la liste `ISLANDS` (start, end, texte) des
-prises gardées. Il génère le `filter_complex` (trim/atrim + `scale=1080:1920` + `concat`) et encode.
+prises gardées. Il génère le `filter_complex` (trim/atrim + `concat`, **sans réduction**) et encode.
 **Copier le script paramétré (avec ses `ISLANDS` finaux) dans `<projet>/derush/build_derush.py`** :
 c'est la trace du montage et il est réutilisable au prochain rebuild.
 
@@ -135,7 +136,12 @@ Préférences de pacing — **valeurs par défaut recommandées, lues depuis `br
     (l'étape 6 le confirme).
   - Cible mesurée : moy ≈ 0,10 s, max ≈ 0,14 s (mesurer les vrais écarts inter-cut en excluant les
     pauses internes aux phrases, qui sont naturelles et à garder).
-- Sortie **1080×1920**, `libx264 -crf 20 -preset veryfast`, `aac 192k`, `-r 30000/1001`.
+- Sortie **en pleine résolution** (celle du rush, ex. 1728×3072 pour une DJI), `libx264 -crf 14`,
+  `aac 192k`, `-r 30000/1001`. **Ne jamais réduire en 1080×1920 ici** : à l'export, le visage est
+  recadré dans ce fichier puis agrandi (`tools/build_final.py`). Réduit dès le dérush (ancien réglage
+  1080 crf 20), il ne gardait qu'un tiers de son détail (mesuré sur un rush DJI) ; en pleine
+  résolution il en garde ~80 %. Le 1080×1920 du studio se fait plus tard (`base.mp4`, skill
+  `motion-design` étape 3).
 - Coupes **franches** (jump-cut) — elles seront lissées au montage (punch-in zoom / B-roll /
   illustrations + SFX par-dessus).
 
@@ -238,7 +244,9 @@ Implémentation de référence : `tools/cut_boundaries.py`.
 
 ### 8. Livrables (dans `<projet>/derush/`)
 
-- `<cut>_enhanced.mp4` — le dérush final, audio nettoyé, 1080×1920 (étape 7).
+- `<cut>_enhanced.mp4` — le dérush final, audio nettoyé, **pleine résolution** (étape 7). C'est
+  aussi la source du visage à l'export final : `build_final.py` le retrouve par le champ `source` du
+  `<cut>_cuts.json`. Ne pas le supprimer ni le remplacer avant l'export.
 - **`<cut>_cuts.json` — les VRAIS points de coupe (étape 7bis). C'est LA source de vérité des
   frontières de section du montage ET des bornes de phrase des sous-titres.**
 - `<cut>_timeline.json` — re-transcription du cut (étape 6). Sert à **vérifier le texte**, PAS à

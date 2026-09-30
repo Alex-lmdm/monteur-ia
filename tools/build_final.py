@@ -13,16 +13,26 @@ Le render HyperFrames RASTERISE la couche video : le visage en ressort mou. L'ex
 fait donc en ffmpeg, en recomposant les couches natives :
 
     fond de marque
-      + le VISAGE croppe depuis base.mp4 (moitie basse sur les sections "split",
-        plein cadre sur les sections "face")
+      + le VISAGE croppe dans le DERUSH EN PLEINE RESOLUTION (moitie basse sur les sections
+        "split", plein cadre sur les sections "face")
       + les B-ROLLS (sections {"media": ...}), eux aussi natifs
       + renders/overlay.mov : tout le motion design + les sous-titres (alpha)
       + l'audio de base.mp4
 
+D'OU VIENT LE VISAGE
+Le visage est une petite zone agrandie : en split, ~771x714 px de base.mp4 remplissent 1080x1000.
+Lu dans base.mp4 (reduit en 1080x1920), il ne garde que ~1/3 du detail du rush. Le derush, lui,
+est garde en pleine resolution (ex. 1728x3072 pour une DJI) et porte les MEMES images aux MEMES
+instants (base.mp4 n'en est que la reduction) : on y relit la meme zone, 1,6x plus de pixels, et
+le visage garde ~80 % du detail. Le fichier est celui que <cut>_cuts.json designe ("source").
+Si ce derush manque, est deja en 1080, est en HDR ou ne montre pas les memes images que
+base.mp4, on revient sur base.mp4 (visage moins net, mais juste) et on dit pourquoi.
+
 Le crop du visage DOIT correspondre exactement au transform CSS du master, sinon le cadrage est
 faux a l'export alors qu'il etait bon dans le studio. Ce script le lit dans brand.config.json
-(montage.faceCrop / montage.fullFaceCrop, calibres par /setup) et, s'ils sont absents, le CALCULE
-depuis le transform avec la formule du skill — plus personne n'a a le retrouver a la main.
+(montage.faceCrop / montage.fullFaceCrop, calibres par /setup, en pixels de base.mp4) et, s'ils
+sont absents, le CALCULE depuis le transform avec la formule du skill — plus personne n'a a le
+retrouver a la main. Il le met ensuite a l'echelle du derush.
 """
 import json
 import pathlib
@@ -124,30 +134,83 @@ if not BASE.exists() or not OVERLAY.exists():
     raise SystemExit(1)
 
 
+def probe(path):
+    """(largeur, hauteur, color_transfer, duree) du flux video."""
+    out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
+                          "stream=width,height,color_transfer,duration", "-of", "json", str(path)],
+                         capture_output=True, text=True).stdout
+    s = (json.loads(out or "{}").get("streams") or [{}])[0]
+    return (int(s.get("width") or 0), int(s.get("height") or 0), s.get("color_transfer") or "",
+            float(s.get("duration") or 0))
+
+
+def same_images(hq, t):
+    """PSNR d'une image de base.mp4 contre la meme image du derush reduite : > 30 dB = meme video."""
+    g = "[0:v]scale=1080:1920[a];[1:v]scale=1080:1920:flags=lanczos[b];[a][b]psnr"
+    err = subprocess.run(["ffmpeg", "-nostdin", "-ss", f"{t:.3f}", "-i", str(BASE), "-ss", f"{t:.3f}",
+                          "-i", str(hq), "-filter_complex", g, "-frames:v", "1", "-f", "null", "-"],
+                         capture_output=True, text=True).stderr
+    m = re.search(r"average:(inf|[\d.]+)", err)
+    return bool(m) and (m.group(1) == "inf" or float(m.group(1)) > 30)
+
+
+def face_source():
+    """Ou relire le visage : (fichier, facteur d'echelle vs base.mp4, raison si repli sur base)."""
+    src = sections.CUTS.get("source")
+    hq = ROOT / src if src else None
+    if not hq or not hq.exists():
+        return BASE, 1.0, f"derush pleine resolution introuvable ({src or 'aucune source dans le cuts.json'})"
+    w, h, trc, dur = probe(hq)
+    k = w / 1080
+    if k < 1.05:
+        return BASE, 1.0, None   # rush deja en 1080 : base.mp4 porte deja tout le detail
+    if abs(h - 1920 * k) > 2:
+        return BASE, 1.0, f"le derush ({w}x{h}) n'est pas au format 9:16 de base.mp4"
+    if trc in ("arib-std-b67", "smpte2084"):
+        return BASE, 1.0, "le derush est en HDR (base.mp4 est tonemappe, les couleurs differeraient)"
+    if abs(dur - probe(BASE)[3]) > 0.1 or not same_images(hq, DUR / 2):
+        return BASE, 1.0, f"{src} ne montre pas les memes images que base.mp4 (base.mp4 a refaire depuis ce derush ?)"
+    return hq, k, None
+
+
+def scale_crop(crop, k, src_w, src_h):
+    """`w:h:x:y` en pixels de base.mp4 -> la meme zone dans une source k fois plus grande."""
+    w, h, x, y = (round(float(v) * k) for v in crop.split(":"))
+    x, y = min(max(x, 0), src_w - 2), min(max(y, 0), src_h - 2)
+    return f"{min(w, src_w - x)}:{min(h, src_h - y)}:{x}:{y}"
+
+
 def enable(wins):
     return "+".join(f"between(t,{a:.3f},{a + d:.3f})" for a, d in wins)
 
+
+FACE_SRC, K, REPLI = face_source()
+FW, FH = round(1080 * K), round(1920 * K)
+FACE_CROP_SRC = scale_crop(FACE_CROP, K, FW, FH)
+FULLFACE_CROP_SRC = scale_crop(FULLFACE_CROP, K, FW, FH)
 
 # Fond de l'export : resolu par brand_style (preset + brand.config.json), jamais en dur.
 BG = brand_style.style().bg_hex
 parts = [f"color=c=0x{BG}:s=1080x1920:r=30000/1001:d={DUR}[bg];"]
 
-# --- le visage, croppe depuis base.mp4 -------------------------------------------------------
+# --- le visage, croppe dans le derush pleine resolution (sinon base.mp4) --------------------
+# L'entree du visage est la DERNIERE (apres les b-rolls) ; base.mp4 (entree 0) fournit le son.
+fin = f"[{2 + len(MEDIAS)}:v]"
 if WINS and WINSFULL:
     parts += [
-        "[0:v]split=2[b0][b1];",
-        f"[b0]crop={FACE_CROP},scale=1080:1000[face];",
-        f"[b1]crop={FULLFACE_CROP},scale=1080:1920[facefull];",
+        f"{fin}split=2[b0][b1];",
+        f"[b0]crop={FACE_CROP_SRC},scale=1080:1000:flags=lanczos[face];",
+        f"[b1]crop={FULLFACE_CROP_SRC},scale=1080:1920:flags=lanczos[facefull];",
         f"[bg][face]overlay=0:920:enable='{enable(WINS)}'[v1];",
         f"[v1][facefull]overlay=0:0:enable='{enable(WINSFULL)}'[v2];",
     ]
     last = "[v2]"
 elif WINSFULL:
-    parts += [f"[0:v]crop={FULLFACE_CROP},scale=1080:1920[facefull];",
+    parts += [f"{fin}crop={FULLFACE_CROP_SRC},scale=1080:1920:flags=lanczos[facefull];",
               f"[bg][facefull]overlay=0:0:enable='{enable(WINSFULL)}'[v1];"]
     last = "[v1]"
 else:
-    parts += [f"[0:v]crop={FACE_CROP},scale=1080:1000[face];",
+    parts += [f"{fin}crop={FACE_CROP_SRC},scale=1080:1000:flags=lanczos[face];",
               f"[bg][face]overlay=0:920:enable='{enable(WINS)}'[v1];"]
     last = "[v1]"
 
@@ -164,13 +227,17 @@ for n, s in enumerate(MEDIAS):
 parts.append(f"{last}[1:v]overlay=0:0[vout]")
 
 cmd = (["ffmpeg", "-y", "-v", "error", "-i", str(BASE), "-i", str(OVERLAY)] + inputs_media +
-       ["-filter_complex", "".join(parts), "-map", "[vout]", "-map", "0:a",
+       ["-i", str(FACE_SRC),
+        "-filter_complex", "".join(parts), "-map", "[vout]", "-map", "0:a",
         "-c:v", "libx264", "-crf", "16", "-preset", "slow", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(OUT)])
 
-print(f"crop visage split      : {FACE_CROP}")
+print(f"visage lu dans          : {FACE_SRC.relative_to(ROOT)} ({FW}x{FH})")
+if REPLI:
+    print(f"  ⚠️ visage moins net (lu en 1080) : {REPLI}")
+print(f"crop visage split       : {FACE_CROP}  -> {FACE_CROP_SRC} dans la source")
 if WINSFULL:
-    print(f"crop visage plein ecran : {FULLFACE_CROP}")
+    print(f"crop visage plein ecran : {FULLFACE_CROP}  -> {FULLFACE_CROP_SRC} dans la source")
 if MEDIAS:
     print(f"b-rolls natifs          : {', '.join(s['media'] for s in MEDIAS)}")
 print("composite ...")
