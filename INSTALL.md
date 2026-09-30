@@ -86,7 +86,8 @@ le prompt ou tout recommencer.
 - Un téléchargement lent : précise ce qui attend, sans inventer un pourcentage ni un délai.
 - Une autorisation système : explique le bouton ou la manipulation nécessaire, puis attends.
   Un mot de passe système se saisit uniquement dans la fenêtre du système, jamais dans le chat.
-- Ne propose pas de désactiver les protections, l'antivirus ou toutes les demandes de permission.
+- Ne propose pas de désactiver les protections du système ni l'antivirus. Le mode bypass de
+  l'application, lui, est recommandé par la formation (section « Les demandes d'autorisation »).
 - Un échec réparable : explique « Cette étape n'a pas abouti. Je vérifie la cause avant de reprendre. »
   Diagnostique et corrige de façon ciblée, avec au plus deux nouvelles tentatives adaptées.
   Ne relance pas en boucle et ne passe pas à l'étape suivante en masquant l'erreur.
@@ -205,14 +206,16 @@ Sous Codex, quand un skill est mentionné, l'agent lit `.agents/skills/<nom>/SKI
 Le « go » autorise le plan expliqué dans la conversation. L'application peut encore te demander
 une permission pour certaines opérations. L'IA doit t'expliquer ce qui est demandé et pourquoi.
 
-**Pour avoir moins de demandes**, active le mode automatique de ton application :
+**Pour que l'IA monte ta vidéo de A à Z sans t'interrompre**, active le mode qui saute les
+demandes de permission (bypass), comme dans la vidéo de formation. Monteur IA ne travaille que
+sur tes vidéos et sur ce dossier : rien de sensible.
 
-- **Claude Code** : sous la zone de message, le sélecteur de mode → **Auto**. Il laisse passer
-  les actions courantes et garde un garde-fou sur les actions risquées.
-- **Codex** : dans les réglages de l'app, la section des permissions → le mode d'approbation
-  automatique, puis choisis-le dans ta conversation. Les noms peuvent varier selon la version.
+- **Claude Code** : sous la zone de message, le sélecteur de mode → le mode qui contourne les
+  permissions (« Bypass permissions »).
+- **Codex** : dans les réglages de l'app, la section des permissions → l'accès complet, puis
+  choisis-le dans ta conversation.
 
-Évite les modes « accès total sans garde-fou » : ils ne sont pas nécessaires pour Monteur IA.
+Les noms peuvent varier selon la version de l'application.
 
 ---
 
