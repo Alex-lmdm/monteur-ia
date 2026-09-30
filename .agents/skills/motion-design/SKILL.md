@@ -485,8 +485,15 @@ de la durée sans trou ni chevauchement, et le format de chaque section est déc
 section — `references/montage-talking-head.md`).
 
 **Étape 3 — Transcoder la vidéo → `assets/video/base.mp4`.**
-Cas courant **SDR** (`color_transfer=bt709`) : **aucun tonemap** — `scale` vers 1080×1920 si besoin,
-keyframes denses `-g 30 -keyint_min 30 -sc_threshold 0`, `-crf 14`.
+Cas courant **SDR** (`color_transfer=bt709`) : **aucun tonemap** — réduire le dérush (pleine
+résolution) en 1080×1920, keyframes denses, `-crf 14`, son copié :
+```bash
+ffmpeg -y -i derush/<cut>_enhanced.mp4 -map 0:v:0 -map 0:a:0 -vf scale=1080:1920:flags=lanczos -c:v libx264 -crf 14 -g 30 -keyint_min 30 -sc_threshold 0 -pix_fmt yuv420p -c:a copy -movflags +faststart assets/video/base.mp4
+```
+`base.mp4` sert au **studio** et au **son**. Le **visage de l'export final** est relu dans le dérush
+pleine résolution (`tools/build_final.py`, via `<cut>_cuts.json` → `source`) : aucune étape en plus,
+mais `base.mp4` doit toujours être tiré de **ce** dérush (le script le vérifie et, sinon, retombe sur
+`base.mp4` en le signalant).
 ▶ **Vidéo source HDR (`color_transfer` = `arib-std-b67` ou `smpte2084`) → lis
 `references/transcodage-video.md` AVANT de lancer ffmpeg** (tonemap zscale obligatoire).
 ✅ *Critère* : `ffprobe` de la sortie renvoie `color_transfer=bt709` ET le seek dans le studio ne

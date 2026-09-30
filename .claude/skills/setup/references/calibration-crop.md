@@ -33,8 +33,9 @@ Sortie : `montage.splitTransform` (le CSS validé) + `montage.faceCrop` (le filt
    - `arib-std-b67` ou `smpte2084` → **HDR**, tonemap obligatoire (cf
      `.claude/skills/motion-design/references/transcodage-video.md`).
    - Caméra **DJI** : la vidéo a un **2ᵉ flux mjpeg** (vignette) → mapper `[0:v:0]` explicitement.
-3. Transcoder en `assets/video/base.mp4`, 1080×1920 (crf 14, visage net). Rappeler à l'utilisateur
-   de filmer en **SDR / mode Normal** à l'avenir s'il est en HDR.
+3. Transcoder en `assets/video/base.mp4`, 1080×1920 (crf 14). Il sert au snapshot de calibration ;
+   la netteté finale du visage vient du dérush pleine résolution, relu à l'export. Rappeler à
+   l'utilisateur de filmer en **SDR / mode Normal** à l'avenir s'il est en HDR.
 
 ---
 
@@ -108,6 +109,9 @@ crop=crop_w:crop_h:crop_x:crop_y,scale=1080:1000     # overlay=0:920
 
 Écrire ce résultat dans `montage.faceCrop`. **Si `splitTransform` change un jour, recalculer** avec
 la formule ci-dessus — un crop désaligné = un cadrage faux à l'export.
+Le crop est toujours exprimé **en pixels de `base.mp4` (1080×1920)** : `tools/build_final.py` le met
+lui-même à l'échelle quand il relit le visage dans le dérush pleine résolution. Ne jamais l'écrire
+en pixels du rush.
 
 ---
 

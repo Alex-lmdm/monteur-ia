@@ -194,11 +194,12 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 - [ ] **Ne pas recopier les prises à la main** : `tools/cut_boundaries.py` lit les `ISLANDS` de `derush/build_derush.py` s'il existe — une seule source, impossible de les désynchroniser.
 - [ ] Selon la caméra (`derush.camera` = `{{CAMERA}}`) : certaines vidéos (ex. DJI) ont un 2ᵉ flux mjpeg (vignette) → mapper `[0:v:0]` explicitement.
 - [ ] **Re-transcrire le cut final** pour vérifier : lecture = script, zéro mot coupé/doublé.
+- [ ] **Dérush en pleine résolution** (template : pas de `scale`, crf 14) : l'export recadre le visage dedans. Le réduire en 1080 dès le dérush divise par ~2,5 le détail du visage.
 - [ ] **Mesurer les VRAIS points de coupe** (`<cut>_cuts.json`, détection scene-change sur le fichier livré) — cf `derush` §7bis.
 
 **Transcodage (`motion-design/references/transcodage-video.md`)**
 - [ ] Vérifier `color_transfer` **AVANT** de transcoder : `bt709` = SDR direct (rien à faire) / `arib-std-b67` = HDR → tonemap obligatoire.
-- [ ] `base.mp4` en **crf 14**, export final en **crf 16** (visage net).
+- [ ] `base.mp4` = le dérush **réduit en 1080×1920**, crf 14 (studio + son) ; export final en **crf 16**, visage relu dans le dérush pleine résolution par `build_final.py`.
 
 **Montage / motion (`motion-design` + `references/montage-talking-head.md`)**
 - [ ] **Frontières de section = `<cut>_cuts.json`**, JAMAIS les timestamps Whisper (ils démarrent 0,1-0,25 s trop tôt → on voit la fin de la prise précédente au passage plein-écran → split). Master, sous-comps et sous-titres lisent **la même source**.

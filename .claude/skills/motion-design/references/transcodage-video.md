@@ -16,8 +16,9 @@ direct** (plus de HDR, plus d'orange). **Vérifier quand même à chaque vidéo.
 **Qualité MAX (zéro dégradation)** : un capteur type DJI filme en **2,7K / 22 Mbps**. CapCut, à
 l'export, **réduit en 1080p** par défaut → perte de netteté surtout sur le **visage recadré**
 (split-screen). ⇒ **Demander au créateur d'exporter de CapCut en résolution MAX (2K/4K) + débit
-élevé.** Plus de pixels source = visage net après recadrage. De ton côté : base.mp4 en **crf 14**,
-export final en **crf 16**.
+élevé.** Plus de pixels source = visage net après recadrage. De ton côté : le **dérush reste en
+pleine résolution** (skill `derush` §5), `base.mp4` (1080×1920, crf 14) n'en est que la réduction
+pour le studio, et l'export final (crf 16) relit le visage dans le dérush.
 
 ---
 
@@ -45,7 +46,17 @@ Résultat : couleurs naturelles/riches, pas lavé, pas sombre. **Toujours vérif
 peau. Ajouter à la fin du `-vf` : `,colortemperature=temperature=7200:mix=0.35,eq=saturation=0.92`
 (refroidit légèrement la balance + désature un peu → teint naturel, mur bien blanc).
 
-**Qualité visage (split-screen)** : le visage est un recadrage zoomé (`crop ... scale`) d'une
-sous-partie du 1080p → chaque ré-encodage ramollit. Pour garder un visage net : base.mp4 en **crf 14**
-(quasi-sans-perte) ET export final en **crf 16** (pas 18+). Limite inhérente : si le créateur est
-filmé d'assez loin → conseiller un cadrage plus serré au tournage.
+**Qualité visage (split-screen)** : le visage est un recadrage zoomé (`crop ... scale`) d'une petite
+zone de l'image (~771×714 px de `base.mp4` pour remplir 1080×1000). Mesuré sur un rush DJI
+1728×3072, en % du détail du visage dans le rush :
+- visage lu dans `base.mp4` (dérush réduit en 1080 dès le départ, ancien pipeline) : **33 %** — la
+  réduction en 1080 seule en coûtait déjà plus de la moitié ;
+- visage relu dans le dérush pleine résolution (pipeline actuel) : **~80 %**.
+D'où la règle : **aucune réduction avant l'export**. `tools/build_final.py` relit le visage dans le
+dérush (`<cut>_cuts.json` → `source`) avec un crop mis à l'échelle ; il retombe sur `base.mp4` (et le
+dit) si ce dérush manque, est en HDR, ou ne montre pas les mêmes images que `base.mp4`. Export final
+en **crf 16** (pas 18+).
+**Cas HDR** : le dérush garde les couleurs HLG, seul `base.mp4` est tonemappé → l'export retombe sur
+`base.mp4` (visage moins net). Le remède durable reste de filmer en SDR (mode couleur « Normal »).
+Limite inhérente : si le créateur est filmé d'assez loin → conseiller un cadrage plus serré au
+tournage.
