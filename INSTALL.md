@@ -15,9 +15,9 @@ L'IA vérifie ton ordinateur, explique ce qu'il reste à préparer, puis te dit 
 - Si une manipulation est nécessaire de ton côté, elle te guide pour cette seule étape.
 - Les menus et les réponses peuvent différer de la vidéo : l'installation s'adapte à ton ordinateur.
 
-Une fois les vérifications terminées, **tu peux monter une première vidéo avec le style Papier** :
-blanc cassé, noir, sous-titres lisibles et animations visuelles. Tes images restent en couleur.
-Tu pourras choisir tes couleurs plus tard, en demandant « personnalise mon style ».
+Une fois les vérifications terminées, **envoie ta première vidéo brute** : l'IA la monte en entier
+avec des réglages de base (habillage noir et blanc, ta vidéo reste en couleur), sans questionnaire.
+Tu lui dis ensuite ce que tu aurais fait autrement, et elle retient ton style pour les suivantes.
 
 **Pas encore d'agent installé ?** Commence par [Installer l'agent IA](#installer-lagent-ia-avant-tout).
 
@@ -153,16 +153,16 @@ Après réussite seulement :
 
 > **Ton monteur est prêt 🎬**
 >
-> Tu peux faire ta première vidéo avec le style Papier : habillage blanc cassé et noir,
-> sous-titres contrastés et animations qui illustrent tes idées. Ta vidéo reste en couleur.
-> Tu pourras personnaliser le style plus tard.
+> **Glisse ta vidéo brute ici et écris “on monte celle-ci”.**
 >
-> **Glisse ta vidéo brute ici et écris “on monte celle-ci”.** Si tu as le texte de ce que tu dis,
-> tu peux le joindre aussi.
+> Pour cette première vidéo, je fais tout le montage avec les réglages de base, sans te poser
+> de questions : coupes, sous-titres, animations, bruitages. Habillage noir et blanc, ta vidéo
+> reste en couleur. Ensuite, tu me diras tout ce que tu aurais fait autrement, et j'apprendrai
+> ton style pour les prochaines.
 
-Si une vidéo est déjà fournie, commence la prochaine étape du pipeline sans la redemander.
-Si l'utilisateur veut personnaliser maintenant, ouvre `/setup visuel`. **Le setup n'est jamais
-une condition d'accès au premier montage.** Les validations du dérush et du montage restent en place.
+Si une vidéo est déjà fournie, commence la première vidéo sans la redemander (fichier agent,
+section 🟢 : montage d'une traite, puis débrief). Si l'utilisateur veut personnaliser avant,
+ouvre `/setup visuel`. **Le setup n'est jamais une condition d'accès au premier montage.**
 
 ---
 
@@ -389,3 +389,6 @@ exact à l'IA ou au support pour identifier le fichier concerné.
 **« Quota atteint » / l'IA refuse de continuer**
 Tu as épuisé le quota de ton abonnement (Claude Pro ou ChatGPT Plus). Attends la remise à zéro
 du quota, ou monte d'offre. Ce n'est pas un bug d'installation.
+Si ça arrive pendant un montage, rien n'est perdu : à la remise à zéro, rouvre la conversation (ou
+une nouvelle, dans le même dossier) et écris « on reprend ». L'IA repart de l'étape où elle s'était
+arrêtée.

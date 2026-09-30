@@ -14,7 +14,7 @@ tout.
   `block` (fond plein dans l'accent), `outline` (contour, sans fond), `plate` (plaque arrondie),
   `shadow` (ombre portée), `underline` (souligné). Description de chacun dans `captionSkins` de
   `templates/style-presets.json`.
-- Nombre de lignes : `visual.captionsLines` (défaut 1) · Taille : `--brand-cap-size` (50 px).
+- Nombre de lignes : `visual.captionsLines` (défaut 1) · Taille : `--brand-cap-size` = `visual.captionsSize` (défaut 50 px ; `montage_captions.py` mesure la largeur à cette taille).
 - Pour **essayer** un autre skin sur une seule compo : ajouter `cap-skin-<nom>` à un `.cap`.
   Pour **changer le défaut** de toutes les vidéos : `/setup visuel`, jamais une règle CSS en dur.
 

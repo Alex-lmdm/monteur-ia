@@ -64,16 +64,17 @@ Quand l'installation est vérifiée, **glisse ta vidéo brute dans la conversati
 On monte celle-ci.
 ```
 
-Tu peux joindre le texte de ce que tu dis si tu l'as. Le monteur prépare le dérush, te le fait
-valider, puis passe au montage. Tu gardes la main sur le résultat.
+**Pour cette première vidéo, le monteur fait tout, sans te poser de questions** : coupes,
+sous-titres, animations, bruitages, avec des réglages de base (habillage noir et blanc, **ta
+vidéo reste en couleur**). Ça prend un moment : tu peux faire autre chose en attendant.
 
-Le style **Papier** est déjà prêt : habillage blanc cassé et noir, sous-titres contrastés,
-animations qui illustrent tes idées. **Ta vidéo reste en couleur.** Aucun questionnaire de marque
-n'est nécessaire pour commencer.
+Ensuite vient le **débrief** : tu regardes ta vidéo et tu lui dis tout ce que tu aurais fait
+autrement. Coupes, visage en grand ou non, type d'animations, sous-titres, couleurs, musique :
+tout se règle, même en vrac ou en vocal. Il corrige la vidéo, te résume ce qu'il a retenu, et
+**tes vidéos suivantes sont montées directement comme tu aimes.**
 
-Plus tard, dis **« personnalise mon style »** (ou `/setup visuel`) pour choisir tes couleurs,
-ta police et tes sous-titres. Tes réglages sont réutilisés pour les prochains montages.
-Le reste de l'Empreinte (ta voix, ton funnel, ta musique…) est optionnel.
+Tu peux aussi personnaliser avant, ou à tout moment : dis **« personnalise mon style »**
+(ou `/setup`). Le reste de l'Empreinte (ta voix pour écrire tes scripts, ton funnel…) est optionnel.
 
 ---
 

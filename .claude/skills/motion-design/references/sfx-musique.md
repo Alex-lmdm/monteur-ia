@@ -3,6 +3,8 @@
 ⚠️ **Quand** : NE PAS poser les SFX au fil de l'eau. Sur un nouveau projet on monte d'abord TOUT
 (sections, motion, sous-titres, couleur), **le créateur valide le montage final**, et **SEULEMENT
 APRÈS** on ajoute les SFX.
+Seule exception : la **première vidéo** d'un client (fichier agent, section 🟢), montée d'une
+traite ; les SFX sont posés après tes propres contrôles, sans attendre de validation.
 
 **Chercher un son qui n'est pas dans la bibliothèque** → méthode de recherche/sourcing :
 `design-system/sfx-sound-search.md`.
@@ -46,7 +48,7 @@ réf `tools/build_sfx.py` (liste d'events `(fichier, start, volume_dB, trim|None
 relatif à `assets/sfx/`, ex. `starter/pop.mp3`) :
 - par SFX : `[i:a]atrim=0:DUR(si rogné),volume=XdB,aformat=channel_layouts=stereo:sample_rates=48000,afade=t=out:st=DUR-0.06:d=0.06(si rogné),adelay=START_ms:all=1[ei]`
 - mix : `[voice][e0][e1]…amix=inputs=N+1:normalize=0:dropout_transition=0,alimiter=limit=0.97[aout]`
-- `-map 0:v -c:v copy -map [aout] -c:a aac -b:a 192k`. Sortie `renders/FINAL_SFX.mp4`.
+- `-map 0:v -c:v copy -map [aout] -c:a aac -b:a 192k`. Sortie `renders/FINAL_SFX_MUSIC.mp4` (même nom sans musique : `tools/build_sfx.py` mixe alors les SFX seuls).
 - Vérif placement sans écoute : `python3 tools/build_sfx.py --probe` (voir plus bas, la seule méthode fiable).
 
 **Musique de fond par défaut** : `brand.config.json` → `audio.musicFile` (fichier dans

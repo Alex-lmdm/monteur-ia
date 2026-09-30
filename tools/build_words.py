@@ -22,6 +22,7 @@ Puis relance tools/montage_captions.py : il detecte le fichier et cale tout dess
 """
 import json
 import pathlib
+import json
 import re
 import subprocess
 import sys
@@ -36,8 +37,39 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 CUT = ROOT / "derush/exemple_enhanced.mp4"
 OUT = sections.CUTS_PATH.with_name(sections.CUTS_PATH.name.replace("_cuts.json", "_words.json"))
 
-# Modele Whisper. `large-v3` donne les meilleurs timestamps FR ; les modeles `.en` ne marchent pas.
-MODEL = pathlib.Path.home() / ".cache/hyperframes/whisper/models/ggml-large-v3.bin"
+
+
+def load_config():
+    for name in ("brand.config.json", "brand.config.example.json"):
+        p = ROOT / name
+        if p.exists():
+            return json.loads(p.read_text(encoding="utf-8"))
+    return {}
+
+
+# Whisper : binaire, modele et langue de brand.config.json (renseignes a l'installation), jamais
+# un chemin en dur. Les modeles `.en` ne marchent pas en francais.
+CFG = load_config()
+ENV = CFG.get("env") or {}
+
+
+def find_model():
+    if ENV.get("whisperModel"):
+        return pathlib.Path(ENV["whisperModel"]).expanduser()
+    for d in (".cache/monteur-ia/whisper", ".cache/hyperframes/whisper/models", "whisper-models", ".cache/whisper"):
+        found = sorted((pathlib.Path.home() / d).glob("ggml-*.bin"))
+        found = [f for f in found if ".en." not in f.name]
+        if found:
+            return found[0]
+    return pathlib.Path.home() / ".cache/monteur-ia/whisper/ggml-large-v3-turbo.bin"
+
+
+MODEL = find_model()
+CLI = pathlib.Path(ENV["whisperCli"]).expanduser() if ENV.get("whisperCli") else None
+if CLI is not None and CLI.is_dir():
+    CLI = CLI / "whisper-cli"
+WHISPER = str(CLI) if CLI is not None and CLI.exists() else "whisper-cli"
+LANG = (CFG.get("derush") or {}).get("whisperLanguage") or (CFG.get("brand") or {}).get("language") or "fr"
 
 LINE = re.compile(r"\[(\d+):(\d+):([\d.]+) --> (\d+):(\d+):([\d.]+)\]\s*(.*)")
 
@@ -64,7 +96,7 @@ with tempfile.TemporaryDirectory() as tmp:
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(take["start"]),
                         "-to", str(take["end"]), "-i", str(CUT),
                         "-ar", "16000", "-ac", "1", str(wav)], check=True)
-        proc = subprocess.run(["whisper-cli", "-m", str(MODEL), "-l", "fr",
+        proc = subprocess.run([WHISPER, "-m", str(MODEL), "-l", LANG,
                                "-ml", "1", "-sow", "-wt", "0.01", "-np", str(wav)],
                               capture_output=True, text=True)
         for line in proc.stdout.split("\n"):

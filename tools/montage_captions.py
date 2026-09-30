@@ -10,7 +10,7 @@
 ║   Avec --write -> ECRASE compositions/captions.html.                           ║
 ║ compositions/captions.html livre est un EXEMPLE pedagogique : on ne l'ecrase   ║
 ║ pas par defaut. Ce script donne le 1er jet ; RE-COUPE ensuite a la main        ║
-║ (2-3 mots, unite grammaticale, pas de ponctuation finale, cf skill §14.8).     ║
+║ (2-3 mots, unite grammaticale, pas de ponctuation finale, cf sous-titres.md).  ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 Decoupage par UNITE GRAMMATICALE : nom+adjectif et groupe verbal insecables, jamais a cheval
@@ -46,7 +46,7 @@ if STYLE.captions_font_file is None:
         "Depose le .ttf dans assets/fonts/, declare-le en `measureFile` dans "
         "templates/style-presets.json, puis relance."
     )
-FONT = ImageFont.truetype(str(STYLE.captions_font_file), 50)
+FONT = ImageFont.truetype(str(STYLE.captions_font_file), STYLE.captions_size)  # = --brand-cap-size
 MAXW_HARD = 900
 
 # Bornes de phrase = les VRAIES coupes (une prise = une phrase). Surtout PAS les timestamps

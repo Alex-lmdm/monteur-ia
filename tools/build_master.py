@@ -38,7 +38,7 @@ FACES = sections.face_windows()          # visage en split (moitie basse)
 FACEFULL = sections.facefull_windows()   # visage PLEIN ECRAN (sections "face")
 
 # Transform par defaut du visage en split (calibre par /setup -> montage.splitTransform).
-DEFAULT_SPLIT_TRANSFORM = "translate(-240px, 380px) scale(1.40)"
+DEFAULT_SPLIT_TRANSFORM = "translate(-216px, 410px) scale(1.40)"  # = repli crop de build_final.py
 # Transform du visage PLEIN ECRAN (calibre par /setup -> montage.fullFaceTransform).
 # Zoom modere sur la tete : le visage remonte, les sous-titres passent dessous.
 DEFAULT_FULLFACE_TRANSFORM = "scale(1.4)"

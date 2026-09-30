@@ -39,40 +39,62 @@ ou besoin réel de dépannage. Ne confonds pas une liste d'outils manquants avec
 - **Il doit agir** : une seule consigne courte, puis attendre. Les permissions réelles de
   l'application restent nécessaires ; ne promettre ni zéro clic ni une réussite non vérifiée.
 - **Validation créative** : présenter le résultat et demander un retour simple, pas un choix
-  de codec, d'outil ou de modèle. Les validations du dérush et du montage restent obligatoires.
+  de codec, d'outil ou de modèle. Les validations du dérush et du montage restent obligatoires,
+  **sauf pour la première vidéo** (section suivante) : elle se monte d'une traite, puis débrief.
 - **Valeur `{{...}}` non renseignée** : c'est une personnalisation optionnelle. Ne jamais
   afficher ces marqueurs au client ni l'obliger à renseigner son identité pour monter.
 
-## 🟢 Premier montage : voir un résultat avant de personnaliser
+## 🟢 Première vidéo : tout monter d'une traite, puis apprendre de ses retours
 
-**Après installation vérifiée, le style Papier est immédiatement utilisable.**
-Le setup n'est jamais un prérequis. Si `setup.styleChosen` est faux, annonce simplement :
+**État : première vidéo {{FIRST_VIDEO_STATUS}}.** C'est la première vidéo tant que
+`setup.firstVideoDone` n'est pas `true` dans `brand.config.json` **et** que `reels-publies/`
+ne contient aucun reel. Le setup n'est jamais un prérequis.
 
-> « Je pars sur le style Papier : habillage blanc cassé et noir, sous-titres contrastés et
-> animations pour illustrer tes idées. Ta vidéo reste en couleur. Tu pourras personnaliser après. »
+Un débutant ne sait pas décrire son style ; devant sa propre vidéo montée, il sait dire ce qu'il
+aime ou pas. Donc : **aucune question avant**, un montage complet avec les réglages de base,
+puis un **débrief** où il dit ce qu'il aurait fait autrement, et tu retiens tout.
 
-Puis avance dans le pipeline avec la vidéo fournie. Si elle manque, demande seulement de la
-joindre. **Ne bloque pas sur une question de couleurs, de police, de marque ou de cadrage** :
-le split-screen est le défaut et tu adaptes le cadrage au visage réel. Ne déduis pas le cadrage
-universel d'une caméra d'exemple. Si une vidéo a déjà été fournie, ne la redemande pas.
+1. **Il envoie sa vidéo brute** (sinon, demande seulement de la glisser ici). Annonce une fois :
+   > « Je m'occupe de tout le montage avec les réglages de base, sans te poser de questions :
+   > coupes, sous-titres, animations, bruitages. Habillage noir et blanc, ta vidéo reste en
+   > couleur. Ça me prend un moment, tu peux faire autre chose. Quand c'est prêt, tu me diras
+   > tout ce que tu aurais fait autrement, et j'apprendrai ton style pour les prochaines. »
+2. **Monte d'une traite** : dérush (3) → montage (4) → SFX (6) → export. **Exception à l'ordre
+   verrouillé, pour cette vidéo seulement** : pas d'écoute du dérush, pas de revue section par
+   section, pas d'accord avant les SFX. Les **contrôles automatiques restent obligatoires**
+   (re-transcription = texte prononcé, `_cuts.json`, `npm run check`, snapshots,
+   `check_export.py`) : tu valides toi-même ce que le client aurait validé.
+   Réglages de base : style Papier, cadrage `split` adapté au visage réel, SFX d'`assets/sfx/`,
+   pas de musique, **voix brute** (le nettoyage Adobe demande une action du client : il est
+   proposé au débrief). Méthode : skill `motion-design`, `references/premier-montage.md`.
+   Ne t'arrête que sur un vrai blocage (vidéo illisible, outil en panne), avec une seule consigne.
+3. **Tiens `work/premiere-video.md` à jour** : étapes faites, prochaine étape, fichiers produits.
+   Si la session s'interrompt (quota atteint, fenêtre fermée), reprends depuis ce fichier sans
+   refaire ce qui est fait ni reposer de question. Ne demande pas de `/clear` au client.
+4. **Livre la vidéo** (`renders/` + copie dans Téléchargements), puis **ouvre le débrief** :
+   charge le skill `setup` et suis `references/debrief-premiere-video.md`.
+5. **Applique ses retours à cette vidéo** (c'est la review, étape 5), ré-exporte, puis
+   **enregistre ses préférences** après son OK sur le résumé, passe `setup.firstVideoDone` à
+   `true` et lance `npm run sync`. Ensuite seulement : proposer la légende (étape 7).
 
-- S'il demande « personnalise mon style » ou fournit ses couleurs → `/setup visuel` (bloc D).
-- S'il dit « plus tard », « je ne sais pas », « montre-moi d'abord » → monter sans insister.
-- Après livraison de sa première vidéo, proposer une fois : « Tu veux garder ce style pour la
-  suite ou poser tes couleurs ? » Un refus n'empêche aucun montage suivant.
-- Ne pas marquer `setup.styleChosen = true` sans choix explicite. Ne jamais écraser une identité
-  déjà renseignée. Le fond clair et noir concerne l'habillage, **jamais un filtre sur le visage**.
+**Dès la deuxième vidéo**, l'ordre verrouillé et toutes ses validations s'appliquent, avec les
+préférences apprises (section suivante) appliquées d'office.
 
-**Qualité attendue dès ce premier montage :** lire le skill `motion-design` et sa référence
-`references/premier-montage.md`. La section `compositions/exemple-section.html` montre le niveau
-visuel attendu : une idée rendue visible, une hiérarchie nette, un mouvement synchronisé.
-Son sujet et ses timings sont des exemples, pas un scénario à reproduire dans toutes les vidéos.
+- Le questionnaire `/setup` reste disponible à tout moment (« personnalise mon style ») ; ne le
+  lance pas de toi-même. Le débrief, lui, fait partie de la première vidéo.
+- Ne pas marquer `setup.styleChosen = true` sans choix explicite (garder le noir et blanc en est
+  un). Ne jamais écraser une identité déjà renseignée. L'habillage ne filtre jamais le visage.
+- Ne jamais inventer une identité « en attendant » : tokens `var(--brand-*)`, polices livrées,
+  réglages éprouvés. `compositions/exemple-section.html` montre le niveau visuel attendu ; son
+  sujet et ses timings sont un exemple, pas un scénario.
 
-Les valeurs vivent dans `brand.config.json`, avec repli sur `templates/style-presets.json`.
-Utiliser les tokens `var(--brand-*)`, les polices livrées et les réglages éprouvés ; ne jamais
-inventer une identité « en attendant ». Le reste du setup (voix, funnel, audio…) reste optionnel.
-Les changements de style ultérieurs régénèrent les tokens via `npm run sync` sans modifier les
-vidéos sources ; les exports déjà produits restent tels quels jusqu'à un nouveau rendu.
+## 🧠 Préférences de montage apprises
+
+À appliquer d'office à chaque vidéo. Elles priment sur les réglages par défaut, jamais sur une
+demande explicite du moment. Si le client change d'avis, mets à jour `montage.preferences`
+(après son OK sur la nouvelle formulation) puis `npm run sync`.
+
+{{MONTAGE_PREFERENCES}}
 
 ---
 
@@ -85,6 +107,8 @@ une étape en avance.** Erreurs déjà commises à ne pas refaire :
   → La publication (légende + DM) est **l'étape 7, la TOUTE DERNIÈRE**, seulement **après** montage
   validé **et** SFX/musique posés.
 - ❌ Poser les **SFX / la musique** avant que {{FIRST_NAME}} ait **validé tout le montage** (étape 6 après 5).
+
+**Seule exception : la première vidéo** (section 🟢 plus haut), montée d'une traite puis débriefée.
 
 **Réflexe de début de session montage** : situer où on en est dans le pipeline, annoncer **la
 prochaine étape (une seule)**, et ne pas déborder dessus.
@@ -101,9 +125,9 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 | 1 | **Script** | « on brainstorm un script », « écris ma version », « voici mon script » | `reel-script` | Hook + corps + CTA, voix de {{FIRST_NAME}}, ~30-45 s, **validé**. Si CTA « commente [MOT] » → juste **noter le mot-clé** (le DM se rédige à l'étape 7, pas maintenant). |
 | 2 | **Tournage** | ({{FIRST_NAME}} tourne la vidéo, puis) « voici la vidéo brute » | — | La vidéo brute est fournie. (Rappel : export **résolution MAX**, pas 1080p.) |
 | 3 | **Dérush** | « fais les cuts », « coupe les blancs / les ratés », « clean l'audio » | `derush` | Re-transcription du cut = le script, **aucun mot coupé/doublé**, souffle inter-cut ≈ 0,1 s. **Voix nettoyée avec Adobe Podcast Enhance** (toujours, aucune autre méthode : l'utilisateur glisse un MP3, tu fais le reste). |
-| 4 | **Montage / motion** | « passe au montage », « mets les split-screens / le motion / les sous-titres » | `motion-design` (§14) | Chaque section montée : split-screen là où il faut, motion-first, visage net (pas de carré noir), sous-titres calés, safe-zones OK. |
+| 4 | **Montage / motion** | « passe au montage », « mets les split-screens / le motion / les sous-titres » | `motion-design` (+ `references/montage-talking-head.md`) | Chaque section montée : split-screen là où il faut, motion-first, visage net (pas de carré noir), sous-titres calés, safe-zones OK. |
 | 5 | **Review** | « là je veux plutôt ça », « mets cette vidéo/image ici », « ça en plein écran », « les sous-titres vont pas » | (rester dans `motion-design`) | {{FIRST_NAME}} a **tout validé section par section** après ses retours. **C'est la barrière avant les SFX.** |
-| 6 | **SFX + musique** | « mets le sound effect et la musique » | `motion-design` §14.10 | **Uniquement APRÈS validation étape 5.** SFX d'`assets/sfx/` placés + musique posée. |
+| 6 | **SFX + musique** | « mets le sound effect et la musique » | `motion-design` → `references/sfx-musique.md` | **Uniquement APRÈS validation étape 5.** SFX d'`assets/sfx/` placés + musique posée. |
 | 7 | **Publication** | « la légende », « le message DM » | `design-system/instagram-caption.md` + `manychat-dm.md` | **Toute fin.** Légende IG + (si CTA) DM prêts. Le mot « lien » **jamais écrit** → emoji 🔗. |
 
 > **Export MP4** : ce n'est pas une étape à part, c'est l'acte technique qui produit la vidéo pour la
@@ -133,7 +157,8 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 
 1. **Une session par grosse étape.** Ne pas enchaîner script → dérush → montage → SFX → publication
    dans un seul contexte (contexte saturé → auto-compaction en plein montage). `/clear`
-   entre les étapes lourdes.
+   entre les étapes lourdes. Première vidéo : pas de `/clear` demandé au client, la continuité
+   passe par `work/premiere-video.md`.
 2. **Cadrer AVANT de produire l'asset** (dérush, b-roll, écran plein) : demander la cible
    précise **une seule fois** au lieu de deviner par itérations. Dérush → appliquer d'emblée les
    valeurs du bloc `derush` de `brand.config.json` (`padStart`, `padEnd`, `silenceDb`,
@@ -165,11 +190,11 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 - [ ] **Re-transcrire le cut final** pour vérifier : lecture = script, zéro mot coupé/doublé.
 - [ ] **Mesurer les VRAIS points de coupe** (`<cut>_cuts.json`, détection scene-change sur le fichier livré) — cf `derush` §7bis.
 
-**Transcodage (`motion-design` §14.3)**
+**Transcodage (`motion-design/references/transcodage-video.md`)**
 - [ ] Vérifier `color_transfer` **AVANT** de transcoder : `bt709` = SDR direct (rien à faire) / `arib-std-b67` = HDR → tonemap obligatoire.
 - [ ] `base.mp4` en **crf 14**, export final en **crf 16** (visage net).
 
-**Montage / motion (`motion-design` §14)**
+**Montage / motion (`motion-design` + `references/montage-talking-head.md`)**
 - [ ] **Frontières de section = `<cut>_cuts.json`**, JAMAIS les timestamps Whisper (ils démarrent 0,1-0,25 s trop tôt → on voit la fin de la prise précédente au passage plein-écran → split). Master, sous-comps et sous-titres lisent **la même source**.
 - [ ] **MOTION FIRST, zéro redondance texte** : pas de gros texte qui redit la voix off / les sous-titres.
 - [ ] Chaque section démarre sur le **cadrage par défaut** (`montage.defaultLayout` : `"split"` = visage en bas / motion en haut · `"faceplein"` = visage plein écran, motion en surimpression transparente) ; {{FIRST_NAME}} dit ensuite section par section ce qui passe en plein écran visage ou plein écran visuel.
@@ -192,9 +217,9 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 - [ ] Canvas / WebGL → **`preserveDrawingBuffer: true`** (sinon snapshot et render tout **noirs**) et `setPixelRatio` fixe.
 - [ ] **Console du navigateur AVANT de deviner** : ces bugs sont invisibles au lint et n'apparaissent souvent qu'en preview.
 
-**Sous-titres (`motion-design` §14.8)**
+**Sous-titres (`motion-design/references/sous-titres.md`)**
 - [ ] **2-3 mots** par sous-titre, **pas de ponctuation finale**, **jamais à cheval sur 2 phrases**, jamais finir sur un mot faible.
-- [ ] **Découper par unité grammaticale** : nom+adjectif et groupe verbal insécables ; **ne jamais orpheliner un adjectif ni fusionner deux unités** ; trop large → isoler le mot seul. `tools/montage_captions.py` = 1er jet, **re-couper avant de livrer** (§14.8 a le tableau d'exemples).
+- [ ] **Découper par unité grammaticale** : nom+adjectif et groupe verbal insécables ; **ne jamais orpheliner un adjectif ni fusionner deux unités** ; trop large → isoler le mot seul. `tools/montage_captions.py` = 1er jet, **re-couper avant de livrer** (`sous-titres.md` a le tableau d'exemples).
 - [ ] Position : jointure (`y=920`) en split · `y≈1140` en plein visage · `y≈1500` en plein motion.
 - [ ] **Timing = les VRAIS MOTS** : lancer `python3 tools/build_words.py` une fois, sinon le timing est proportionnel au texte et **dérive** (jusqu'à +0,35 s de retard sur la voix).
 - [ ] **Snap aux DEUX bords de section** : le 1er sous-titre démarre à `section.start`, le dernier finit à `section.end` (sinon il bave sur la section suivante).
@@ -202,11 +227,11 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 - [ ] **Sous-titres section-aware** : si une même prise est scindée en deux sections, le générateur raisonne **par section** (frontières du master), jamais par prise — sinon les sous-titres de la 2ᵉ section gardent la position/le timing de la 1ʳᵉ.
 - [ ] CTA : **ne JAMAIS écrire « lien »** → emoji 🔗 (risque de shadowban).
 
-**Export (`motion-design` §14.7)**
+**Export (`motion-design/references/montage-talking-head.md` §4)**
 - [ ] Export = **ffmpeg**, **PAS `npm run render`** (le render HyperFrames ramollit le visage).
 - [ ] L'export final se lance avec **`python3 tools/build_final.py`** : il dérive le crop du visage de `brand.config.json` (ou le calcule depuis le `transform`, `transform-origin` compris). Ne pas réécrire la commande ffmpeg à la main — un crop faux passe inaperçu jusqu'à l'export.
 
-**SFX + musique (`motion-design` §14.10) — étape 6, après validation**
+**SFX + musique (`motion-design/references/sfx-musique.md`) — étape 6, après validation**
 - [ ] **Seulement après validation complète du montage (étape 5).** Jamais au fil de l'eau.
 - [ ] « mets le sound effect et la musique » = les SFX d'`assets/sfx/` + la musique `{{MUSIC_FILE}}` à **{{MUSIC_DB}} dB**, sauf indication contraire.
 - [ ] Volumes SFX **rééquilibrés par niveau perçu** (pas un dB uniforme).
@@ -219,7 +244,7 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 
 **Self-checks (obligatoires)**
 - [ ] `npm run check` après **chaque** modif `.html`.
-- [ ] `npx hyperframes keyframes` (+ onion-shot `--shot`) après **chaque** modif d'animation.
+- [ ] Contrôle du **mouvement** après **chaque** modif d'animation (voir « Motion self-check » plus bas).
 
 ---
 
@@ -313,7 +338,17 @@ Corriger toutes les erreurs avant de présenter le résultat. Revoir les warning
 ## Motion self-check — APRÈS TOUTE MODIF D'ANIMATION
 
 `npm run check` valide la structure, pas le **mouvement**. Après avoir écrit/modifié des
-animations (GSAP/CSS/Anime), lancer aussi le diagnostic keyframes :
+animations (GSAP/CSS/Anime), vérifier aussi le mouvement.
+
+**Toujours disponible** : des images à des instants choisis (début, pendant l'entrée, fin de
+chaque animation), puis les regarder réellement :
+
+```bash
+npx hyperframes snapshot --at 0.3,1.2,2.5
+```
+
+**Si ta version de la CLI a la commande `keyframes`** (`npx hyperframes --help` la liste ; ce n'est
+pas le cas de la version épinglée dans ce projet), elle ajoute un diagnostic détaillé :
 
 ```bash
 npx hyperframes keyframes compositions/<scene>.html          # tweens + timing + valeurs
@@ -321,14 +356,16 @@ npx hyperframes keyframes compositions/<scene>.html --shot out.png [--selector "
 ```
 
 - Vérifier que chaque tween tombe sur le bon temps du voiceover.
-- Un sélecteur `__unresolved__` = bug silencieux à corriger.
-- Pour toute motion non triviale (x/y, arc, stagger, pulse), générer l'onion-shot (`--shot`) et
-  regarder la trajectoire **avant** le render final.
+- Un sélecteur `__unresolved__` (keyframes) ou un élément resté figé d'une image à l'autre
+  (snapshots) = bug silencieux à corriger. La console du navigateur signale aussi
+  `GSAP target … not found`.
+- Pour toute motion non triviale (arc, stagger, pulse), regarder la trajectoire sur plusieurs
+  images **avant** le render final.
 
 ## Règles framework HyperFrames (rappel technique)
 
 1. Tout élément timé porte `data-start`, `data-duration` et `data-track-index`.
-2. Les éléments timés visibles **DOIVENT** avoir `class="clip"` (contrôle de visibilité). Exception connue : le `<video>` visage n'a PAS `class="clip"` (voir `motion-design` §14.5).
+2. Les éléments timés visibles **DOIVENT** avoir `class="clip"` (contrôle de visibilité). Exception connue : le `<video>` visage n'a PAS `class="clip"` (voir `motion-design/references/visage-carre-noir.md`).
 2bis. **Toute balise `<video>` porte un `id`** — sans `id`, le runtime ne pilote pas sa lecture et la vidéo est **gelée** au render (bug silencieux : la preview studio peut sembler correcte).
 2ter. **Le framework impose son cadrage (`object-fit`) sur les `<video>`** : pour un cadrage déterministe du visage, **pré-cropper le segment en ffmpeg** en amont ; pour un **zoom animé**, animer un `<div>` conteneur autour de la vidéo, jamais la `<video>` elle-même.
 3. Les timelines GSAP sont **paused** et enregistrées sur `window.__timelines` :

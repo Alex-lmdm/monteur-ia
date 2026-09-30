@@ -85,6 +85,7 @@ class Style:
     font_captions: str
     captions_skin: str
     captions_lines: int
+    captions_size: int     # px, visual.captionsSize (défaut 50) = --brand-cap-size
     default_layout: str
     cta_style: str
     captions_font_file: pathlib.Path | None  # .ttf lisible par PIL, pour mesurer la largeur
@@ -93,6 +94,14 @@ class Style:
     def bg_hex(self) -> str:
         """Le fond sans `#`, pour les filtres ffmpeg (`color=c=0x...`)."""
         return self.bg.lstrip("#")
+
+
+def _caption_size(value) -> int:
+    try:
+        size = round(float(value))
+    except (TypeError, ValueError):
+        return 50
+    return size if 30 <= size <= 100 else 50
 
 
 def style() -> Style:
@@ -126,7 +135,8 @@ def style() -> Style:
 
     return Style(
         preset_id=preset["id"],
-        chosen=bool(wanted) and not preset.get("isUnset"),
+        chosen=(cfg.get("setup") or {}).get("styleChosen") is True
+        or (bool(wanted) and not preset.get("isUnset")),
         bg=bg,
         surface=visual["surface"],
         text=text,
@@ -139,6 +149,7 @@ def style() -> Style:
         font_captions=visual["fontCaptions"],
         captions_skin=visual.get("captionsSkin") or "plate",
         captions_lines=int(visual.get("captionsLines") or 1),
+        captions_size=_caption_size(visual.get("captionsSize")),
         default_layout=(cfg.get("montage") or {}).get("defaultLayout")
         or (preset.get("montage") or {}).get("defaultLayout")
         or "split",

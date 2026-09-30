@@ -83,6 +83,44 @@ test("les copies de skills suivent la source à l'identique et sont idempotentes
   assert.equal(read(dir, '.claude/skills/framework/SKILL.md'), '# Source framework');
 });
 
+test('les préférences apprises au débrief arrivent dans les fichiers agent', (t) => {
+  const dir = fixture(t);
+  let claude = (sync(dir), read(dir, 'CLAUDE.md'));
+  assert.match(claude, /première vidéo pas encore faite/);
+  assert.match(claude, /Aucune pour l'instant/);
+  const own = config();
+  own.montage.preferences = ['Pas d\'animation par-dessus le visage', '  ', 'Sous-titres {{GRANDS}}\nen jaune'];
+  own.setup.firstVideoDone = true;
+  write(dir, 'brand.config.json', own);
+  sync(dir);
+  for (const file of ['CLAUDE.md', 'AGENTS.md']) {
+    const text = read(dir, file);
+    assert.match(text, /première vidéo faite/);
+    assert.match(text, /^- Pas d'animation par-dessus le visage$/m);
+    assert.match(text, /^- Sous-titres GRANDS en jaune$/m);
+    assert.doesNotMatch(text, /Aucune pour l'instant|\{\{GRANDS/);
+  }
+  sync(dir, '--template');
+  assert.doesNotMatch(read(dir, 'CLAUDE.md'), /Pas d'animation par-dessus le visage/);
+});
+
+test('garder Papier compte comme un choix et la taille des sous-titres est réglable', (t) => {
+  const dir = fixture(t);
+  const own = config();
+  own.visual.stylePreset = 'neutral';
+  own.visual.captionsSize = 60;
+  own.setup.styleChosen = true;
+  write(dir, 'brand.config.json', own);
+  sync(dir);
+  assert.doesNotMatch(read(dir, 'CLAUDE.md'), /personnalisable plus tard/);
+  assert.doesNotMatch(read(dir, 'brand/tokens.css'), /pas encore personnalisé/);
+  assert.match(read(dir, 'brand/tokens.css'), /--brand-cap-size: 60px;/);
+  own.visual.captionsSize = 'énorme';
+  write(dir, 'brand.config.json', own);
+  sync(dir, '--style-only');
+  assert.match(read(dir, 'brand/tokens.css'), /--brand-cap-size: 50px;/);
+});
+
 test('tous les presets conservent leurs couleurs et leurs polices locales', (t) => {
   const dir = fixture(t);
   const { presets, fonts } = JSON.parse(read(root, 'templates/style-presets.json'));
