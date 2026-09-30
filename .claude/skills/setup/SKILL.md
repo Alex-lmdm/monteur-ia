@@ -4,7 +4,8 @@ description: >-
   L'Empreinte — l'onboarding de personnalisation du Monteur IA. Lance-le UNE fois après
   l'installation pour transférer TON goût (ta voix, tes couleurs, ton funnel, ton cadrage) à ton
   monteur. Use when the user says "setup", "configure mon système", "onboarding", "empreinte",
-  "personnalise mon monteur", "je viens d'installer", ou au tout premier lancement du template.
+  "personnalise mon monteur" ou "personnalise mon style". Ne pas lancer ce questionnaire
+  automatiquement après installation ou lorsqu’une personne demande simplement son premier montage.
   Aussi : `/setup <bloc>` (identite, voix, funnel, visuel, derush, technique) pour refaire un bloc.
 ---
 
@@ -19,7 +20,7 @@ réponse va dans un seul fichier de vérité — `brand.config.json` à la racin
 **régénère** les fichiers du monteur depuis ce config (jamais l'inverse, jamais à la main).
 
 L'utilisateur **n'est pas développeur.** Zéro jargon. Une question à la fois. Toujours un défaut
-prêt (« appuie sur Entrée pour garder le réglage recommandé »).
+prêt (« écris “on garde” pour garder le réglage recommandé »).
 
 ---
 
@@ -30,12 +31,11 @@ prêt (« appuie sur Entrée pour garder le réglage recommandé »).
    `/setup <bloc>` refait un bloc isolé : `a`/`identite`, `b`/`voix`, `c`/`funnel`, `d`/`visuel`,
    `e`/`derush`, `f`/`technique`.
 
-   🎨 **Le bloc D (Visuel) passe TOUJOURS en premier**, quel que soit l'ordre habituel. C'est le
-   seul réglage qu'on ne peut pas deviner : le style de départ « Papier » (noir & blanc) rend bien,
-   mais ne contient aucune couleur à lui. Si l'utilisateur arrive en disant « monte ma vidéo » sans
-   setup, **propose le bloc D** (2 minutes, 3 questions) — et **s'il préfère voir d'abord, monte en
-   Papier sans insister**, puis repropose une fois la vidéo livrée. Les 5 autres blocs restent
-   optionnels et se font quand il veut.
+   **Cette route s'applique uniquement si la personnalisation est demandée.** Si l'utilisateur
+   veut monter une vidéo ou vient de finir l'installation, suivre le pipeline du fichier agent
+   avec le style Papier, sans lancer ce skill. L'habillage est monochrome, sa vidéo reste en couleur.
+   Si la personnalisation est demandée sans bloc précis et que le style n'est pas choisi,
+   proposer D (Visuel) en premier. Les autres blocs restent optionnels.
 
 2. **`brand.config.json` = source de vérité unique.** Au démarrage : lire `brand.config.json` à la
    racine. **S'il n'existe pas**, le créer en copiant `brand.config.example.json` (défauts
@@ -44,11 +44,11 @@ prêt (« appuie sur Entrée pour garder le réglage recommandé »).
    où on en est.
 
 3. **Reprise annoncée.** Au début, dire clairement l'état : « Tu as déjà fait A et B. On reprend au
-   bloc C (Funnel) ? » S'il n'y a rien de fait : « On commence par le bloc A (ton identité). » Ne
+   bloc C (Funnel) ? » S'il n'y a rien de fait, appliquer la règle du bloc demandé, sinon proposer D (Visuel). Ne
    jamais recommencer un bloc validé sans que l'utilisateur le demande.
 
-4. **AUCUNE écriture avant validation explicite.** À la fin de chaque bloc, **récapituler ce qu'on
-   va écrire** (les valeurs + les fichiers touchés), puis **attendre un OK clair**. Tant que
+4. **AUCUNE écriture avant validation explicite.** À la fin de chaque bloc, **récapituler le résultat concret**
+   (« fond clair, sous-titres noirs, cadrage partagé » ; détails des fichiers seulement sur demande), puis **attendre un OK clair**. Tant que
    l'utilisateur n'a pas validé, on ne touche à aucun fichier.
 
 5. **Écritures déterministes, régénérées depuis les templates.** On ne patche jamais un fichier
@@ -73,12 +73,12 @@ prêt (« appuie sur Entrée pour garder le réglage recommandé »).
 
 6. **Après chaque bloc validé :** (a) mettre à jour `setup.completedBlocks` dans `brand.config.json`
    (ajouter la lettre du bloc), puis (b) lancer `node scripts/sync.mjs` — c'est lui qui régénère
-   `CLAUDE.md` + `AGENTS.md` et met à jour le miroir des skills à partir du config. Confirmer à
-   l'utilisateur : « Bloc X enregistré, ton monteur est à jour. »
+   `CLAUDE.md` + `AGENTS.md` et met à jour le miroir des skills à partir du config. Confirmer le résultat
+   (« Tes couleurs sont enregistrées pour les prochains montages. »).
 
 7. **Ton chaleureux, humain, concret.** On explique le POURQUOI en une phrase simple quand un
    réglage a un enjeu (« le fond n'est jamais noir pur, sinon ça bave à l'écran »), jamais en
-   paragraphe technique. On félicite les petites étapes. On propose toujours de sauter (« pas
+   paragraphe technique. On confirme les étapes utiles sans félicitations répétitives. On propose toujours de sauter (« pas
    obligatoire, on peut y revenir »).
 
 > **Périmètre.** Ce skill écrit dans : `brand.config.json`, `.claude/skills/reel-script/SKILL.md`
@@ -102,7 +102,7 @@ validations) est dans **`references/questions.md`** — le lire avant d'animer u
 3. **Si un bloc précis est demandé** (`/setup voix`) → aller droit à ce bloc.
 4. **Si `setup.styleChosen` est `false` → proposer le bloc D EN PREMIER**, quel que soit l'ordre
    habituel. Annoncer franchement : « on commence par tes couleurs et tes sous-titres, 2 minutes —
-   après tu peux monter, et on fera le reste quand tu veux ». S'il préfère voir d'abord une vidéo
+   tu peux aussi monter tout de suite avec le style Papier ». S'il préfère voir d'abord une vidéo
    sortir, **c'est OK** : le style de départ « Papier » tient la route, on repropose après.
 5. **Sinon** → annoncer l'état et proposer le prochain bloc non fait. Un petit mot d'accueil au tout
    premier lancement : présenter l'Empreinte en 2 phrases (ton monteur apprend ta voix, tes couleurs, ton cadrage : tu la déposes une fois, chaque vidéo la porte), dire
@@ -189,7 +189,7 @@ encore ces marqueurs, les insérer après l'intro, en montrant l'emplacement à 
 
 ---
 
-## Bloc D — Visuel `visual.*`  🎨 LE PREMIER BLOC, TOUJOURS
+## Bloc D — Visuel `visual.*` : en premier si la personnalisation est demandée
 
 **Écrit :** `visual.*`, `setup.styleChosen`, puis `node scripts/sync.mjs` régénère
 `brand/tokens.css` + `brand/fonts.css`.

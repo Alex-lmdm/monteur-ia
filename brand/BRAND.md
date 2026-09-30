@@ -89,10 +89,23 @@ police. Le `@font-face` existe bien dans `fonts.css` et Chrome le résout correc
 
 ## Voir la démo
 
-`compositions/brand-showcase.html` recrée une section avec ce seul design system (cartes qui
-entrent, checkmark tracé, underline d'accent, lower-third). Lancer `npm run dev` et l'ouvrir.
+`compositions/exemple-section.html` illustre le dérush en 8 secondes : piste brute, silences,
+piste montée. `index.html` la montre au-dessus de la zone réservée à la vidéo, avec les
+sous-titres. Lancer `npm run dev` pour voir l’animation. Le style de départ Papier est prêt
+sans personnalisation ; le guide `motion-design/references/premier-montage.md` explique comment
+obtenir cette qualité sur les vrais montages.
 
 ---
 
 *Le langage visuel complet (règles motion, patterns, anti-slop) est dans le skill `motion-design`.
 Ce fichier ne documente que le branchement technique du dossier `brand/`.*
+
+## Préparer une version distribuable
+
+`node scripts/sync.mjs --template` régénère les instructions et les tokens avec les valeurs
+livrées, même si le mainteneur possède un `brand.config.json` personnel. Ce fichier personnel
+reste intact. Utiliser cette commande avant de versionner `CLAUDE.md` et `AGENTS.md` pour ne pas
+y embarquer une identité privée. Pour revenir à son aperçu personnel : `npm run sync`.
+Les copies de skills (`.agents/skills/` ← `.claude/skills/`, et l'inverse pour les skills
+framework) sont régénérées à l'identique : un fichier supprimé ou renommé dans la source disparaît
+aussi de la copie. N'ajoute rien directement dans une copie, édite la source.

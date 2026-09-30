@@ -50,7 +50,8 @@ DURATION = CUTS["duration"]
 #   sans trou ni chevauchement (les asserts plus bas le verifient).
 #
 # DEMO : une seule section split "exemple-section" qui couvre les 3 prises (0 -> 8 s) et
-# correspond a compositions/exemple-section.html + a index.html livre.
+# correspond a compositions/exemple-section.html (index.html livre n'est qu'un apercu :
+# build_master.py genere le vrai master depuis cette table).
 # Pour un vrai Reel tu auras plutot une alternance split/full, par exemple :
 #     ("s0-hook",   "split", [0]),
 #     ("s1a-intro", "split", [1]),  ("s1b-intro", "full", [2]),

@@ -15,9 +15,10 @@ SORTIE :
   Par defaut -> work/index.generated.html (un BROUILLON, pour inspection/diff).
   Avec --write -> ECRASE index.html a la racine.
 
-⚠️ index.html livre dans le template est ecrit A LA MAIN (pedagogique, avec les [pieges]).
-   On ne l'ecrase donc PAS par defaut : compare d'abord le brouillon genere a index.html,
-   puis --write seulement quand ta table LAYOUT reflete vraiment ton Reel.
+⚠️ index.html livre dans le template est un APERCU (zone d'attente a la place du visage, aucun
+   media requis). Le vrai master se genere ICI : brouillon d'abord, puis --write quand ta table
+   LAYOUT reflete vraiment ton Reel (ou pour le calage du cadrage, cf. setup/calibration-crop.md).
+   Les pieges du master sont documentes dans motion-design/references/montage-talking-head.md §2.
 
 POURQUOI generer plutot qu'editer a la main : les data-start / data-duration et les fenetres du
 visage sont DERIVES des vraies coupes du derush. C'est ce qui empeche le bug "on voit la fin de

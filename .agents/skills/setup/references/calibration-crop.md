@@ -47,7 +47,10 @@ Le `transform` du visage en split (défaut validé, cadrage type) :
   transform-origin:0 0; transform: translate(-216px, 410px) scale(1.40);
 }
 ```
-Poser cette valeur dans `montage.splitTransform`, puis générer un contrôle visuel **déterministe** :
+Poser cette valeur dans `montage.splitTransform`, générer le master avec
+`python3 tools/build_master.py --write` (il lit ce transform et pose le calque visage sur
+`base.mp4` ; l'`index.html` livré n'est qu'un aperçu sans visage), puis un contrôle visuel
+**déterministe** :
 ```bash
 npx hyperframes snapshot   # (+ --selector / --shot selon l'outil) — jamais le navigateur ici
 ```
@@ -66,7 +69,7 @@ repositionne la surface et déclenche le bug du « carré noir »). Trois levier
 | Hauteur | **2ᵉ** valeur de `translate` (`ty`) | plus **petit** = visage plus **haut** |
 | Horizontal | **1ʳᵉ** valeur de `translate` (`tx`) | recentre gauche/droite |
 
-Questions de calage à poser (une itération = un ajustement + un nouveau snapshot) :
+Questions de calage à poser (une itération = un ajustement de `montage.splitTransform` + `build_master.py --write` + un nouveau snapshot) :
 - « Ton visage est bien centré dans la moitié basse ? »
 - « Il est trop zoomé / pas assez ? »
 - « Les yeux tombent à peu près au tiers haut du cadre du bas ? »

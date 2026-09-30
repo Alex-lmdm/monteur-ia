@@ -31,6 +31,7 @@ sombre ni jaune.
 
 | Condition observable | Fichier |
 |---|---|
+| Premier montage, style Papier ou référence de qualité à appliquer | `references/premier-montage.md` |
 | Vidéo talking-head à monter (split-screen, master, visage, export final) | `references/montage-talking-head.md` |
 | Panneau visage NOIR dans le studio | `references/visage-carre-noir.md` |
 | Vidéo source HDR (`color_transfer` = `arib-std-b67` ou `smpte2084`) | `references/transcodage-video.md` |

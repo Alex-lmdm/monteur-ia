@@ -33,13 +33,14 @@ let hadError = false;
 function loadConfig() {
   const configPath = path.join(ROOT, "brand.config.json");
   const examplePath = path.join(ROOT, "brand.config.example.json");
+  // Préparer les fichiers distribués sans utiliser ni modifier la config personnelle.
+  if (process.argv.includes("--template")) {
+    return { config: readJSON(examplePath), source: "brand.config.example.json", isExample: true };
+  }
   if (fs.existsSync(configPath)) {
     return { config: readJSON(configPath), source: "brand.config.json", isExample: false };
   }
-  warn(
-    "brand.config.json introuvable — `/setup` n'a pas encore été lancé. " +
-      "Utilisation de brand.config.example.json (valeurs d'exemple)."
-  );
+  log("Premier démarrage : utilisation du style Papier. La personnalisation reste optionnelle.");
   return { config: readJSON(examplePath), source: "brand.config.example.json", isExample: true };
 }
 
@@ -269,7 +270,7 @@ function buildPlaceholderMap(config, style) {
     MUSIC_FILE: audio.musicFile ?? "(aucune — à fournir)",
     MUSIC_DB: audio.musicDb,
     CAMERA: derush.camera,
-    STYLE_PRESET: style.chosen ? style.preset.label : `${style.preset.label} — PAS ENCORE PERSONNALISÉ`,
+    STYLE_PRESET: style.chosen ? style.preset.label : `${style.preset.label} — prêt à monter, personnalisable plus tard`,
     STYLE_ACCENT: style.visual.accent,
     STYLE_BG: style.visual.bg,
     STYLE_CAPTIONS: `${style.visual.fontCaptions}, skin « ${style.visual.captionsSkin} »`,
@@ -330,11 +331,7 @@ function generateAgentFiles(config, style) {
   }
 
   if (missing.size > 0) {
-    warn(
-      `Placeholders non renseignés (laissés visibles, à compléter via /setup) : ${[...missing]
-        .map((k) => `{{${k}}}`)
-        .join(", ")}`
-    );
+    log("Identité personnelle non renseignée : optionnelle, tu peux monter avec les réglages de départ.");
   }
 }
 
@@ -407,6 +404,8 @@ function mirrorSkills(lockedNames) {
     const src = path.join(srcRoot, name);
     const dest = path.join(destRoot, name);
 
+    // Copie à l'identique : un fichier supprimé/renommé dans la source ne doit pas survivre
+    // dans la copie Codex (il y serait livré avec des consignes périmées).
     fs.rmSync(dest, { recursive: true, force: true });
     fs.cpSync(src, dest, { recursive: true, force: true });
     stampSkillMd(path.join(dest, "SKILL.md"), name);
@@ -460,7 +459,7 @@ function main() {
   if (!styleOnly) log("🔄 sync — design system + fichiers agent + miroir des skills\n");
 
   const { config, source, isExample } = loadConfig();
-  if (!styleOnly) log(`Config : ${source}${isExample ? "  (exemple — lance /setup)" : ""}\n`);
+  if (!styleOnly) log(`Config : ${source}${isExample ? "  (réglages de départ)" : ""}\n`);
 
   const presetsFile = loadStylePresets();
   const style = resolveStyle(config, presetsFile);
@@ -488,16 +487,10 @@ function main() {
     process.exit(1);
   }
   if (!style.chosen) {
-    log("✅ Sync terminé.\n");
-    log("┌──────────────────────────────────────────────────────────────────────┐");
-    log("│  🎨  Style de départ : « Papier » — noir & blanc, sans couleur.       │");
-    log("│                                                                      │");
-    log("│  Il rend bien tel quel, tu peux monter tout de suite. Mais il ne      │");
-    log("│  contient aucune couleur à toi : deux comptes qui le gardent se       │");
-    log("│  ressemblent.                                                        │");
-    log("│                                                                      │");
-    log("│      /setup visuel  (2 min) — 5 styles au choix, ou tes couleurs.     │");
-    log("└──────────────────────────────────────────────────────────────────────┘");
+    log("✅ Réglages synchronisés. Style Papier disponible pour ton premier montage.");
+    log("L'habillage est blanc cassé et noir ; ta vidéo reste en couleur.");
+    log("Personnalisation possible plus tard avec /setup visuel.");
+    log("Ce message confirme les réglages, pas les tests d'installation.");
     return;
   }
   log(`✅ Sync terminé — style « ${style.preset.label} ».`);

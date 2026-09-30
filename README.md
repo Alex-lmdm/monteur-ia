@@ -40,37 +40,40 @@ L'abonnement IA (~20 €/mois) est **le seul coût**. Tout le reste du système 
 
 ### 2. Installe le système
 
-Clique dans ce dossier, ouvre **Claude Code** (ou **Codex**), et colle **le prompt d'installation unique**.
-L'IA détecte ton système, installe ce qui manque, et vérifie que tout marche.
+Ouvre le dossier **monteur-ia-main** dans Claude Code ou Codex, puis écris :
 
-👉 Le prompt et la marche à suivre détaillée sont dans **[INSTALL.md](INSTALL.md)**.
-
-Tu n'as jamais installé Claude Code ou Codex ? INSTALL.md t'explique aussi ça, avant le prompt.
-
-### 3. Choisis ton style (2 minutes)
-
-Une fois installé, tape :
-
-```
-/setup
+```text
+Lis INSTALL.md et accompagne-moi pour installer Monteur IA. Occupe-toi de la partie technique.
 ```
 
-L'**Empreinte** commence par la seule chose qu'on ne peut pas deviner à ta place : **tes couleurs,
-ta police et l'allure de tes sous-titres**. Tu choisis parmi 5 styles prêts, ou tu donnes tes
-propres couleurs si tu les as déjà. **2 minutes, une seule fois.**
+L'IA vérifie ton ordinateur et affiche un petit bilan. **« À installer » n'est pas une erreur.**
+Quand elle te le propose, réponds simplement **« go » dans la conversation** : elle exécute les
+commandes et vérifie le résultat. Si une étape doit être faite à la main (par exemple installer
+Node.js), elle te guide puis reprend la suite.
 
-**Et si tu ne sais pas encore ?** Tu montes quand même. Le style de départ, « Papier », est en
-noir et blanc : propre, lisible, ça rend bien tel quel. Tu fais ta première vidéo, tu vois le
-système tourner, et tu choisis tes couleurs en connaissance de cause. **Rien n'est définitif** :
-`/setup visuel` se relance à tout moment et tout le montage suit.
+Les menus et les messages peuvent différer de la vidéo de formation : ils s'adaptent à ton
+ordinateur. Tu n'as pas de commandes à recopier depuis sa réponse.
 
-Ce qu'il ne faut pas faire, c'est le garder par défaut sans y penser. « Papier » ne contient
-aucune couleur à toi — c'est un point de départ, pas une identité. Ce système ne te donne pas le
-look de quelqu'un d'autre, il t'aide à poser le tien.
+Pas encore d'agent ? Voir [INSTALL.md](INSTALL.md#installer-lagent-ia-avant-tout).
 
-Le reste de l'Empreinte (ta voix, ton funnel, ta caméra, ta musique, le cadrage de ton visage)
-est **optionnel** et se fait quand tu veux — mais c'est ce qui tire le résultat le plus haut.
-Compte ~15 minutes en tout, et tu peux t'arrêter entre deux blocs.
+### 3. Monte ta première vidéo
+
+Quand l'installation est vérifiée, **glisse ta vidéo brute dans la conversation** et écris :
+
+```text
+On monte celle-ci.
+```
+
+Tu peux joindre le texte de ce que tu dis si tu l'as. Le monteur prépare le dérush, te le fait
+valider, puis passe au montage. Tu gardes la main sur le résultat.
+
+Le style **Papier** est déjà prêt : habillage blanc cassé et noir, sous-titres contrastés,
+animations qui illustrent tes idées. **Ta vidéo reste en couleur.** Aucun questionnaire de marque
+n'est nécessaire pour commencer.
+
+Plus tard, dis **« personnalise mon style »** (ou `/setup visuel`) pour choisir tes couleurs,
+ta police et tes sous-titres. Tes réglages sont réutilisés pour les prochains montages.
+Le reste de l'Empreinte (ta voix, ton funnel, ta musique…) est optionnel.
 
 ---
 
@@ -122,4 +125,6 @@ Prends celui dont tu as déjà l'abonnement.
 
 **Et si je bloque ?**
 La [formation Monteur IA](https://www.lemondedumarketing.fr/monteur-ia) reprend chaque étape en vidéo.
-Pour un souci technique du repo, ouvre une *issue* sur GitHub.
+Dis à ton IA ce qui bloque ; elle doit te guider pour la prochaine étape. Si elle ne peut pas
+résoudre le problème, demande-lui un message de diagnostic court à transmettre au support de la
+formation, avec une capture. Pas besoin de créer un compte GitHub.
