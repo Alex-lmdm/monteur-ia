@@ -139,3 +139,123 @@ test('tous les presets conservent leurs couleurs et leurs polices locales', (t) 
     }
   }
 });
+
+// ---------------------------------------------------------------------------
+// Clôture d'un reel (tools/close_reel.py) : retour à l'état d'un ZIP neuf
+// ---------------------------------------------------------------------------
+const DEMO = 'templates/demo';
+const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' });
+// Fichiers du template tels que livrés (suivis par git + nouveaux fichiers pas encore commités).
+const shipped = () => git(root, 'ls-files', '--cached', '--others', '--exclude-standard', '-z')
+  .split('\0').filter(f => f && fs.existsSync(path.join(root, f)));
+const demoCopies = () => fs.readdirSync(path.join(root, DEMO), { recursive: true })
+  .filter(f => f.endsWith('.demo')).map(f => f.split(path.sep).join('/').slice(0, -'.demo'.length));
+function tree(dir) {
+  const out = new Map();
+  for (const f of fs.readdirSync(dir, { recursive: true })) {
+    const rel = f.split(path.sep).join('/');
+    if (rel === '.git' || rel.startsWith('.git/')) continue;
+    const p = path.join(dir, f);
+    if (fs.statSync(p).isFile()) out.set(rel, fs.readFileSync(p));
+  }
+  return out;
+}
+
+test('la copie de démo est identique aux fichiers livrés et couvre tout le plan de travail', () => {
+  const copies = demoCopies();
+  for (const file of copies) {
+    assert.ok(fs.readFileSync(path.join(root, DEMO, `${file}.demo`)).equals(fs.readFileSync(path.join(root, file))),
+      `${DEMO}/${file}.demo diffère de ${file} : recopie-le (cp ${file} ${DEMO}/${file}.demo)`);
+  }
+  // Tout ce que close_reel vide ou que le pipeline adapte à chaque reel doit avoir sa copie.
+  const needed = shipped().filter(f => f === 'index.html'
+    || /^(compositions|derush|assets\/video)\//.test(f) && !f.endsWith('.gitkeep')
+    || /^tools\/[^/]+\.py$/.test(f) && /A CHAQUE REEL/.test(read(root, f)));
+  for (const file of needed) {
+    assert.ok(copies.includes(file), `${file} n'a pas de copie dans ${DEMO}/ (cp ${file} ${DEMO}/${file}.demo)`);
+  }
+});
+
+test('close_reel remet le projet à neuf, avec ou sans git, sans toucher aux réglages du client', (t) => {
+  let python;
+  try {
+    python = execFileSync('python3', ['-c', 'import sys; print(sys.executable)'], { encoding: 'utf8' }).trim();
+  } catch {
+    return t.skip('python3 absent');
+  }
+  // Avec git : débrief de la première vidéo repoussé (la note reste). Sans git : débrief fait.
+  for (const withGit of [true, false]) {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-cloture-'));
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-home-'));
+    t.after(() => [dir, home].forEach(d => fs.rmSync(d, { recursive: true, force: true })));
+    for (const file of shipped().filter(f => !/^\.(agents|claude)\//.test(f))) {
+      fs.mkdirSync(path.dirname(path.join(dir, file)), { recursive: true });
+      fs.copyFileSync(path.join(root, file), path.join(dir, file));
+    }
+    const neuf = tree(dir);
+
+    // Un reel monté de bout en bout : outils adaptés, médias du client, restes des outils.
+    const edit = (file, from, to) => write(dir, file, read(dir, file).replace(from, to));
+    edit('tools/sections.py', 'derush/exemple_cuts.json', 'derush/mon-reel_cuts.json');
+    for (const file of ['tools/build_words.py', 'tools/cut_boundaries.py', 'tools/montage_captions.py',
+      'tools/build_sfx.py', 'tools/build_master.py', 'index.html', 'compositions/captions.html',
+      'compositions/exemple-section.html', 'derush/exemple_cuts.json']) {
+      write(dir, file, `${read(dir, file)}\n<!-- réglage du reel précédent -->\n`);
+    }
+    write(dir, 'assets/video/base.mp4', 'vidéo du client');
+    write(dir, 'assets/video/hook-broll-v2.mp4', 'b-roll');
+    write(dir, 'derush/build_derush.py', 'ISLANDS = [(1.0, 2.0, "ancienne prise")]\n');
+    write(dir, 'derush/mon-reel_cuts.json', '{}');
+    write(dir, 'derush/mon-reel_enhanced.mp4', 'cut');
+    write(dir, 'compositions/s0-hook.html', '<div data-composition-id="s0-hook"></div>');
+    write(dir, 'compositions/components/grain.html', '<div></div>');
+    write(dir, 'renders/FINAL_SFX_MUSIC.mp4', 'master');
+    write(dir, 'renders/overlay.mov', 'calque');
+    write(dir, 'work/premiere-video.md', 'étape : dérush fait, débrief à faire');
+    write(dir, 'snapshots/frame-01.png', 'png');
+    write(dir, 'probe/index.html', '<div data-composition-id="probe"></div>');
+    write(dir, 'overlay.html', '<div data-composition-id="overlay"></div>');
+    write(dir, 'transcript.json', '[]');
+    write(dir, '.thumbnails/index.jpg', 'jpg');
+    // Réglages et fichiers personnels : doivent survivre à la clôture.
+    const personal = { 'brand.config.json': JSON.stringify({ brand: { name: 'CLIENT' }, setup: { firstVideoDone: !withGit } }),
+      'assets/images/logo.png': 'logo', 'assets/music/theme.mp3': 'musique', 'assets/sfx/perso.mp3': 'sfx' };
+    for (const [file, content] of Object.entries(personal)) write(dir, file, content);
+
+    const env = { ...process.env, HOME: home, USERPROFILE: home, GIT_CONFIG_GLOBAL: os.devNull,
+      GIT_CONFIG_NOSYSTEM: '1', PATH: withGit ? process.env.PATH : home };
+    const out = execFileSync(python, ['tools/close_reel.py', 'mon-reel'], { cwd: dir, env, encoding: 'utf8' });
+    const mode = withGit ? 'avec git' : 'sans git';
+
+    const after = tree(dir);
+    const note = after.get('work/premiere-video.md')?.toString();
+    after.delete('work/premiere-video.md');
+    if (withGit) {
+      assert.match(note ?? '', /débrief à faire[\s\S]*reel mon-reel/, `${mode} : note de débrief perdue`);
+      assert.doesNotMatch(note, /étape/);
+    } else {
+      assert.equal(note, undefined, `${mode} : suivi de première vidéo laissé alors que le débrief est fait`);
+    }
+    for (const [file, content] of Object.entries(personal)) {
+      assert.equal(after.get(file)?.toString(), content, `${mode} : ${file} perdu`);
+      after.delete(file);
+    }
+    assert.deepEqual([...after.keys()].sort(), [...neuf.keys()].sort(), `${mode} : fichiers en trop ou manquants`);
+    for (const [file, content] of neuf) {
+      assert.ok(after.get(file).equals(content), `${mode} : ${file} n'est pas revenu à l'état livré`);
+    }
+    const archive = path.join(home, process.platform === 'win32' ? 'Videos' : 'Movies', 'reels-publies', 'mon-reel');
+    assert.equal(fs.readFileSync(path.join(archive, 'FINAL_SFX_MUSIC.mp4'), 'utf8'), 'master');
+    if (withGit) {
+      assert.match(out, /tag reel\/mon-reel posé/);
+      assert.equal(git(dir, 'status', '--porcelain'), '');
+      assert.match(git(dir, 'show', 'reel/mon-reel:tools/sections.py'), /mon-reel_cuts\.json/);
+    } else {
+      assert.match(fs.readFileSync(path.join(archive, 'projet/tools/sections.py'), 'utf8'), /mon-reel_cuts\.json/);
+      assert.ok(fs.existsSync(path.join(archive, 'projet/build_derush.py')));
+    }
+    // Les outils repartent sur la démo livrée.
+    const sections = execFileSync(python, ['tools/sections.py'], { cwd: dir, encoding: 'utf8' });
+    assert.match(sections, /^exemple-section\s+split\s+0\.000 ->\s+8\.000/m);
+  }
+});

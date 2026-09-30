@@ -114,7 +114,8 @@ me dire de changer quelque chose. »
 `setup.firstVideoDone = true`, sync.
 
 **Il veut débriefer plus tard** : ne rien enregistrer et laisser `firstVideoDone` à `false` ;
-noter « débrief à faire » dans `work/premiere-video.md` et le reproposer une fois à la
+noter « débrief à faire » dans `work/premiere-video.md` (la note survit à la clôture du reel :
+`tools/close_reel.py` la garde tant que `firstVideoDone` n'est pas `true`) et le reproposer une fois à la
 conversation suivante.
 
 ## 5. Ensuite
