@@ -184,8 +184,8 @@ vidéo) — et **sous-titres à ~59 % (`y≈1140`, sous le centre)** (cf `refere
 `<video>` plein cadre n'a PAS le bug du split (il est déjà plein cadre).
 
 Les `<video>` visage : **SANS `class="clip"`** (le framework gère leur visibilité via les data-attrs ;
-ne jamais animer width/height/top/left d'une `<video>`), `src="assets/video/base-proxy.mp4"` (jamais un
-fichier séparé → ne se compose pas), `data-start`/`data-duration`/`data-media-start`/`data-track-index`
+ne jamais animer width/height/top/left d'une `<video>`), `src="assets/video/base.mp4"` (la même source
+que la voix off, jamais un fichier séparé → ne se compose pas), `data-start`/`data-duration`/`data-media-start`/`data-track-index`
 (track au-dessus des sections).
 
 **Ajustement du cadrage = UNIQUEMENT via `transform`** : `scale` = zoom · **2e valeur de `translate`**

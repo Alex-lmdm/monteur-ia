@@ -47,8 +47,11 @@ ou besoin réel de dépannage. Ne confonds pas une liste d'outils manquants avec
 ## 🟢 Première vidéo : tout monter d'une traite, puis apprendre de ses retours
 
 **État : première vidéo {{FIRST_VIDEO_STATUS}}.** C'est la première vidéo tant que
-`setup.firstVideoDone` n'est pas `true` dans `brand.config.json` **et** que `reels-publies/`
-ne contient aucun reel. Le setup n'est jamais un prérequis.
+`setup.firstVideoDone` n'est pas `true` dans `brand.config.json`, **sauf** si une vidéo a déjà
+été livrée : archive des reels clôturés non vide (`~/Movies/reels-publies/` sur Mac,
+`~/Videos/reels-publies/` sur Windows, hors du projet) ou `work/premiere-video.md` qui annonce
+« débrief à faire ». Dans ces deux cas, la vidéo suivante suit l'ordre verrouillé normal.
+Le setup n'est jamais un prérequis.
 
 Un débutant ne sait pas décrire son style ; devant sa propre vidéo montée, il sait dire ce qu'il
 aime ou pas. Donc : **aucune question avant**, un montage complet avec les réglages de base,
@@ -59,7 +62,7 @@ puis un **débrief** où il dit ce qu'il aurait fait autrement, et tu retiens to
    > coupes, sous-titres, animations, bruitages. Habillage noir et blanc, ta vidéo reste en
    > couleur. Ça me prend un moment, tu peux faire autre chose. Quand c'est prêt, tu me diras
    > tout ce que tu aurais fait autrement, et j'apprendrai ton style pour les prochaines. »
-2. **Monte d'une traite** : dérush (3) → montage (4) → SFX (6) → export. **Exception à l'ordre
+2. **Monte d'une traite** : dérush (3) → montage (4) → export → SFX (6). **Exception à l'ordre
    verrouillé, pour cette vidéo seulement** : pas d'écoute du dérush, pas de revue section par
    section, pas d'accord avant les SFX. Les **contrôles automatiques restent obligatoires**
    (re-transcription = texte prononcé, `_cuts.json`, `npm run check`, snapshots,
@@ -142,7 +145,7 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 > (**aucun compte GitHub ni push requis, tout est local** : avec git il committe et tague
 > `reel/<slug>` tout seul, en initialisant un repo local au besoin ; sans git il copie le
 > projet du reel vers le dossier Vidéos), copie les masters `renders/*FINAL*` vers
-> `reels-publies/<slug>/`, vide `renders/`, `work/`, `derush/`, `compositions/`,
+> `~/Movies/reels-publies/<slug>/` (Windows : `~/Videos/…`, hors du projet), vide `renders/`, `work/`, `derush/`, `compositions/`,
 > `assets/video/` et les restes à la racine (`snapshots/`, `probe/`, `overlay.html`), en gardant
 > une note « débrief à faire » si le débrief de la première vidéo n'a pas eu lieu, puis
 > remet les fichiers livrés depuis `templates/demo/` (master d'aperçu, placeholder `base.mp4`,

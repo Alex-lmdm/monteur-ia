@@ -45,8 +45,9 @@ Tous les binaires et le modèle Whisper se lisent dans `brand.config.json` → `
 - **Modèle Whisper** : `env.whisperModel`
   - **Défaut recommandé : `ggml-large-v3-turbo`** (plus léger, rapide, quasi aussi précis).
     Alternative haute qualité : `ggml-large-v3` (plus lourd).
-  - macOS : `~/.cache/hyperframes/whisper/models/ggml-large-v3-turbo.bin`
-  - Windows : `%USERPROFILE%\.cache\hyperframes\whisper\models\ggml-large-v3-turbo.bin`
+  - Le chemin réel est celui de `env.whisperModel`, renseigné à l'installation. Emplacement posé
+    par `INSTALL.md` : `~/.cache/monteur-ia/whisper/ggml-large-v3-turbo.bin` (Windows :
+    `%USERPROFILE%\.cache\monteur-ia\whisper\`). Un modèle déjà présent ailleurs est gardé tel quel.
 - **Langue de transcription** : `brand.config.json` → `derush.whisperLanguage` (noté `<LANG>` ci-dessous).
 - Script de montage paramétrable : `references/build_derush_template.py`.
 
