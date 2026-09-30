@@ -4,6 +4,7 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║ CE FICHIER EST ADAPTE A CHAQUE REEL.                                           ║
 ║  - La MUSIQUE vient de brand.config.json -> audio.musicFile + audio.musicDb.   ║
+║    Optionnelle : sans musique (premiere video), seuls les SFX sont mixes.     ║
 ║  - Les SFX sont les fichiers de assets/sfx/ ET de ses sous-dossiers            ║
 ║    (starter/, pack/...) : on les nomme par chemin relatif, ex. starter/pop.mp3.║
 ║  - Le MAPPING/PLACEMENT (quel SFX, a quel instant, a quel volume) est PILOTE   ║
@@ -54,11 +55,13 @@ CFG = load_config()
 audio = CFG.get("audio") or {}
 music_file = audio.get("musicFile")
 music_db = audio.get("musicDb", -26.5)
-if not music_file:
-    die("audio.musicFile est vide dans brand.config.json — configure ta musique via /setup bloc E.")
-MUSIC = MUSIC_DIR / music_file
-if not MUSIC.exists():
-    die(f"musique introuvable : {MUSIC.relative_to(ROOT)} (verifie audio.musicFile dans brand.config.json).")
+MUSIC = None
+if music_file:
+    MUSIC = MUSIC_DIR / music_file
+    if not MUSIC.exists():
+        die(f"musique introuvable : {MUSIC.relative_to(ROOT)} (verifie audio.musicFile dans brand.config.json).")
+else:
+    print("Pas de musique (audio.musicFile vide) : SFX seuls, sur la voix.")
 
 if not SRC.exists():
     die(f"{SRC.relative_to(ROOT)} manquant — rends d'abord la video finale (etape export ffmpeg).")
@@ -85,7 +88,7 @@ for i, t in enumerate(transitions):
 
 events.sort(key=lambda e: e[1])
 
-# ---- ffmpeg : voix (FINAL.mp4) + N SFX + musique ---------------------------------------------
+# ---- ffmpeg : voix (FINAL.mp4) + N SFX + musique (si configuree) -----------------------------
 inputs, filters, mixin = ["-i", str(SRC)], [], ["[0:a]"]
 for i, (f, start, vol, trim) in enumerate(events, start=1):
     inputs += ["-i", str(SFX_DIR / f)]
@@ -102,18 +105,20 @@ for i, (f, start, vol, trim) in enumerate(events, start=1):
     filters.append(f"{ch}{ch_f}[e{i}]")
     mixin.append(f"[e{i}]")
 
-mi = len(events) + 1
-inputs += ["-i", str(MUSIC)]
-filters.append(f"[{mi}:a]atrim=0:{DUR},volume={music_db}dB,aformat=channel_layouts=stereo:sample_rates=48000,"
-               f"afade=t=in:st=0:d=0.4,afade=t=out:st={DUR - 1.2:.3f}:d=1.2[music]")
-mixin.append("[music]")
+if MUSIC:
+    mi = len(events) + 1
+    inputs += ["-i", str(MUSIC)]
+    filters.append(f"[{mi}:a]atrim=0:{DUR},volume={music_db}dB,aformat=channel_layouts=stereo:sample_rates=48000,"
+                   f"afade=t=in:st=0:d=0.4,afade=t=out:st={DUR - 1.2:.3f}:d=1.2[music]")
+    mixin.append("[music]")
 
 filters.append(f"{''.join(mixin)}amix=inputs={len(mixin)}:normalize=0:dropout_transition=0,"
                f"alimiter=limit=0.97[aout]")
 
 # --probe : ecrit la piste SFX+musique SEULE (sans la voix) en WAV 48 kHz, pour VERIFIER LE
 # PLACEMENT SANS ECOUTER. Comparer ensuite le pic de chaque evenement au pic de la musique de
-# fond (viser +4 dB minimum). Deux methodes qui MENTENT, a ne pas utiliser :
+# fond (viser +4 dB minimum) ; sans musique, le comparer au niveau de la voix (chaque SFX
+# audible mais sous la voix). Deux methodes qui MENTENT, a ne pas utiliser :
 #   - soustraire le MP4 final et le MP4 sans SFX : deux encodages AAC independants laissent
 #     l'erreur de quantification de la voix (~-6 dB), tres au-dessus des SFX -> inexploitable ;
 #   - mesurer en 16 kHz : coupe au-dessus de 8 kHz et sous-estime massivement risers et clics
@@ -141,6 +146,7 @@ if r.returncode:
     print(r.stderr[-1200:])
     raise SystemExit(1)
 
-print(f"{len(events)} SFX + musique ({music_file} @ {music_db} dB) -> {OUT.relative_to(ROOT)}")
+print(f"{len(events)} SFX + " + (f"musique ({music_file} @ {music_db} dB)" if MUSIC else "sans musique")
+      + f" -> {OUT.relative_to(ROOT)}")
 for f, s, v, t in events:
     print(f"  {s:6.2f}  {v:>4} dB  {f}{'  (trim ' + str(t) + ')' if t else ''}")

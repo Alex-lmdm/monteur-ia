@@ -1,18 +1,38 @@
 # Premier montage : qualité immédiate avec le style Papier
 
-Lire avant un premier montage ou une section utilisant le style de départ. Complète la méthode
-`montage-talking-head.md`, sans remplacer ses validations ni son ordre.
+Lire avant la première vidéo d'un client ou une section utilisant le style de départ. Complète
+la méthode `montage-talking-head.md` ; pour la première vidéo, remplace ses arrêts de validation
+(fichier agent, section 🟢).
 
-## Parcours
+## Parcours de la première vidéo
 
-L'installation est vérifiée, une vidéo a été fournie : annoncer le style Papier en une phrase,
-puis préparer le dérush. Aucun questionnaire de marque, de police ou de matériel n'est requis.
-Le cadrage est adapté à la vraie vidéo par l'agent. Faire valider le dérush, puis une première
-section représentative avant de décliner le montage. Montrer le résultat, pas les commandes.
+Le client a envoyé sa vidéo brute : annoncer en une fois que tu montes tout avec les réglages de
+base, puis **monter d'une traite** jusqu'à l'export avec bruitages. Aucun questionnaire, aucune
+validation intermédiaire, aucune commande montrée. Tenir `work/premiere-video.md` à jour pour
+pouvoir reprendre après une interruption.
 
-Demande simple : « Voilà le début monté. Le rythme et l'habillage te plaisent ? »
-Le client peut répondre « continue » ou donner un retour en langage naturel. Ne pas ajouter une
-étape de choix de presets. Après la première livraison, proposer la personnalisation une fois.
+Réglages de base : style Papier, cadrage `split` calé sur le visage réel, sous-titres découpés
+selon `sous-titres.md`, bruitages d'`assets/sfx/` avec sobriété, pas de musique, voix brute mise
+au bon volume (skill `derush`, étape 7 ; nettoyage Adobe proposé au débrief).
+
+- **Texte non fourni** : ne pas le demander, le reconstituer depuis la transcription (skill
+  `derush`, « Texte non fourni »).
+- **Calage du visage** : ajuster le transform sur snapshot, l'écrire dans
+  `montage.splitTransform` (réglage technique, pas une préférence : aucun accord à demander),
+  laisser `montage.faceCrop` vide pour que l'export le dérive du transform, puis comparer une image
+  du studio et une image de l'export.
+- **Bruitages** : seulement sur les moments forts (apparition d'un élément clé, révélation,
+  appel à l'action), environ un toutes les 3 à 4 secondes au plus. Chaque son audible, sous la voix.
+
+**Tu valides toi-même ce que le client aurait validé** :
+- le dérush par re-transcription (aucun mot coupé ni doublé) et les vraies coupes mesurées ;
+- le concept visuel sur un snapshot de la première section avant de décliner les autres ;
+- chaque section sur des images de début, milieu et fin ; les sous-titres sur les vrais mots ;
+- l'export final : `check_export.py`, visage net, son présent, durée juste.
+
+Puis livrer et ouvrir le débrief : skill `setup`, `references/debrief-premiere-video.md`.
+Les vidéos suivantes reprennent le pipeline normal avec ses validations, et appliquent les
+préférences apprises (fichier agent, section 🧠).
 
 ## Direction visuelle prête à utiliser
 
@@ -23,6 +43,13 @@ Toutes les valeurs proviennent des tokens du preset, jamais d'une identité inve
 - **Composition :** le visage reste le repère. En split, le haut illustre une idée principale,
   avec un objet visuel dominant, des marges franches et quelques labels courts. En plein visage,
   garder le centre du visage dégagé et poser seulement les éléments utiles.
+- **Remplir la zone :** en split, la zone utile va d'environ y = 180 à y = 860 et de x = 100 à
+  x = 980. L'objet dominant en occupe l'essentiel (au moins la moitié de la hauteur). Un visuel
+  qui tient dans un tiers du panneau, avec le reste vide, paraît inachevé : l'agrandir ou le
+  composer autrement. Contrôler sur le snapshot avant de décliner.
+- **Pas de doublon avec les sous-titres :** aucun label ne répète les mots du sous-titre affiché au
+  même moment. Le motion montre l'idée (objet, chiffre, comparaison), les sous-titres portent la
+  phrase.
 - **Hiérarchie :** un objet dominant, au plus deux niveaux secondaires. La différence d'échelle,
   les surfaces et l'espace créent le relief. Éviter la grille de trois cartes textuelles identiques.
 - **Lisible sur téléphone :** la vidéo est vue sur un écran de téléphone, pas sur un 27 pouces.

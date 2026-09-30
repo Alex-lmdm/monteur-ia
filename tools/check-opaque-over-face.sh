@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Garde anti-regression "visage noir au studio" (cf skill motion-design §14.5).
+# Garde anti-regression "visage noir au studio" (cf skill motion-design, references/visage-carre-noir.md).
 # Signale tout wrapper video PLEIN CADRE (.face*/.screen*/.illu*) a fond OPAQUE :
 # un tel element empile au-dessus du <video> visage le masque dans le studio.
 set -u
@@ -9,7 +9,7 @@ hits=$(grep -nE '\.(screen|illu|face)[A-Za-z-]*[^{]*\{[^}]*background[^;}]*:[^;}
 if [ -n "$hits" ]; then
   echo "❌ Wrapper video plein cadre a fond OPAQUE (masque le visage dans le studio) :"
   echo "$hits"
-  echo "→ Mettre background:transparent (seul #bgbase track 0 peut etre opaque). Cf skill §14.5."
+  echo "→ Mettre background:transparent (seul #bgbase track 0 peut etre opaque). Cf references/visage-carre-noir.md."
   exit 1
 fi
 echo "✅ Aucun wrapper video opaque au-dessus du visage."

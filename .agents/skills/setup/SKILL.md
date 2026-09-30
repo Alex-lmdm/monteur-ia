@@ -6,7 +6,9 @@ description: >-
   monteur. Use when the user says "setup", "configure mon système", "onboarding", "empreinte",
   "personnalise mon monteur" ou "personnalise mon style". Ne pas lancer ce questionnaire
   automatiquement après installation ou lorsqu’une personne demande simplement son premier montage.
-  Aussi : `/setup <bloc>` (identite, voix, funnel, visuel, derush, technique) pour refaire un bloc.
+  Aussi : `/setup <bloc>` (identite, voix, funnel, visuel, derush, technique) pour refaire un bloc,
+  et le débrief de la première vidéo (references/debrief-premiere-video.md), ouvert par le fichier
+  agent une fois la première vidéo livrée.
 ---
 <!-- Copie générée — éditer .claude/skills/setup/ puis npm run sync -->
 
@@ -37,6 +39,12 @@ prêt (« écris “on garde” pour garder le réglage recommandé »).
    avec le style Papier, sans lancer ce skill. L'habillage est monochrome, sa vidéo reste en couleur.
    Si la personnalisation est demandée sans bloc précis et que le style n'est pas choisi,
    proposer D (Visuel) en premier. Les autres blocs restent optionnels.
+
+   **Débrief de la première vidéo** : après la livraison de la première vidéo (montée d'une
+   traite, cf. fichier agent), on n'anime pas les blocs un par un : on suit
+   `references/debrief-premiere-video.md`. Le client réagit à sa vidéo, on traduit ses retours
+   vers les mêmes champs que les blocs D, E et F, et vers `montage.preferences` pour tout ce qui
+   n'a pas de champ dédié. Principes 4 à 7 inchangés.
 
 2. **`brand.config.json` = source de vérité unique.** Au démarrage : lire `brand.config.json` à la
    racine. **S'il n'existe pas**, le créer en copiant `brand.config.example.json` (défauts
@@ -82,7 +90,8 @@ prêt (« écris “on garde” pour garder le réglage recommandé »).
    paragraphe technique. On confirme les étapes utiles sans félicitations répétitives. On propose toujours de sauter (« pas
    obligatoire, on peut y revenir »).
 
-> **Périmètre.** Ce skill écrit dans : `brand.config.json`, `.claude/skills/reel-script/SKILL.md`
+> **Périmètre.** Ce skill écrit dans : `brand.config.json` (dont `montage.preferences` et
+> `setup.firstVideoDone` au débrief), `.claude/skills/reel-script/SKILL.md`
 > (+ `references/scripts-exemples.md`), `design-system/manychat-dm.md`,
 > `design-system/instagram-caption.md`, `templates/style-presets.json` (table `fonts`, quand
 > l'utilisateur fournit SA police), `assets/…`.

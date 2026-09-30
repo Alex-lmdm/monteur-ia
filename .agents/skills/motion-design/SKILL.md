@@ -37,7 +37,7 @@ sombre ni jaune.
 | Panneau visage NOIR dans le studio | `references/visage-carre-noir.md` |
 | Vidéo source HDR (`color_transfer` = `arib-std-b67` ou `smpte2084`) | `references/transcodage-video.md` |
 | Sous-titres à produire | `references/sous-titres.md` |
-| SFX / musique (UNIQUEMENT après validation du montage par le créateur) | `references/sfx-musique.md` |
+| SFX / musique (UNIQUEMENT après validation du montage par le créateur ; première vidéo : d'une traite) | `references/sfx-musique.md` |
 | Section CTA « commente un mot-clé », ou image qui zoome (Ken Burns) | `references/patterns.md` |
 | Police display statique de la marque | `references/coluna-statique.md` |
 | Projet Remotion (legacy) | `references/remotion.md` |
@@ -416,7 +416,9 @@ crucial · fondamental · indéniablement · incontournable · primordial · ré
 - [ ] Le corps est en Regular avec 1-3 mots en Black pour les ancres.
 - [ ] Le fond est `var(--brand-bg)`, pas du noir pur (ou transparent pour clip intégrable).
 - [ ] Aucun emoji décoratif sans utilité (pas de ✨ 🚀 💯 génériques). Si emoji : Apple/iOS style, 1-2 par moment max.
-- [ ] L'identité (handle, avatar) est visible **au moins une fois** dans la vidéo finale.
+- [ ] L'identité (handle, avatar) est visible **au moins une fois** dans la vidéo finale. Si
+  `brand.handle` et `brand/assets/avatar.png` n'existent pas (cas d'une première vidéo), on saute
+  ce point : ne jamais afficher un marqueur `{{...}}` ni inventer un nom.
 - [ ] Easing utilisé est conforme (§4 / §8).
 
 ---
@@ -514,6 +516,10 @@ les `var(--brand-*)` se résolvent (accent = accent, pas noir).
 Ouvrir la compo `index`, montrer au créateur, corriger.
 ✅ *Critère* : **le créateur a vu la preview et validé section par section.** C'est CE feu vert qui
 débloque les sous-titres finaux, l'export et les SFX — rien avant.
+**Exception première vidéo** (fichier agent, section 🟢, et `references/premier-montage.md`) : pas
+de revue ici, le montage va d'une traite jusqu'à l'export SFX ; le débrief final tient lieu de
+revue. Tu valides toi-même chaque section sur snapshots, et tu découpes les sous-titres selon
+`references/sous-titres.md` sans attendre de dictée.
 
 **Après validation, dans cet ordre :**
 1. ▶ **Sous-titres à produire → lis `references/sous-titres.md` AVANT d'écrire le moindre chunk** (le

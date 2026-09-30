@@ -131,8 +131,11 @@ function resolveStyle(config, presetsFile) {
     muted: visual.muted ?? mix(text, bg, 0.42),
   };
 
-  const chosen = Boolean(wanted) && !preset.isUnset;
-  return { preset, visual: { ...visual, text, ...derived }, chosen };
+  // Choisi = un preset nommé, ou un choix explicite enregistré (garder Papier en est un).
+  const chosen = config?.setup?.styleChosen === true || (Boolean(wanted) && !preset.isUnset);
+  const capSize = Number(visual.captionsSize);
+  const captionsSize = Number.isFinite(capSize) && capSize >= 30 && capSize <= 100 ? Math.round(capSize) : 50;
+  return { preset, visual: { ...visual, text, captionsSize, ...derived }, chosen };
 }
 
 /** Corps CSS de chaque skin de sous-titres. Une seule source de vérité. */
@@ -190,6 +193,7 @@ function generateTokensCss(style, presetsFile) {
     FONT_BODY: v.fontBody,
     FONT_CAPTIONS: v.fontCaptions,
     CAPTIONS_SKIN: v.captionsSkin,
+    CAPTIONS_SIZE: v.captionsSize,
     CAPTIONS_SKIN_ACTIVE_CSS: caption.active,
     CAPTIONS_SKINS_ALL_CSS: caption.all,
   };
@@ -257,6 +261,18 @@ function generateFontsCss(style, presetsFile) {
 // ---------------------------------------------------------------------------
 // 2. Générer CLAUDE.md / AGENTS.md
 // ---------------------------------------------------------------------------
+// Préférences apprises au débrief (texte libre du client) -> liste Markdown.
+// Une ligne par préférence ; les accolades sont retirées pour ne jamais créer de placeholder.
+function renderPreferences(prefs) {
+  const lines = (Array.isArray(prefs) ? prefs : [])
+    .map((p) => String(p ?? "").replace(/[{}]/g, "").replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+  if (lines.length === 0) {
+    return "_Aucune pour l'instant : elles s'apprennent au débrief de la première vidéo._";
+  }
+  return lines.map((l) => `- ${l}`).join("\n");
+}
+
 function buildPlaceholderMap(config, style) {
   const brand = config.brand ?? {};
   const audio = config.audio ?? {};
@@ -275,6 +291,10 @@ function buildPlaceholderMap(config, style) {
     STYLE_BG: style.visual.bg,
     STYLE_CAPTIONS: `${style.visual.fontCaptions}, skin « ${style.visual.captionsSkin} »`,
     STYLE_LAYOUT: config?.montage?.defaultLayout ?? style.preset.montage?.defaultLayout ?? "split",
+    FIRST_VIDEO_STATUS: config?.setup?.firstVideoDone === true
+      ? "faite (débrief enregistré)"
+      : "pas encore faite",
+    MONTAGE_PREFERENCES: renderPreferences(config?.montage?.preferences),
   };
 
   const map = {};

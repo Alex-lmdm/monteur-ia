@@ -18,6 +18,12 @@ la meilleure prise de chaque phrase, on supprime les blancs et les ratés, on ne
 > Prérequis de contexte : **le script final est connu** (vient du skill `reel-script` ou fourni par le
 > créateur). C'est ce qui rend la sélection de prise fiable — on aligne l'audio sur un texte connu, on
 > ne devine pas.
+>
+> **Texte non fourni** (cas courant pour une première vidéo, où l'on ne pose pas de question) :
+> transcrire chaque îlot de parole, reconstituer le texte voulu phrase par phrase, et garder la
+> **dernière prise complète** de chaque phrase. Une prise qui s'interrompt, un faux départ ou un mot
+> isolé est jeté. En cas de doute entre deux prises, garder la plus fluide et le noter dans le
+> fichier d'état.
 
 ## Principe clé (à ne jamais oublier)
 
@@ -160,12 +166,26 @@ ffmpeg -ss <a> -to <b> -i work/d_audio.wav -af silencedetect=noise=-44dB:d=0.05 
 On voit alors les deux occurrences → ne garder que la **dernière** (complète), ajuster la borne de
 l'îlot, rebuild, re-vérifier (a) + (b), régénérer la timeline.
 
+> **Première vidéo** (fichier agent, section 🟢) : pas d'écoute (b), la vidéo est montée d'une
+> traite. Le critère (a) devient la seule barrière : le vérifier avec d'autant plus de soin (zoom
+> mot à mot sur toute zone douteuse). Le client signalera un doublon audible au débrief.
+
 ### 7. Nettoyage de la voix → Adobe Podcast Enhance (toujours, pas d'alternative)
 
 L'audio brut grésille. Le nettoyage passe **toujours** par Adobe Podcast Enhance (gratuit, compte
 Adobe requis) : c'est la seule méthode du système. **Ne propose jamais une autre méthode** (pas de
 filtre ffmpeg, pas de « je peux le faire moi-même ») : l'utilisateur fait deux gestes dans son
 navigateur, tu fais tout le reste.
+
+> **Première vidéo** (fichier agent, section 🟢) : **ne pas faire cette étape**, elle demande une
+> action du client en plein montage. Produire `<cut>_enhanced.mp4` avec la voix brute **mise au bon
+> volume** (normalisation du niveau, pas un nettoyage : sans elle, une voix brute sort vers
+> -23 LUFS, trop discrète à côté des Reels habituels) :
+> ```bash
+> ffmpeg -y -i <projet>/derush/<cut>.mp4 -map 0:v:0 -map 0:a:0 -c:v copy -af loudnorm=I=-16:TP=-1.5:LRA=11 -ar 48000 -c:a aac -b:a 256k -shortest <projet>/derush/<cut>_enhanced.mp4
+> ```
+> Le nettoyage Adobe est proposé au débrief, qui remplace alors l'audio sans toucher à la vidéo ni
+> aux coupes. Dès la deuxième vidéo, cette étape redevient systématique.
 
 1. Extraire la voix du cut :
 ```bash

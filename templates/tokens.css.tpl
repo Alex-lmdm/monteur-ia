@@ -40,7 +40,7 @@
   --brand-font-mono: "Courier New", ui-monospace, monospace;
 
   /* --- Sous-titres : réglages du skin « {{CAPTIONS_SKIN}} » ---------------- */
-  --brand-cap-size: 50px;
+  --brand-cap-size: {{CAPTIONS_SIZE}}px;   /* visual.captionsSize (défaut 50) */
   --brand-cap-stroke-width: 8px;   /* skins outline / shadow                    */
   --brand-cap-radius: 14px;        /* skins plate / block arrondi               */
 
