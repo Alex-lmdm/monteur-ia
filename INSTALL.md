@@ -1,165 +1,225 @@
-# Installation
+# Installer Monteur IA
 
-Tu as deux voies :
+Ouvre le dossier **monteur-ia-main** dans Claude Code ou Codex, puis envoie ce message :
 
-- **La voie rapide** — tu colles un seul prompt et l'IA installe tout pour toi. Recommandé.
-- **L'installation manuelle** — tu fais chaque étape à la main. Pour ceux qui préfèrent, ou si la voie rapide bloque.
+```text
+Lis INSTALL.md et accompagne-moi pour installer Monteur IA. Occupe-toi de la partie technique.
+```
 
-> ⚠️ **Avant de coller le prompt, il faut que Claude Code ou Codex soit déjà installé et ouvert dans ce dossier.**
-> Si ce n'est pas encore le cas, va d'abord à la section [Installer l'agent IA](#installer-lagent-ia-avant-tout).
+C'est le même départ si la vidéo de formation dit simplement « lis INSTALL.md et installe tout ».
+L'IA vérifie ton ordinateur, explique ce qu'il reste à préparer, puis te dit quoi faire.
+**Quand elle te propose de commencer, réponds « go » dans la conversation.**
+
+- **À installer** signifie que l'outil n'est pas encore présent. Ce n'est pas une erreur.
+- L'IA exécute les commandes. Tu n'as pas à les recopier dans un terminal.
+- Si une manipulation est nécessaire de ton côté, elle te guide pour cette seule étape.
+- Les menus et les réponses peuvent différer de la vidéo : l'installation s'adapte à ton ordinateur.
+
+Une fois les vérifications terminées, **tu peux monter une première vidéo avec le style Papier** :
+blanc cassé, noir, sous-titres lisibles et animations visuelles. Tes images restent en couleur.
+Tu pourras choisir tes couleurs plus tard, en demandant « personnalise mon style ».
+
+**Pas encore d'agent installé ?** Commence par [Installer l'agent IA](#installer-lagent-ia-avant-tout).
+
+**Pas encore le dossier ?** Dans un dossier vide dédié à tes montages, demande à ton agent :
+« Télécharge https://github.com/Alex-lmdm/monteur-ia ici, puis lis son INSTALL.md et aide-moi à l'installer. »
+Il doit te guider pour rouvrir le dossier téléchargé si nécessaire.
 
 ---
 
-## 🚀 La voie rapide — le prompt d'installation
+## Instructions pour l'IA : accompagner l'installation
 
-> **Encore plus simple ?** Ouvre ton agent dans n'importe quel dossier (Documents par exemple) et
-> dis-lui : « Télécharge le système https://github.com/Alex-lmdm/monteur-ia ici, puis suis les
-> instructions d'installation de son INSTALL.md. » Il fait tout. **À la fin, ferme et rouvre ton
-> agent DANS le dossier monteur-ia** : c'est là que vivent ses instructions, et c'est là que tu
-> travailleras.
+Cette section est ton mode opératoire. **Applique-la aussi quand l'utilisateur dit seulement
+« lis INSTALL.md et installe tout »** : il n'a pas à recopier un autre prompt.
+Le protocole technique plus bas est destiné à toi. Ne le transforme pas en tutoriel terminal
+pour l'utilisateur et ne lui demande pas de le lire.
 
-Sinon, ouvre **Claude Code** (ou **Codex**) à la racine de ce dossier, puis **copie-colle exactement le bloc ci-dessous**
-comme premier message :
+### 1. Vérifier, expliquer simplement, proposer de commencer
 
-```text
-Tu es mon assistant d'installation pour le projet « Monteur IA ». Installe tout l'environnement,
-étape par étape, sans jamais rien casser. Suis ces règles :
+- Détecte le système et l'architecture, vérifie le dossier et les outils présents en lecture seule.
+  Distingue un outil absent d'un outil présent mais non fonctionnel. Ne change rien à cette étape.
+- Commence par un constat réel et rassurant, sans garantir à l'avance que tout réussira.
+- Présente un tableau court avec des **fonctions compréhensibles** : base du système (Node.js),
+  traitement vidéo, moteur de montage, export vidéo, transcription, réglages du projet.
+  États : **✅ Déjà prêt**, **À installer**, **À préparer**. Réserve **À réparer** aux échecs constatés.
+  Pas de croix rouges pour une absence normale avant l'installation.
+- Pas de liste de commandes, chemins, noms de paquets ou choix de modèles dans ce premier message.
+  Les outils de l'application peuvent afficher leurs propres commandes : explique au besoin
+  « ce sont les opérations que j'exécute, tu n'as rien à recopier ».
+- Choisis toi-même la méthode compatible avec la machine. Propose un réglage recommandé,
+  sans faire arbitrer « Homebrew ou binaire », « large-v3-turbo ou medium » à un débutant.
+- Annonce les interventions prévisibles et les téléchargements volumineux AVANT le « go ».
+  Si Homebrew est absent et nécessaire, explique sa fonction et inclus explicitement son
+  installation dans ce qui est autorisé. Le modèle de transcription recommandé pèse environ
+  1,6 Go **s'il manque**. S'il existe déjà, ne propose pas de le télécharger à nouveau.
+- Termine par **une action unique**, très visible. « Go », « oui », « vas-y », « lance » valent
+  accord pour le plan annoncé ; ne redemande pas ensuite l'accord pour chacune de ses étapes.
+  Une nouvelle action système non annoncée ou une permission de l'application reste à valider.
 
-1. DÉTECTE mon système d'exploitation (macOS ou Windows) et mon architecture, puis annonce-moi
-   le PLAN d'installation en une liste courte avant de commencer. Attends que je confirme.
+Exemple de formulation, à adapter au bilan réel :
 
-2. Procède par étapes IDEMPOTENTES : pour chaque outil, d'abord VÉRIFIE s'il est déjà là
-   (check), installe seulement si absent (install), puis RE-VÉRIFIE (re-check). Ne réinstalle
-   jamais un outil déjà présent et fonctionnel. Ordre imposé :
+> J'ai vérifié ton ordinateur : une partie des outils est déjà prête 😊
+>
+> [Tableau du bilan réel]
+>
+> Je vais installer ce qui manque et vérifier que le montage et les sous-titres fonctionnent.
+> Je m'occupe des commandes, tu n'as rien à recopier dans un terminal.
+>
+> La transcription nécessite un téléchargement d'environ 1,6 Go. Garde ton ordinateur connecté.
+> Si ta connexion est limitée, dis-le-moi : je pourrai choisir une version plus légère.
+>
+> **Pour commencer, réponds simplement « go » ici.**
 
-   a) Node.js 22 minimum (vérifie `node --version`). S'il est absent ou trop vieux : donne-moi
-      le lien https://nodejs.org (installeur LTS officiel, .pkg macOS / .msi Windows) et
-      ARRÊTE-TOI — je l'installe moi-même, puis je relance ce prompt. Ne tente pas de
-      l'installer par un gestionnaire de paquets.
-   b) `npm install` à la racine du projet (installe HyperFrames et les dépendances).
-   c) chrome-headless-shell : `npx puppeteer browsers install chrome-headless-shell`.
-   d) ffmpeg (vérifie `ffmpeg -version`). Si absent :
-      - macOS : installe via Homebrew (`brew install ffmpeg`). Si Homebrew est absent,
-        demande-moi d'ABORD mon accord EXPLICITE avant d'installer Homebrew, puis installe-le.
-      - Windows : `winget install Gyan.FFmpeg`. Préviens-moi qu'il faut ROUVRIR un terminal
-        pour que le PATH soit pris en compte. Si `winget` est introuvable, dis-moi de mettre à
-        jour « App Installer » depuis le Microsoft Store, puis de relancer.
-   e) Whisper (transcription locale) — VÉRIFIE D'ABORD ce qui existe déjà :
-      - binaire : `which whisper-cli` (macOS) / `where whisper-cli` (Windows), et regarde
-        aussi si Homebrew l'a déjà (`brew list whisper-cpp` sur macOS) ;
-      - modèle : cherche un `ggml-*.bin` existant dans `~/.cache/monteur-ia/whisper/`,
-        `~/whisper-models/` et `~/.cache/whisper/` avant tout téléchargement.
-      Seulement si l'un des deux MANQUE : télécharge le binaire précompilé whisper.cpp adapté
-      à mon OS/architecture depuis les GitHub Releases de ggml-org/whisper.cpp, et/ou le
-      modèle `ggml-large-v3-turbo.bin`. PRÉVIENS-MOI que le modèle pèse ~1,6 Go AVANT de le
-      télécharger, et propose le modèle `medium` en alternative si ma connexion est lente.
-      Range ce qui est téléchargé dans le cache :
-        - macOS : ~/.cache/monteur-ia/whisper/
-        - Windows : %USERPROFILE%\.cache\monteur-ia\whisper\
-   f) Configuration : si `brand.config.json` n'existe pas, crée-le à partir de
-      `brand.config.example.json`. Écris-y les chemins réellement détectés (ffmpeg, binaire et
-      modèle whisper). Sur Windows, ajoute la variable d'environnement
-      PRODUCER_FORCE_SCREENSHOT=true (elle évite les rendus blancs/lents).
-   g) Skills : lance `npx hyperframes skills update` (installe/rafraîchit les skills officiels
-      HyperFrames en global dans `~/.claude/skills` et `~/.agents/skills` ; le repo embarque
-      déjà une copie fonctionnelle, cette commande garantit la dernière version).
-   h) `npm run sync` (régénère CLAUDE.md / AGENTS.md et les skills).
+**Exception Node.js absent ou trop ancien :** c'est la prochaine action, donc ne demande pas
+« go » pour t'arrêter aussitôt. Dis : « Il manque Node.js, un outil gratuit nécessaire au montage.
+Cette étape se fait manuellement ; je te guide, puis je m'occupe de la suite. » Donne le lien
+https://nodejs.org et indique l'installeur LTS adapté au système (.pkg sur Mac, .msi sur Windows).
+Demande de terminer l'installation puis de fermer et rouvrir l'agent dans le même dossier.
+**« Quand c'est fait, écris “c'est installé”. »** Re-vérifie, reprends au bon endroit et demande
+l'accord pour les étapes restantes si elles n'ont pas encore été autorisées. Ne fais pas recopier
+le prompt ou tout recommencer.
 
-3. Ne PASSE JAMAIS à l'étape suivante si l'étape en cours a échoué. En cas d'échec :
-   diagnostique en trois lignes — message d'erreur → cause probable → UNE action corrective —
-   puis retente. Si c'est un blocage système (droits admin, proxy réseau, antivirus), NE
-   force pas : pointe-moi vers la section « Problèmes courants » correspondante d'INSTALL.md
-   et attends.
+### 2. Pendant l'installation : toujours dire qui agit
 
-4. DIAGNOSTIC FINAL, une fois tout installé :
-   - lance `npx hyperframes doctor`. IMPORTANT : doctor ne teste PAS whisper, et certains ✗
-     sont bénins pour nous — Docker absent (on ne rend pas via Docker), version hyperframes
-     plus récente disponible (on épingle volontairement la version), mémoire basse si
-     d'autres apps tournent. Seuls Node, FFmpeg/FFprobe et Chrome doivent être au vert ;
-   - smoke test rendu : rends 2 secondes de la composition-témoin
-     `compositions/exemple-section.html` et vérifie qu'un fichier vidéo est bien produit ;
-   - smoke test transcription : génère un son de test avec
-     `ffmpeg -f lavfi -i "sine=frequency=440:duration=5" work/test-whisper.wav`
-     puis transcris-le avec la commande exacte (adapte les chemins depuis
-     `brand.config.json` → env) :
-     `<whisperCli> -m <whisperModel> -f work/test-whisper.wav -l fr`
-     — n'importe quelle sortie texte (même « (bell ringing) ») prouve que whisper répond ;
-   - affiche un TABLEAU récapitulatif avec ✅ / ❌ par composant (Node, npm, chrome-headless-shell,
-     ffmpeg, whisper, config, doctor, rendu, transcription).
-   Si tout est ✅, conclus par : « Installation terminée. Lance /setup — les 2 premières minutes
-   posent tes couleurs et tes sous-titres, et c'est obligatoire avant de monter : sans ça tes
-   vidéos sortiraient dans le style d'usine, identique pour tout le monde. »
-   S'il reste un ❌, explique-moi précisément quoi faire.
-```
+- Exécute toi-même les commandes. Donne des nouvelles aux étapes utiles, en une ou deux phrases :
+  « Je prépare l'export vidéo. Tu n'as rien à faire pour le moment. »
+- Un téléchargement lent : précise ce qui attend, sans inventer un pourcentage ni un délai.
+- Une autorisation système : explique le bouton ou la manipulation nécessaire, puis attends.
+  Un mot de passe système se saisit uniquement dans la fenêtre du système, jamais dans le chat.
+- Ne propose pas de désactiver les protections, l'antivirus ou toutes les demandes de permission.
+- Un échec réparable : explique « Cette étape n'a pas abouti. Je vérifie la cause avant de reprendre. »
+  Diagnostique et corrige de façon ciblée, avec au plus deux nouvelles tentatives adaptées.
+  Ne relance pas en boucle et ne passe pas à l'étape suivante en masquant l'erreur.
+- Si l'utilisateur doit agir : une explication courte, **une seule action concrète**, puis reprise
+  après sa réponse. Ne le renvoie pas seul vers toute l'installation manuelle.
+- Si tu restes bloqué : indique ce qui est prêt, ce qui bloque et fournis un court message à
+  transmettre au support (étape, erreur utile, système ; aucun secret). Garde les détails techniques
+  disponibles sur demande, sans en remplir la conversation.
 
-C'est tout. Laisse l'IA travailler et réponds-lui quand elle te pose une question.
+### 3. Protocole technique à exécuter
 
-Si à un moment ça coince et que l'IA ne s'en sort pas, passe à l'installation manuelle ci-dessous
-pour l'étape concernée.
+Procède par étapes idempotentes : vérifier, installer uniquement si nécessaire, re-vérifier.
+Préserve les vidéos, les réglages personnels et les outils déjà fonctionnels. Ne mets pas à jour
+la version HyperFrames épinglée dans ce projet pendant l'installation.
+
+1. **Node.js 22 minimum** : `node --version`. Absent ou trop ancien : appliquer l'exception ci-dessus.
+   Ne pas tenter de l'installer via un gestionnaire de paquets.
+2. **Dépendances** : `npm install` à la racine du projet.
+3. **Navigateur de rendu** : `npx puppeteer browsers install chrome-headless-shell` si absent.
+4. **FFmpeg** : vérifier `ffmpeg -version` et `ffprobe -version`.
+   - macOS : `brew install ffmpeg` si nécessaire. Si Homebrew manque, vérifier que son installation
+     a été explicitement annoncée et autorisée ; sinon expliquer et demander cet accord.
+   - Windows : `winget install Gyan.FFmpeg`. Après installation, rouvrir l'agent si son environnement
+     ne voit pas le nouveau PATH. Si winget manque, guider pour mettre à jour App Installer depuis
+     le Microsoft Store, puis reprendre cette étape.
+5. **Whisper** : vérifier `whisper-cli` (macOS : `command -v whisper-cli` ; PowerShell :
+   `Get-Command whisper-cli -ErrorAction SilentlyContinue`) et les modèles `ggml-*.bin` dans
+   `~/.cache/monteur-ia/whisper/`, `~/whisper-models/` et `~/.cache/whisper/`.
+   - Garder un binaire et un modèle déjà fonctionnels, même si le modèle diffère du défaut recommandé.
+   - macOS : privilégier `brew install whisper.cpp` avec Homebrew déjà disponible/autorisé.
+     Vérifier la disponibilité de la formule ([source Homebrew](https://formulae.brew.sh/formula/whisper.cpp), ancien nom : `whisper-cpp`) ; ne pas promettre un binaire GitHub macOS sans
+     avoir vérifié qu'il existe réellement pour cette architecture.
+   - Windows : récupérer le binaire whisper.cpp compatible avec la machine dans les releases
+     officielles `ggml-org/whisper.cpp` ; vérifier la présence réelle de l'archive attendue.
+   - Modèle manquant : `ggml-large-v3-turbo.bin` (~1,6 Go), après l'annonce initiale. Si la connexion
+     est limitée, proposer une alternative plus petite en vérifiant sa taille réelle : `medium`
+     pèse encore environ 1,6 Go, ce n'est pas une solution nettement plus légère ; `small` environ
+     0,5 Go. Expliquer le compromis de précision en français courant.
+   - Stocker les nouveaux fichiers dans `~/.cache/monteur-ia/whisper/` (Windows : sous
+     `%USERPROFILE%`). Rechercher les chemins réels après l'installation.
+6. **Configuration** : créer `brand.config.json` depuis `brand.config.example.json` seulement s'il
+   manque. Compléter les chemins réellement détectés dans `env`, sans écraser la personnalisation.
+   Sous Windows, appliquer `PRODUCER_FORCE_SCREENSHOT=true` pour le rendu si nécessaire.
+7. **Skills** : `npx hyperframes skills update`, puis `npm run sync`. Les skills embarqués permettent
+   de continuer si leur mise à jour réseau échoue : vérifier leur présence et signaler ce seul
+   report. Toute erreur de génération ou dépendance nécessaire reste bloquante.
+
+### 4. Vérifier avant d'annoncer la réussite
+
+- `npx hyperframes doctor` : Node, FFmpeg/FFprobe et Chrome doivent fonctionner. Docker absent,
+  une nouvelle version HyperFrames disponible ou une mémoire temporairement basse ne sont pas,
+  seuls, la preuve d'une installation ratée. Ne pas mettre à jour HyperFrames pour effacer un avis.
+- Rendre deux secondes de `compositions/exemple-section.html` avec la CLI du projet et vérifier
+  qu'une vidéo non vide est produite. C'est un test technique, pas une commande à donner au client.
+- Tester la transcription séparément : créer `work/` si besoin, produire un petit son de test
+  avec FFmpeg, puis lancer le binaire Whisper avec le modèle et les chemins de `brand.config.json`.
+  Vérifier le code de sortie et le chargement réel du modèle. Un son sans parole peut légitimement
+  ne produire aucun mot : ne pas inventer une transcription ni conclure à un échec pour ce seul motif.
+- Afficher un bilan bref par fonction : montage, export vidéo, transcription, réglages.
+  **✅ Vérifié** seulement si testé avec succès ; sinon **À terminer**, avec la prochaine action.
+  Ne jamais annoncer « tout est prêt » tant qu'un test nécessaire reste en échec ou non exécuté.
+
+Après réussite seulement :
+
+> **Ton monteur est prêt 🎬**
+>
+> Tu peux faire ta première vidéo avec le style Papier : habillage blanc cassé et noir,
+> sous-titres contrastés et animations qui illustrent tes idées. Ta vidéo reste en couleur.
+> Tu pourras personnaliser le style plus tard.
+>
+> **Glisse ta vidéo brute ici et écris “on monte celle-ci”.** Si tu as le texte de ce que tu dis,
+> tu peux le joindre aussi.
+
+Si une vidéo est déjà fournie, commence la prochaine étape du pipeline sans la redemander.
+Si l'utilisateur veut personnaliser maintenant, ouvre `/setup visuel`. **Le setup n'est jamais
+une condition d'accès au premier montage.** Les validations du dérush et du montage restent en place.
 
 ---
 
 ## Installer l'agent IA (avant tout)
 
-Le prompt ci-dessus s'adresse à une IA. Il faut donc d'abord installer **Claude Code** OU **Codex**
+Le message du début de cette page s'adresse à une IA. Il faut donc d'abord installer **Claude Code** OU **Codex**
 (un seul des deux suffit — prends celui dont tu as l'abonnement).
 
-### Option A — Claude Code (abonnement Claude Pro, ~20 €/mois)
+### Option A — Claude Code
 
-**macOS**
-1. Ouvre le Terminal (Applications → Utilitaires → Terminal).
-2. Colle et lance :
-   ```bash
-   curl -fsSL https://claude.ai/install.sh | bash
-   ```
-   *Alternative sans terminal :* télécharge l'app **Claude Desktop** depuis claude.ai.
-3. Succès : la commande `claude` répond dans un nouveau terminal.
+1. Télécharge l'application Claude pour ordinateur depuis [le site officiel](https://claude.com/download),
+   puis connecte-toi avec ton compte disposant d'un accès à Claude Code.
+2. Ouvre l'espace **Code** et choisis l'environnement **Local** pour travailler sur ton ordinateur.
+3. Sélectionne le dossier dézippé **monteur-ia-main** via « Ouvrir un dossier » ou le sélecteur de projet.
+4. Envoie le message du début de cette page. L'IA prend le relais.
 
-**Windows** (sans WSL, natif)
-1. Ouvre **PowerShell**.
-2. Colle et lance :
-   ```powershell
-   irm https://claude.ai/install.ps1 | iex
-   ```
-3. Succès : la commande `claude` répond dans un nouveau PowerShell.
+La présentation des menus peut évoluer. Le repère à vérifier : **Code, Local, ton dossier sélectionné**.
+Voir la [documentation officielle](https://code.claude.com/docs/en/desktop) si l'écran diffère.
 
-Ensuite : place-toi dans ce dossier et lance `claude`. Puis colle le prompt d'installation.
+### Option B — Codex
 
-### Option B — Codex (inclus dans ChatGPT Plus, ~20 €/mois)
+1. Télécharge l'application de bureau ChatGPT depuis le site officiel, puis connecte-toi avec ton compte.
+2. Ouvre **Codex** et sélectionne le dossier local dézippé **monteur-ia-main** comme projet.
+3. Envoie le message du début de cette page. L'IA prend le relais.
 
-**Le plus simple : l'app ChatGPT sur ordinateur** (macOS et Windows). Codex est intégré dedans.
+Le repère à vérifier est **Codex avec accès au dossier de ton ordinateur**. Joindre INSTALL.md à
+une conversation sans accès aux fichiers locaux ne suffit pas pour installer les outils.
+Les liens de téléchargement et les étapes à jour sont dans le
+[guide officiel de démarrage](https://learn.chatgpt.com/docs/quickstart).
 
-1. Télécharge l'app **ChatGPT** pour ordinateur depuis chatgpt.com (ou le Microsoft Store sur
-   Windows) et connecte-toi avec ton compte.
-2. En haut à gauche, bascule sur l'onglet **Codex** (à côté de Chat et Work).
-3. Ouvre ce dossier dans Codex, puis colle le prompt d'installation.
+Si tu utilises déjà Claude Code ou Codex en terminal, tu peux garder cette méthode : ouvre ton
+agent dans le dossier du projet et envoie le même message. Ce n'est pas nécessaire pour débuter.
 
-*Alternative pour les habitués du terminal :* Codex existe aussi en ligne de commande
-(`npm install -g @openai/codex`, nécessite Node.js — attention au `@openai/`, le paquet est
-bien sous ce scope). Sous Windows, ce mode terminal est encore expérimental : préfère l'app.
-
-Sous Codex, quand un skill est mentionné, ouvre le fichier `.agents/skills/<nom>/SKILL.md` indiqué.
+Sous Codex, quand un skill est mentionné, l'agent lit `.agents/skills/<nom>/SKILL.md`.
 
 ---
 
-## 💡 Marre des demandes de permission ?
+## Les demandes d'autorisation
 
-Par défaut, ton agent demande ton accord avant chaque action. Pour travailler sans interruption :
+Le « go » autorise le plan expliqué dans la conversation. L'application peut encore te demander
+une permission pour certaines opérations. L'IA doit t'expliquer ce qui est demandé et pourquoi.
 
-- **Claude Code** : choisis le mode **Auto** (dans l'app : le sélecteur de mode de permission ;
-  dans le terminal : `claude --permission-mode acceptEdits` ou le mode Auto). Il saute presque
-  toutes les demandes mais garde un garde-fou contre les actions vraiment risquées.
-- **Codex (app ChatGPT)** : Réglages > Général > Permissions → active « Approve for me »
-  (Auto-review), puis choisis ce mode dans ta conversation.
+**Pour avoir moins de demandes**, active le mode automatique de ton application :
 
-Évite les modes « accès total sans garde-fou » tant que tu débutes.
+- **Claude Code** : sous la zone de message, le sélecteur de mode → **Auto**. Il laisse passer
+  les actions courantes et garde un garde-fou sur les actions risquées.
+- **Codex** : dans les réglages de l'app, la section des permissions → le mode d'approbation
+  automatique, puis choisis-le dans ta conversation. Les noms peuvent varier selon la version.
+
+Évite les modes « accès total sans garde-fou » : ils ne sont pas nécessaires pour Monteur IA.
 
 ---
 
 ## Installation manuelle pas à pas
 
-Tu peux tout installer toi-même, dans l'ordre. Après chaque commande, un « ✅ Succès » te dit à quoi
-ça ressemble quand c'est bon.
+Cette section sert à l'IA pour dépanner, ou aux personnes qui choisissent de tout faire elles-mêmes.
+Pour le parcours accompagné, reste dans la conversation : l'IA exécute ces commandes pour toi.
 
 ### macOS
 
@@ -196,20 +256,21 @@ brew install ffmpeg
 ✅ Succès : `ffmpeg -version` affiche un numéro de version.
 
 **5. Whisper (transcription locale)**
-Vérifie d'abord s'il est déjà là : `which whisper-cli` dans le Terminal, et cherche un fichier
-`ggml-*.bin` dans `~/whisper-models/` ou `~/.cache/`. Si les deux existent, passe à l'étape 6.
-Sinon : télécharge le binaire whisper.cpp pour **macOS Apple Silicon** depuis les Releases de
-`ggml-org/whisper.cpp` sur GitHub, plus le modèle `ggml-large-v3-turbo.bin` (~1,6 Go ; prends
-`medium` si ta connexion est lente). Place les deux dans :
+Vérifie d'abord `command -v whisper-cli` et la présence d'un modèle `ggml-*.bin` dans les
+caches indiqués dans le protocole. Garde ce qui fonctionne déjà.
+Si le binaire manque et que Homebrew est installé :
+```bash
+brew install whisper.cpp
 ```
-~/.cache/monteur-ia/whisper/
-```
-Si macOS bloque le binaire (« impossible de vérifier le développeur »), voir *Problèmes courants*.
-✅ Succès : lancer le binaire whisper affiche son aide.
+Pour le modèle manquant, utilise les fichiers officiels de whisper.cpp : `ggml-large-v3-turbo.bin`
+(~1,6 Go), ou `small` (~0,5 Go) si la connexion est limitée. Place le modèle dans
+`~/.cache/monteur-ia/whisper/` et reporte son chemin réel dans la configuration.
+✅ Succès : le binaire répond et charge le modèle lors du test de transcription.
 
 **6. Configuration**
+Crée le fichier seulement s’il n’existe pas déjà, pour conserver tes réglages :
 ```bash
-cp brand.config.example.json brand.config.json
+if [ ! -f brand.config.json ]; then cp brand.config.example.json brand.config.json; fi
 ```
 Renseigne dans `brand.config.json` les chemins de ffmpeg et de whisper détectés.
 ✅ Succès : `brand.config.json` existe.
@@ -219,9 +280,9 @@ Renseigne dans `brand.config.json` les chemins de ffmpeg et de whisper détecté
 npx hyperframes doctor
 ```
 ✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker absent, version plus récente
-disponible ou mémoire basse = bénin, ce n'est pas un échec.) Lance maintenant `/setup` : les
-2 premières minutes (tes couleurs, ta police, tes sous-titres) sont **obligatoires** avant de
-monter ta première vidéo.
+disponible ou mémoire basse = bénin, ce n'est pas un échec.) Tu peux lancer `/setup visuel` : les
+couleurs et les sous-titres peuvent être personnalisés plus tard. Tu peux aussi envoyer ta vidéo
+et demander un premier montage avec le style Papier, sans questionnaire préalable.
 
 ### Windows
 
@@ -259,19 +320,19 @@ rouvre PowerShell et réessaie.
 ✅ Succès : après réouverture, `ffmpeg -version` affiche un numéro de version.
 
 **5. Whisper (transcription locale)**
-Vérifie d'abord s'il est déjà là : `where whisper-cli` dans PowerShell, et cherche un fichier
+Vérifie d'abord s'il est déjà là : `Get-Command whisper-cli` dans PowerShell, et cherche un fichier
 `ggml-*.bin` dans `%USERPROFILE%\.cache\`. Si les deux existent, passe à l'étape 6.
 Sinon : télécharge le binaire whisper.cpp pour **Windows x64** depuis les Releases de
-`ggml-org/whisper.cpp` sur GitHub, plus le modèle `ggml-large-v3-turbo.bin` (~1,6 Go ; prends
-`medium` si ta connexion est lente). Place les deux dans :
+`ggml-org/whisper.cpp` sur GitHub, plus le modèle `ggml-large-v3-turbo.bin` (~1,6 Go ; `small`, ~0,5 Go, est une alternative si ta connexion est limitée). Place les deux dans :
 ```
 %USERPROFILE%\.cache\monteur-ia\whisper\
 ```
 ✅ Succès : lancer le binaire whisper affiche son aide.
 
 **6. Configuration**
+Crée le fichier seulement s’il n’existe pas déjà, pour conserver tes réglages :
 ```powershell
-copy brand.config.example.json brand.config.json
+if (-not (Test-Path brand.config.json)) { Copy-Item brand.config.example.json brand.config.json }
 ```
 Renseigne les chemins ffmpeg/whisper dans `brand.config.json`, et ajoute la variable
 d'environnement `PRODUCER_FORCE_SCREENSHOT=true` (évite les rendus blancs/lents sous Windows).
@@ -282,9 +343,9 @@ d'environnement `PRODUCER_FORCE_SCREENSHOT=true` (évite les rendus blancs/lents
 npx hyperframes doctor
 ```
 ✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker absent, version plus récente
-disponible ou mémoire basse = bénin, ce n'est pas un échec.) Lance maintenant `/setup` : les
-2 premières minutes (tes couleurs, ta police, tes sous-titres) sont **obligatoires** avant de
-monter ta première vidéo.
+disponible ou mémoire basse = bénin, ce n'est pas un échec.) Tu peux lancer `/setup visuel` : les
+couleurs et les sous-titres peuvent être personnalisés plus tard. Tu peux aussi envoyer ta vidéo
+et demander un premier montage avec le style Papier, sans questionnaire préalable.
 
 ---
 
@@ -304,8 +365,8 @@ Ajoute la variable d'environnement `PRODUCER_FORCE_SCREENSHOT=true`, puis relanc
 Elle force un mode de capture compatible avec Windows.
 
 **Le modèle Whisper est très long à télécharger**
-`ggml-large-v3-turbo.bin` fait ~1,6 Go. Sur une connexion lente, prends le modèle **medium**
-(plus léger) : la transcription reste très bonne pour du talking-head. Tu pourras passer au
+`ggml-large-v3-turbo.bin` fait ~1,6 Go. Sur une connexion limitée, le modèle **small** (~0,5 Go) réduit le téléchargement
+avec un compromis possible sur la précision : la transcription reste très bonne pour du talking-head. Tu pourras passer au
 large plus tard.
 
 **macOS bloque le binaire Whisper (« développeur non vérifié », Gatekeeper)**
@@ -322,7 +383,8 @@ npm config set proxy http://adresse-du-proxy:port
 npm config set https-proxy http://adresse-du-proxy:port
 npm install
 ```
-Si un antivirus bloque l'écriture dans `node_modules`, mets le dossier du projet en exception.
+Si un antivirus bloque l'installation, garde ses protections actives et transmets le message
+exact à l'IA ou au support pour identifier le fichier concerné.
 
 **« Quota atteint » / l'IA refuse de continuer**
 Tu as épuisé le quota de ton abonnement (Claude Pro ou ChatGPT Plus). Attends la remise à zéro

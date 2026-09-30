@@ -4,7 +4,7 @@
     "(palette + polices + skin de sous-titres + cadrage par défaut + style de CTA).",
     "Le bloc D de /setup en fait choisir un, PUIS l'utilisateur ajuste ce qu'il veut.",
     "Aucun preset ne reproduit l'identité d'un créateur existant : le premier de la liste",
-    "('neutral') est volontairement fade — c'est le signal 'tu n'as pas encore choisi'.",
+    "('neutral') est le style Papier : éditorial, contrasté et prêt pour un premier montage.",
     "Ajouter un preset = ajouter une entrée ici. Rien d'autre à toucher."
   ],
 
@@ -29,7 +29,7 @@
     {
       "id": "neutral",
       "label": "Papier (le style de départ)",
-      "description": "Fond blanc cassé, texte noir, aucune couleur. Propre, éditorial, ça marche tout de suite — mais c'est un point de départ, pas une identité : il n'y a aucune couleur à toi dedans. Le jour où tu poses la tienne, tout le système la reprend.",
+      "description": "Fond blanc cassé, texte noir, aucune couleur. Habillage éditorial contrasté, sous-titres en bandeau noir, schémas animés lisibles. Prêt pour ton premier montage, personnalisable plus tard. Les images du visage restent en couleur.",
       "isUnset": true,
       "visual": {
         "bg": "#f7f7f5",

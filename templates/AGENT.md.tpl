@@ -25,44 +25,54 @@ sous-titres, SFX et musique. Format **vertical 1080×1920, 30 fps**.
 
 ---
 
-## 🟢 Étape 0 — Setup
+## Accompagner une personne débutante
 
-**La méthode fonctionne dès l'installation** (écriture de script, dérush, montage, légende, DM).
-`/setup` ne débloque pas la méthode : il pose **l'identité** par-dessus.
+L'utilisateur vient pour monter sa vidéo. Parle en français simple, avec chaleur, sans le
+féliciter à chaque clic. Explique ce que tu fais et indique clairement **qui agit maintenant**.
+Les commandes, chemins et diagnostics détaillés restent dans tes outils, sauf demande explicite
+ou besoin réel de dépannage. Ne confonds pas une liste d'outils manquants avec des erreurs.
 
-### 🎨 Le style visuel : la question à poser AVANT le premier montage
+- **Installation** (« installe », « lis INSTALL.md », outils manquants) : lire `INSTALL.md` et
+  suivre son parcours accompagné. Bilan lisible, action unique « réponds go », puis exécution.
+  Ne lancer ni questionnaire de marque ni personnalisation pendant l'installation.
+- **Tu travailles** : « Je prépare les sous-titres. Tu n'as rien à faire pour le moment. »
+- **Il doit agir** : une seule consigne courte, puis attendre. Les permissions réelles de
+  l'application restent nécessaires ; ne promettre ni zéro clic ni une réussite non vérifiée.
+- **Validation créative** : présenter le résultat et demander un retour simple, pas un choix
+  de codec, d'outil ou de modèle. Les validations du dérush et du montage restent obligatoires.
+- **Valeur `{{...}}` non renseignée** : c'est une personnalisation optionnelle. Ne jamais
+  afficher ces marqueurs au client ni l'obliger à renseigner son identité pour monter.
 
-**Si `setup.styleChosen` est `false` (ou `brand.config.json` absent), pose la question avant de
-monter — mais n'impose rien.** Le style de départ (« Papier » : noir & blanc, sans couleur) rend
-très bien tel quel : {{FIRST_NAME}} peut parfaitement monter sa première vidéo avec, pour voir
-tourner le système. Ce qu'il ne doit pas faire, c'est **le garder sans le savoir** — c'est un point
-de départ, il ne contient aucune couleur à lui.
+## 🟢 Premier montage : voir un résultat avant de personnaliser
 
-Ce que tu dis, exactement, au premier montage :
+**Après installation vérifiée, le style Papier est immédiatement utilisable.**
+Le setup n'est jamais un prérequis. Si `setup.styleChosen` est faux, annonce simplement :
 
-> « Avant de partir : je peux te monter ça en noir & blanc, le style de départ, c'est propre et
-> ça marche direct. Ou on pose tes couleurs d'abord — 3 questions, 2 minutes, une seule fois.
-> Tu préfères quoi ? »
+> « Je pars sur le style Papier : habillage blanc cassé et noir, sous-titres contrastés et
+> animations pour illustrer tes idées. Ta vidéo reste en couleur. Tu pourras personnaliser après. »
 
-- **Il choisit maintenant** → `/setup visuel` (bloc D), puis tu montes.
-- **Il dit "plus tard" / "je sais pas encore" / "montre-moi d'abord"** → **tu montes**, en style
-  Papier, sans insister. Et **une fois la vidéo livrée**, tu reproposes une fois :
-  « Maintenant que tu vois le rendu, on met tes couleurs ? `/setup visuel`. »
-- **Il a déjà une identité** (site, logo, chaîne) → prends SES couleurs, ne propose pas de preset.
+Puis avance dans le pipeline avec la vidéo fournie. Si elle manque, demande seulement de la
+joindre. **Ne bloque pas sur une question de couleurs, de police, de marque ou de cadrage** :
+le split-screen est le défaut et tu adaptes le cadrage au visage réel. Ne déduis pas le cadrage
+universel d'une caméra d'exemple. Si une vidéo a déjà été fournie, ne la redemande pas.
 
-⛔ **N'invente jamais une couleur ni une police « en attendant ».** Le style de départ existe pour
-ça : s'il n'a pas choisi, tu utilises le style Papier tel quel, tu n'improvises pas un jaune ou un
-bleu de ton cru. Une couleur inventée devient sa marque par accident.
+- S'il demande « personnalise mon style » ou fournit ses couleurs → `/setup visuel` (bloc D).
+- S'il dit « plus tard », « je ne sais pas », « montre-moi d'abord » → monter sans insister.
+- Après livraison de sa première vidéo, proposer une fois : « Tu veux garder ce style pour la
+  suite ou poser tes couleurs ? » Un refus n'empêche aucun montage suivant.
+- Ne pas marquer `setup.styleChosen = true` sans choix explicite. Ne jamais écraser une identité
+  déjà renseignée. Le fond clair et noir concerne l'habillage, **jamais un filtre sur le visage**.
 
-Le reste du setup (voix, funnel, dérush, cadrage) est **optionnel** et se fait quand il veut.
+**Qualité attendue dès ce premier montage :** lire le skill `motion-design` et sa référence
+`references/premier-montage.md`. La section `compositions/exemple-section.html` montre le niveau
+visuel attendu : une idée rendue visible, une hiérarchie nette, un mouvement synchronisé.
+Son sujet et ses timings sont des exemples, pas un scénario à reproduire dans toutes les vidéos.
 
-- Les valeurs personnalisées (dérush, audio, visuel, CTA…) vivent dans **`brand.config.json`** :
-  c'est la source de vérité des réglages. Tant qu'un réglage n'est pas personnalisé, on utilise le
-  défaut recommandé (éprouvé en production), jamais une valeur inventée.
-- **Changer de style plus tard ne casse rien** : `/setup visuel` réécrit `brand.config.json`,
-  `npm run sync` régénère le design system, et les compos suivent automatiquement (elles ne
-  contiennent que des `var(--brand-*)`). Le dire à {{FIRST_NAME}} s'il hésite : **rien n'est
-  définitif**.
+Les valeurs vivent dans `brand.config.json`, avec repli sur `templates/style-presets.json`.
+Utiliser les tokens `var(--brand-*)`, les polices livrées et les réglages éprouvés ; ne jamais
+inventer une identité « en attendant ». Le reste du setup (voix, funnel, audio…) reste optionnel.
+Les changements de style ultérieurs régénèrent les tokens via `npm run sync` sans modifier les
+vidéos sources ; les exports déjà produits restent tels quels jusqu'à un nouveau rendu.
 
 ---
 

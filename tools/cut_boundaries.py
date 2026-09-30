@@ -43,9 +43,9 @@ OUT = ROOT / "derush/exemple_cuts.json"
 # >>> A REMPLIR A CHAQUE NOUVEAU REEL : les prises gardees (identiques a celles du derush),
 #     bornes dans le RUSH D'ORIGINE + texte lu. DEMO : 3 prises fictives de ~2.6 s.
 ISLANDS = [
-    (10.00, 12.60, "Voici une section témoin."),
-    (15.20, 17.80, "Duplique ce fichier pour la tienne."),
-    (21.50, 24.10, "Garde les invariants un à sept."),
+    (10.00, 12.60, "On garde tes mots."),
+    (15.20, 17.80, "On retire les silences."),
+    (21.50, 24.10, "Le rythme change tout."),
 ]
 
 # Pads appliques au derush (brand.config.json -> derush.padStart / padEnd).

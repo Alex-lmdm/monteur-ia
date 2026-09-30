@@ -61,8 +61,11 @@ sonne faux. » On n'écrit qu'après OK.
 
 ---
 
-## Bloc D — Visuel  🎨 TOUJOURS EN PREMIER
+## Bloc D — Visuel : si la personnalisation est demandée
 
+> Ne pas ouvrir ce questionnaire pour un premier montage : le style Papier est déjà prêt.
+> Si l’utilisateur demande à personnaliser, proposer ce bloc.
+>
 > **Aucun défaut proposé pour D1.** C'est volontaire : un défaut accepté par réflexe, c'est
 > exactement le problème qu'on veut éviter. D2 à D12 ont, eux, les valeurs du preset choisi en
 > D1 — on les saute si le preset convient tel quel.

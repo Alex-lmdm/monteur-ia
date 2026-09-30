@@ -61,9 +61,9 @@ DUR = sections.DURATION
 # DEMO : une ligne par prise de derush/exemple_cuts.json (3 prises).
 # =============================================================================
 MANUAL = [
-    ["voici une", "section témoin"],          # take 0
-    ["duplique ce fichier", "pour la tienne"],  # take 1
-    ["garde les invariants", "un à sept"],     # take 2
+    ["on garde", "tes mots"],                 # take 0
+    ["on retire", "les silences"],           # take 1
+    ["le rythme", "change tout"],            # take 2
 ]
 
 # Une phrase par prise (cas simple). Si plusieurs prises forment UNE phrase (ex. un CTA en
