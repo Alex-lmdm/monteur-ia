@@ -45,38 +45,41 @@
     #exemple-section * { box-sizing:border-box; }
     /* [6] Safe-zones : rien d'important dans les ~150 px du haut (Instagram y pose le nom du
        compte) ni à moins de var(--brand-safe-x) des bords (Instagram recadre les côtés). */
-    #exemple-section .eyebrow { position:absolute; top:216px; left:var(--brand-safe-x); right:var(--brand-safe-x);
-      display:flex; align-items:center; justify-content:space-between; font-size:24px;
-      line-height:1.3; font-weight:700; letter-spacing:2px; }
-    #exemple-section .edition { font-size:22px; letter-spacing:0; color:var(--brand-muted); }
+    #exemple-section .eyebrow { position:absolute; top:196px; left:var(--brand-safe-x); right:var(--brand-safe-x);
+      display:flex; align-items:baseline; justify-content:space-between; }
+    /* Tailles = hiérarchie du skill motion-design §3 (×1,4 en vertical) : titre ≈ 64 px Black,
+       labels 40 px Black, métadonnées 28 px minimum. Rien sous 28 px : c'est vu sur un téléphone. */
+    #exemple-section .title { font-size:64px; line-height:1; font-weight:900; letter-spacing:-0.5px; }
+    #exemple-section .edition { font-size:28px; font-weight:600; letter-spacing:1px; }
+    /* Contraste : l'encre d'abord. Texte et contours porteurs de sens en --brand-text ;
+       --brand-surface seulement en aplat discret ; jamais de gris sur gris. */
     #exemple-section .paper { position:absolute; left:var(--brand-safe-x); right:var(--brand-safe-x);
-      top:284px; height:530px;
-      border:2px solid color-mix(in srgb,var(--brand-text) 16%,transparent);
-      border-radius:32px; background:var(--brand-bg);
-      box-shadow:0 20px 48px color-mix(in srgb,var(--brand-text) 8%,transparent); }
-    #exemple-section .label { position:absolute; left:40px; font-size:26px; line-height:1.3;
-      font-weight:700; letter-spacing:1.5px; margin:0; }
+      top:296px; height:540px; border:3px solid var(--brand-text); border-radius:28px;
+      background:var(--brand-bg); }
+    #exemple-section .label { position:absolute; left:40px; font-size:40px; line-height:1.1;
+      font-weight:900; letter-spacing:1px; margin:0; }
     #exemple-section .raw-label { top:34px; }
-    #exemple-section .final-label { top:314px; }
-    #exemple-section .badge { position:absolute; right:38px; top:35px; font-size:22px;
-      color:var(--brand-muted); font-weight:600; }
+    #exemple-section .final-label { top:318px; }
     #exemple-section .wave { position:absolute; left:40px; width:796px; height:124px; }
-    #exemple-section .wave-raw { top:90px; }
-    #exemple-section .wave-final { top:362px; }
+    #exemple-section .wave-raw { top:100px; }
+    #exemple-section .wave-final { top:384px; }
     #exemple-section .bar { fill:var(--brand-text); }
     #exemple-section .final-bar { fill:var(--brand-contrast); }
     #exemple-section .gaps { position:absolute; inset:0; }
-    #exemple-section .gap { position:absolute; top:96px; height:120px; width:54px;
-      border:2px dashed var(--brand-muted); border-radius:12px; background:var(--brand-surface); }
-    #exemple-section .gap-a { left:247px; }
-    #exemple-section .gap-b { left:511px; }
-    #exemple-section .gap-caption { position:absolute; top:233px; left:40px; margin:0;
-      font-size:24px; font-weight:600; color:var(--brand-muted); }
-    #exemple-section .connector { position:absolute; right:56px; top:226px; width:44px;
-      height:64px; color:var(--brand-muted); }
-    #exemple-section .result { position:absolute; left:32px; top:354px; width:812px; height:140px;
+    /* Un silence = une onde plate, sur un aplat discret. */
+    #exemple-section .gap { position:absolute; top:106px; height:112px; width:54px;
+      border-radius:14px; background:var(--brand-surface); }
+    #exemple-section .gap::after { content:""; position:absolute; left:10px; right:10px; top:54px;
+      height:4px; border-radius:2px; background:var(--brand-text); }
+    #exemple-section .gap-a { left:275px; }
+    #exemple-section .gap-b { left:539px; }
+    #exemple-section .gap-caption { position:absolute; top:244px; left:40px; margin:0;
+      font-size:32px; line-height:1.2; font-weight:600; }
+    #exemple-section .connector { position:absolute; right:56px; top:240px; width:44px;
+      height:64px; color:var(--brand-text); }
+    #exemple-section .result { position:absolute; left:32px; top:382px; width:812px; height:128px;
       border-radius:20px; background:var(--brand-accent); }
-    #exemple-section .done { position:absolute; right:40px; top:307px; width:38px; height:38px;
+    #exemple-section .done { position:absolute; right:44px; top:318px; width:44px; height:44px;
       color:var(--brand-accent); }
   </style>
 </head>
@@ -87,9 +90,9 @@
     <!-- [1] Élément timé visible → class="clip" + data-start / data-duration / data-track-index.
          Sans class="clip", le framework ne contrôle pas sa visibilité (reste peint au render). -->
     <div id="exemple-panel" class="clip" data-start="0" data-duration="8" data-track-index="0">
-      <div class="eyebrow"><span>LE RYTHME</span><span class="edition">01 / DÉRUSH</span></div>
+      <div class="eyebrow"><span class="title">LE RYTHME</span><span class="edition">01 / DÉRUSH</span></div>
       <div class="paper">
-        <p class="label raw-label">PRISE BRUTE</p><span class="badge">Illustration</span>
+        <p class="label raw-label">PRISE BRUTE</p>
         <svg class="wave wave-raw" viewBox="0 0 796 124" aria-label="Trois prises séparées par des silences"></svg>
         <div class="gaps"><div class="gap gap-a"></div><div class="gap gap-b"></div>
           <p class="gap-caption">Les silences s'effacent</p></div>
@@ -100,7 +103,7 @@
         <div class="result"></div>
         <svg class="wave wave-final" viewBox="0 0 796 124" aria-label="Les trois prises assemblées, sans les silences"></svg>
         <svg class="done" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-          <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="2"/>
+          <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="2.5"/>
           <path class="check" d="M11 20l6 6 12-13" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/>
         </svg>
       </div>
@@ -123,7 +126,7 @@
         for (var i = 0; i < 18; i++) {
           var h = heights[(i + group * 5) % heights.length];
           var bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          bar.setAttribute('x', 6 + group * 264 + i * 11);
+          bar.setAttribute('x', 34 + group * 264 + i * 11);
           bar.setAttribute('y', (124 - h) / 2);
           bar.setAttribute('width', 6); bar.setAttribute('height', h); bar.setAttribute('rx', 3);
           bar.setAttribute('class', 'bar raw-bar'); raw.appendChild(bar);
@@ -142,7 +145,7 @@
       tl.fromTo(scope+'.paper', {opacity:0,scale:.96}, {opacity:1,scale:1,duration:.38,ease:'expo.out'}, .08);
       tl.fromTo(scope+'.raw-bar', {scaleY:.08,transformOrigin:'50% 50%'}, {scaleY:1,duration:.45,stagger:.009,ease:'power3.out'}, .3);
       tl.fromTo(scope+'.gaps', {opacity:0}, {opacity:1,duration:.25}, 2.2);
-      tl.to(scope+'.gap', {scaleY:.08,opacity:0,duration:.4,ease:'power3.in'}, 3.4);
+      tl.to(scope+'.gap', {scaleX:0,opacity:0,duration:.4,ease:'power3.in'}, 3.4);
       tl.to(scope+'.gap-caption', {opacity:0,duration:.2}, 4.1);
       tl.fromTo(scope+'.connector', {opacity:0,scale:.85}, {opacity:1,scale:1,duration:.3,ease:'expo.out'}, 4.25);
       tl.fromTo(scope+'.final-label', {opacity:0}, {opacity:1,duration:.2}, 4.6);

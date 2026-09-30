@@ -21,12 +21,18 @@ noirs, les sous-titres blancs sur bandeau noir. La vidéo du visage garde ses co
 Toutes les valeurs proviennent des tokens du preset, jamais d'une identité inventée ou empruntée.
 
 - **Composition :** le visage reste le repère. En split, le haut illustre une idée principale,
-  avec un objet visuel dominant, des marges franches et quelques petits labels. En plein visage,
+  avec un objet visuel dominant, des marges franches et quelques labels courts. En plein visage,
   garder le centre du visage dégagé et poser seulement les éléments utiles.
 - **Hiérarchie :** un objet dominant, au plus deux niveaux secondaires. La différence d'échelle,
   les surfaces et l'espace créent le relief. Éviter la grille de trois cartes textuelles identiques.
-- **Contraste :** surfaces claires, contours fins, blocs noirs bien choisis. Texte sur accent =
-  `--brand-contrast`. Une ombre douce peut détacher une carte ; ni glow ni dégradé coloré par défaut.
+- **Lisible sur téléphone :** la vidéo est vue sur un écran de téléphone, pas sur un 27 pouces.
+  Suivre la hiérarchie du skill (§3, ×1,4 en vertical) : titre de section ≈ 64–70 px Black,
+  labels 40–50 px, métadonnées 28 px minimum. **Rien sous 28 px.** Si ça ne rentre pas, mettre
+  moins de texte, jamais du texte plus petit.
+- **Contraste : l'encre d'abord.** Textes et formes qui portent le sens en `--brand-text`, contours
+  francs (2–3 px) ; `--brand-muted` réservé à une métadonnée secondaire ; `--brand-surface` en aplat
+  discret. Pas de contour pointillé gris, pas de texte gris sur gris. Texte sur accent =
+  `--brand-contrast`. Ni glow ni dégradé coloré par défaut.
 - **Sous-titres :** 2–3 mots, unités grammaticales intactes, police Inter Black livrée, bandeau
   noir dimensionné au texte. Se caler sur les vrais mots ; aucun mot sur le visage ou hors cadre.
 - **Mouvement :** montrer une transformation compréhensible (séparer, relier, classer, comparer),
