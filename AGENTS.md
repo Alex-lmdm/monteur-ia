@@ -82,6 +82,9 @@ préférences apprises (section suivante) appliquées d'office.
 
 - Le questionnaire `/setup` reste disponible à tout moment (« personnalise mon style ») ; ne le
   lance pas de toi-même. Le débrief, lui, fait partie de la première vidéo.
+- **Débrief repoussé** : si `work/premiere-video.md` annonce « débrief à faire » (la note survit
+  à la clôture du reel), le reproposer une fois en début de conversation, suivre ce que dit la
+  note, puis la supprimer, qu'il accepte ou non.
 - Ne pas marquer `setup.styleChosen = true` sans choix explicite (garder le noir et blanc en est
   un). Ne jamais écraser une identité déjà renseignée. L'habillage ne filtre jamais le visage.
 - Ne jamais inventer une identité « en attendant » : tokens `var(--brand-*)`, polices livrées,
@@ -139,9 +142,12 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 > (**aucun compte GitHub ni push requis, tout est local** : avec git il committe et tague
 > `reel/<slug>` tout seul, en initialisant un repo local au besoin ; sans git il copie le
 > projet du reel vers le dossier Vidéos), copie les masters `renders/*FINAL*` vers
-> `reels-publies/<slug>/`, purge `renders/`, `work/`, les médias de `derush/`,
-> `compositions/*.html` et `assets/video/` (les fichiers d'exemple du template sont conservés),
-> et pose un `index.html` squelette. **Ne JAMAIS archiver un vieux reel dans un dossier du
+> `reels-publies/<slug>/`, vide `renders/`, `work/`, `derush/`, `compositions/`,
+> `assets/video/` et les restes à la racine (`snapshots/`, `probe/`, `overlay.html`), en gardant
+> une note « débrief à faire » si le débrief de la première vidéo n'a pas eu lieu, puis
+> remet les fichiers livrés depuis `templates/demo/` (master d'aperçu, placeholder `base.mp4`,
+> outils du reel remis en mode démo) : le projet redevient celui d'un ZIP neuf, réglages du
+> client intacts (`brand.config.json`, ses assets). **Ne JAMAIS archiver un vieux reel dans un dossier du
 > projet** (le studio scanne tout le projet → il polluerait la sidebar de l'éditeur) : la
 > récupération se fait via `git checkout reel/<slug> -- <chemins>` (ou le dossier copié).
 
@@ -314,7 +320,7 @@ Topics : `data-attributes`, `gsap`, `compositions`, `rendering`, `examples`, `tr
 - `compositions/` — sous-compositions référencées via `data-composition-src`
 - `brand/` — design system branché dans les compositions (`tokens.css`, `fonts.css`, `motion.js`, `atoms.html`)
 - `brand.config.json` — réglages personnalisés (généré par `/setup`) · source de vérité des valeurs
-- `templates/` — templates dépersonnalisés (`AGENT.md.tpl`, `tokens.css.tpl`, `voice-profile.md.tpl`)
+- `templates/` — templates dépersonnalisés (`AGENT.md.tpl`, `tokens.css.tpl`, `voice-profile.md.tpl`) ; `templates/demo/` = copie des fichiers livrés, remise en place par `tools/close_reel.py` (ne pas éditer pendant un montage)
 - `scripts/` — outils du template (`sync.mjs` : régénère `CLAUDE.md`/`AGENTS.md` + miroir skills)
 - `tools/` — utilitaires Python du pipeline (`montage_captions.py`, `check_export.py`, `cut_boundaries.py`…)
 - `design-system/` — docs publication + recherche (légende IG, DM, SFX, anti-slop)

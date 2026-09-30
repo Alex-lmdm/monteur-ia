@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+"""ETAPE 6 — SFX + musique par-dessus renders/FINAL.mp4 (video COPIEE, seul l'audio est remixe).
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ CE FICHIER EST ADAPTE A CHAQUE REEL.                                           ║
+║  - La MUSIQUE vient de brand.config.json -> audio.musicFile + audio.musicDb.   ║
+║    Optionnelle : sans musique (premiere video), seuls les SFX sont mixes.     ║
+║  - Les SFX sont les fichiers de assets/sfx/ ET de ses sous-dossiers            ║
+║    (starter/, pack/...) : on les nomme par chemin relatif, ex. starter/pop.mp3.║
+║  - Le MAPPING/PLACEMENT (quel SFX, a quel instant, a quel volume) est PILOTE   ║
+║    PAR L'AGENT : remplis la liste EVENTS ci-dessous, un evenement par SFX.     ║
+║ La demo place un SFX de transition sur chaque frontiere de section — c'est un  ║
+║ EXEMPLE de structure, remplace-le par le placement de TON Reel.                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Regles generales (skill motion-design / references/sfx-musique.md) :
+  - Musique en fond, toute la duree, -26.5 dB par defaut (fade in 0.4 / out 1.2).
+  - Volumes SFX REEQUILIBRES par niveau PERCU (pas un dB uniforme : la frappe clavier et les
+    clics sont inaudibles au meme dB qu'un riser).
+  - Les temps s'appuient sur sections (les VRAIES coupes) + les timelines GSAP des sections.
+"""
+import json
+import pathlib
+import subprocess
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import sections
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SFX_DIR = ROOT / "assets/sfx"
+MUSIC_DIR = ROOT / "assets/music"
+SRC = ROOT / "renders/FINAL.mp4"
+OUT = ROOT / "renders/FINAL_SFX_MUSIC.mp4"
+
+SEC = sections.sections()
+DUR = sections.DURATION
+
+
+def die(msg):
+    print("ERREUR :", msg)
+    sys.exit(1)
+
+
+def load_config():
+    for name in ("brand.config.json", "brand.config.example.json"):
+        p = ROOT / name
+        if p.exists():
+            return json.loads(p.read_text(encoding="utf-8"))
+    die("aucun brand.config.json ni brand.config.example.json trouve — lance /setup.")
+
+
+# --- musique : depuis brand.config.json --------------------------------------------------------
+CFG = load_config()
+audio = CFG.get("audio") or {}
+music_file = audio.get("musicFile")
+music_db = audio.get("musicDb", -26.5)
+MUSIC = None
+if music_file:
+    MUSIC = MUSIC_DIR / music_file
+    if not MUSIC.exists():
+        die(f"musique introuvable : {MUSIC.relative_to(ROOT)} (verifie audio.musicFile dans brand.config.json).")
+else:
+    print("Pas de musique (audio.musicFile vide) : SFX seuls, sur la voix.")
+
+if not SRC.exists():
+    die(f"{SRC.relative_to(ROOT)} manquant — rends d'abord la video finale (etape export ffmpeg).")
+
+# --- SFX disponibles ---------------------------------------------------------------------------
+# Racine ET sous-dossiers : la bibliotheque de demarrage vit dans starter/. Chemins relatifs a
+# assets/sfx/ (ex. "starter/whoosh.mp3"), c'est ce qu'on ecrit dans EVENTS.
+available = sorted(p.relative_to(SFX_DIR).as_posix() for p in SFX_DIR.rglob("*")
+                   if p.is_file() and p.suffix.lower() in (".mp3", ".wav", ".m4a", ".aif", ".aiff"))
+if not available:
+    die(f"aucun SFX dans {SFX_DIR.relative_to(ROOT)} — depose tes effets (cf assets/sfx/README.md).")
+
+# =============================================================================
+# EVENTS = (fichier_sfx, start_s, volume_dB, trim|None)  -> A REMPLIR PAR L'AGENT.
+#   fichier_sfx : chemin relatif a assets/sfx/ (ex. "starter/pop.mp3"), ou chemin absolu.
+#   trim : None, une duree (on garde 0 -> trim), ou un tuple (t0, t1) (on garde t0 -> t1).
+# Ci-dessous : un EXEMPLE generique — un SFX de transition sur chaque debut de section
+# (sauf la premiere). On alterne les SFX disponibles pour ne jamais jouer 2x le meme d'affilee.
+# =============================================================================
+events = []
+transitions = [s["start"] for s in SEC[1:]]
+for i, t in enumerate(transitions):
+    events.append((available[i % len(available)], round(t, 3), -20, 0.45))
+
+events.sort(key=lambda e: e[1])
+
+# ---- ffmpeg : voix (FINAL.mp4) + N SFX + musique (si configuree) -----------------------------
+inputs, filters, mixin = ["-i", str(SRC)], [], ["[0:a]"]
+for i, (f, start, vol, trim) in enumerate(events, start=1):
+    inputs += ["-i", str(SFX_DIR / f)]
+    ch = f"[{i}:a]"
+    if trim:
+        t0, t1 = (float(trim[0]), float(trim[1])) if isinstance(trim, (tuple, list)) else (0.0, float(trim))
+        keep = t1 - t0
+        ch_f = (f"atrim={t0}:{t1},asetpts=PTS-STARTPTS,volume={vol}dB,"
+                f"aformat=channel_layouts=stereo:sample_rates=48000,"
+                f"afade=t=out:st={max(keep - 0.06, 0):.3f}:d=0.06,adelay={int(start * 1000)}:all=1")
+    else:
+        ch_f = (f"volume={vol}dB,aformat=channel_layouts=stereo:sample_rates=48000,"
+                f"adelay={int(start * 1000)}:all=1")
+    filters.append(f"{ch}{ch_f}[e{i}]")
+    mixin.append(f"[e{i}]")
+
+if MUSIC:
+    mi = len(events) + 1
+    inputs += ["-i", str(MUSIC)]
+    filters.append(f"[{mi}:a]atrim=0:{DUR},volume={music_db}dB,aformat=channel_layouts=stereo:sample_rates=48000,"
+                   f"afade=t=in:st=0:d=0.4,afade=t=out:st={DUR - 1.2:.3f}:d=1.2[music]")
+    mixin.append("[music]")
+
+filters.append(f"{''.join(mixin)}amix=inputs={len(mixin)}:normalize=0:dropout_transition=0,"
+               f"alimiter=limit=0.97[aout]")
+
+# --probe : ecrit la piste SFX+musique SEULE (sans la voix) en WAV 48 kHz, pour VERIFIER LE
+# PLACEMENT SANS ECOUTER. Comparer ensuite le pic de chaque evenement au pic de la musique de
+# fond (viser +4 dB minimum) ; sans musique, le comparer au niveau de la voix (chaque SFX
+# audible mais sous la voix). Deux methodes qui MENTENT, a ne pas utiliser :
+#   - soustraire le MP4 final et le MP4 sans SFX : deux encodages AAC independants laissent
+#     l'erreur de quantification de la voix (~-6 dB), tres au-dessus des SFX -> inexploitable ;
+#   - mesurer en 16 kHz : coupe au-dessus de 8 kHz et sous-estime massivement risers et clics
+#     (qui vivent dans les aigus) -> on croit un SFX absent alors qu'il est bien la.
+if "--probe" in sys.argv:
+    probe_mix = [m for m in mixin if m != "[0:a]"]
+    probe_filters = filters[:-1] + [f"{''.join(probe_mix)}amix=inputs={len(probe_mix)}:"
+                                    f"normalize=0:dropout_transition=0[aout]"]
+    probe_out = ROOT / "renders/sfx-only.wav"
+    r = subprocess.run(["ffmpeg", "-y", "-v", "error"] + inputs +
+                       ["-filter_complex", ";".join(probe_filters), "-map", "[aout]",
+                        "-ar", "48000", "-ac", "1", str(probe_out)],
+                       capture_output=True, text=True)
+    print("probe exit:", r.returncode, "->", probe_out.relative_to(ROOT))
+    if r.returncode:
+        print(r.stderr[-1200:])
+    raise SystemExit(0 if r.returncode == 0 else 1)
+
+cmd = (["ffmpeg", "-y", "-v", "error"] + inputs +
+       ["-filter_complex", ";".join(filters), "-map", "0:v", "-c:v", "copy",
+        "-map", "[aout]", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(OUT)])
+r = subprocess.run(cmd, capture_output=True, text=True)
+print("ffmpeg exit:", r.returncode)
+if r.returncode:
+    print(r.stderr[-1200:])
+    raise SystemExit(1)
+
+print(f"{len(events)} SFX + " + (f"musique ({music_file} @ {music_db} dB)" if MUSIC else "sans musique")
+      + f" -> {OUT.relative_to(ROOT)}")
+for f, s, v, t in events:
+    print(f"  {s:6.2f}  {v:>4} dB  {f}{'  (trim ' + str(t) + ')' if t else ''}")
