@@ -128,7 +128,7 @@ Questions (détail + validations dans `references/questions.md`) :
 - Ton handle Instagram (valider qu'il commence par `@`, sinon l'ajouter).
 - Comment ton monteur doit t'appeler (ton prénom).
 - Tes thématiques récurrentes (ta niche, en quelques mots).
-- La langue de tes vidéos (défaut : français).
+- La langue de tes vidéos (reprendre une préférence déjà confirmée ; sinon la demander dans la langue de l'utilisateur, sans imposer le français).
 
 **Restitution + validation**, puis écrire `brand.*`, marquer `A` fait, `node scripts/sync.mjs`.
 

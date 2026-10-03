@@ -12,13 +12,13 @@ défaut, et on n'écrit **rien** avant la validation de fin de bloc.
 
 ## Bloc A — Identité
 
-| # | Question (à dire tel quel) | Champ | Défaut | Validation |
+| # | Question (à adapter à la langue de l'utilisateur) | Champ | Défaut | Validation |
 |---|---|---|---|---|
 | A1 | « C'est quoi le nom de ta marque ou de ton compte ? » | `brand.name` | — (obligatoire) | non vide |
 | A2 | « Ton handle Instagram ? (ex. @toncompte) » | `brand.handle` | — | doit commencer par `@` → sinon on l'ajoute automatiquement ; pas d'espace |
 | A3 | « Comment je t'appelle ? (ton prénom) » | `brand.firstName` | — | non vide |
 | A4 | « Tu parles surtout de quoi ? Tes thématiques, en quelques mots. » | `brand.niche` | — | non vide (sert au mode interview du bloc B) |
-| A5 | « Tes vidéos sont dans quelle langue ? » | `brand.language` | `français` (Entrée) | code/nom de langue simple |
+| A5 | « Tes vidéos sont dans quelle langue ? » | `brand.language` | langue déjà confirmée, sinon demander | code/nom de langue simple |
 
 ---
 

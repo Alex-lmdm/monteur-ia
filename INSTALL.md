@@ -29,6 +29,12 @@ Il doit te guider pour rouvrir le dossier téléchargé si nécessaire.
 
 ## Instructions pour l'IA : accompagner l'installation
 
+**Langue :** accompagne l'utilisateur dans la langue qu'il demande ou utilise, y compris
+l'espagnol. Traduis les explications et les exemples de réponses, jamais les commandes ni
+les noms de fichiers. Sa langue de conversation ne change pas automatiquement la langue de
+ses vidéos : configure `brand.language` et `derush.whisperLanguage` selon sa demande ou
+l'audio réel. Le français des exemples ci-dessous n'est pas imposé au client.
+
 Cette section est ton mode opératoire. **Applique-la aussi quand l'utilisateur dit seulement
 « lis INSTALL.md et installe tout »** : il n'a pas à recopier un autre prompt.
 Le protocole technique plus bas est destiné à toi. Ne le transforme pas en tutoriel terminal
