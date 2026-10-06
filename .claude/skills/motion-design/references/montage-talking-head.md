@@ -49,7 +49,7 @@ référencer `compositions/…` à l'identique. Deux HTML racines = erreur de li
 `multiple_root_compositions` → on l'**écrit, on rend, puis on le supprime** (cf `tools/build_overlay.py --render`).
 
 **Contrôle obligatoire avant de livrer** : `npm run check` ne voit RIEN de tout ça (il valide la
-structure, pas le calque rendu). Lancer **`python3 tools/check_export.py`** sur `renders/overlay.mov` :
+structure, pas la vidéo rendue). Lancer **`python3 tools/check_export.py`** sur la vidéo exportée :
 il vérifie (A) l'opacité du calque section par section et (B) que les timelines tournent vraiment
 (un élément posé à `opacity:0` par GSAP doit être invisible au début de sa section).
 
@@ -100,7 +100,7 @@ comme du script inline (`invalid_inline_script_syntax`).
 
 **Bonus snapshot** : `hyperframes snapshot` prend un **DOSSIER**, pas un fichier. Pour snapshoter
 une sous-comp isolée : un dossier `probe/` avec `index.html` = copie de la compo **+ un symlink
-`probe/assets` et un symlink `probe/brand`** (sans eux les `../assets` et `../brand` partent en 404), puis **supprimer
+`probe/assets` et un symlink `probe/brand`** (sans eux les chemins `assets/…` et `brand/…` partent en 404), puis **supprimer
 `probe/`** (deux compositions racines = erreur de lint).
 
 ## 1. La règle de format (le défaut vient de la config)
@@ -212,30 +212,24 @@ tout le décor pour revenir sur la personne, une phrase, puis on repart.
   un wrapper `.face-full` à **fond transparent** — un fond opaque redéclenche le carré noir.
 - Sous-titre : **`Y_FACE = 1140`**, un peu SOUS le centre. Au centre il tomberait sur la bouche.
 
-## 4. Export final = ffmpeg, PAS le render HyperFrames (qualité visage)
+## 4. Export final natif (bouton Export de l'app, ou `npm run render`)
 
-**Le render HyperFrames RASTERISE/ramollit la couche vidéo** (visage flou : la même frame depuis
-`base.mp4` est nette, depuis le render HyperFrames elle est floue). Donc :
-- **Studio HyperFrames** = preview/édition live uniquement (visage doux dans l'aperçu = normal).
-- **Export final** = **compositer en ffmpeg** (couche vidéo native, zéro rasterisation) → visage net.
-- ✅ **C'est fait par `python3 tools/build_final.py`** — ne réécris pas la commande à la main. Le
-  script lit les fenêtres du visage dans `tools/sections.py`, les b-rolls, et surtout le **crop**
-  dans `montage.faceCrop` / `montage.fullFaceCrop` ; s'ils sont absents il le **calcule** depuis le
-  `transform` avec la formule ci-dessous (`transform-origin` compris). Un crop retrouvé à la main
-  est la source d'erreur n°1 : le cadrage est bon dans le studio et faux à l'export.
-- **Le visage est relu dans le dérush pleine résolution**, pas dans `base.mp4` : même zone (crop
-  mis à l'échelle, ×1,6 pour une DJI 1728×3072), mêmes images aux mêmes instants, 2 à 2,5× plus de
-  détail sur le visage. La première ligne affichée par le script dit d'où vient le visage ; un
-  « ⚠️ visage moins net » donne la raison du repli sur `base.mp4`.
-  Modèle (split S1 + sections plein écran S2–S8 en overlay, audio de la base) :
-```bash
-ffmpeg -y -i assets/video/base.mp4 -i sections/s1.mp4 -i sections/s2.mp4 ... \
- -filter_complex "[0:v]split=2[bg][c];[c]crop=771:714:154:364,scale=1080:1000[face];\
- [bg][1:v]overlay=0:0:enable='between(t,0,T1)'[v1];[v1][face]overlay=0:920:enable='between(t,0,T1)'[v2];\
- [2:v]setpts=PTS+T1/TB[d2];[v2][d2]overlay=0:0:enable='between(t,T1,T2)'[v3]; ...(s3..s8)... [vout]" \
- -map "[vout]" -map 0:a -c:v libx264 -crf 16 -preset slow -pix_fmt yuv420p -c:a aac -b:a 192k -movflags +faststart renders/FINAL.mp4
-```
-Le `crop` du visage doit correspondre EXACTEMENT au `transform` CSS du split (= `montage.faceCrop`,
-dérivé de `montage.splitTransform` par la formule du §3). Un crop désaligné = un cadrage faux à
-l'export. `-crf 16` (le bitrate moyen paraît bas car le motion design plein écran compresse énormément
-; le visage reçoit beaucoup de bits).
+Le rendu HyperFrames ramollissait le visage parce que le master **agrandissait** `base.mp4`, une copie
+réduite en 1080 (zoom ×1,4 environ). Ce n'était pas le moteur de rendu : posée à l'échelle 1, une
+vidéo sort aussi nette qu'en ffmpeg (mesuré sur un rush DJI 1728×3072, SSIM 0,976 contre 0,982).
+Donc :
+- **`python3 tools/build_faces.py`**, après tout dérush ou changement de cadrage : il pré-cadre le
+  visage **dans le dérush pleine résolution** (même zone que l'ancien export, calculée par
+  `tools/cadrage.py` depuis `montage.splitTransform` / `fullFaceTransform`, `transform-origin`
+  compris) et écrit `assets/video/visage-split.mp4` et `visage-plein.mp4` (1080×1920). La première
+  ligne dit d'où vient le visage ; un « ⚠️ visage moins net » donne la raison du repli sur `base.mp4`.
+- **`python3 tools/build_master.py --write`** pose alors ces vidéos **sans aucun transform** (surface
+  plein cadre + `clip-path`, la forme anti carré noir), les sons déjà posés sont gardés.
+- **Export** : dans l'app HyperFrames, bouton **Export** (MP4 1080p 30 im/s, dans Téléchargements) ;
+  ailleurs `npm run render` (`exports/FINAL.mp4`). Puis `python3 tools/check_export.py [fichier]`.
+- Un crop retrouvé à la main reste la source d'erreur n°1 : ne jamais l'écrire soi-même.
+
+**Secours, ancien export ffmpeg** (si l'export natif déraille) : `python3 tools/build_overlay.py
+--render` (calque motion + sous-titres en `work/overlay.mov`), `python3 tools/build_final.py`
+(composite le visage relu dans le dérush, `exports/FINAL.mp4`), puis `python3 tools/build_sfx.py
+--ffmpeg` (SFX et musique remixés, `exports/FINAL_SFX_MUSIC.mp4`). Même cadrage, via `tools/cadrage.py`.

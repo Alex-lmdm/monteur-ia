@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <script src="assets/vendor/gsap.min.js"></script>
+    <!-- Carte d'accueil de Monteur IA dans l'app HyperFrames. Aucun montage ici : chaque Reel a
+         son propre projet dans reels/. brand/ est une copie du style, rafraîchie par npm run sync. -->
+    <link rel="stylesheet" href="brand/fonts.css">
+    <link rel="stylesheet" href="brand/tokens.css">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--brand-bg); }
+      /* Un élément de timeline par texte (pas de bloc imbriqué) : le studio en fait une ligne chacun. */
+      .ligne { position: absolute; left: 120px; right: 120px; color: var(--brand-muted);
+        font-family: var(--brand-font-body); font-size: 46px; line-height: 1.35; }
+      #titre { top: 700px; color: var(--brand-text); font-family: var(--brand-font-display); font-size: 104px; line-height: 1.02; }
+      #consigne { top: 860px; }
+      #consigne strong { color: var(--brand-text); }
+      #pied { top: 1060px; font-size: 34px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="accueil" data-start="0" data-duration="5" data-fps="30" data-width="1080" data-height="1920">
+      <h1 id="titre" class="ligne clip" data-start="0" data-duration="5" data-track-index="0">Monteur IA</h1>
+      <p id="consigne" class="ligne clip" data-start="0" data-duration="5" data-track-index="1">Glisse ta vidéo brute dans le chat, à gauche, puis écris&nbsp;: <strong>« On monte celle-ci »</strong>.</p>
+      <p id="pied" class="ligne clip" data-start="0" data-duration="5" data-track-index="2">Chaque Reel a ensuite sa propre vignette dans la liste des projets.</p>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#titre", { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" }, 0.1);
+      window.__timelines["accueil"] = tl;
+    </script>
+  </body>
+</html>

@@ -5,10 +5,14 @@ a exposé un catalogue SFX via l'API externe HeyGen, recherchable en langage nat
 
 ## Règle de priorité
 
-1. **Toujours réutiliser d'abord les SFX déjà présents dans `assets/sfx/`** — le **pack de démarrage
-   livré** (`assets/sfx/starter/`, ci-dessous) et tout MP3 que le créateur a déposé lui-même à la
-   racine du dossier. À privilégier pour tout ce qui est courant.
-2. **N'appeler l'API HeyGen que pour un besoin spécial** : un mouvement, une animation, une
+1. **Pack SFX installé** : le pack d'abord, pour tout ce qu'il couvre (skill `pack-sfx`).
+2. **Dans l'app HyperFrames, sans Pack SFX** : la bibliothèque HeyGen d'abord, par ses outils
+   `find_sound_effect` et `find_music` (gratuits, sans clé). Le fichier arrive dans `assets/` du
+   Reel : il passe par la liste de l'étape 6, jamais par un `<audio>` écrit à la main (skill
+   `motion-design` → `references/sfx-musique.md`, qui dit aussi ses manques). Si rien ne colle :
+   le pack de démarrage livré (`assets/sfx/starter/`, ci-dessous) et les MP3 du créateur.
+   Hors de l'app : ce pack de démarrage d'abord.
+3. **Hors de l'app, n'appeler l'API HeyGen que pour un besoin spécial** : un mouvement, une animation, une
    transition à l'écran qui n'a pas de son adéquat en local. Nécessite `npx hyperframes auth` (voir
    plus bas) — si l'auth n'est pas faite, rester sur le pack de démarrage ou demander au créateur de
    déposer son propre MP3.

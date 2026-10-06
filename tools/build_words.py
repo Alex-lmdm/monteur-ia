@@ -79,7 +79,7 @@ if not CUT.exists():
 if not MODEL.exists():
     print(f"ERREUR : modele Whisper introuvable ({MODEL}).")
     print("Installe-le, ou saute cette etape : montage_captions.py retombe alors sur un timing")
-    print("approximatif (proportionnel au texte) — moins bien cale sur la voix.")
+    print("approximatif (proportionnel au texte), moins bien cale sur la voix.")
     raise SystemExit(1)
 
 words = []
@@ -92,7 +92,7 @@ with tempfile.TemporaryDirectory() as tmp:
                         "-ar", "16000", "-ac", "1", str(wav)], check=True)
         proc = subprocess.run([WHISPER, "-m", str(MODEL), "-l", LANG,
                                "-ml", "1", "-sow", "-wt", "0.01", "-np", str(wav)],
-                              capture_output=True, text=True)
+                              capture_output=True, encoding="utf-8", errors="replace")
         for line in proc.stdout.split("\n"):
             m = LINE.match(line.strip())
             if not m:

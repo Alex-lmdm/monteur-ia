@@ -58,8 +58,8 @@ Adapter les exemples à ce qui a réellement été monté, garder la structure :
 ## 3. Corriger cette vidéo
 
 C'est la review (étape 5) : appliquer les retours avec le skill `motion-design`, puis ré-exporter
-toute la chaîne comme au montage (calque si le motion a changé, `tools/build_final.py`, puis
-`tools/build_sfx.py`, qui repose les bruitages sur le nouvel export). Livrer la nouvelle version et
+comme au montage (`tools/build_faces.py` si le cadrage a changé, `tools/build_master.py --write` si
+la structure a changé ; les sons posés restent), avec le bouton Export de l'app ou `npm run render`. Livrer la nouvelle version et
 boucler jusqu'à ce qu'il soit content. Mêmes contrôles automatiques qu'au montage.
 
 **Nettoyage de la voix demandé** : suivre le skill `derush`, étape 7 (Adobe Podcast Enhance) sur
@@ -69,8 +69,8 @@ Vérifier que les durées concordent (écart < 0,1 s), puis :
 ffmpeg -y -i derush/<cut>.mp4 -i derush/<cut>_voice_enhanced.mp3 -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest derush/<cut>_enhanced.mp4
 ffmpeg -y -i assets/video/base.mp4 -i derush/<cut>_voice_enhanced.mp3 -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 256k -shortest work/base_voix.mp4
 ```
-Remplacer `assets/video/base.mp4` par `work/base_voix.mp4`, puis relancer `tools/build_final.py` et
-`tools/build_sfx.py` (le calque ne change pas).
+Remplacer `assets/video/base.mp4` par `work/base_voix.mp4`, puis ré-exporter (bouton Export de
+l'app, ou `npm run render`) : la voix du montage vient de `base.mp4`, l'image ne change pas.
 
 ## 4. Résumer ce qu'on retient, attendre l'OK, enregistrer
 
@@ -79,7 +79,8 @@ Remplacer `assets/video/base.mp4` par `work/base_voix.mp4`, puis relancer `tools
 >
 > On garde tout ça ? »
 
-Rien n'est écrit avant un OK clair. Ensuite :
+Ses préférences ne s'enregistrent qu'après un OK clair. Les réglages qu'une correction exige pour se
+voir (cadrage, taille des sous-titres) s'écrivent pendant la correction, à l'essai ; l'OK les confirme. Ensuite :
 
 | Retour | Où l'enregistrer |
 |---|---|
@@ -114,9 +115,9 @@ me dire de changer quelque chose. »
 `setup.firstVideoDone = true`, sync.
 
 **Il veut débriefer plus tard** : ne rien enregistrer et laisser `firstVideoDone` à `false` ;
-noter « débrief à faire » dans `work/premiere-video.md` (la note survit à la clôture du reel :
-`tools/close_reel.py` la garde tant que `firstVideoDone` n'est pas `true`) et le reproposer une fois à la
-conversation suivante.
+noter « débrief à faire » dans `work/premiere-video.md` du dossier Monteur IA (la note survit au
+rangement du Reel : `tools/ranger_reel.py` la pose tant que `firstVideoDone` n'est pas `true`) et le
+reproposer une fois à la conversation suivante.
 
 ## 5. Ensuite
 

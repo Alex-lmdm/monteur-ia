@@ -88,7 +88,7 @@ sonne faux. » On n'écrit qu'après OK.
 | D9 | « Sur 1 ou 2 lignes ? » | `visual.captionsLines` | `1` | `1` ou `2` |
 | D10 | « Où tu les places par défaut ? (jointure du split / centre-bas) » | `visual.captionsPosition` | celui du preset | libellé simple |
 | D11 | « Le style de ta section CTA ? (facultatif) » puis lister `ctaStyles` | `cta.style` | celui du preset | id existant |
-| D12 | « Tu as un logo ou un avatar à intégrer ? (facultatif) » | (→ `assets/images/`) | aucun | fichier image si fourni |
+| D12 | « Tu as un logo ou un avatar à intégrer ? (facultatif) » | (→ `assets/images/` du dossier Monteur IA) | aucun | fichier image si fourni |
 
 **Après écriture** : `setup.styleChosen = true`, puis `node scripts/sync.mjs`. Relire sa sortie :
 tout avertissement (contraste faible, police absente de la table, `.ttf` de mesure manquant) doit

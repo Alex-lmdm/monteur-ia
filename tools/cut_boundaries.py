@@ -84,18 +84,18 @@ for s, e, _ in ISLANDS:
 proc = subprocess.run(
     ["ffmpeg", "-v", "error", "-i", str(CUT),
      "-filter:v", "select='gt(scene,0.015)',metadata=print:file=-", "-an", "-f", "null", "-"],
-    capture_output=True, text=True)
+    capture_output=True, encoding="utf-8", errors="replace")
 detected = [float(x) for x in re.findall(r"pts_time:([\d.]+)", proc.stdout)]
 
 dur = float(subprocess.run(
     ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(CUT)],
-    capture_output=True, text=True).stdout.strip())
+    capture_output=True, encoding="utf-8", errors="replace").stdout.strip())
 
 bounds, drifts = [0.0], []
 for m in theo[1:-1]:
     near = [d for d in detected if abs(d - m) < TOL]
     if not near:
-        raise SystemExit(f"coupe introuvable pres de {m:.3f}s — baisser le seuil scene ou verifier ISLANDS")
+        raise SystemExit(f"coupe introuvable pres de {m:.3f}s : baisser le seuil scene ou verifier ISLANDS")
     d = min(near, key=lambda x: abs(x - m))
     bounds.append(round(d, 3))
     drifts.append(d - m)

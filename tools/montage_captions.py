@@ -34,6 +34,13 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import brand_style
 import sections
 
+# Windows : une sortie lue par l'agent (redirigée) est en cp1252, et un « ✅ » y fait planter l'outil.
+for _flux in (sys.stdout, sys.stderr):
+    try:
+        _flux.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 # La police de sous-titres vient du style resolu (preset + brand.config.json), jamais en dur :
@@ -200,12 +207,12 @@ doc = f'''<!DOCTYPE html>
     <meta name="viewport" content="width=1080, height=1920">
     <!-- SOUS-TITRES — genere par tools/montage_captions.py depuis derush/<video>_cuts.json.
          Regles : 2-3 mots par sous-titre, AUCUNE ponctuation finale, jamais a cheval sur 2 phrases. -->
-    <script src="../assets/vendor/gsap.min.js"></script>
+    <script src="assets/vendor/gsap.min.js"></script>
     <!-- L'apparence de .cap (police, couleurs, skin « {STYLE.captions_skin} ») vient ENTIEREMENT
          de brand/tokens.css, genere depuis TON style. Ne rien redefinir ici : une regle en dur
          dans ce fichier survivrait a un changement de style et casserait la coherence. -->
-    <link rel="stylesheet" href="../brand/fonts.css">
-    <link rel="stylesheet" href="../brand/tokens.css">
+    <link rel="stylesheet" href="brand/fonts.css">
+    <link rel="stylesheet" href="brand/tokens.css">
     <style>
       * {{ margin: 0; padding: 0; box-sizing: border-box; }}
       /* Pas de height en dur sur body : plein cadre 1920, scope sous #captions. */

@@ -9,6 +9,34 @@ traite ; les SFX sont posés après tes propres contrôles, sans attendre de val
 **Chercher un son qui n'est pas dans la bibliothèque** → méthode de recherche/sourcing :
 `design-system/sfx-sound-search.md`.
 
+**Quelle bibliothèque** (décision du 6 octobre 2026) :
+1. **Pack SFX installé** : le pack d'abord (skill `pack-sfx`), l'app pour un son qu'il n'a pas.
+2. **Dans l'app HyperFrames, sans Pack SFX** : la bibliothèque HeyGen d'abord (`find_sound_effect`,
+   gratuite avec la connexion HeyGen). Requête en anglais qui décrit le geste (« fast whoosh
+   transition », « mouse click », « cash register »). Elle n'a pas tout : rien de propre pour un
+   déclencheur photo ou un feutre, et « ding » et « succès » renvoient la même notification. Pour
+   ces moments, ou si rien ne colle, les sons de départ (`assets/sfx/starter/sounds.md`).
+3. **Hors de l'app** (Claude Code, Codex, Windows) : les sons de départ, et le pack s'il est là.
+
+**Sons et musique trouvés dans l'app** (`find_sound_effect`, `find_music` ; absents hors de l'app).
+Le fichier arrive dans `assets/` du Reel avec sa durée, et pour un bruitage son `peakOffset`
+(secondes entre le début du fichier et l'impact). Mesuré sur 39 sons : MP3 48 kHz stéréo, même
+niveau technique que le pack, mais normalisés près du maximum (pic vers -1,5 dB), avec 20 à 50 ms
+de silence avant le son et des queues longues (whooshes de 1,3 à 1,6 s) : rogne-les (`trim`, le
+fondu de sortie est automatique) pour un son sec. Pour les poser :
+- **jamais d'`<audio>` écrit à la main** : hors du bloc SONS, il disparaît à la prochaine
+  régénération du master ;
+- un bruitage → un event de `tools/build_sfx.py` : `("assets/<fichier>", instant_visé − peakOffset,
+  volume_dB, trim)` (avec le Pack SFX : `{"file": "assets/<fichier>", "start": …, "vol": …}` dans
+  `work/sfx_events.json`) ;
+- une musique → `MUSIQUE_REEL = "assets/<fichier>"` (et `MUSIQUE_REEL_DB`) dans `tools/build_sfx.py`
+  (avec le Pack SFX : `"music"` et `"musicDb"` dans `work/sfx_events.json`, forme objet). Elle ne
+  vaut que pour ce Reel ; s'il veut la garder pour les suivants, copie-la dans `assets/music/` du
+  dossier Monteur IA et règle `audio.musicFile` ;
+- ces sons ne sont **pas calibrés** : mesure le volume (`volumedetect`, puis `--probe`) comme pour un
+  MP3 du créateur ;
+- le fichier reste dans `assets/` du Reel (le bloc SONS le référence sur place, sans copie).
+
 **Bibliothèque** : `assets/sfx/` — contient la **bibliothèque de démarrage livrée**
 (`assets/sfx/starter/`, 22 sons CC0) plus tout MP3 que le créateur a ajouté (ses propres sons, ou
 récupérés via l'API HeyGen). **➡️ Lire `assets/sfx/starter/sounds.md`** : chaque son y a une description
@@ -43,12 +71,19 @@ ajuster au son réel) :
   **-14/-15 dB**
 - (À -20 uniforme, les sons doux — felt pen, typing, clics — sont inaudibles ; les remonter.)
 
-**Recette ffmpeg** (mix par-dessus `renders/FINAL.mp4`, **vidéo copiée** donc rapide) — script de
-réf `tools/build_sfx.py` (liste d'events `(fichier, start, volume_dB, trim|None)`, fichier = chemin
-relatif à `assets/sfx/`, ex. `starter/pop.mp3`) :
+**Pose dans le montage** (export natif) : `python3 tools/build_sfx.py` (liste d'events `(fichier,
+start, volume_dB, trim|None)`, fichier = chemin relatif à `assets/sfx/`, ex. `starter/pop.mp3`, ou
+`assets/<fichier>` pour un son du Reel). Chaque son de la bibliothèque est copié dans `assets/sons/` et écrit en `<audio>` dans le bloc SONS d'`index.html` : volume en dB
+converti en `data-volume`, coupe adoucie et fondus en enveloppe `data-automation` (une enveloppe
+**remplace** `data-volume`, elle porte donc le niveau réel), voix + sons + musique sur le bus
+`mixage` plafonné à -0,26 dB. Dans l'app, chaque son devient un clip de la timeline. Le bloc retouché
+à la main ou dans l'app n'est plus écrasé sans `--ecraser`. Mesuré sur un vrai Reel : même mixage
+que l'ancien ffmpeg à 0,3 dB près.
+
+**Ancien mixage ffmpeg** (secours : `python3 tools/build_sfx.py --ffmpeg`, par-dessus `exports/FINAL.mp4`) :
 - par SFX : `[i:a]atrim=0:DUR(si rogné),volume=XdB,aformat=channel_layouts=stereo:sample_rates=48000,afade=t=out:st=DUR-0.06:d=0.06(si rogné),adelay=START_ms:all=1[ei]`
 - mix : `[voice][e0][e1]…amix=inputs=N+1:normalize=0:dropout_transition=0,alimiter=limit=0.97[aout]`
-- `-map 0:v -c:v copy -map [aout] -c:a aac -b:a 192k`. Sortie `renders/FINAL_SFX_MUSIC.mp4` (même nom sans musique : `tools/build_sfx.py` mixe alors les SFX seuls).
+- `-map 0:v -c:v copy -map [aout] -c:a aac -b:a 192k`. Sortie `exports/FINAL_SFX_MUSIC.mp4` (même nom sans musique : SFX seuls).
 - Vérif placement sans écoute : `python3 tools/build_sfx.py --probe` (voir plus bas, la seule méthode fiable).
 
 **Musique de fond par défaut** : `brand.config.json` → `audio.musicFile` (fichier dans
@@ -64,7 +99,7 @@ relatif à `assets/sfx/`, ex. `starter/pop.mp3`) :
   saturation.
 
 **Vérifier le placement SANS ÉCOUTER — la seule méthode fiable.**
-`python3 tools/build_sfx.py --probe` écrit `renders/sfx-only.wav` : la piste **SFX + musique
+`python3 tools/build_sfx.py --probe` écrit `work/sfx-only.wav` : la piste **SFX + musique
 SEULE** (mêmes événements, sans la voix), en **48 kHz**. Comparer ensuite le pic de chaque
 événement au pic de la musique de fond (viser **+4 dB** minimum). Deux méthodes qui mentent :
 - ❌ **soustraire deux MP4** (avec / sans SFX) : deux encodages AAC indépendants laissent

@@ -4,8 +4,10 @@
 graisse Black (`visual.fontBody`). Cette spéc concerne les formats **statiques** (carrousels, visuels,
 miniatures) où le texte porte tout.
 
-La police display de la marque = `brand.config.json` → `visual.fontDisplay`. Fichier custom exporté
-dans chaque projet qui l'utilise : `brand/fonts/<display>.otf`.
+La police display de la marque = `brand.config.json` → `visual.fontDisplay`. Fichier custom : dans
+`assets/fonts/` du dossier Monteur IA, déclaré dans la table `fonts` de `templates/style-presets.json`
+(`npm run sync` en copie les polices utilisées dans `brand/fonts/`). Jamais déposé directement dans
+`brand/fonts/` : ce dossier est tenu par la synchro.
 
 > **Coluna** est un bon **exemple** de police display : condensée, bold, faite pour frapper en gros. Si
 > ta marque n'a pas de display propre, une condensée de ce genre (ou la pile de secours ci-dessous)

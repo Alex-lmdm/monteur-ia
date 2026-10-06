@@ -52,9 +52,9 @@ zone de l'image (~771×714 px de `base.mp4` pour remplir 1080×1000). Mesuré su
 - visage lu dans `base.mp4` (dérush réduit en 1080 dès le départ, ancien pipeline) : **33 %** — la
   réduction en 1080 seule en coûtait déjà plus de la moitié ;
 - visage relu dans le dérush pleine résolution (pipeline actuel) : **~80 %**.
-D'où la règle : **aucune réduction avant l'export**. `tools/build_final.py` relit le visage dans le
-dérush (`<cut>_cuts.json` → `source`) avec un crop mis à l'échelle ; il retombe sur `base.mp4` (et le
-dit) si ce dérush manque, est en HDR, ou ne montre pas les mêmes images que `base.mp4`. Export final
+D'où la règle : **aucune réduction avant l'export**. `tools/build_faces.py` pré-cadre le visage dans
+le dérush (`<cut>_cuts.json` → `source`) avec un crop mis à l'échelle ; il retombe sur `base.mp4` (et
+le dit) si ce dérush manque, est en HDR, ou ne montre pas les mêmes images que `base.mp4`. Export final
 en **crf 16** (pas 18+).
 **Cas HDR** : le dérush garde les couleurs HLG, seul `base.mp4` est tonemappé → l'export retombe sur
 `base.mp4` (visage moins net). Le remède durable reste de filmer en SDR (mode couleur « Normal »).

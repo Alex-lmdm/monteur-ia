@@ -18,9 +18,14 @@ from __future__ import annotations
 
 import json
 import pathlib
+import sys
 from dataclasses import dataclass
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from lieux import MAISON  # noqa: E402
+
+# Réglages, presets et polices vivent dans la maison, même quand l'outil tourne dans un Reel.
+ROOT = MAISON
 PRESETS_PATH = ROOT / "templates/style-presets.json"
 
 
@@ -115,7 +120,7 @@ def style() -> Style:
         preset = next((p for p in presets if p.get("isUnset")), presets[0] if presets else None)
     if preset is None:
         raise SystemExit(
-            "ERREUR : aucun preset de style dans templates/style-presets.json — "
+            "ERREUR : aucun preset de style dans templates/style-presets.json : "
             "impossible de résoudre les couleurs."
         )
 
@@ -162,7 +167,7 @@ def style() -> Style:
 
 if __name__ == "__main__":
     s = style()
-    print(f"style      : {s.preset_id}{'' if s.chosen else '  (style de depart, pas encore personnalise — /setup visuel)'}")
+    print(f"style      : {s.preset_id}{'' if s.chosen else '  (style de depart, pas encore personnalise : /setup visuel)'}")
     print(f"couleurs   : fond {s.bg} · accent {s.accent} · texte {s.text}")
     print(f"polices    : body {s.font_body} · sous-titres {s.font_captions} (skin {s.captions_skin})")
     print(f"cadrage    : {s.default_layout} · CTA {s.cta_style}")

@@ -267,7 +267,8 @@ Deux réglages, deux phrases :
   déjà posé un.
 - `montage.defaultLayout` : `split` ou `faceplein`. **Détail complet au bloc F3** (avec la
   calibration du cadrage) — ici on ne fait que confirmer celui du preset.
-- **Logo / avatar** (optionnel) : si fourni → le déposer dans `assets/images/`.
+- **Logo / avatar** (optionnel) : si fourni → le déposer dans `assets/images/` du dossier Monteur IA
+  (partagé : chaque Reel copie ce qu'il utilise dans ses propres `assets/images/`).
 
 ### Écriture
 
@@ -311,7 +312,9 @@ snapshot visuel.
 
 1. **Détecter l'environnement** (remplir `env.*`, ne rien installer) :
    - OS (`env.os`) : via node `process.platform` (`darwin`/`win32`/`linux`) ou `uname`/`ver`.
-   - `ffmpeg` (`env.ffmpegPath`) : `which ffmpeg` (macOS/Linux) / `where ffmpeg` (Windows).
+   - `ffmpeg` (`env.ffmpegPath`) : le **dossier** qui contient ffmpeg et ffprobe, comme au dérush
+     (`dirname "$(which ffmpeg)"` sur macOS/Linux, le dossier de `where ffmpeg` sous Windows).
+     Les outils acceptent aussi le chemin du binaire.
    - Whisper (`env.whisperCli`, `env.whisperModel`) : détecter la CLI whisper dispo.
    - **Si ffmpeg ou whisper manquent** → NE PAS installer ici : renvoyer vers `INSTALL.md` et
      marquer le champ à compléter, on pourra relancer `/setup technique` plus tard.

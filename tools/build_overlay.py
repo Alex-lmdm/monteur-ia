@@ -21,7 +21,7 @@ ramollirait).
 
 Usage :
   python3 tools/build_overlay.py            # ecrit overlay.html a la racine (pour inspection)
-  python3 tools/build_overlay.py --render   # ecrit + rend renders/overlay.mov + supprime
+  python3 tools/build_overlay.py --render   # ecrit + rend work/overlay.mov + supprime
 """
 import pathlib
 import re
@@ -30,11 +30,11 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OVERLAY = ROOT / "overlay.html"
-MOV = ROOT / "renders/overlay.mov"
+MOV = ROOT / "work/overlay.mov"
 
 INDEX = ROOT / "index.html"
 if not INDEX.exists():
-    print(f"ERREUR : {INDEX.relative_to(ROOT)} manquant — genere d'abord le master "
+    print(f"ERREUR : {INDEX.relative_to(ROOT)} manquant : genere d'abord le master "
           "(python3 tools/build_master.py --write).")
     sys.exit(1)
 
@@ -46,7 +46,7 @@ out = src
 # de tous ceux dont le fond n'est pas celui du template.
 out, n_bg = re.subn(r"background:\s*var\(--brand-bg\);\s*\}", "background: transparent; }", out, count=1)
 if n_bg == 0:
-    print("ERREUR : fond du master introuvable — index.html doit poser "
+    print("ERREUR : fond du master introuvable : index.html doit poser "
           "`html, body { ... background: var(--brand-bg); }` (jamais une couleur en dur).")
     sys.exit(1)
 # retirer fond de marque / voix off / toutes les <video> (visage + b-roll natif)
@@ -60,7 +60,8 @@ out = re.sub(r"\n *<audio\b[^>]*>\s*(?:</audio>)?", "", out)
 # retirer les wrappers plein cadre devenus vides ET leur CSS : un div plein cadre avec `clip-path`
 # reste un clippeur dans le compositeur, meme vide.
 out = re.sub(r'\n *<div class="(?:face-bottom|screen-top)">\s*</div>', "", out, flags=re.S)
-out = re.sub(r"\n */\* Visage SPLIT-SCREEN.*?scale\([^)]*\); }\n", "\n", out, flags=re.S)
+# (avec ou sans transform : le visage peut etre deja cadre, cf tools/build_faces.py)
+out = re.sub(r"\n */\* Visage SPLIT-SCREEN.*?\.face-bottom video \{[^}]*\}\n", "\n", out, flags=re.S)
 out = re.sub(r"\n */\* B-roll du hook.*?object-fit: cover; }\n", "\n", out, flags=re.S)
 out = re.sub(r"\n{3,}", "\n\n", out)
 # composition distincte du master (deux compositions racines identiques = erreur de lint)
@@ -76,13 +77,13 @@ assert "clip-path" not in out, "un clip-path plein cadre traine encore dans le c
 assert 'data-composition-src="compositions/' in out, "les sous-comps doivent etre en chemin RACINE"
 
 OVERLAY.write_text(out, encoding="utf-8")
-print(f"overlay.html (racine) — {out.count('data-composition-src')} sous-comp(s) (sections + captions)")
+print(f"overlay.html (racine) : {out.count('data-composition-src')} sous-comp(s) (sections + captions)")
 
 if "--render" in sys.argv:
     try:
         r = subprocess.run(["npx", "--yes", "hyperframes", "render", "-c", "overlay.html",
                             "--format", "mov", "-q", "high", "-o", str(MOV)],
-                           cwd=ROOT, capture_output=True, text=True)
+                           cwd=ROOT, capture_output=True, encoding="utf-8", errors="replace")
         print(r.stdout.strip().splitlines()[-1] if r.stdout.strip() else r.stderr[-400:])
     finally:
         OVERLAY.unlink(missing_ok=True)   # jamais laisser 2 compositions racines dans le projet

@@ -1,0 +1,64 @@
+/* ==========================================================================
+   Design system — Polices (HyperFrames)
+
+   ⚠️ FICHIER GÉNÉRÉ. Ne pas éditer : il est réécrit à chaque `npm run sync`.
+   Source : templates/fonts.css.tpl + brand.config.json (bloc `visual`)
+            + la table `fonts` de templates/style-presets.json.
+
+   Toutes les polices sont hébergées EN LOCAL : sources dans assets/fonts/, copies des
+   polices utilisées dans brand/fonts/ (à côté de ce fichier : même chemin pour l'aperçu et le
+   rendu HyperFrames 0.8). Le rendu doit être déterministe et marcher hors-ligne.
+   JAMAIS de @import Google Fonts.
+
+   Ajouter TA police : dépose les fichiers dans assets/fonts/, déclare-les dans la
+   table `fonts` de templates/style-presets.json, puis `npm run sync`.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("fonts/Inter-400.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url("fonts/Inter-400-italic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url("fonts/Inter-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url("fonts/Inter-700.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("fonts/Inter-900.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Anton";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("fonts/Anton-400.woff2") format("woff2");
+}
+

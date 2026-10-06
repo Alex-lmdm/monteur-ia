@@ -47,7 +47,7 @@ cmd = ["ffmpeg", "-y", "-i", SRC, "-filter_complex", filtg,
        "-c:a", "aac", "-b:a", "192k", OUT]
 
 print(f"Prises : {len(ISLANDS)}  |  duree estimee : {kept:.1f}s")
-r = subprocess.run(cmd, capture_output=True, text=True)
+r = subprocess.run(cmd, capture_output=True, encoding="utf-8", errors="replace")
 print("ffmpeg exit:", r.returncode)
 if r.returncode:
     print(r.stderr[-1500:])

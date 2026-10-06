@@ -9,6 +9,7 @@ brand.config.json
 # comme réglage d'usine : c'est exactement ce qu'on ne veut pas.
 brand/tokens.css
 brand/fonts.css
+brand/fonts/
 
 # Exports finaux (régénérés par ffmpeg depuis les compositions)
 renders/*
@@ -55,3 +56,27 @@ snapshots/
 node_modules/
 *.log
 __pycache__/
+
+# Reels (un Reel = un projet, dans reels/<nom>/) : le montage est suivi (index.html, compositions/,
+# coupes, outils du Reel, style), pas les médias lourds ni les copies régénérées ou sous licence :
+# sons posés (copies de la bibliothèque, Pack SFX compris), polices, GSAP, instructions générées.
+reels/*/assets/video/*
+reels/*/derush/**/*.mp4
+reels/*/derush/**/*.mov
+reels/*/derush/**/*.mp3
+reels/*/derush/**/*.wav
+reels/*/derush/**/*.m4a
+reels/*/exports/
+reels/*/renders/
+reels/*/work/
+reels/*/snapshots/
+reels/*/probe/
+reels/*/.thumbnails/
+reels/*/.waveform-cache/
+reels/*/.hyperframes/
+reels/*/.transcode-cache/
+reels/*/assets/sons/
+reels/*/assets/vendor/
+reels/*/brand/fonts/
+reels/*/CLAUDE.md
+reels/*/AGENTS.md

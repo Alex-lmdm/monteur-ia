@@ -307,7 +307,8 @@ L'IA met en gras trop de choses, surtout dans les listes avec le pattern
 - Ne commence pas deux paragraphes consécutifs de la même manière.
 - N'explique pas ce que quelque chose "pourrait" faire. Montre ce que ça
   fait.
-- Pas d'emoji sauf si explicitement demandé.
+- Pas d'emoji sauf si explicitement demandé (les légendes Instagram ont leur propre règle :
+  `instagram-caption.md`).
 - Pas de listes à puces où chaque item commence par un gérondif/participe
   présent ("Optimisant...", "Permettant...", "Facilitant...").
 - Pas de questions rhétoriques en série ("Vous vous êtes déjà demandé...

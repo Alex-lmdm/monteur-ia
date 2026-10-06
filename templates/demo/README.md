@@ -1,15 +1,15 @@
-# Copie de référence du plan de travail livré
+# Gabarit d'un nouveau Reel
 
-Chaque fichier `X.demo` ici est la version **livrée** du fichier `X` du projet (même chemin,
-suffixe `.demo` en plus). `tools/close_reel.py` les recopie à leur place après avoir purgé le
-reel publié : le projet revient exactement à l'état d'un ZIP neuf (démo de 8 s, placeholder
-`base.mp4`, outils pointés sur `derush/exemple_cuts.json`), sans toucher aux réglages du client.
+`tools/nouveau_reel.py` crée chaque Reel dans `reels/<nom>/` à partir de ce dossier : chaque
+fichier `X.demo` devient `X` (même chemin, sans le suffixe), puis les outils de `tools/` sont
+copiés à côté et `npm run sync` ajoute le style, les polices, GSAP et les instructions.
 
-Le suffixe `.demo` empêche le studio HyperFrames de lister ces fichiers comme des compositions
-ou des médias du projet.
+Le Reel neuf est donc le plan de travail de départ : démo de 8 s, placeholder `base.mp4`, coupes
+d'exemple (`derush/exemple_cuts.json`, lu par `tools/sections.py`), sans aucun réglage du client.
 
-**Maintenance (template uniquement).** Si tu modifies dans le template un fichier qui a sa copie
-ici, recopie-le : `cp tools/sections.py templates/demo/tools/sections.py.demo`.
-`node --test scripts/sync.test.mjs` échoue tant qu'une copie diffère de l'original, et quand
-un fichier du plan de travail (outil marqué « A CHAQUE REEL », `compositions/`, `derush/`,
-`assets/video/`) n'a pas de copie.
+Le suffixe `.demo` empêche le studio HyperFrames de lister ces fichiers comme des compositions ou
+des médias, et la racine du dossier Monteur IA de passer pour un projet.
+
+**Maintenance (template uniquement).** Un fichier modifié ici change tous les Reels créés
+ensuite, jamais les Reels existants. `node --test scripts/sync.test.mjs` vérifie qu'un Reel créé
+depuis ce gabarit est un projet HyperFrames complet.

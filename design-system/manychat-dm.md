@@ -16,7 +16,7 @@ configuration._
 
 _Bonus (optionnel) : lance `/setup` (bloc Funnel) pour mémoriser ton outil de DM, ton ouverture type
 et la ressource que tu livres — ils seront décrits ici. En attendant, le DM est écrit à partir du
-mot-clé et de la ressource du script, avec l'URL réelle (ou un placeholder `[LIEN À COMPLÉTER]`)._
+mot-clé et de la ressource du script, avec l'URL réelle (ou un repère `[ADRESSE À COMPLÉTER]`)._
 <!-- END GENERATED: cta -->
 
 ## Voix et structure
@@ -107,7 +107,7 @@ Adapter à la complexité de la ressource, jamais à la longueur du contenu.
 ## URL
 
 - Si l'URL définitive est connue (donnée par le créateur), on l'écrit directement.
-- Sinon, placeholder `[LIEN À COMPLÉTER]` à remplacer par le créateur avant de coller dans l'outil de
+- Sinon, repère `[ADRESSE À COMPLÉTER]` (jamais le mot « lien ») à remplacer par le créateur avant de coller dans l'outil de
   DM. Toujours préfixé par 🔗 dans le texte. **Ne jamais inventer d'URL.**
 
 ## Squelette type

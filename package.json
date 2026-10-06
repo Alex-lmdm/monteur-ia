@@ -4,16 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "predev": "node scripts/sync.mjs --style-only",
-    "dev": "hyperframes preview",
-    "precheck": "node scripts/sync.mjs --style-only",
-    "check": "hyperframes lint && hyperframes validate && hyperframes inspect",
-    "prerender": "node scripts/sync.mjs --style-only",
-    "render": "hyperframes render",
     "sync": "node scripts/sync.mjs",
-    "postinstall": "node scripts/sync.mjs || true"
+    "postinstall": "node scripts/sync.mjs || exit 0",
+    "app": "node scripts/app-hyperframes.mjs",
+    "test": "node --test scripts/*.test.mjs"
   },
   "devDependencies": {
-    "hyperframes": "0.6.72"
+    "hyperframes": "0.8.136"
   }
 }

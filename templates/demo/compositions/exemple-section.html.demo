@@ -24,11 +24,11 @@
   -->
   <!-- GSAP est aussi chargé dans le head du master : au render par couches, les scripts externes
        d'une sous-comp ne sont PAS chargés. Toute lib tierce ajoutée ici va AUSSI dans le master. -->
-  <script src="../assets/vendor/gsap.min.js"></script>
+  <script src="assets/vendor/gsap.min.js"></script>
   <!-- Polices + tokens de marque : indispensables pour que var(--brand-*) se résolve
        dans le studio ET au render par couches (le master les charge aussi). -->
-  <link rel="stylesheet" href="../brand/fonts.css">
-  <link rel="stylesheet" href="../brand/tokens.css">
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
   <style>
     /* [7] ⛔ AUCUNE règle sur html/body ici (surtout pas `height: 920px`).
        Au render, TOUTES les sous-comps sont injectées dans UN SEUL document : un style posé

@@ -87,8 +87,9 @@ Tout vient de `brand.config.json` :
 - **Auteur signataire** : `brand.firstName`
 - **Niche / positionnement** : `brand.niche`. Ton direct et factuel, voix de « pote qui te
   dit ce qui marche vraiment ». Pas de corporate speak.
-- **Assets perso** : `brand/assets/avatar.png`, `brand/assets/portrait.png` (à fournir par projet pour
-  lower-thirds intro/outro).
+- **Assets perso** : `assets/images/avatar.png`, `assets/images/portrait.png` du dossier Monteur IA
+  (rangés par le setup ; à copier dans `assets/images/` du Reel qui les utilise), pour les
+  lower-thirds intro/outro.
 
 ---
 
@@ -228,7 +229,7 @@ Plages et règles d'usage (ne figurent pas dans le JSON) :
 ## 5. Lower-third / identité / safe areas
 
 ### Lower-third (identité bas-gauche)
-- **Avatar** circulaire `brand/assets/avatar.png`, ≈ 76×85 px (×1.4 en 1080×1920).
+- **Avatar** circulaire `assets/images/avatar.png` (copié dans le Reel), ≈ 76×85 px (×1.4 en 1080×1920).
 - **Texte sur 2 lignes** à droite de l'avatar :
   - Ligne 1 : `brand.firstName` — SemiBold, blanc
   - Ligne 2 : `brand.handle` — Regular, blanc ou muted `var(--brand-muted)`
@@ -417,7 +418,7 @@ crucial · fondamental · indéniablement · incontournable · primordial · ré
 - [ ] Le fond est `var(--brand-bg)`, pas du noir pur (ou transparent pour clip intégrable).
 - [ ] Aucun emoji décoratif sans utilité (pas de ✨ 🚀 💯 génériques). Si emoji : Apple/iOS style, 1-2 par moment max.
 - [ ] L'identité (handle, avatar) est visible **au moins une fois** dans la vidéo finale. Si
-  `brand.handle` et `brand/assets/avatar.png` n'existent pas (cas d'une première vidéo), on saute
+  `brand.handle` et l'avatar (`assets/images/avatar.png` du dossier Monteur IA) n'existent pas (cas d'une première vidéo), on saute
   ce point : ne jamais afficher un marqueur `{{...}}` ni inventer un nom.
 - [ ] Easing utilisé est conforme (§4 / §8).
 
@@ -444,9 +445,9 @@ Brancher dans une composition :
 ```html
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/CustomEase.min.js"></script>
-<link rel="stylesheet" href="../brand/fonts.css" />
-<link rel="stylesheet" href="../brand/tokens.css" />
-<!-- ... <script src="../brand/motion.js"></script> avant la timeline -->
+<link rel="stylesheet" href="brand/fonts.css" />
+<link rel="stylesheet" href="brand/tokens.css" />
+<!-- ... <script src="brand/motion.js"></script> avant la timeline -->
 ```
 
 Easings : `BRAND.ease.outExpo` pour les entrées, `BRAND.ease.inOut` pour le standard. Durées :
@@ -459,6 +460,25 @@ sur `window.__timelines["<composition-id>"]` ; logique déterministe (pas de
 
 **Fond transparent (overlay CapCut)** : `--format mov`/`webm`/`png-sequence` rendent automatiquement
 avec transparence ; `--format mp4` garde le fond `var(--brand-bg)`.
+
+### 11.1 Motion self-check : après toute modif d'animation
+
+`npm run check` valide la structure, pas le **mouvement**. Après avoir écrit ou modifié des
+animations (GSAP, CSS, Anime), prendre des images à des instants choisis (début, pendant l'entrée,
+fin de chaque animation), puis les regarder réellement :
+
+```bash
+npx hyperframes snapshot --at 0.3,1.2,2.5
+```
+
+- Chaque tween tombe sur le bon temps de la voix.
+- Un élément resté figé d'une image à l'autre = bug silencieux à corriger. La console du
+  navigateur signale aussi `GSAP target … not found`.
+- Toute motion non triviale (arc, stagger, pulse) : regarder la trajectoire sur plusieurs images
+  **avant** le rendu final.
+- Diagnostic détaillé des tweens : `npx hyperframes keyframes` (skill `hyperframes-keyframes`) ;
+  un sélecteur `__unresolved__` écrit en dur = même bug silencieux (un sélecteur construit dans le
+  script, comme `scope + ' .x'` de l'exemple livré, n'est pas lisible par l'outil : c'est normal).
 
 ---
 
@@ -490,10 +510,10 @@ résolution) en 1080×1920, keyframes denses, `-crf 14`, son copié :
 ```bash
 ffmpeg -y -i derush/<cut>_enhanced.mp4 -map 0:v:0 -map 0:a:0 -vf scale=1080:1920:flags=lanczos -c:v libx264 -crf 14 -g 30 -keyint_min 30 -sc_threshold 0 -pix_fmt yuv420p -c:a copy -movflags +faststart assets/video/base.mp4
 ```
-`base.mp4` sert au **studio** et au **son**. Le **visage de l'export final** est relu dans le dérush
-pleine résolution (`tools/build_final.py`, via `<cut>_cuts.json` → `source`) : aucune étape en plus,
-mais `base.mp4` doit toujours être tiré de **ce** dérush (le script le vérifie et, sinon, retombe sur
-`base.mp4` en le signalant).
+`base.mp4` sert au **son** et au repli. Le **visage du montage et de l'export** est pré-cadré dans le
+dérush pleine résolution par `python3 tools/build_faces.py` (via `<cut>_cuts.json` → `source`), à
+relancer après tout dérush ou changement de cadrage ; `base.mp4` doit toujours être tiré de **ce**
+dérush (le script le vérifie et, sinon, retombe sur `base.mp4` en le signalant).
 ▶ **Vidéo source HDR (`color_transfer` = `arib-std-b67` ou `smpte2084`) → lis
 `references/transcodage-video.md` AVANT de lancer ffmpeg** (tonemap zscale obligatoire).
 ✅ *Critère* : `ffprobe` de la sortie renvoie `color_transfer=bt709` ET le seek dans le studio ne
@@ -507,7 +527,13 @@ freeze pas (keyframes denses).
 ligne à ligne, elle respecte les safe areas (§5), et `npm run check` est vert.
 
 **Étape 5 — Logos (§12.1) et médias.**
-✅ *Critère* : tout logo/média est **vendu en local** (`assets/logos/`, `assets/images/`), zéro appel
+Toute marque, tout produit ou outil **nommé dans la voix** (CapCut, Claude, ChatGPT, Instagram…) se
+montre avec son **vrai logo** (skill `thesvg`, couleurs d'origine), au moins à sa première
+apparition : jamais une icône inventée à sa place, un logo officiel rassure. Absent de theSVG
+(marque récente) : demande au client le logo ou une capture, une seule fois.
+✅ *Critère* : tout logo/média est **vendu en local** dans le Reel (`assets/logos/`, `assets/images/`
+du Reel ; un logo ou une image du client rangé dans les `assets/` du dossier Monteur IA,
+`../../assets/…`, s'y **copie** au même chemin : le rendu ne voit que le dossier du Reel), zéro appel
 CDN au rendu, et tout média qui ne remplit pas sa zone a son **fond flou** (§5.6).
 
 **Étape 6 — Master natif `index.html`.**
@@ -524,7 +550,7 @@ Ouvrir la compo `index`, montrer au créateur, corriger.
 ✅ *Critère* : **le créateur a vu la preview et validé section par section.** C'est CE feu vert qui
 débloque les sous-titres finaux, l'export et les SFX — rien avant.
 **Exception première vidéo** (fichier agent, section 🟢, et `references/premier-montage.md`) : pas
-de revue ici, le montage va d'une traite jusqu'à l'export SFX ; le débrief final tient lieu de
+de revue ici, le montage va d'une traite jusqu'aux SFX et à l'export ; le débrief final tient lieu de
 revue. Tu valides toi-même chaque section sur snapshots, et tu découpes les sous-titres selon
 `references/sous-titres.md` sans attendre de dictée.
 
@@ -532,14 +558,15 @@ revue. Tu valides toi-même chaque section sur snapshots, et tu découpes les so
 1. ▶ **Sous-titres à produire → lis `references/sous-titres.md` AVANT d'écrire le moindre chunk** (le
    découpage se décide par **unité grammaticale**, pas par largeur ; les chunks finaux sont **dictés
    par le créateur**).
-2. ▶ **Export final → `references/montage-talking-head.md` §4** : l'export se fait **en ffmpeg**, PAS
-   avec le render HyperFrames (qui rasterise et ramollit le visage).
-3. ▶ **SFX / musique → UNIQUEMENT après validation du montage : `references/sfx-musique.md`.**
-   (« mets le sound effect ET la musique » = SFX + musique de fond par défaut.)
+2. ▶ **SFX / musique → UNIQUEMENT après validation du montage : `references/sfx-musique.md`.**
+   (« mets le sound effect ET la musique » = SFX + musique de fond par défaut.) Ils se posent dans
+   le montage, l'export les emporte.
+3. ▶ **Export final natif → `references/montage-talking-head.md` §4** : bouton Export de l'app
+   HyperFrames, ou `npm run render`. Visages pré-cadrés (`tools/build_faces.py`) : visage net.
 
 ### 12.1 Logos → skill theSVG
 
-`npx skills add glincker/thesvg`. CDN : `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/{slug}/{variant}.svg` ; registre des slugs : `.../src/data/icons.json`. **Toujours les couleurs d'origine** (pas de recolorage mono). **Vendre en local** (`assets/logos/`), jamais de CDN au rendu (déterminisme). Sur fond sombre, marques monochromes (GitHub…) → variant `dark` (= logo blanc).
+Le skill `thesvg` est livré avec Monteur IA (rien à installer). CDN : `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/{slug}/{variant}.svg` ; registre des slugs : `.../src/data/icons.json`. **Toujours les couleurs d'origine** (pas de recolorage mono). **Vendre en local** (`assets/logos/` du Reel), jamais de CDN au rendu (déterminisme). Sur fond sombre, marques monochromes (GitHub…) → variant `dark` (= logo blanc).
 
 ### 12.2 Fluidité : faire vite, sans re-travail
 
@@ -570,22 +597,20 @@ Version complète des réflexes résumés dans le fichier agent (section « Flui
 7. **hyperframes en local** (`npm i -D hyperframes`) plutôt que `npx --yes hyperframes@version`
    (re-résolution réseau à chaque appel).
 
-### 12.3 Clôture du reel (étape 8, après publication)
+### 12.3 Ranger le Reel (étape 8, après publication)
 
-Une fois le reel posté, on remet le plan de travail à zéro : `python3 tools/close_reel.py <slug>`
-(l'en-tête du script fait foi).
+Un Reel = un projet : chaque Reel a son dossier `reels/<nom>/` dans le dossier Monteur IA, créé
+par `python3 tools/nouveau_reel.py "<sujet>"` (`--ouvrir` l'ouvre dans l'app HyperFrames). On ne
+remet plus de plan de travail à zéro : une fois le Reel posté, `python3 tools/ranger_reel.py`
+depuis son dossier (l'en-tête du script fait foi).
 
-- **Archive de l'état final, tout en local** (aucun compte GitHub ni push requis) : avec git, le
-  script committe et tague `reel/<slug>` tout seul, en initialisant un repo local au besoin ; sans
-  git, il copie le projet du reel vers le dossier Vidéos (`reels-publies/<slug>/projet/`).
-- Copie les masters `renders/*FINAL*` vers `~/Movies/reels-publies/<slug>/` (Windows :
+- Copie les vidéos finales (`*FINAL*`) vers `~/Movies/reels-publies/<nom>/` (Windows :
   `~/Videos/…`, hors du projet).
-- Vide `renders/`, `work/`, `derush/`, `compositions/`, `assets/video/` et les restes à la racine
-  (`snapshots/`, `probe/`, `overlay.html`), en gardant une note « débrief à faire » si le débrief
-  de la première vidéo n'a pas eu lieu.
-- Remet les fichiers livrés depuis `templates/demo/` (master d'aperçu, placeholder `base.mp4`,
-  outils du reel remis en mode démo) : le projet redevient celui d'un ZIP neuf, réglages du client
-  intacts (`brand.config.json`, ses assets).
-- **Ne JAMAIS archiver un vieux reel dans un dossier du projet** (le studio scanne tout le projet
-  → il polluerait la sidebar de l'éditeur) : la récupération se fait via
-  `git checkout reel/<slug> -- <chemins>` (ou le dossier copié).
+- Marque le Reel publié (`meta.json` : `monteurIa.etat = "publie"`) : il garde le style qu'il avait
+  au moment du post, et prouve que la première vidéo est passée.
+- Pose la note « débrief à faire » dans `work/premiere-video.md` **du dossier Monteur IA** si le
+  débrief de la première vidéo n'a pas eu lieu.
+- `--alleger` efface en plus les médias du dérush, les fichiers de travail et les rendus
+  intermédiaires ; le montage, ses vidéos et les vidéos finales restent.
+- Le dossier du Reel reste en place : il se rouvre d'un clic dans l'app pour une retouche ou une
+  nouvelle version. **Jamais deux Reels dans un même dossier** : un nouveau Reel = un nouveau dossier.

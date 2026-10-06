@@ -1,8 +1,8 @@
 # Légende Instagram (caption)
 
 À chaque contenu écrit (Reel ou carrousel), **tu génères aussi la légende Instagram** qui ira sous le
-post. Elle est stockée dans le champ `caption` du livrable de publication. Pas de question, c'est
-systématique — la légende fait partie du livrable au même titre que le contenu.
+post. Elle est donnée dans la conversation et rangée dans `publication.md` du Reel. Pas de question,
+c'est systématique : la légende fait partie du livrable au même titre que le contenu.
 
 Identité et ton viennent de `brand.config.json` (`brand.name`, `brand.handle`, `brand.niche`) ; l'offre
 et le funnel (ce vers quoi pointe le CTA) sont **définis par `/setup` (bloc Funnel)**.
@@ -122,13 +122,19 @@ Inputs:
 
 ## Stockage
 
-Dans le livrable de publication, champ `caption` :
+Dans la conversation (prête à copier), et dans `publication.md` à la racine du Reel, avec le DM s'il y
+en a un : le fichier reste quand le Reel est rangé, même allégé.
 
-```json
-{
-  "title": "...",
-  "caption": "Première ligne hook 🎯\n\nDeuxième ligne...\n\n...\n\nCommente [MOT-CLÉ] pour recevoir [ressource] en DM."
-}
+```markdown
+# Légende
+
+Première ligne hook 🎯
+
+Deuxième ligne...
+
+Commente [MOT-CLÉ] pour recevoir [ressource] en DM.
+
+# DM (si CTA mot-clé)
+
+...
 ```
-
-La caption se lit / s'édite depuis l'onglet **Publication** du studio.

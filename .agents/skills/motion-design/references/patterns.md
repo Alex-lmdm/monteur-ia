@@ -17,8 +17,10 @@ la place du créateur, lis sa config. Les variantes sont décrites dans `ctaStyl
 
 Split-screen 1080×920, visage en bas.
 - **Avatar du créateur** en haut, ~206 px : sa tête détourée sur un rond `var(--brand-accent)`
-  (`assets/images/avatar.png`, PNG transparent, redimensionné ~400 px). Pop-in `scale 0.5→1`.
-  Pas d'avatar fourni ? Le mot-clé seul suffit, ne pas inventer de substitut.
+  (`assets/images/avatar.png` du Reel, copié depuis `../../assets/images/` du dossier Monteur IA où
+  le setup le range ; PNG transparent, redimensionné ~400 px). Pop-in `scale 0.5→1`.
+  Pas d'avatar ni dans le Reel ni dans le dossier Monteur IA ? Le mot-clé seul suffit, ne pas
+  inventer de substitut.
 - **Champ commentaire** en dessous : pill `var(--brand-surface)` + bordure discrète,
   `border-radius:56px`, padding `28px 36px`. **Largeur modérée ~580 px** (le mot-clé est court),
   police ~54 px en `var(--brand-accent)`. De gauche à droite : emoji 💬 (~46 px, `margin-right:10px`),

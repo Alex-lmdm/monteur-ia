@@ -1,10 +1,9 @@
 # Calibration du cadrage — split-screen (transform) ↔ crop ffmpeg
 
 But du bloc F : régler **une fois** comment le visage de l'utilisateur est cadré dans la moitié
-basse du split-screen, le valider **à l'œil sur un vrai snapshot**, puis en déduire le **crop
-ffmpeg** exact pour que l'export final soit cadré à l'identique (la preview HyperFrames ramollit le
-visage → l'export final se fait en ffmpeg, donc le crop doit correspondre pixel pour pixel au
-`transform` CSS).
+basse du split-screen, le valider **à l'œil sur un vrai snapshot**, puis en déduire le **crop**
+exact : c'est lui qui pré-cadre le visage en pleine résolution (`tools/build_faces.py`) pour le
+montage et l'export, donc il doit correspondre pixel pour pixel au `transform` CSS.
 
 Sortie : `montage.splitTransform` (le CSS validé) + `montage.faceCrop` (le filtre ffmpeg dérivé).
 
@@ -107,10 +106,11 @@ crop=crop_w:crop_h:crop_x:crop_y,scale=1080:1000     # overlay=0:920
 - `crop_y = (920-410)/1.40 = 510/1.40 = 364,3 → 364`
 - → `crop=771:714:154:364,scale=1080:1000` ✔ (valeur de référence du skill motion-design).
 
-Écrire ce résultat dans `montage.faceCrop`. **Si `splitTransform` change un jour, recalculer** avec
-la formule ci-dessus — un crop désaligné = un cadrage faux à l'export.
-Le crop est toujours exprimé **en pixels de `base.mp4` (1080×1920)** : `tools/build_final.py` le met
-lui-même à l'échelle quand il relit le visage dans le dérush pleine résolution. Ne jamais l'écrire
+Laisser `montage.faceCrop` **vide** : `tools/cadrage.py` dérive le crop du transform avec cette même
+formule, et il suit tout changement de `splitTransform`. Ne l'écrire que pour forcer un crop
+différent du transform (un crop désaligné = un cadrage faux à l'export).
+Le crop est toujours exprimé **en pixels de `base.mp4` (1080×1920)** : `tools/cadrage.py` le met
+lui-même à l'échelle quand le visage est lu dans le dérush pleine résolution. Ne jamais l'écrire
 en pixels du rush.
 
 ---
@@ -127,6 +127,6 @@ Récapituler à l'utilisateur (champs selon le `defaultLayout` choisi en F5) :
 
 Après OK → écrire dans `brand.config.json`, marquer le bloc `F`, `node scripts/sync.mjs`.
 
-> Note qualité : l'export final se fait **en ffmpeg** (crf 16, visage net), **jamais** `npm run
-> render` (le render HyperFrames ramollit la couche vidéo). Le crop calibré ici est précisément ce
-> qui garde l'export aligné sur la preview.
+> Note qualité : le visage n'est jamais agrandi par le navigateur ; il est pré-cadré en pleine
+> résolution avec ce crop (`tools/build_faces.py`). Le crop calibré ici est précisément ce qui garde
+> l'export aligné sur la preview. Après un nouveau calage : `build_faces.py` puis `build_master.py --write`.

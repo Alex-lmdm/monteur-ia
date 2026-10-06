@@ -48,7 +48,8 @@ mal transcrits) :
    (`qu' d' l' j' n'…`), **nombres** (s'accrochent au nom : « deux minutes », « 30 000 personnes »). Si
    la coupe forcée (taille/largeur) tombe sur un mot faible, reculer d'un mot.
 6. **Taille** : **viser 2-3 tokens** par sous-titre (défaut idéal — plus granulaire que ce que l'algo
-   tend à produire) ; **max 4** seulement si ça reste court ET cohérent ; largeur ≤ ~920px @50px →
+   tend à produire) ; **max 4** seulement si ça reste court ET cohérent ; largeur **≤ 900 px** (la
+   limite que `tools/montage_captions.py` applique, à la taille de sous-titres du style) →
    **jamais de débordement**.
 
 **Découpage par UNITÉ GRAMMATICALE — le nerf de la guerre.** Chaque sous-titre = **UNE unité qui se
@@ -90,7 +91,7 @@ modèle de rythme à reproduire** (exemple générique, niche IA) :
 
 > Le découpage COMPLET d'un Reel vit dans `tools/montage_captions.py` (liste **`MANUAL`**, un chunk par
 > sous-titre par clip). Le rythme : **fin (2-3 mots)**, connecteurs qui démarrent, mots forts /
-> adjectifs de chute isolés, groupes grammaticaux intacts, jamais de largeur ≤ 820 px dépassée.
+> adjectifs de chute isolés, groupes grammaticaux intacts, jamais plus de 900 px de large.
 
 **⚠️ MÉTA-RÈGLE — le découpage final est l'OREILLE du créateur.** Les règles 1-8 donnent un bon
 brouillon, mais **toujours PROPOSER le découpage au créateur et implémenter SES chunks exacts** via la
@@ -132,9 +133,8 @@ un `id="cap-N"` à chaque (sinon warning `studio_missing_editable_id` + non édi
 positionnement vient de `.cap` dans `tokens.css`). Branchée 2 fois :
 - dans le master `index.html` comme overlay (track-index élevé) **+ `brand/fonts.css` et
   `brand/tokens.css` dans le head du master** → visible/éditable dans le studio ;
-- rendue en overlay transparent `hyperframes render -c compositions/captions.html --format mov -o
-  renders/captions.mov`, puis compositée en ffmpeg par-dessus `FINAL.mp4` :
-  `ffmpeg -i FINAL.mp4 -i captions.mov -filter_complex "[0:v][1:v]overlay[v]" -map "[v]" -map 0:a ... renders/FINAL_CAP.mp4`.
+- et rendue avec tout le montage par l'export natif (bouton Export de l'app, `npm run render`).
+  Ancien export : elle part dans le calque `work/overlay.mov` (`tools/build_overlay.py`).
 
 **Mot « lien » dans un CTA** → interdit (shadowban) : utiliser l'emoji `cta.linkEmoji` (défaut 🔗).
 **⚠️ TIMING — sur les VRAIS MOTS, jamais au prorata du texte.**

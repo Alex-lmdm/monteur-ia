@@ -1,6 +1,11 @@
 # Installer Monteur IA
 
-Ouvre le dossier **monteur-ia-main** dans Claude Code ou Codex, puis envoie ce message :
+Range d'abord le dossier dézippé **monteur-ia-main** dans ton dossier **Vidéos** (Movies sur Mac,
+Videos sur Windows). Évite Documents et le Bureau : sur beaucoup d'ordinateurs, ils sont
+synchronisés avec iCloud ou OneDrive, qui retirent les fichiers du disque pour faire de la place,
+et chaque montage attend alors que tes rushes redescendent.
+
+Ouvre ensuite le dossier **monteur-ia-main** dans Claude Code ou Codex, puis envoie ce message :
 
 ```text
 Lis INSTALL.md et accompagne-moi pour installer Monteur IA. Occupe-toi de la partie technique.
@@ -21,7 +26,11 @@ Tu lui dis ensuite ce que tu aurais fait autrement, et elle retient ton style po
 
 **Pas encore d'agent installé ?** Commence par [Installer l'agent IA](#installer-lagent-ia-avant-tout).
 
-**Pas encore le dossier ?** Dans un dossier vide dédié à tes montages, demande à ton agent :
+**L'app HyperFrames (Mac, Linux) vient ensuite.** L'installation se fait ici, dans Claude Code ou
+Codex ; elle branche aussi ton monteur sur l'app. Tu ouvres ensuite l'accueil de Monteur IA dans
+l'app pour monter avec une timeline (voir le [README](README.md#monter-et-retoucher-dans-lapp-hyperframes-mac-linux)).
+
+**Pas encore le dossier ?** Dans ton dossier Vidéos, demande à ton agent :
 « Télécharge https://github.com/Alex-lmdm/monteur-ia ici, puis lis son INSTALL.md et aide-moi à l'installer. »
 Il doit te guider pour rouvrir le dossier téléchargé si nécessaire.
 
@@ -46,7 +55,8 @@ pour l'utilisateur et ne lui demande pas de le lire.
   Distingue un outil absent d'un outil présent mais non fonctionnel. Ne change rien à cette étape.
 - Commence par un constat réel et rassurant, sans garantir à l'avance que tout réussira.
 - Présente un tableau court avec des **fonctions compréhensibles** : base du système (Node.js),
-  traitement vidéo, moteur de montage, export vidéo, transcription, réglages du projet.
+  outils du monteur (Python), traitement vidéo, moteur de montage, export vidéo, transcription,
+  réglages du projet.
   États : **✅ Déjà prêt**, **À installer**, **À préparer**. Réserve **À réparer** aux échecs constatés.
   Pas de croix rouges pour une absence normale avant l'installation.
 - Pas de liste de commandes, chemins, noms de paquets ou choix de modèles dans ce premier message.
@@ -109,10 +119,28 @@ Procède par étapes idempotentes : vérifier, installer uniquement si nécessai
 Préserve les vidéos, les réglages personnels et les outils déjà fonctionnels. Ne mets pas à jour
 la version HyperFrames épinglée dans ce projet pendant l'installation.
 
+0. **Emplacement** : si le dossier est dans Documents, sur le Bureau ou dans un dossier iCloud
+   Drive ou OneDrive, recommande de le ranger dans Vidéos avant d'installer : ces dossiers sont
+   souvent synchronisés, et une synchronisation qui retire les rushes du disque ralentit chaque
+   montage. Le déplacement se fait dans le Finder (ou l'Explorateur), agent fermé, puis on rouvre
+   le dossier au nouvel endroit. S'il préfère rester où il est, continue.
+
 1. **Node.js 22 minimum** : `node --version`. Absent ou trop ancien : appliquer l'exception ci-dessus.
    Ne pas tenter de l'installer via un gestionnaire de paquets.
+1 bis. **Python 3.9 minimum** (les outils du monteur sont des scripts Python) :
+   - macOS : `python3 --version`. S'il manque, le Mac propose d'installer les « outils de
+     développement en ligne de commande » : c'est la bonne réponse (Homebrew les installe aussi).
+   - Windows : `python --version`, sinon `py --version`. Absent, ou une fenêtre du Microsoft Store
+     s'ouvre : `winget install -e --id Python.Python.3.12`, puis rouvrir l'agent (PATH). Sous
+     Windows, les commandes `python3` des consignes s'écrivent `python` (ou `py`).
+   - **Pillow** (mesure des sous-titres, contrôle de l'export) : `python3 -c "import PIL"`. Absent :
+     `python3 -m pip install --user pillow` (Windows : `python -m pip install pillow`). Refusé avec
+     « externally-managed-environment » (Python de Homebrew) : `brew install pillow`.
 2. **Dépendances** : `npm install` à la racine du projet.
-3. **Navigateur de rendu** : `npx puppeteer browsers install chrome-headless-shell` si absent.
+3. **Navigateur de rendu** : `npx hyperframes browser ensure` (garde un navigateur déjà là, sinon
+   télécharge celui du rendu, environ 400 Mo une fois installé : à annoncer avant le « go » s'il
+   manque, `npx hyperframes browser path` le dit en lecture seule). Jamais `npx puppeteer browsers
+   install` : il tire en plus un Chrome complet, plus de 500 Mo pour rien.
 4. **FFmpeg** : vérifier `ffmpeg -version` et `ffprobe -version`.
    - macOS : `brew install ffmpeg` si nécessaire. Si Homebrew manque, vérifier que son installation
      a été explicitement annoncée et autorisée ; sinon expliquer et demander cet accord.
@@ -121,7 +149,8 @@ la version HyperFrames épinglée dans ce projet pendant l'installation.
      le Microsoft Store, puis reprendre cette étape.
 5. **Whisper** : vérifier `whisper-cli` (macOS : `command -v whisper-cli` ; PowerShell :
    `Get-Command whisper-cli -ErrorAction SilentlyContinue`) et les modèles `ggml-*.bin` dans
-   `~/.cache/monteur-ia/whisper/`, `~/whisper-models/` et `~/.cache/whisper/`.
+   `~/.cache/monteur-ia/whisper/`, `~/.cache/hyperframes/whisper/models/`, `~/whisper-models/` et
+   `~/.cache/whisper/`.
    - Garder un binaire et un modèle déjà fonctionnels, même si le modèle diffère du défaut recommandé.
    - macOS : privilégier `brew install whisper.cpp` avec Homebrew déjà disponible/autorisé.
      Vérifier la disponibilité de la formule ([source Homebrew](https://formulae.brew.sh/formula/whisper.cpp), ancien nom : `whisper-cpp`) ; ne pas promettre un binaire GitHub macOS sans
@@ -137,21 +166,30 @@ la version HyperFrames épinglée dans ce projet pendant l'installation.
 6. **Configuration** : créer `brand.config.json` depuis `brand.config.example.json` seulement s'il
    manque. Compléter les chemins réellement détectés dans `env`, sans écraser la personnalisation.
    Sous Windows, appliquer `PRODUCER_FORCE_SCREENSHOT=true` pour le rendu si nécessaire.
-7. **Skills** : `npx hyperframes skills update`, puis `npm run sync`. Les skills embarqués permettent
-   de continuer si leur mise à jour réseau échoue : vérifier leur présence et signaler ce seul
-   report. Toute erreur de génération ou dépendance nécessaire reste bloquante.
+7. **Instructions et skills** : `npm run sync` (déjà lancé par `npm install`, le relancer ne coûte rien).
+   Les skills sont livrés avec le système, à la version de HyperFrames épinglée : ne lance pas
+   `npx hyperframes skills update`, qui installerait d'autres skills dans la configuration personnelle
+   de Claude Code et de Codex (tous ses projets) au lieu de mettre à jour ceux du dossier.
+   Une erreur de `npm run sync` reste bloquante.
+8. **Branchement** : `node scripts/app-hyperframes.mjs brancher`, sur toutes les machines. Il permet
+   à l'app HyperFrames de lire les consignes du monteur (réglage de Claude Code) et à Codex de les
+   lire en entier (limite de lecture relevée). Il écrit dans la configuration personnelle de
+   Claude Code et de Codex, avec une sauvegarde : l'annoncer dans le plan, avant le « go ».
 
 ### 4. Vérifier avant d'annoncer la réussite
 
-- `npx hyperframes doctor` : Node, FFmpeg/FFprobe et Chrome doivent fonctionner. Docker absent,
+- `npx hyperframes doctor` : Node, FFmpeg/FFprobe et Chrome doivent fonctionner. Docker, TTS (Kokoro)
+  ou BGM (MusicGen) absents, « Some checks failed » pour ces seules lignes,
   une nouvelle version HyperFrames disponible ou une mémoire temporairement basse ne sont pas,
   seuls, la preuve d'une installation ratée. Ne pas mettre à jour HyperFrames pour effacer un avis.
-- Rendre deux secondes de `compositions/exemple-section.html` avec la CLI du projet et vérifier
-  qu'une vidéo non vide est produite. C'est un test technique, pas une commande à donner au client.
+- Rendre l'accueil (5 s) avec la CLI du projet, `npx hyperframes render "<dossier Accueil …>" -o
+  work/test-rendu.mp4`, et vérifier qu'une vidéo non vide est produite, puis la supprimer. C'est
+  un test technique, pas une commande à donner au client.
 - Tester la transcription séparément : créer `work/` si besoin, produire un petit son de test
   avec FFmpeg, puis lancer le binaire Whisper avec le modèle et les chemins de `brand.config.json`.
   Vérifier le code de sortie et le chargement réel du modèle. Un son sans parole peut légitimement
   ne produire aucun mot : ne pas inventer une transcription ni conclure à un échec pour ce seul motif.
+- Vérifier les outils du monteur : `python3 -c "import PIL"` (Windows : `python`) sans erreur.
 - Afficher un bilan bref par fonction : montage, export vidéo, transcription, réglages.
   **✅ Vérifié** seulement si testé avec succès ; sinon **À terminer**, avec la prochaine action.
   Ne jamais annoncer « tout est prêt » tant qu'un test nécessaire reste en échec ou non exécuté.
@@ -166,6 +204,9 @@ Après réussite seulement :
 > de questions : coupes, sous-titres, animations, bruitages. Habillage noir et blanc, ta vidéo
 > reste en couleur. Ensuite, tu me diras tout ce que tu aurais fait autrement, et j'apprendrai
 > ton style pour les prochaines.
+>
+> Sur Mac et Linux, si tu veux voir ton montage sur une timeline, l'app gratuite HyperFrames est en option :
+> ouvre-y le dossier « Accueil » de ton dossier Monteur IA et glisse-y ta vidéo.
 
 Si une vidéo est déjà fournie, commence la première vidéo sans la redemander (fichier agent,
 section 🟢 : montage d'une traite, puis débrief). Si l'utilisateur veut personnaliser avant,
@@ -176,9 +217,9 @@ ouvre `/setup visuel`. **Le setup n'est jamais une condition d'accès au premier
 ## Installer l'agent IA (avant tout)
 
 Le message du début de cette page s'adresse à une IA. Il faut donc d'abord installer **Claude Code** OU **Codex**
-(un seul des deux suffit — prends celui dont tu as l'abonnement).
+(un seul des deux suffit : prends celui dont tu as l'abonnement).
 
-### Option A — Claude Code
+### Option A : Claude Code
 
 1. Télécharge l'application Claude pour ordinateur depuis [le site officiel](https://claude.com/download),
    puis connecte-toi avec ton compte disposant d'un accès à Claude Code.
@@ -189,7 +230,7 @@ Le message du début de cette page s'adresse à une IA. Il faut donc d'abord ins
 La présentation des menus peut évoluer. Le repère à vérifier : **Code, Local, ton dossier sélectionné**.
 Voir la [documentation officielle](https://code.claude.com/docs/en/desktop) si l'écran diffère.
 
-### Option B — Codex
+### Option B : Codex
 
 1. Télécharge l'application de bureau ChatGPT depuis le site officiel, puis connecte-toi avec ton compte.
 2. Ouvre **Codex** et sélectionne le dossier local dézippé **monteur-ia-main** comme projet.
@@ -240,17 +281,30 @@ S'il affiche `v22` (ou plus) : c'est bon, passe à la suite.
 Sinon, télécharge l'installeur **LTS** (.pkg) sur https://nodejs.org et lance-le.
 ✅ Succès : `node --version` affiche `v22.x` ou plus.
 
+**1 bis. Python 3**
+```bash
+python3 --version
+```
+S'il affiche `Python 3.9` ou plus : passe à la suite. Sinon, accepte l'installation des « outils de
+développement en ligne de commande » que le Mac propose (ou installe Homebrew, étape 4, qui les ajoute).
+Puis la librairie d'images (Pillow), si `python3 -c "import PIL"` affiche une erreur :
+```bash
+python3 -m pip install --user pillow
+```
+(Message « externally-managed-environment » : `brew install pillow` à la place.)
+✅ Succès : `python3 --version` affiche `Python 3.9` ou plus, et `python3 -c "import PIL"` ne dit rien.
+
 **2. Dépendances du projet**
 ```bash
 npm install
 ```
 ✅ Succès : un dossier `node_modules/` apparaît, sans erreur rouge à la fin.
 
-**3. Navigateur de rendu (chrome-headless-shell)**
+**3. Navigateur de rendu**
 ```bash
-npx puppeteer browsers install chrome-headless-shell
+npx hyperframes browser ensure
 ```
-✅ Succès : un message « chrome-headless-shell … downloaded ».
+✅ Succès : la commande affiche le chemin du navigateur (trouvé ou téléchargé).
 
 **4. ffmpeg**
 ```bash
@@ -288,7 +342,7 @@ Renseigne dans `brand.config.json` les chemins de ffmpeg et de whisper détecté
 ```bash
 npx hyperframes doctor
 ```
-✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker absent, version plus récente
+✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker, Kokoro ou MusicGen absents, version plus récente
 disponible ou mémoire basse = bénin, ce n'est pas un échec.) Tu peux lancer `/setup visuel` : les
 couleurs et les sous-titres peuvent être personnalisés plus tard. Tu peux aussi envoyer ta vidéo
 et demander un premier montage avec le style Papier, sans questionnaire préalable.
@@ -303,17 +357,33 @@ S'il affiche `v22` ou plus : passe à la suite. Sinon, télécharge l'installeur
 sur https://nodejs.org et lance-le. Rouvre PowerShell après.
 ✅ Succès : `node --version` affiche `v22.x` ou plus.
 
+**1 bis. Python 3**
+```powershell
+python --version
+```
+S'il affiche `Python 3.9` ou plus : passe à la suite. Sinon (message d'erreur, ou le Microsoft Store
+s'ouvre) :
+```powershell
+winget install -e --id Python.Python.3.12
+```
+Puis **ferme et rouvre PowerShell**. Sous Windows, tape `python` là où la formation écrit `python3`.
+Puis la librairie d'images (Pillow) :
+```powershell
+python -m pip install pillow
+```
+✅ Succès : `python --version` affiche `Python 3.12` (ou 3.9 et plus), et `python -c "import PIL"` ne dit rien.
+
 **2. Dépendances du projet**
 ```powershell
 npm install
 ```
 ✅ Succès : un dossier `node_modules\` apparaît, sans erreur.
 
-**3. Navigateur de rendu (chrome-headless-shell)**
+**3. Navigateur de rendu**
 ```powershell
-npx puppeteer browsers install chrome-headless-shell
+npx hyperframes browser ensure
 ```
-✅ Succès : message « … downloaded ».
+✅ Succès : la commande affiche le chemin du navigateur (trouvé ou téléchargé).
 
 **4. ffmpeg**
 ```powershell
@@ -323,7 +393,7 @@ S'il répond : passe à la suite. Sinon :
 ```powershell
 winget install Gyan.FFmpeg
 ```
-Puis **ferme et rouvre PowerShell** (sinon `ffmpeg` reste introuvable — c'est le PATH).
+Puis **ferme et rouvre PowerShell** (sinon `ffmpeg` reste introuvable : c'est le PATH).
 Si `winget` est introuvable : ouvre le **Microsoft Store**, mets à jour « **App Installer** »,
 rouvre PowerShell et réessaie.
 ✅ Succès : après réouverture, `ffmpeg -version` affiche un numéro de version.
@@ -351,7 +421,7 @@ d'environnement `PRODUCER_FORCE_SCREENSHOT=true` (évite les rendus blancs/lents
 ```powershell
 npx hyperframes doctor
 ```
-✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker absent, version plus récente
+✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker, Kokoro ou MusicGen absents, version plus récente
 disponible ou mémoire basse = bénin, ce n'est pas un échec.) Tu peux lancer `/setup visuel` : les
 couleurs et les sous-titres peuvent être personnalisés plus tard. Tu peux aussi envoyer ta vidéo
 et demander un premier montage avec le style Papier, sans questionnaire préalable.
@@ -366,7 +436,7 @@ Ton « App Installer » est trop vieux ou absent. Ouvre le Microsoft Store, cher
 fais d'abord les mises à jour Windows.
 
 **ffmpeg installé mais « commande introuvable »**
-C'est le PATH. **Ferme et rouvre** ton terminal après l'installation — le nouveau chemin n'est
+C'est le PATH. **Ferme et rouvre** ton terminal après l'installation : le nouveau chemin n'est
 pris en compte que dans un terminal ouvert après coup. Si ça persiste, redémarre la machine.
 
 **Rendu blanc ou très lent (Windows)**

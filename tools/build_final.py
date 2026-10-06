@@ -16,7 +16,7 @@ fait donc en ffmpeg, en recomposant les couches natives :
       + le VISAGE croppe dans le DERUSH EN PLEINE RESOLUTION (moitie basse sur les sections
         "split", plein cadre sur les sections "face")
       + les B-ROLLS (sections {"media": ...}), eux aussi natifs
-      + renders/overlay.mov : tout le motion design + les sous-titres (alpha)
+      + work/overlay.mov : tout le motion design + les sous-titres (alpha)
       + l'audio de base.mp4
 
 D'OU VIENT LE VISAGE
@@ -43,11 +43,12 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import brand_style
 import sections
+from lieux import MAISON  # réglages du client, partagés par tous les Reels
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 BASE = ROOT / "assets/video/base.mp4"
-OVERLAY = ROOT / "renders/overlay.mov"
-OUT = ROOT / "renders/FINAL.mp4"
+OVERLAY = ROOT / "work/overlay.mov"
+OUT = ROOT / "exports/FINAL.mp4"
 
 SEC = sections.sections()
 DUR = sections.DURATION
@@ -58,7 +59,7 @@ MEDIAS = [s for s in SEC if s.get("media")]
 
 def load_config():
     for name in ("brand.config.json", "brand.config.example.json"):
-        p = ROOT / name
+        p = MAISON / name
         if p.exists():
             return json.loads(p.read_text(encoding="utf-8"))
     return {}
@@ -67,64 +68,10 @@ def load_config():
 CFG = (load_config().get("montage") or {})
 
 
-def crop_from_transform(transform, top, origin=None):
-    """Traduit un `transform` CSS du master en `crop=w:h:x:y` ffmpeg.
+# Le calcul du cadrage est partagé avec tools/build_faces.py (export natif) : même zone du rush.
+from cadrage import crops, face_source as _face_source, scale_crop  # noqa: E402
 
-    La <video> du master est une surface plein cadre 1080x1920 transformee. Deux cas, selon
-    comment le master cadre le visage (cf skill motion-design §3) :
-
-    - SPLIT — `transform-origin: 0 0` + `translate(Tx, Ty) scale(S)`. La zone SOURCE visible
-      dans la fenetre [top .. 1920] est `src_x = (0 .. 1080 - Tx) / S`,
-      `src_y = (top - Ty .. 1920 - Ty) / S`.
-    - PLEIN ECRAN — `scale(S)` autour d'un `transform-origin` (ox, oy). L'agrandissement se fait
-      AUTOUR de ce point, donc la zone visible est decalee de `o * taille * (1 - 1/S)`.
-      Ignorer l'origin donnerait un cadrage faux (visage decentre a l'export alors qu'il etait
-      bon dans le studio) — c'est exactement le piege que ce script supprime.
-    """
-    if not transform:
-        return None
-    scale = re.search(r"scale\(([\d.]+)\)", transform)
-    trans = re.search(r"translate\(\s*(-?[\d.]+)px\s*,\s*(-?[\d.]+)px\s*\)", transform)
-    s = float(scale.group(1)) if scale else 1.0
-    w = round(1080 / s)
-    h = round((1920 - top) / s)
-
-    if trans:
-        tx, ty = float(trans.group(1)), float(trans.group(2))
-        x = round(-tx / s)
-        y = round((top - ty) / s)
-    else:
-        ox, oy = parse_origin(origin)
-        x = round(ox * 1080 * (1 - 1 / s))
-        y = round(oy * 1920 * (1 - 1 / s))
-
-    x, y = max(x, 0), max(y, 0)
-    w, h = min(w, 1080 - x), min(h, 1920 - y)
-    return f"{w}:{h}:{x}:{y}"
-
-
-def parse_origin(origin):
-    """`transform-origin` CSS -> fractions (ox, oy). Accepte « center 34% », « 50% 34% », « 0 0 »."""
-    mots = {"left": 0.0, "center": 0.5, "right": 1.0, "top": 0.0, "bottom": 1.0}
-    parts = (origin or "center center").split()
-    vals = []
-    for i, mot in enumerate(parts[:2]):
-        if mot in mots:
-            vals.append(mots[mot])
-        elif mot.endswith("%"):
-            vals.append(float(mot[:-1]) / 100)
-        else:
-            vals.append(float(re.sub(r"[^\d.\-]", "", mot) or 0) / (1080 if i == 0 else 1920))
-    while len(vals) < 2:
-        vals.append(0.5)
-    return vals[0], vals[1]
-
-
-FACE_CROP = CFG.get("faceCrop") or crop_from_transform(CFG.get("splitTransform"), 920) \
-    or "771:714:154:364"
-FULLFACE_CROP = CFG.get("fullFaceCrop") or crop_from_transform(
-    CFG.get("fullFaceTransform"), 0, CFG.get("fullFaceOrigin") or "center 34%") \
-    or "771:1371:154:187"
+FACE_CROP, FULLFACE_CROP = crops(CFG)
 
 if not BASE.exists() or not OVERLAY.exists():
     manquant = BASE if not BASE.exists() else OVERLAY
@@ -134,50 +81,9 @@ if not BASE.exists() or not OVERLAY.exists():
     raise SystemExit(1)
 
 
-def probe(path):
-    """(largeur, hauteur, color_transfer, duree) du flux video."""
-    out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
-                          "stream=width,height,color_transfer,duration", "-of", "json", str(path)],
-                         capture_output=True, text=True).stdout
-    s = (json.loads(out or "{}").get("streams") or [{}])[0]
-    return (int(s.get("width") or 0), int(s.get("height") or 0), s.get("color_transfer") or "",
-            float(s.get("duration") or 0))
-
-
-def same_images(hq, t):
-    """PSNR d'une image de base.mp4 contre la meme image du derush reduite : > 30 dB = meme video."""
-    g = "[0:v]scale=1080:1920[a];[1:v]scale=1080:1920:flags=lanczos[b];[a][b]psnr"
-    err = subprocess.run(["ffmpeg", "-nostdin", "-ss", f"{t:.3f}", "-i", str(BASE), "-ss", f"{t:.3f}",
-                          "-i", str(hq), "-filter_complex", g, "-frames:v", "1", "-f", "null", "-"],
-                         capture_output=True, text=True).stderr
-    m = re.search(r"average:(inf|[\d.]+)", err)
-    return bool(m) and (m.group(1) == "inf" or float(m.group(1)) > 30)
-
-
 def face_source():
     """Ou relire le visage : (fichier, facteur d'echelle vs base.mp4, raison si repli sur base)."""
-    src = sections.CUTS.get("source")
-    hq = ROOT / src if src else None
-    if not hq or not hq.exists():
-        return BASE, 1.0, f"derush pleine resolution introuvable ({src or 'aucune source dans le cuts.json'})"
-    w, h, trc, dur = probe(hq)
-    k = w / 1080
-    if k < 1.05:
-        return BASE, 1.0, None   # rush deja en 1080 : base.mp4 porte deja tout le detail
-    if abs(h - 1920 * k) > 2:
-        return BASE, 1.0, f"le derush ({w}x{h}) n'est pas au format 9:16 de base.mp4"
-    if trc in ("arib-std-b67", "smpte2084"):
-        return BASE, 1.0, "le derush est en HDR (base.mp4 est tonemappe, les couleurs differeraient)"
-    if abs(dur - probe(BASE)[3]) > 0.1 or not same_images(hq, DUR / 2):
-        return BASE, 1.0, f"{src} ne montre pas les memes images que base.mp4 (base.mp4 a refaire depuis ce derush ?)"
-    return hq, k, None
-
-
-def scale_crop(crop, k, src_w, src_h):
-    """`w:h:x:y` en pixels de base.mp4 -> la meme zone dans une source k fois plus grande."""
-    w, h, x, y = (round(float(v) * k) for v in crop.split(":"))
-    x, y = min(max(x, 0), src_w - 2), min(max(y, 0), src_h - 2)
-    return f"{min(w, src_w - x)}:{min(h, src_h - y)}:{x}:{y}"
+    return _face_source(ROOT, BASE, sections.CUTS, DUR)
 
 
 def enable(wins):
@@ -241,10 +147,10 @@ if WINSFULL:
 if MEDIAS:
     print(f"b-rolls natifs          : {', '.join(s['media'] for s in MEDIAS)}")
 print("composite ...")
-r = subprocess.run(cmd, capture_output=True, text=True)
+r = subprocess.run(cmd, capture_output=True, encoding="utf-8", errors="replace")
 print("ffmpeg exit:", r.returncode)
 if r.returncode:
     print(r.stderr[-1500:])
     raise SystemExit(1)
-print(f"{OUT.relative_to(ROOT)} — {DUR}s")
+print(f"{OUT.relative_to(ROOT)} : {DUR}s")
 print("Etape suivante : python3 tools/build_sfx.py (SFX + musique), APRES validation du montage.")

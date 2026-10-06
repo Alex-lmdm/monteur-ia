@@ -135,11 +135,15 @@ Préférences de pacing — **valeurs par défaut recommandées, lues depuis `br
     début du mot. Le garder **positif**.
   - Les 2-3 fins de voix les plus basses : étendre leur `end` juste assez pour ne pas clipper
     (l'étape 6 le confirme).
+  - **Ne fusionne jamais deux îlots séparés par un blanc pour en faire une prise.** Un îlot très
+    court en tête ou en queue (souffle, clic de langue : moins de 0,25 s, sans mot) se retire : la
+    prise commence à l'attaque de la parole et finit sur la dernière syllabe. Sinon on entend
+    souffle + blanc à la coupe (mesuré : 0,59 s au lieu de 0,07 s).
   - Cible mesurée : moy ≈ 0,10 s, max ≈ 0,14 s (mesurer les vrais écarts inter-cut en excluant les
     pauses internes aux phrases, qui sont naturelles et à garder).
 - Sortie **en pleine résolution** (celle du rush, ex. 1728×3072 pour une DJI), `libx264 -crf 14`,
-  `aac 192k`, `-r 30000/1001`. **Ne jamais réduire en 1080×1920 ici** : à l'export, le visage est
-  recadré dans ce fichier puis agrandi (`tools/build_final.py`). Réduit dès le dérush (ancien réglage
+  `aac 192k`, `-r 30000/1001`. **Ne jamais réduire en 1080×1920 ici** : le visage est pré-cadré
+  dans ce fichier pour le montage et l'export (`tools/build_faces.py`). Réduit dès le dérush (ancien réglage
   1080 crf 20), il ne gardait qu'un tiers de son détail (mesuré sur un rush DJI) ; en pleine
   résolution il en garde ~80 %. Le 1080×1920 du studio se fait plus tard (`base.mp4`, skill
   `motion-design` étape 3).
@@ -157,13 +161,23 @@ critères sont remplis :
 ffmpeg -y -i work/d_out.mp4 -ar 16000 -ac 1 work/d_check.wav
 whisper-cli -m $MODEL -l <LANG> -oj -of work/d_check work/d_check.wav   # puis re-parser
 ```
-De cette re-transcription, **écrire `<projet>/derush/<cut>_timeline.json`** : les timestamps par
-phrase sur la timeline du cut. C'est le contrat d'interface avec la suite (sous-titres + beats du
-motion design) — le livrable n'existe pas sans ça.
+De cette re-transcription, **écrire `<projet>/derush/<cut>_timeline.json`** : le texte par phrase
+et ses repères sur la timeline du cut, pour vérifier le texte et écrire le motion. Les frontières de
+section et des sous-titres se calent, elles, sur `<cut>_cuts.json` (étape 7bis).
+
+**Puis les coupes, mesurées** : `python3 tools/ecarts_derush.py` mesure le blanc réel à chaque
+coupe de la vidéo livrée (souffle isolé compris). Cible 0,10 s, jamais plus de 0,20 s : une coupe
+signalée « traîne » se corrige (recaler l'îlot de la prise qui suit, rebuild, re-mesurer) **avant**
+de montrer le dérush au créateur.
 
 **(b) Le bar final = l'oreille du créateur.** Livrer explicitement le cut **pour validation à
-l'écoute** : c'est le seul point non automatisable à 100 %. S'il signale un doublon, **zoomer** sur
-la zone :
+l'écoute** : c'est le seul point non automatisable à 100 %. Le cut se regarde **dans le montage** :
+`python3 tools/apercu_derush.py derush/<cut>.mp4` le pose plein écran dans `index.html` (copie
+légère, sans motion). Dans l'app HyperFrames, dis-lui qu'il est dans le lecteur et sur la timeline,
+prêt à écouter ; **ne l'ouvre pas dans le Finder**. Hors de l'app, révèle aussi le fichier
+(`open -R`, `explorer /select,`). Après le nettoyage Adobe (étape 7), relance l'aperçu sur
+`<cut>_enhanced.mp4`. L'étape 4 le remplace par le vrai montage (`build_master.py --write`).
+S'il signale un doublon, **zoomer** sur la zone :
 ```bash
 ffmpeg -y -ss <a> -to <b> -i work/d_audio.wav -ar 16000 -ac 1 work/z.wav
 whisper-cli -m $MODEL -l <LANG> -ml 1 -sow -wt 0.01 -oj -of work/z work/z.wav   # mot-à-mot, OK sur slice courte
@@ -246,8 +260,8 @@ Implémentation de référence : `tools/cut_boundaries.py`.
 ### 8. Livrables (dans `<projet>/derush/`)
 
 - `<cut>_enhanced.mp4` — le dérush final, audio nettoyé, **pleine résolution** (étape 7). C'est
-  aussi la source du visage à l'export final : `build_final.py` le retrouve par le champ `source` du
-  `<cut>_cuts.json`. Ne pas le supprimer ni le remplacer avant l'export.
+  aussi la source du visage du montage et de l'export : `build_faces.py` le retrouve par le champ
+  `source` du `<cut>_cuts.json`. Ne pas le supprimer ni le remplacer avant l'export.
 - **`<cut>_cuts.json` — les VRAIS points de coupe (étape 7bis). C'est LA source de vérité des
   frontières de section du montage ET des bornes de phrase des sous-titres.**
 - `<cut>_timeline.json` — re-transcription du cut (étape 6). Sert à **vérifier le texte**, PAS à
