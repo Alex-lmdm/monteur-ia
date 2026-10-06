@@ -539,3 +539,52 @@ revue. Tu valides toi-même chaque section sur snapshots, et tu découpes les so
 ### 12.1 Logos → skill theSVG
 
 `npx skills add glincker/thesvg`. CDN : `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/{slug}/{variant}.svg` ; registre des slugs : `.../src/data/icons.json`. **Toujours les couleurs d'origine** (pas de recolorage mono). **Vendre en local** (`assets/logos/`), jamais de CDN au rendu (déterminisme). Sur fond sombre, marques monochromes (GitHub…) → variant `dark` (= logo blanc).
+
+### 12.2 Fluidité : faire vite, sans re-travail
+
+Version complète des réflexes résumés dans le fichier agent (section « Fluidité »).
+
+> Constat d'audit : le **compute réel** (ffmpeg/whisper/render) pèse à peine **~2-3 %** du temps.
+> Le temps part dans les **itérations** (assets refaits 4-6×) et le **volume de sortie**
+> (réécritures HTML entières, longs messages), jamais dans la machine.
+
+1. **Une session par grosse étape.** Ne pas enchaîner script → dérush → montage → SFX → publication
+   dans un seul contexte (contexte saturé → auto-compaction en plein montage). `/clear` entre les
+   étapes lourdes. Première vidéo : pas de `/clear` demandé au client, la continuité passe par
+   `work/premiere-video.md`.
+2. **Cadrer AVANT de produire l'asset** (dérush, b-roll, écran plein) : demander la cible précise
+   **une seule fois** au lieu de deviner par itérations. Dérush → appliquer d'emblée les valeurs du
+   bloc `derush` de `brand.config.json` (`padStart`, `padEnd`, `silenceDb`, `islandDuration`), pas
+   de re-tune au jugé.
+3. **Valider le CONCEPT motion sur 1 snapshot** d'une section-témoin **avant** de décliner toutes
+   les sections → évite les refontes « c'est moche ».
+4. **Un seul contrôle visuel : `hyperframes snapshot`** (déterministe, zéro cache navigateur). Le
+   navigateur sert **uniquement au visionnage de la vidéo finale**. **Versionner les assets dès le
+   départ** (`hook-broll-v2.mp4`…) pour ne jamais se battre avec le cache studio.
+5. **Serveur preview vivant toute la session** (`npm run dev` en arrière-plan, lancé une fois) : ne
+   pas le tuer ni le relancer.
+6. **Éditer, pas réécrire** : `Edit` ciblé plutôt que `Write` d'un HTML entier (chaque réécriture
+   coûte 9-23 s). Réponses de review courtes. Peu de délibération sur le rote (lint, transcode,
+   remux).
+7. **hyperframes en local** (`npm i -D hyperframes`) plutôt que `npx --yes hyperframes@version`
+   (re-résolution réseau à chaque appel).
+
+### 12.3 Clôture du reel (étape 8, après publication)
+
+Une fois le reel posté, on remet le plan de travail à zéro : `python3 tools/close_reel.py <slug>`
+(l'en-tête du script fait foi).
+
+- **Archive de l'état final, tout en local** (aucun compte GitHub ni push requis) : avec git, le
+  script committe et tague `reel/<slug>` tout seul, en initialisant un repo local au besoin ; sans
+  git, il copie le projet du reel vers le dossier Vidéos (`reels-publies/<slug>/projet/`).
+- Copie les masters `renders/*FINAL*` vers `~/Movies/reels-publies/<slug>/` (Windows :
+  `~/Videos/…`, hors du projet).
+- Vide `renders/`, `work/`, `derush/`, `compositions/`, `assets/video/` et les restes à la racine
+  (`snapshots/`, `probe/`, `overlay.html`), en gardant une note « débrief à faire » si le débrief
+  de la première vidéo n'a pas eu lieu.
+- Remet les fichiers livrés depuis `templates/demo/` (master d'aperçu, placeholder `base.mp4`,
+  outils du reel remis en mode démo) : le projet redevient celui d'un ZIP neuf, réglages du client
+  intacts (`brand.config.json`, ses assets).
+- **Ne JAMAIS archiver un vieux reel dans un dossier du projet** (le studio scanne tout le projet
+  → il polluerait la sidebar de l'éditeur) : la récupération se fait via
+  `git checkout reel/<slug> -- <chemins>` (ou le dossier copié).

@@ -41,8 +41,8 @@ test('un dossier neuf fonctionne en Papier sans identité ni questionnaire', (t)
   assert.equal(fs.existsSync(path.join(dir, 'brand.config.json')), false);
   const codex = read(dir, 'AGENTS.md');
   const claude = read(dir, 'CLAUDE.md');
-  assert.match(codex, /Codex — \*\*ouvre le fichier\*\*/);
-  assert.match(claude, /Claude Code — utilise l'outil/);
+  assert.match(codex, /Codex : \*\*ouvre le fichier\*\*/);
+  assert.match(claude, /Claude Code : utilise l'outil/);
   assert.match(codex, /Le setup n'est jamais un prérequis/);
   assert.match(codex, /references\/premier-montage.md/);
   assert.doesNotMatch(codex + claude, /\{\{#|\{\{\//);
@@ -102,6 +102,31 @@ test('les préférences apprises au débrief arrivent dans les fichiers agent', 
   }
   sync(dir, '--template');
   assert.doesNotMatch(read(dir, 'CLAUDE.md'), /Pas d'animation par-dessus le visage/);
+});
+
+// Codex lit les AGENTS.md jusqu'à project_doc_max_bytes (32 Kio par défaut, cumulé sur la chaîne)
+// et tronque la fin sans prévenir. Le template livré garde 2 Kio de marge pour les préférences
+// apprises au débrief ; une fois personnalisé, il doit toujours tenir sous la limite.
+test('AGENTS.md et CLAUDE.md tiennent dans la limite de lecture de Codex', (t) => {
+  const LIMIT = 32 * 1024;
+  const MARGIN = 2 * 1024;
+  const dir = fixture(t);
+  const size = (file) => fs.statSync(path.join(dir, file)).size;
+  sync(dir, '--template');
+  for (const file of ['AGENTS.md', 'CLAUDE.md']) {
+    assert.ok(size(file) <= LIMIT - MARGIN,
+      `${file} livré : ${size(file)} octets, max ${LIMIT - MARGIN}. Déplacer du détail de templates/AGENT.md.tpl vers un skill.`);
+  }
+  const own = config();
+  own.brand = { ...own.brand, name: 'Une marque au nom assez long', handle: '@une.marque.au.nom.long', firstName: 'Prénom' };
+  own.montage.preferences = Array.from({ length: 8 }, (_, i) =>
+    `Préférence ${i + 1} : une consigne de montage apprise au débrief, formulée en une phrase complète.`);
+  own.setup.firstVideoDone = true;
+  write(dir, 'brand.config.json', own);
+  sync(dir);
+  for (const file of ['AGENTS.md', 'CLAUDE.md']) {
+    assert.ok(size(file) <= LIMIT, `${file} personnalisé : ${size(file)} octets, Codex en tronquerait la fin.`);
+  }
 });
 
 test('garder Papier compte comme un choix et la taille des sous-titres est réglable', (t) => {
