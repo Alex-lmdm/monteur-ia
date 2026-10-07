@@ -18,8 +18,8 @@
 {{/LIEU_MAISON}}{{#LIEU_ACCUEIL}}> 📍 **Tu es dans l'accueil de Monteur IA** (vignette de l'app HyperFrames). On n'y monte
 > rien : chaque Reel a son propre projet.
 > - Monteur IA pas encore installé (`../node_modules/` absent) : lis `../INSTALL.md` et suis-le.
-> - Vidéo glissée, « on monte celle-ci », « nouveau Reel » : demande le sujet en quelques mots
->   s'il manque, lance `python3 ../tools/nouveau_reel.py "<sujet>" --video "<vidéo glissée>" --ouvrir`
+> - Vidéo glissée pour un Reel (une story : bloc Système Stories), « on monte celle-ci », « nouveau
+>   Reel » : demande le sujet en quelques mots s'il manque, lance `python3 ../tools/nouveau_reel.py "<sujet>" --video "<vidéo glissée>" --ouvrir`
 >   (la copie faite par l'app part dans le Reel), puis dis : « Ton Reel est ouvert dans la liste
 >   des projets. Il montre d'abord un modèle : ta vidéo y entre au dérush. Écris-lui « On monte
 >   celle-ci ». »
@@ -34,7 +34,10 @@
 >   (`--depuis .` pour une variante de celui-ci ; le bouton Duplicate de l'app le sortirait du
 >   dossier Monteur IA, sans ses réglages ni ses sons).
 
-{{/LIEU_REEL}}Ce projet sert **un seul format** : les Reels Instagram de {{FIRST_NAME}} ({{BRAND_HANDLE}}) =
+{{/LIEU_REEL}}{{#LIEU_STORY}}> 📍 **Tu es dans une story** (un projet de l'app HyperFrames, extension Système Stories) : suis le
+> bloc « Système Stories » plus bas, skill `story`. Le pipeline Reel de ce fichier ne s'applique pas ici.
+
+{{/LIEU_STORY}}Ce projet sert **un seul format** : les Reels Instagram de {{FIRST_NAME}} ({{BRAND_HANDLE}}) =
 **vraie vidéo talking-head + motion design {{BRAND_NAME}} par-dessus, section par section**, avec
 sous-titres, SFX et musique. Format **vertical 1080×1920, 30 fps**.
 

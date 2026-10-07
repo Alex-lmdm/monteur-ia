@@ -567,3 +567,16 @@ test('MISE-A-JOUR.md : télécharger, montrer le plan, appliquer, brancher, avec
   bash(nettoyage.replaceAll('<TMP>', tmp));
   assert.equal(fs.existsSync(tmp), false, 'dossier temporaire supprimé');
 });
+
+
+test("Système Stories d'avant la story montée comme un Reel (déjà écrite pour les Reels) est à mettre à jour", async (t) => {
+  const { EXTENSIONS } = await import(pathToFileURL(path.join(root, 'scripts/mettre-a-jour.mjs')).href);
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-stories-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(dir, 'tools'));
+  const story = path.join(dir, 'tools/story.py');
+  fs.writeFileSync(story, 'from lieux import MAISON as ROOT\n');
+  assert.equal(EXTENSIONS['systeme-stories'].aJour(dir), false, 'une story doit devenir un projet de l’app');
+  fs.writeFileSync(story, 'from lieux import MAISON as ROOT\ndef composer(slug, publiee=False, ecraser=False, auto=True):\n    pass\n');
+  assert.equal(EXTENSIONS['systeme-stories'].aJour(dir), true);
+});

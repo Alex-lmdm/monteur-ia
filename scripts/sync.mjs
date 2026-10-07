@@ -432,10 +432,12 @@ function generateAgentFiles(config, style) {
       tropLong = Math.max(tropLong, Buffer.byteLength(contenu));
       ecrireSiDifferent(path.join(lieu.dir, file), contenu);
     }
-    if (lieu.bloc !== "LIEU_REEL") log(`  généré  ${rel(path.join(lieu.dir, "CLAUDE.md"))} + AGENTS.md`);
+    if (lieu.bloc !== "LIEU_REEL" && lieu.bloc !== "LIEU_STORY") log(`  généré  ${rel(path.join(lieu.dir, "CLAUDE.md"))} + AGENTS.md`);
   }
   const nbReels = reels().length;
   if (nbReels > 0) log(`  généré  CLAUDE.md + AGENTS.md dans ${nbReels} Reel(s)`);
+  const nbStories = stories().length;
+  if (nbStories > 0) log(`  généré  CLAUDE.md + AGENTS.md dans ${nbStories} story(s)`);
   if (tropLong > LIMITE) {
     warn(`consignes générées de ${tropLong} octets, au-delà des ${LIMITE} que Codex lit par défaut : lance`
       + " node scripts/app-hyperframes.mjs brancher, et raccourcis les préférences apprises ou un bloc d'extension.");
@@ -447,7 +449,7 @@ function generateAgentFiles(config, style) {
 }
 
 // ---------------------------------------------------------------------------
-// 2 bis. Lieux : la maison, l'accueil et les Reels (un Reel = un projet HyperFrames)
+// 2 bis. Lieux : la maison, l'accueil, les Reels et les stories (un Reel ou une story = un projet HyperFrames)
 // ---------------------------------------------------------------------------
 // La racine n'est jamais un projet HyperFrames (l'app scanne tout le dossier d'un projet) :
 // l'accueil et chaque Reel sont des projets autonomes, avec leur copie du style et des outils.
@@ -469,12 +471,16 @@ const subdirs = (dir) =>
 
 const accueils = () => subdirs(ROOT).filter((d) => readMeta(d)?.monteurIa?.lieu === "accueil");
 const reels = () => subdirs(path.join(ROOT, "reels")).filter((d) => readMeta(d)?.monteurIa?.lieu === "reel");
+// Stories de l'extension Système Stories : un projet de l'app par story (visionneuse de la vidéo ffmpeg),
+// dont les consignes viennent du bloc LIEU_STORY de l'extension.
+const stories = () => subdirs(path.join(ROOT, "stories")).filter((d) => readMeta(d)?.monteurIa?.lieu === "story");
 
 function lieux() {
   return [
     { dir: ROOT, maison: "", bloc: "LIEU_MAISON", nom: "" },
     ...accueils().map((dir) => ({ dir, maison: "../", bloc: "LIEU_ACCUEIL", nom: path.basename(dir) })),
     ...reels().map((dir) => ({ dir, maison: "../../", bloc: "LIEU_REEL", nom: path.basename(dir) })),
+    ...stories().map((dir) => ({ dir, maison: "../../", bloc: "LIEU_STORY", nom: path.basename(dir) })),
   ];
 }
 

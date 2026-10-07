@@ -745,3 +745,30 @@ test('les messages des outils et des scripts sont sans tiret long', () => {
   }
   assert.deepEqual(fautifs, []);
 });
+
+
+test("une story de l'extension Système Stories est un projet, avec le bloc LIEU_STORY de l'extension", (t) => {
+  const dir = fixture(t);
+  // Bloc d'extension réduit à sa mécanique : une ligne par lieu, comme celui du Système Stories.
+  const tpl = path.join(dir, 'templates/AGENT.md.tpl');
+  fs.appendFileSync(tpl, "\n<!-- BEGIN EXTENSION: systeme-stories -->\n{{#LIEU_ACCUEIL}}- Story demandée ici : init --ouvrir\n"
+    + "{{/LIEU_ACCUEIL}}{{#LIEU_STORY}}- Tu es dans une story : `python3 ../../tools/story.py`\n{{/LIEU_STORY}}"
+    + "<!-- END EXTENSION: systeme-stories -->\n");
+  write(dir, 'stories/story-offre-1/meta.json', { id: 'story-offre-1', name: 'story-offre-1', monteurIa: { lieu: 'story', etat: 'en-cours' } });
+  write(dir, 'stories/ancienne/story.json', {});   // une story d'avant (sans meta.json) n'est pas un projet
+  sync(dir);
+  const story = path.join(dir, 'stories/story-offre-1');
+  const claude = read(story, 'CLAUDE.md');
+  assert.match(claude, /Tu es dans une story/);
+  assert.match(claude, /`\.\.\/\.\.\/\.claude\/skills\/<nom>\/SKILL\.md`/);
+  assert.doesNotMatch(claude, /Tu es dans le Reel|Tu es dans l'accueil|Tu es à la racine|Story demandée ici|\{\{#|\{\{MAISON\}\}/);
+  assert.ok(Buffer.byteLength(read(story, 'AGENTS.md')) <= 32 * 1024, 'AGENTS.md de la story au-delà de la limite de Codex');
+  assert.equal(fs.existsSync(path.join(dir, 'stories/ancienne/CLAUDE.md')), false);
+  const accueil = fs.readdirSync(dir).find((n) => readMeta(path.join(dir, n))?.monteurIa?.lieu === 'accueil');
+  assert.match(read(path.join(dir, accueil), 'CLAUDE.md'), /Story demandée ici/);
+  assert.doesNotMatch(read(dir, 'CLAUDE.md'), /Tu es dans une story|Story demandée ici/);
+});
+
+function readMeta(dir) {
+  try { return JSON.parse(fs.readFileSync(path.join(dir, 'meta.json'), 'utf8')); } catch { return null; }
+}

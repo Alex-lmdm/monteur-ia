@@ -78,8 +78,11 @@ const ecritePourLesReels = (outil) => (client) => existe(path.join(client, outil
 export const EXTENSIONS = {
   "double-ia": { nom: "Ton Double IA", depot: "Alex-lmdm/double-ia", outils: ["double_ia.py", "build_audio_cut.py"],
     aJour: ecritePourLesReels("tools/double_ia.py") },
+  // Depuis le 07/10/2026, une story est un projet de l'app, montée comme un Reel : la version d'avant, déjà
+  // écrite pour « un Reel = un projet », est à mettre à jour aussi.
   "systeme-stories": { nom: "Système Stories", depot: "Alex-lmdm/systeme-stories", outils: ["story.py", "story_text.py"],
-    aJour: ecritePourLesReels("tools/story.py") },
+    aJour: (client) => existe(path.join(client, "tools/story.py"))
+      && /\bdef composer\(/.test(lireTexte(path.join(client, "tools/story.py"))) },
   // Privé (sons sous licence) : le client retélécharge pack-sfx.zip depuis sa formation.
   "pack-sfx": { nom: "Pack SFX", depot: null, outils: ["sfx.py", "sfx_mix.py"], versionMin: "1.1.0",
     aJour: (client) => comparerVersions(versionPackSfx(client) ?? "0", "1.1.0") >= 0 },
