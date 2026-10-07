@@ -120,18 +120,14 @@ timeline en plus. Rien d'obligatoire, tout reste faisable dans Claude Code ou Co
    Claude Code (pour Codex : Settings > Agent).
 4. **Nouvelle vidéo** : dans l'accueil, glisse ta vidéo brute et écris « On monte celle-ci ». Le
    monteur crée le Reel et l'ouvre dans l'app. Il montre d'abord un modèle : ta vidéo y entre au dérush.
-   Écris-lui la même phrase dans ce Reel. Pas encore filmé ? Écris « écris-moi un script sur… » dans
-   l'accueil : il crée le Reel, tu l'ouvres, tu écris « On y va » et le script s'écrit dedans ; après
-   le tournage, glisse la vidéo dans ce même Reel.
+   Écris-lui la même phrase dans ce Reel.
 5. **Retouches** : en le demandant au monteur, comme d'habitude, ou à la souris sur la timeline
    (déplacer un plan, un son, régler un volume).
 6. **Export** : le bouton **Export** sort la vidéo finale complète, sons et musique compris.
 
-**Tout part de l'accueil.** Le bouton **New project** et le champ « Make something. » de l'app
-créent un projet hors de ton dossier Monteur IA : ton monteur n'y est pas, l'IA qui répond ne connaît
-ni ton style ni tes sons. Dans l'app, n'utilise pas non plus le bouton **Duplicate** sur un Reel : la
-copie sortirait de ton dossier Monteur IA, sans tes réglages ni tes sons. Demande une variante au
-monteur. Pour cacher un Reel de la liste : **Archive**.
+Dans l'app, n'utilise pas le bouton **Duplicate** sur un Reel : la copie sortirait de ton dossier
+Monteur IA, sans tes réglages ni tes sons. Demande une variante au monteur. Pour cacher un Reel de
+la liste : **Archive**.
 
 ---
 
