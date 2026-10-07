@@ -1,6 +1,6 @@
 {
   "ref": "HEAD",
-  "versions": 52,
+  "versions": 54,
   "fichiers": {
     ".agents/skills/animejs/SKILL.md": ["9eeea2bf2176"],
     ".agents/skills/contribute-catalog/SKILL.md": ["db570cff8234"],
@@ -1019,7 +1019,7 @@
     "CLAUDE.md": ["06a234e85731","0c3fb5e37d5f","1954c3755045","23da92ff556f","26664b453dd8","41f488baeffc","44c49264c648","552ecbd46f2d","7cf2da7031cb","839c693a4bae","ae30434b68f4","c6e83416c727","d0782c14faba","d86177013a0c","dadedfab174e","dff35cb43126","e349552f309a","f06fd2186342","f8ea75858e48"],
     "INSTALL.md": ["0bd789bb7ec0","361e305ab0ee","3aebc81c1e1f","86d934e40b80","89c3f4732f25","95c19da06677","b11d0dcfe7c0","b9f489317077","dc21cfce62ac","e09832d1cb02","ffd78e1120e0"],
     "MISE-A-JOUR.md": ["f417b9c5847a","z:7f3ab68c0a05"],
-    "README.md": ["1e50ffc7c2a8","496538fe253e","4a1a1650a518","72675808c651","9153a3f36d63","a317157e385a","a3e56c29a69e"],
+    "README.md": ["1c53ac4bec24","1e50ffc7c2a8","496538fe253e","4a1a1650a518","72675808c651","9153a3f36d63","a317157e385a","a3e56c29a69e"],
     "assets/fonts/Anton-400.ttf": ["3d2a0014c30d"],
     "assets/fonts/Anton-400.woff2": ["69d48b9af8be"],
     "assets/fonts/ArchivoBlack-400.ttf": ["5e51c6238ac5"],
@@ -1103,7 +1103,7 @@
     "scripts/mettre-a-jour.test.mjs": ["04ca1598a8f9","36ea3f3411d6","44dc5ef30184"],
     "scripts/sync.mjs": ["08ca8034890e","69176765b8d3","7c5929776dcd","84c7f475c03e","a9770c844b5f","e1869bfe7fe4","e1a7a4e72f78","e4c98903a3fc","f0ac613ea182"],
     "scripts/sync.test.mjs": ["0cca296bd0f3","1195775c84d2","3714605bf58f","a14413a122c3","b25201408ee5","b530d100072e","c2a6ea5127c9"],
-    "scripts/versions-livrees.json": ["206e72951694","4385858a7f94","7987b66bf4c0","b8cf0b655296","db3a58aefa98"],
+    "scripts/versions-livrees.json": ["206e72951694","4385858a7f94","7987b66bf4c0","b8cf0b655296","db3a58aefa98","e1735ae0760e"],
     "skills-lock.json": ["1b0fa11ae201","5d823121aa7c"],
     "templates/AGENT.md.tpl": ["22dc08e0ee17","2f104e753b8b","2f320ddf31a3","3f041fe6c0f7","41f8facfc192","44fb8e8e2462","4553eb124ee3","483d22a6dd55","63597ef13cb8","7a4b2f7c6062","7aa3459eb982","861f1b2db5d0","8bf27d7418ae","9a4d6acdc142","aa026ac17c59","b4aa8ae7e8e5","b7444dabf16f","b9e6f403e0f2","d90f5069842b","e868ffae7b21","f3e6362790b7","f44cf8d6753c","f73040b77cba"],
     "templates/accueil/index.html": ["43de0f004a45"],
