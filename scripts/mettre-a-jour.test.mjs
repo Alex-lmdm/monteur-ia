@@ -577,6 +577,6 @@ test("Système Stories d'avant la story montée comme un Reel (déjà écrite po
   const story = path.join(dir, 'tools/story.py');
   fs.writeFileSync(story, 'from lieux import MAISON as ROOT\n');
   assert.equal(EXTENSIONS['systeme-stories'].aJour(dir), false, 'une story doit devenir un projet de l’app');
-  fs.writeFileSync(story, 'from lieux import MAISON as ROOT\ndef composer(slug, publiee=False, ecraser=False, auto=True):\n    pass\n');
+  fs.writeFileSync(story, 'from lieux import MAISON as ROOT\ndef composer(slug, publiee=False, ecraser=False, auto=True):\n    pass\ns.add_argument("--brief")\n');
   assert.equal(EXTENSIONS['systeme-stories'].aJour(dir), true);
 });

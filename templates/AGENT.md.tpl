@@ -18,6 +18,10 @@
 {{/LIEU_MAISON}}{{#LIEU_ACCUEIL}}> 📍 **Tu es dans l'accueil de Monteur IA** (vignette de l'app HyperFrames). On n'y monte
 > rien : chaque Reel a son propre projet.
 > - Monteur IA pas encore installé (`../node_modules/` absent) : lis `../INSTALL.md` et suis-le.
+> - Script à écrire ou à brainstormer (« écris-moi un script », « on brainstorme une vidéo ») : crée d'abord
+>   le Reel, `python3 ../tools/nouveau_reel.py "<sujet>" --brief "<sa demande : idées, liens, consignes>"
+>   --ouvrir`, puis dis : « Ton Reel est ouvert dans la liste des projets : on écrit le script là-bas.
+>   Ouvre-le et écris-lui « On y va ». » N'écris pas le script ici.
 > - Vidéo glissée pour un Reel, « on monte celle-ci », « nouveau Reel » : demande le sujet en quelques
 >   mots s'il manque, lance `python3 ../tools/nouveau_reel.py "<sujet>" --video "<vidéo glissée>" --ouvrir`
 >   (la copie faite par l'app part dans le Reel), puis dis : « Ton Reel est ouvert dans la liste

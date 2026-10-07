@@ -5,6 +5,7 @@ Usage :
     python3 tools/nouveau_reel.py "<sujet>" [--date AAAA-MM-JJ] [--ouvrir]
     python3 tools/nouveau_reel.py "<sujet>" --depuis "<dossier d'un Reel>"   # variante d'un Reel
     python3 tools/nouveau_reel.py "<sujet>" --video "<vidéo brute>" [--ouvrir]  # avec sa vidéo
+    python3 tools/nouveau_reel.py "<sujet>" --brief "<la demande du client>" --ouvrir  # script à écrire
 
 Un Reel = un projet HyperFrames autonome. reels/<nom>/ reçoit le plan de travail de départ
 (templates/demo/, sans le suffixe .demo) et une copie des outils de la maison ; `npm run sync`
@@ -21,6 +22,10 @@ Avec --video, la vidéo brute est notée dans work/brief.md du Reel. Glissée da
 elle y a été recopiée (sans limite de taille) : cette copie part dans derush/ du Reel, pour ne pas
 s'empiler dans l'accueil ; « ranger --alleger » la libère avec les autres rushes. Une vidéo prise
 ailleurs (le fichier du client) n'est jamais déplacée.
+
+Avec --brief, la demande du client (idées, liens, consignes) est notée dans work/brief.md : dans
+l'app, un script se brainstorme dans le projet du Reel, pas dans l'accueil, et la conversation du
+Reel commence par lire ce brief.
 
 Ne touche ni aux autres Reels ni aux réglages du client. Marche depuis la maison, l'accueil ou un
 autre Reel (l'outil retrouve la maison tout seul).
@@ -148,6 +153,13 @@ def poser_la_video(reel: Path, video: Path) -> str:
             if deplacee else f"vidéo notée dans work/brief.md : {video.resolve()}")
 
 
+def noter_brief(reel: Path, texte: str) -> None:
+    """Note la demande du client dans work/brief.md, lu en début de conversation du Reel."""
+    brief = reel / "work" / "brief.md"
+    debut = brief.read_text(encoding="utf-8") if brief.exists() else "# Brief\n\n"
+    brief.write_text(debut + f"Demande du client (depuis l'accueil) :\n\n{texte.strip()}\n\n", encoding="utf-8")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Crée le dossier d'un nouveau Reel.")
     parser.add_argument("sujet", help="Le sujet du Reel, en quelques mots (ex. « Méliès »).")
@@ -155,6 +167,7 @@ def main() -> None:
     parser.add_argument("--ouvrir", action="store_true", help="Ouvre le Reel dans l'app HyperFrames (Mac).")
     parser.add_argument("--depuis", type=Path, help="Dossier d'un Reel existant : le nouveau en est une copie.")
     parser.add_argument("--video", type=Path, help="La vidéo brute du Reel (ex. celle glissée dans l'accueil).")
+    parser.add_argument("--brief", help="La demande du client (script à écrire, idées, liens), notée dans work/brief.md.")
     args = parser.parse_args()
     if not propre(args.sujet):
         sys.exit("ERREUR : donne un sujet au Reel, en quelques mots.")
@@ -173,6 +186,9 @@ def main() -> None:
         sys.exit(f"ERREUR : vidéo introuvable : {video}. Rien n'a été créé.")
     reel = creer(args.sujet, args.date, depuis)
     print(f"• Reel créé : {reel.relative_to(MAISON)}" + (f" (copie de « {depuis.name} »)" if depuis else ""))
+    if args.brief and args.brief.strip():
+        noter_brief(reel, args.brief)
+        print("• demande du client notée dans work/brief.md (lue en début de conversation du Reel)")
     if video:
         print("• " + poser_la_video(reel, video))
     sync = subprocess.run(["node", "scripts/sync.mjs"], cwd=MAISON, capture_output=True, encoding="utf-8", errors="replace")

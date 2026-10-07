@@ -772,3 +772,19 @@ test("une story de l'extension Système Stories est un projet, avec le bloc LIEU
 function readMeta(dir) {
   try { return JSON.parse(fs.readFileSync(path.join(dir, 'meta.json'), 'utf8')); } catch { return null; }
 }
+
+
+test("dans l'app, un script se brainstorme dans le projet du Reel : l'accueil le crée avec la demande du client", (t) => {
+  const python = pythonOrSkip(t);
+  if (!python) return;
+  const dir = maison(t);
+  const sortie = execFileSync(python, ['tools/nouveau_reel.py', 'Cinq outils IA', '--date', '2026-10-12',
+    '--brief', 'Idées en vrac : Claude, Codex, HyperFrames. Lien : https://exemple.fr'], { cwd: dir, encoding: 'utf8' });
+  assert.match(sortie, /demande du client notée dans work\/brief\.md/);
+  const reel = path.join(dir, 'reels', `Cinq outils IA · 2026-10-12 · ${path.basename(dir)}`);
+  assert.match(read(reel, 'work/brief.md'), /Demande du client[\s\S]*Claude, Codex, HyperFrames\. Lien : https:\/\/exemple\.fr/);
+  assert.match(read(reel, 'CLAUDE.md'), /si `work\/brief\.md` existe, lis-le d'abord/);
+  const accueil = fs.readdirSync(dir).find((n) => n.startsWith('Accueil'));
+  assert.match(read(path.join(dir, accueil), 'CLAUDE.md'), /Script à écrire ou à brainstormer[\s\S]*--brief[\s\S]*N'écris pas le script ici/);
+  assert.doesNotMatch(read(dir, 'CLAUDE.md'), /N'écris pas le script ici/, 'hors de l’app (maison), rien ne change');
+});
