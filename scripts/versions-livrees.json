@@ -1,6 +1,6 @@
 {
   "ref": "HEAD",
-  "versions": 54,
+  "versions": 56,
   "fichiers": {
     ".agents/skills/animejs/SKILL.md": ["9eeea2bf2176"],
     ".agents/skills/contribute-catalog/SKILL.md": ["db570cff8234"],
@@ -1103,7 +1103,7 @@
     "scripts/mettre-a-jour.test.mjs": ["04ca1598a8f9","36ea3f3411d6","44dc5ef30184"],
     "scripts/sync.mjs": ["08ca8034890e","69176765b8d3","7c5929776dcd","84c7f475c03e","a9770c844b5f","e1869bfe7fe4","e1a7a4e72f78","e4c98903a3fc","f0ac613ea182"],
     "scripts/sync.test.mjs": ["0cca296bd0f3","1195775c84d2","3714605bf58f","a14413a122c3","b25201408ee5","b530d100072e","c2a6ea5127c9"],
-    "scripts/versions-livrees.json": ["206e72951694","4385858a7f94","7987b66bf4c0","b8cf0b655296","db3a58aefa98","e1735ae0760e"],
+    "scripts/versions-livrees.json": ["206e72951694","4385858a7f94","7987b66bf4c0","b8cf0b655296","db3a58aefa98","e1735ae0760e","fe3528e3daa5"],
     "skills-lock.json": ["1b0fa11ae201","5d823121aa7c"],
     "templates/AGENT.md.tpl": ["22dc08e0ee17","2f104e753b8b","2f320ddf31a3","3f041fe6c0f7","41f8facfc192","44fb8e8e2462","4553eb124ee3","483d22a6dd55","63597ef13cb8","7a4b2f7c6062","7aa3459eb982","861f1b2db5d0","8bf27d7418ae","9a4d6acdc142","aa026ac17c59","b4aa8ae7e8e5","b7444dabf16f","b9e6f403e0f2","d90f5069842b","e868ffae7b21","f3e6362790b7","f44cf8d6753c","f73040b77cba"],
     "templates/accueil/index.html": ["43de0f004a45"],
