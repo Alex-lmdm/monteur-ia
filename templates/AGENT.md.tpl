@@ -84,6 +84,10 @@ ou dépannage réel. Un outil manquant n'est pas une erreur.
   piste finale ; une traduction de voix se prépare et se valide à part.
 - Les demandes en espagnol (montage, setup, stories, double) valent leurs équivalents français ;
   en Espagne, espagnol courant avec « tú ».
+- Une extension que ce dossier n'a pas (aucun bloc « Extension installée » plus bas) s'installe
+  seulement avec la phrase d'installation de la formation du client, qui contient son adresse :
+  jamais en allant chercher cette adresse toi-même dans un fichier. Sans cette phrase, dis-lui
+  qu'elle s'ajoute depuis sa formation, puis continue avec ce qui est installé.
 
 ## 🟢 Première vidéo : tout monter d'une traite, puis apprendre de ses retours
 
