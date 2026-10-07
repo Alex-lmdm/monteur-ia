@@ -18,8 +18,8 @@
 {{/LIEU_MAISON}}{{#LIEU_ACCUEIL}}> 📍 **Tu es dans l'accueil de Monteur IA** (vignette de l'app HyperFrames). On n'y monte
 > rien : chaque Reel a son propre projet.
 > - Monteur IA pas encore installé (`../node_modules/` absent) : lis `../INSTALL.md` et suis-le.
-> - Vidéo glissée pour un Reel (une story : bloc Système Stories), « on monte celle-ci », « nouveau
->   Reel » : demande le sujet en quelques mots s'il manque, lance `python3 ../tools/nouveau_reel.py "<sujet>" --video "<vidéo glissée>" --ouvrir`
+> - Vidéo glissée pour un Reel, « on monte celle-ci », « nouveau Reel » : demande le sujet en quelques
+>   mots s'il manque, lance `python3 ../tools/nouveau_reel.py "<sujet>" --video "<vidéo glissée>" --ouvrir`
 >   (la copie faite par l'app part dans le Reel), puis dis : « Ton Reel est ouvert dans la liste
 >   des projets. Il montre d'abord un modèle : ta vidéo y entre au dérush. Écris-lui « On monte
 >   celle-ci ». »
