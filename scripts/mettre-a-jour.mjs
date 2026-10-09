@@ -83,7 +83,8 @@ export const EXTENSIONS = {
   "systeme-stories": { nom: "Système Stories", depot: "Alex-lmdm/systeme-stories", outils: ["story.py", "story_text.py"],
     aJour: (client) => existe(path.join(client, "tools/story.py"))
       && /\bdef composer\(/.test(lireTexte(path.join(client, "tools/story.py")))
-      && /"--brief"/.test(lireTexte(path.join(client, "tools/story.py"))) },   // script d'abord dans l'app
+      && /"--brief"/.test(lireTexte(path.join(client, "tools/story.py")))      // script d'abord dans l'app
+      && /\bdef adopter\(/.test(lireTexte(path.join(client, "tools/story.py"))) },   // retouches de l'app reportées, musique, B-rolls (09/10/2026)
   // Privé (sons sous licence) : le client retélécharge pack-sfx.zip depuis sa formation.
   "pack-sfx": { nom: "Pack SFX", depot: null, outils: ["sfx.py", "sfx_mix.py"], versionMin: "1.1.0",
     aJour: (client) => comparerVersions(versionPackSfx(client) ?? "0", "1.1.0") >= 0 },
