@@ -16,7 +16,7 @@
  * Toute autre retouche d'un fichier du moteur, même hors zones ou hors blocs, est sauvegardée et
  * signalée dans le plan.
  * Jamais touchés : brand.config.json, brand/, ses images, logos, musiques et sons, ses extensions
- * (outils et skills), double-ia.config.json, stories/, ses Reels. Seule exception : un client de
+ * (outils et skills), double-ia.config.json, stories/, clones/, ses Reels. Seule exception : un client de
  * Monteur IA 1 qui a déjà livré des Reels reçoit `setup.firstVideoDone: true` (la première vidéo se
  * décide désormais par dossier, plus par l'archive des Reels publiés, commune à tous ses dossiers).
  * Avant d'être remplacé ou retiré, chaque fichier du client est copié (ou rangé) dans
@@ -47,10 +47,10 @@ const WIN = process.platform === "win32";
 const TAILLE_MAX_LIVREE = 10 * 1024 * 1024;   // aucun fichier livré n'est plus gros : un rush ne se hache pas
 
 // Jamais copiés depuis la nouvelle version : générés sur place, propres à un dossier, ou au chantier.
-const JAMAIS = [/^Accueil /, /^reels\//, /^stories\//, /^exports\//, /^assets\/video\//, /^REFONTE-APP\.md$/,
+const JAMAIS = [/^Accueil /, /^reels\//, /^stories\//, /^clones\//, /^\.reel-cloneur-venv\//, /^exports\//, /^assets\/video\//, /^REFONTE-APP\.md$/,
   /^(CLAUDE|AGENTS)\.md$/, /^brand\/(tokens|fonts)\.css$/, /^brand\/fonts\//, /^brand\.config\.json$/,
   /(^|\/)\.DS_Store$/, /^\.git$/, /^\.claude\/settings\.local\.json$/, /^\.sauvegarde-mise-a-jour-/];
-const ELAGUER = new Set(["node_modules", ".git", "reels", "exports", "worktrees", ".thumbnails", ".hyperframes",
+const ELAGUER = new Set(["node_modules", ".git", "reels", "exports", "clones", ".reel-cloneur-venv", "worktrees", ".thumbnails", ".hyperframes",
   ".waveform-cache", ".transcode-cache"]);
 // Fusionnés à part : le modèle d'instructions (consignes des extensions) et le .gitignore.
 const A_PART = new Set(["templates/AGENT.md.tpl", ".gitignore"]);
@@ -85,6 +85,9 @@ export const EXTENSIONS = {
       && /\bdef composer\(/.test(lireTexte(path.join(client, "tools/story.py")))
       && /"--brief"/.test(lireTexte(path.join(client, "tools/story.py")))      // script d'abord dans l'app
       && /\bdef adopter\(/.test(lireTexte(path.join(client, "tools/story.py"))) },   // retouches de l'app reportées, musique, B-rolls (09/10/2026)
+  // Reel Cloneur™ (10/10/2026) : un seul outil, ses analyses vivent dans clones/, jamais touchées.
+  "reel-cloneur": { nom: "Reel Cloneur™", depot: "Alex-lmdm/reel-cloneur", outils: ["cloner_reel.py"],
+    aJour: (client) => existe(path.join(client, "tools/cloner_reel.py")) },
   // Privé (sons sous licence) : le client retélécharge pack-sfx.zip depuis sa formation.
   "pack-sfx": { nom: "Pack SFX", depot: null, outils: ["sfx.py", "sfx_mix.py"], versionMin: "1.1.0",
     aJour: (client) => comparerVersions(versionPackSfx(client) ?? "0", "1.1.0") >= 0 },
@@ -601,7 +604,7 @@ export function decrire(plan) {
     l.push("• Première vidéo : tu as déjà monté des Reels, je le note dans tes réglages (pas de montage d'essai ni de débrief à refaire).");
   }
   l.push(`• Jamais touchés : ${plan.premiereVideoFaite ? "tes autres réglages" : "tes réglages"} et ton style (brand.config.json, brand/), ton profil de voix, tes CTA et tes polices,${plan.consignesPerso ? " tes consignes perso," : ""}`
-    + " tes images, logos, musiques et sons, tes extensions, stories/, double-ia.config.json, tes Reels.");
+    + " tes images, logos, musiques et sons, tes extensions, stories/, clones/, double-ia.config.json, tes Reels.");
   return l.join("\n");
 }
 

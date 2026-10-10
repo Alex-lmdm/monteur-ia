@@ -80,3 +80,7 @@ reels/*/assets/vendor/
 reels/*/brand/fonts/
 reels/*/CLAUDE.md
 reels/*/AGENTS.md
+
+# Reel Cloneur™ : analyses de Reels (vidéos tierces) et son téléchargeur
+clones/
+.reel-cloneur-venv/
