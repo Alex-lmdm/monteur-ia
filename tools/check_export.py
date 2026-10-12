@@ -12,7 +12,8 @@ Export natif (la video finale elle-meme) :
      visages pre-cadres (tools/build_faces.py) ; s'ils manquent, le visage vient de base.mp4
      agrandie (moins net) -> signale ;
   T) les timelines tournent (meme principe que B ci-dessous, sur la video finale) ;
-  S) le son est la : volume integre au-dessus de -35 LUFS.
+  S) le son est la : volume integre au-dessus de -35 LUFS ; niveau et crete affiches (vises : -16 LUFS,
+     crete sous -1 dBTP, poses avec les sons par tools/sons.py).
 
 Ancien export (--calque) : gardes A et B sur le calque, decrites ci-dessous.
 
@@ -162,13 +163,20 @@ def verifier_final(mp4):
         ko += not ok
         print(f"   {s['id']:<16} bande centrale ecart-type {ecart:5.1f}  {'OK' if ok else '!! JS MUET (elements visibles des le debut)'}")
 
-    err = subprocess.run(["ffmpeg", "-nostats", "-i", str(mp4), "-af", "ebur128", "-f", "null", "-"],
+    err = subprocess.run(["ffmpeg", "-nostats", "-i", str(mp4), "-af", "ebur128=peak=true", "-f", "null", "-"],
                          capture_output=True, encoding="utf-8", errors="replace").stderr
     m = re.findall(r"I:\s+(-?[\d.]+) LUFS", err)
     lufs = float(m[-1]) if m else -99.0
+    crete = re.findall(r"Peak:\s+(-?[\d.]+|-inf) dBFS", err)
     ok = lufs > -35
     ko += not ok
-    print(f"S) son : {lufs:.1f} LUFS  {'OK' if ok else '!! KO (voix absente ou tres faible)'}")
+    print(f"S) son : {lufs:.1f} LUFS, crete {crete[-1] if crete else '?'} dBTP  "
+          f"{'OK' if ok else '!! KO (voix absente ou tres faible)'}")
+    # Information, sans bloquer : les sons poses par tools/sons.py amenent le Reel a -16 LUFS.
+    master = ROOT / "index.html"
+    if ok and abs(lufs + 16) > 2 and master.exists() and "SONS:DEBUT" in master.read_text(encoding="utf-8"):
+        print("   niveau loin des -16 LUFS vises : sons poses avant la mise a jour du niveau final ? "
+              "Repose-les (outil des sons), puis exporte a nouveau.")
     print("\n" + ("✅ EXPORT CONFORME" if ko == 0 else f"❌ {ko} point(s) à revoir avant de livrer"))
     sys.exit(1 if ko else 0)
 

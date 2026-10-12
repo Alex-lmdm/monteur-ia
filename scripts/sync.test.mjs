@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // Chaque test travaille dans une copie temporaire, supprimée à la fin du test.
@@ -566,6 +566,63 @@ test('les sons sont posés dans le montage, survivent au master et ne sont jamai
   }
   run('tools/build_master.py', '--write');
   assert.match(read(reel, 'index.html'), /src="assets\/Whoosh Transition\.mp3"/, 'survit au master régénéré');
+});
+
+// Une voix au niveau d'une sortie d'Adobe Podcast (vers -24 LUFS) : la pose des sons règle le gain du
+// bus pour que le Reel sorte à -16 LUFS, crêtes sous -1 dBTP, sans toucher aux volumes entre eux.
+test('les sons posent le niveau final : -16 LUFS avec une voix, aucun gain sans voix audible', (t) => {
+  const python = pythonOrSkip(t);
+  if (!python || !ffmpegOrSkip(t)) return;
+  const dir = maison(t);
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=220:duration=12', 'assets/music/fond.mp3'], { cwd: dir });
+  write(dir, 'brand.config.json', { ...config(), audio: { musicFile: 'fond.mp3', musicDb: -26.5 } });
+  execFileSync(python, ['tools/nouveau_reel.py', 'Niveau', '--date', '2026-10-12'], { cwd: dir, encoding: 'utf8' });
+  const reel = path.join(dir, 'reels', `Niveau · 2026-10-12 · ${path.basename(dir)}`);
+  const run = (...args) => execFileSync(python, args, { cwd: reel, encoding: 'utf8', stdio: 'pipe' });
+  const voix = (filtre) => execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc2=size=1080x1920:rate=30:duration=8',
+    '-f', 'lavfi', '-i', filtre, '-shortest', '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'aac', 'assets/video/base.mp4'], { cwd: reel });
+  const lufs = (fichier) => {
+    const err = spawnSync('ffmpeg', ['-nostats', '-i', fichier, '-af', 'ebur128=peak=true', '-f', 'null', '-'],
+      { cwd: reel, encoding: 'utf8' }).stderr;
+    return { i: Number([...err.matchAll(/I:\s+(-?[\d.]+) LUFS/g)].pop()[1]),
+      crete: Number([...err.matchAll(/Peak:\s+(-?[\d.]+) dBFS/g)].pop()[1]) };
+  };
+  const chaine = () => JSON.parse(read(reel, 'index.html').match(/<hf-audio-group id="mixage"[^>]*data-fx-chain="([^"]+)"/)[1]
+    .replaceAll('&quot;', '"')).nodes;
+
+  // Bruit rose modulé, crêtes plus hautes que la moyenne comme une voix, vers -24 LUFS.
+  voix('anoisesrc=color=pink:amplitude=0.5:duration=8,volume=\'0.6+0.4*sin(2*PI*1.7*t)\':eval=frame');
+  run('tools/build_master.py', '--write');
+  const sortie = run('tools/build_sfx.py');
+  const [, niveau, gain] = sortie.match(/mixage mesuré à (-?[\d.]+) LUFS, gain ([+-][\d.]+) dB/).map(Number);
+  assert.ok(niveau < -18 && niveau > -32, `voix de test hors gabarit : ${niveau} LUFS`);
+  assert.equal(gain, Math.round((-16 - niveau) * 10) / 10);
+  assert.deepEqual(chaine().map((n) => [n.type, Object.values(n.params)[0]]), [['gain', gain], ['limiter', -1.5]]);
+  assert.match(read(reel, 'index.html'), /<audio id="musique"[^>]*data-volume="0\.0473"/, 'volumes inchangés entre eux');
+
+  // Ancien export (--ffmpeg) : même niveau, mesuré sur le fichier encodé.
+  fs.mkdirSync(path.join(reel, 'exports'), { recursive: true });
+  fs.copyFileSync(path.join(reel, 'assets/video/base.mp4'), path.join(reel, 'exports/FINAL.mp4'));
+  run('tools/build_sfx.py', '--ffmpeg');
+  const fin = lufs('exports/FINAL_SFX_MUSIC.mp4');
+  assert.ok(Math.abs(fin.i + 16) <= 0.7, `export à ${fin.i} LUFS, -16 visé`);
+  assert.ok(fin.crete <= -1, `crête à ${fin.crete} dBTP`);
+
+  // Voix muette (vidéo d'exemple, Reel sans voix) : niveau d'aujourd'hui, aucun gain.
+  voix('anullsrc=r=48000:cl=stereo');
+  assert.match(run('tools/build_sfx.py'), /non mesuré \(pas de voix audible/);
+  assert.equal(chaine()[0].params.gain, 0);
+
+  // Le vrai rendu HyperFrames applique le gain et le plafond du bus (MONTEUR_RENDU=1 npm test).
+  if (!process.env.MONTEUR_RENDU) return;
+  voix('anoisesrc=color=pink:amplitude=0.5:duration=8,volume=\'0.6+0.4*sin(2*PI*1.7*t)\':eval=frame');
+  run('tools/build_sfx.py');
+  const cli = path.join(dir, 'node_modules', '.bin', process.platform === 'win32' ? 'hyperframes.cmd' : 'hyperframes');
+  execFileSync(fs.existsSync(cli) ? cli : path.join(root, 'node_modules', '.bin', 'hyperframes'), ['render', '-o', 'exports/FINAL.mp4'],
+    { cwd: reel, stdio: 'ignore', timeout: 600000 });
+  const rendu = lufs('exports/FINAL.mp4');
+  assert.ok(Math.abs(rendu.i + 16) <= 1, `rendu à ${rendu.i} LUFS, -16 visé`);
+  assert.ok(rendu.crete <= -1, `crête du rendu à ${rendu.crete} dBTP`);
 });
 
 test("la vidéo glissée dans l'accueil part dans le Reel créé ; celle du client reste où elle est", (t) => {

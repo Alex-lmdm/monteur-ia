@@ -198,11 +198,12 @@ filtre ffmpeg, pas de « je peux le faire moi-même ») : l'utilisateur fait deu
 navigateur, tu fais tout le reste.
 
 > **Première vidéo** (fichier agent, section 🟢) : **ne pas faire cette étape**, elle demande une
-> action du client en plein montage. Produire `<cut>_enhanced.mp4` avec la voix brute **mise au bon
-> volume** (normalisation du niveau, pas un nettoyage : sans elle, une voix brute sort vers
-> -23 LUFS, trop discrète à côté des Reels habituels) :
+> action du client en plein montage. Produire `<cut>_enhanced.mp4` avec la voix brute **mise au
+> niveau de référence** (normalisation, pas un nettoyage) : -24 LUFS, celui d'une voix sortie
+> d'Adobe Podcast, pour lequel les volumes des sons et de la musique sont réglés. Le niveau final
+> du Reel (-16 LUFS) se pose avec les sons, à l'étape SFX :
 > ```bash
-> ffmpeg -y -i <projet>/derush/<cut>.mp4 -map 0:v:0 -map 0:a:0 -c:v copy -af loudnorm=I=-16:TP=-1.5:LRA=11 -ar 48000 -c:a aac -b:a 256k -shortest <projet>/derush/<cut>_enhanced.mp4
+> ffmpeg -y -i <projet>/derush/<cut>.mp4 -map 0:v:0 -map 0:a:0 -c:v copy -af loudnorm=I=-24:TP=-1.5:LRA=11 -ar 48000 -c:a aac -b:a 256k -shortest <projet>/derush/<cut>_enhanced.mp4
 > ```
 > Le nettoyage Adobe est proposé au débrief, qui remplace alors l'audio sans toucher à la vidéo ni
 > aux coupes. Dès la deuxième vidéo, cette étape redevient systématique.

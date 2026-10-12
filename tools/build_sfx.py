@@ -24,7 +24,8 @@ Usage (depuis le dossier du Reel) :
 
 Pose native : chaque son est copie dans assets/sons/ (un son deja dans assets/ du Reel reste ou
 il est) puis ecrit en <audio> dans le bloc SONS du master, avec les memes reglages que l'ancien mixage ffmpeg : volume en dB, coupe adoucie (60 ms),
-musique avec fondus (0.4 s / 1.2 s) et un plafond (limiteur) sur tout le mix, voix comprise. Dans
+musique avec fondus (0.4 s / 1.2 s) et, sur tout le mix voix comprise, un gain qui amene le Reel a
+-16 LUFS (le niveau des Reels du fil, mesure a la pose) puis un plafond (limiteur). Dans
 l'app HyperFrames, chaque son devient un clip de la timeline (deplacable, volume reglable) et le
 bouton Export sort la video complete. Retouches faites a la main ou dans l'app : elles sont
 protegees, l'outil refuse de les ecraser sans --ecraser (empreinte du bloc).
@@ -144,14 +145,15 @@ def poser():
         evs.append({"src": sfx_path(f), "start": start, "vol": vol, "trim": bornes,
                     "fondu_sortie": FONDU_COUPE if bornes else 0})
     try:
-        sons.poser(ROOT, evs, musique=MUSIC, musique_db=music_db, total=DUR, sfx_dir=SFX_DIR,
-                   ecraser="--ecraser" in sys.argv)
+        rapport = sons.poser(ROOT, evs, musique=MUSIC, musique_db=music_db, total=DUR, sfx_dir=SFX_DIR,
+                             ecraser="--ecraser" in sys.argv)
     except sons.Erreur as e:
         die(str(e))
     print(f"{len(events)} SFX + " + (f"musique ({music_file} @ {music_db} dB)" if MUSIC else "sans musique")
           + " poses dans index.html (bloc SONS, copies dans assets/sons/)")
     for f, s, v, t in events:
         print(f"  {s:6.2f}  {v:>4} dB  {f}{'  (trim ' + str(t) + ')' if t else ''}")
+    print(sons.resume_niveau(rapport))
     print("Export : bouton Export de l'app HyperFrames, ou npm run render (exports/FINAL.mp4).")
 
 
@@ -209,9 +211,20 @@ def ffmpeg_ou_probe():
 
     if not SRC.exists():
         die(f"{SRC.relative_to(ROOT)} manquant : rends d'abord la video finale (python3 tools/build_final.py).")
+    import sons
     inputs, filters, mixin = filtres_sfx_musique(1)
-    filters.append(f"[0:a]{''.join(mixin)}amix=inputs={len(mixin) + 1}:normalize=0:dropout_transition=0,"
-                   f"alimiter=limit=0.97[aout]")
+    mix = f"[0:a]{''.join(mixin)}amix=inputs={len(mixin) + 1}:normalize=0:dropout_transition=0"
+    # Niveau final, comme la pose native (tools/sons.py) : on mesure le mixage, puis un gain l'amene
+    # a -16 LUFS et le plafond garde les cretes sous -1 dBTP. L'equilibre voix/SFX/musique ne bouge pas.
+    def lufs(entrees, graphe):
+        r = subprocess.run(["ffmpeg", "-nostats", "-hide_banner"] + entrees + ["-filter_complex", graphe, "-map", "[m]",
+                           "-f", "null", "-"], capture_output=True, encoding="utf-8", errors="replace")
+        return sons.lire_lufs(r.stderr) if r.returncode == 0 else None
+    niveau = None
+    if (lufs(["-i", str(SRC)], "[0:a]ebur128[m]") or -99.0) > -50:   # pas de gain sans voix audible
+        niveau = lufs(["-i", str(SRC)] + inputs, ";".join(filters + [f"{mix},ebur128[m]"]))
+    gain = sons.gain_final(niveau)
+    filters.append(f"{mix},volume={gain}dB,alimiter=limit={sons.lin(sons.LIMITE_DB)}:level=false:latency=true[aout]")
     cmd = (["ffmpeg", "-y", "-v", "error", "-i", str(SRC)] + inputs +
            ["-filter_complex", ";".join(filters), "-map", "0:v", "-c:v", "copy",
             "-map", "[aout]", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(OUT)])
@@ -222,6 +235,7 @@ def ffmpeg_ou_probe():
         raise SystemExit(1)
     print(f"{len(events)} SFX + " + (f"musique ({music_file} @ {music_db} dB)" if MUSIC else "sans musique")
           + f" -> {OUT.relative_to(ROOT)}")
+    print(sons.resume_niveau({"niveau": niveau, "gain": gain, "cible": sons.CIBLE_LUFS}))
 
 
 if "--ffmpeg" in sys.argv or "--probe" in sys.argv:
