@@ -6,8 +6,9 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync, spawnSync } from 'node:child_process';
+import zlib from 'node:zlib';
 import {
-  assetsReferences, aucunChangement, appliquer, calculerManifeste, cheminsDepuisLaRacine, decrire, ecartsExtension, fusionnerJson,
+  archiveExtension, assetsReferences, aucunChangement, appliquer, calculerManifeste, cheminsDepuisLaRacine, decrire, ecartsExtension, fusionnerJson,
   HORS_LIGNE, modeleAvecExtensions, neutre, planifier, reporterSons, reporterZones, versionsPubliees,
 } from './mettre-a-jour.mjs';
 
@@ -584,37 +585,48 @@ test("Système Stories d'avant la story montée comme un Reel (déjà écrite po
   assert.equal(EXTENSIONS['systeme-stories'].aJour(dir), true);
 });
 
-// Empreinte git d'un contenu : celle que donne l'arborescence d'un dépôt GitHub.
-const blob = (texte) => crypto.createHash('sha1').update(`blob ${Buffer.byteLength(texte)}\0`).update(texte).digest('hex');
+// L'archive d'un dépôt telle que GitHub la sert (`git archive`, dossier de tête `<dépôt>-main/`).
+function archiveGithub(dir, fichiers, prefixe) {
+  for (const [rel, texte] of Object.entries(fichiers)) write(dir, rel, texte);
+  const git = (...args) => execFileSync('git', ['-c', 'core.autocrlf=false', '-c', 'user.name=test', '-c', 'user.email=test@example.com',
+    '-c', 'commit.gpgsign=false', ...args], { cwd: dir, stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1 << 26 });
+  git('init', '-q');
+  git('add', '-A');
+  git('commit', '-qm', 'publiée');
+  return zlib.gzipSync(git('archive', '--format=tar', `--prefix=${prefixe}/`, 'HEAD'));
+}
 
 test('extensions : comparées à leur dernière version publiée, lue en ligne, sans règle à ajouter à chaque version', async (t) => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-extensions-'));
-  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-extensions-'));
+  t.after(() => fs.rmSync(base, { recursive: true, force: true }));
+  const dir = path.join(base, 'client');
   const consignes = '<!-- BEGIN EXTENSION: systeme-stories (ajouté par l’installation) -->\nConsignes v2\n<!-- END EXTENSION: systeme-stories -->\n';
-  const publies = { 'tools/story.py': 'def adopter():\n    pass\n', '.claude/skills/story/SKILL.md': '# Story v2\n' };
-  // Ce que répondent GitHub (arborescence de main, puis fichier des consignes) et le site de la formation.
+  // Chemins longs : découpé dans l'en-tête (préfixe), ou d'un seul tenant (en-tête pax).
+  const publies = { 'tools/story.py': 'def adopter():\n    pass\n', '.claude/skills/story/SKILL.md': '# Story v2\n',
+    [`.claude/skills/story/references/${'r'.repeat(60)}/${'b'.repeat(40)}.md`]: 'préfixe\n',
+    [`.claude/skills/story/${'p'.repeat(110)}.md`]: 'pax\n' };
+  // Ce que servent GitHub (l'archive du dépôt, celle que l'étape 6 installe) et le site de la formation.
   const reponses = {
-    'https://api.github.com/repos/Alex-lmdm/systeme-stories/git/trees/main?recursive=1': { truncated: false, tree: [
-      ...Object.entries(publies).map(([rel, texte]) => ({ path: rel, type: 'blob', sha: blob(texte) })),
-      { path: '.claude/skills/story', type: 'tree', sha: 'x' },
-      { path: 'tests/test_outils.py', type: 'blob', sha: blob('jamais copié chez le client') },
-      { path: 'templates/agent-extension-stories.md', type: 'blob', sha: blob(consignes), url: 'https://api.github.com/consignes' },
-    ] },
-    'https://api.github.com/consignes': { content: Buffer.from(`\n\n${consignes}`).toString('base64'), encoding: 'base64' },
+    [archiveExtension('Alex-lmdm/systeme-stories')]: archiveGithub(path.join(base, 'depot'), { ...publies,
+      'tests/test_outils.py': 'jamais copié chez le client\n', 'templates/agent-extension-stories.md': `\n\n${consignes}` },
+    'systeme-stories-main'),
     'https://www.lemondedumarketing.fr/api/formations/pack-sfx/version': { version: '1.2.0' },
   };
-  const lire = async (url) => (url in reponses ? { ok: true, json: async () => reponses[url] } : { ok: false, status: 403 });
+  const lire = async (url) => (url in reponses
+    ? { ok: true, json: async () => reponses[url], arrayBuffer: async () => new Uint8Array(reponses[url]).buffer }
+    : { ok: false, status: 404 });
   const publiees = await versionsPubliees(['systeme-stories', 'pack-sfx', 'double-ia', 'egaree'], { lire });
-  assert.equal(publiees['double-ia'], null, 'dépôt illisible (quota de GitHub) : règle locale');
+  assert.equal(publiees['double-ia'], null, 'dépôt injoignable : règle locale');
   assert.equal('egaree' in publiees, false, 'pas une extension officielle');
   assert.deepEqual(publiees['pack-sfx'], { version: '1.2.0' });
-  assert.deepEqual(Object.keys(publiees['systeme-stories'].fichiers).sort(), ['.claude/skills/story/SKILL.md', 'tools/story.py']);
+  assert.deepEqual(Object.keys(publiees['systeme-stories'].fichiers).sort(), Object.keys(publies).sort());
+  assert.equal(publiees['systeme-stories'].consignes, `\n\n${consignes}`);
 
   // Installée dans sa dernière version : mêmes fichiers (fins de ligne Windows comprises), mêmes consignes.
   write(dir, 'templates/AGENT.md.tpl', `# Monteur IA\n\n${consignes}\n<!-- BEGIN EXTENSION: double-ia (ajouté) -->\nx\n<!-- END EXTENSION: double-ia -->\n`
     + '\n<!-- BEGIN EXTENSION: pack-sfx (ajouté) -->\nx\n<!-- END EXTENSION: pack-sfx -->\n');
+  for (const [rel, texte] of Object.entries(publies)) write(dir, rel, texte);
   write(dir, 'tools/story.py', publies['tools/story.py'].replace(/\n/g, '\r\n'));
-  write(dir, '.claude/skills/story/SKILL.md', publies['.claude/skills/story/SKILL.md']);
   write(dir, 'tools/double_ia.py', 'from lieux import MAISON\n');
   write(dir, 'assets/sfx/.pack-sfx-manifest.json', '{"pack": "pack-sfx", "version": "1.2.0", "files": {}}\n');
   assert.deepEqual(ecartsExtension(dir, 'systeme-stories', publiees['systeme-stories']), []);
@@ -629,8 +641,8 @@ test('extensions : comparées à leur dernière version publiée, lue en ligne, 
   fs.rmSync(path.join(dir, '.claude/skills/story'), { recursive: true });
   edit(dir, 'templates/AGENT.md.tpl', 'Consignes v2', 'Consignes v1');
   write(dir, 'assets/sfx/.pack-sfx-manifest.json', '{"pack": "pack-sfx", "version": "1.1.0", "files": {}}\n');
-  assert.deepEqual(ecartsExtension(dir, 'systeme-stories', publiees['systeme-stories']),
-    ['tools/story.py', '.claude/skills/story/SKILL.md', 'templates/AGENT.md.tpl']);
+  assert.deepEqual(ecartsExtension(dir, 'systeme-stories', publiees['systeme-stories']).sort(),
+    [...Object.keys(publies), 'templates/AGENT.md.tpl'].sort());
   assert.deepEqual(ecartsExtension(dir, 'pack-sfx', publiees['pack-sfx']), ['version 1.1.0']);
   const plan = planifier(dir, { publiees, archive: vide });
   assert.deepEqual(plan.extensionsAMettreAJour, ['systeme-stories', 'pack-sfx']);

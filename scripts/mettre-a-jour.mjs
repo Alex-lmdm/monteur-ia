@@ -40,6 +40,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import zlib from "node:zlib";
 
 export const NEUF = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MANIFESTE = "scripts/versions-livrees.json";
@@ -75,6 +76,8 @@ const BLOC_PERSO = "consignes-perso";
 // version. Le plan compare l'extension installée à sa dernière version publiée, lue en ligne
 // (`versionsPubliees`) : publier une extension suffit, rien à changer ici. `aJour` n'est que la
 // règle locale, pour un plan sans réseau : à quoi on reconnaît une version déjà assez récente.
+// L'archive d'un dépôt d'extension : celle que l'étape 6 de MISE-A-JOUR.md télécharge et installe.
+export const archiveExtension = (depot) => `https://github.com/${depot}/archive/refs/heads/main.tar.gz`;
 const ecritePourLesReels = (outil) => (client) => existe(path.join(client, outil))
   && /\b(lieux|MAISON)\b/.test(lireTexte(path.join(client, outil)));
 export const EXTENSIONS = {
@@ -402,22 +405,23 @@ export function extensionsInstallees(client) {
 
 /**
  * La dernière version publiée de chaque extension officielle installée, lue en ligne avant le plan.
- * Dépôt GitHub : l'empreinte de chaque fichier que son installation copie, et ses consignes. Pack SFX
- * (privé) : son numéro de version, donné par le site de la formation. `null` quand elle n'a pas pu
- * être lue (pas de réseau, quota de GitHub) : le plan retombe alors sur la règle locale.
+ * Dépôt GitHub : l'empreinte de chaque fichier que son installation copie, et ses consignes, lues
+ * dans son archive (pas dans l'API de GitHub : 60 lectures par heure et par adresse, vite épuisées
+ * derrière une box 4G ou un réseau partagé). Pack SFX (privé) : son numéro de version, donné par le
+ * site de la formation. `null` quand elle n'a pas pu être lue (pas de réseau, site injoignable) : le
+ * plan retombe alors sur la règle locale.
  */
-export async function versionsPubliees(cles, { lire = globalThis.fetch, delai = 8000 } = {}) {
+export async function versionsPubliees(cles, { lire = globalThis.fetch, delai = 15000 } = {}) {
   const out = {};
   if (process.env[HORS_LIGNE] || typeof lire !== "function") return out;
-  const json = async (url) => {
-    const r = await lire(url, { headers: { "User-Agent": "monteur-ia-mise-a-jour", Accept: "application/vnd.github+json" },
-      signal: AbortSignal.timeout(delai) });
+  const telecharger = async (url) => {
+    const r = await lire(url, { headers: { "User-Agent": "monteur-ia-mise-a-jour" }, signal: AbortSignal.timeout(delai) });
     if (!r.ok) throw new Error(`${url} : ${r.status}`);
-    return r.json();
+    return r;
   };
   await Promise.all(cles.filter((cle) => EXTENSIONS[cle]).map(async (cle) => {
     try {
-      out[cle] = await versionPubliee(EXTENSIONS[cle], json);
+      out[cle] = await versionPubliee(EXTENSIONS[cle], telecharger);
     } catch {
       out[cle] = null;
     }
@@ -425,20 +429,47 @@ export async function versionsPubliees(cles, { lire = globalThis.fetch, delai = 
   return out;
 }
 
-async function versionPubliee(e, json) {
+async function versionPubliee(e, telecharger) {
   if (!e.depot) {
-    const { version } = await json(e.versionPubliee);
+    const { version } = await (await telecharger(e.versionPubliee)).json();
     if (!/^\d+(\.\d+)*$/.test(String(version))) throw new Error(`version illisible : ${version}`);
     return { version: String(version) };
   }
-  const arbre = await json(`https://api.github.com/repos/${e.depot}/git/trees/main?recursive=1`);
-  if (arbre.truncated || !Array.isArray(arbre.tree)) throw new Error("arborescence incomplète");
-  const blobs = arbre.tree.filter((n) => n.type === "blob");
-  const fichiers = Object.fromEntries(blobs.filter((n) => FICHIERS_EXTENSION.test(n.path)).map((n) => [n.path, n.sha.slice(0, 12)]));
+  const archive = fichiersArchive(Buffer.from(await (await telecharger(archiveExtension(e.depot))).arrayBuffer()));
+  const fichiers = Object.fromEntries([...archive].filter(([rel]) => FICHIERS_EXTENSION.test(rel)).map(([rel, buf]) => [rel, empreinte(buf)]));
   if (!Object.keys(fichiers).length) throw new Error("aucun fichier d'extension");
-  const modele = blobs.find((n) => CONSIGNES_EXTENSION.test(n.path));
-  const consignes = modele ? Buffer.from((await json(modele.url)).content, "base64").toString("utf8") : null;
+  const consignes = [...archive].find(([rel]) => CONSIGNES_EXTENSION.test(rel))?.[1].toString("utf8") ?? null;
   return { fichiers, consignes };
+}
+
+/**
+ * Les fichiers d'une archive .tar.gz de GitHub (format de `git archive`), par chemin dans le dépôt
+ * (sans le dossier de tête, `<dépôt>-main/`). Chemins longs : en-tête pax (`path=`) ou GNU (`L`).
+ */
+function fichiersArchive(tgz) {
+  const tar = zlib.gunzipSync(tgz);
+  const out = new Map();
+  let long = null;
+  for (let i = 0; i + 512 <= tar.length;) {
+    const entete = tar.subarray(i, i + 512);
+    if (entete.every((octet) => octet === 0)) break;
+    const champ = (debut, fin) => entete.subarray(debut, fin).toString("utf8").replace(/\0[\s\S]*$/, "");
+    const taille = parseInt(champ(124, 136).trim() || "0", 8);
+    const type = String.fromCharCode(entete[156] || 48);
+    const contenu = tar.subarray(i + 512, i + 512 + taille);
+    i += 512 + Math.ceil(taille / 512) * 512;
+    if (type === "x" || type === "L") {
+      long = type === "L" ? contenu.toString("utf8").replace(/\0[\s\S]*$/, "")
+        : /(?:^|\n)\d+ path=([^\n]*)\n/.exec(contenu.toString("utf8"))?.[1] ?? null;
+      continue;
+    }
+    // Préfixe du chemin : format POSIX seulement (l'ancien format GNU range des dates à cet endroit).
+    const prefixe = entete.subarray(257, 263).toString("latin1") === "ustar\0" ? champ(345, 500) : "";
+    const nom = long ?? [prefixe, champ(0, 100)].filter(Boolean).join("/");
+    long = null;
+    if (type === "0") out.set(nom.replace(/^[^/]+\//, ""), Buffer.from(contenu));
+  }
+  return out;
 }
 
 const sansCR = (texte) => texte.replace(/\r\n/g, "\n");
