@@ -126,15 +126,29 @@ test('AGENTS.md et CLAUDE.md tiennent dans la limite de lecture de Codex', (t) =
   write(dir, 'brand.config.json', own);
   const reel = `reels/Un sujet de Reel volontairement assez long · 2026-10-12 · ${own.brand.name}`;
   write(dir, `${reel}/meta.json`, { monteurIa: { lieu: 'reel', etat: 'en-cours' } });
-  // Les trois extensions officielles ajoutent chacune ses consignes (budget : 1 100 octets par bloc).
-  for (const nom of ['double-ia', 'systeme-stories', 'pack-sfx']) {
-    fs.appendFileSync(path.join(dir, 'templates/AGENT.md.tpl'), `\n<!-- BEGIN EXTENSION: ${nom} (installation) -->\n`
-      + `${'Consigne extension. '.repeat(50).slice(0, 1000)}\n<!-- END EXTENSION: ${nom} -->\n`);
+  write(dir, 'stories/story-offre-1/meta.json', { monteurIa: { lieu: 'story', etat: 'en-cours' } });
+  // Pire cas réel : les quatre extensions officielles, chacune avec ses consignes. Budgets un peu
+  // au-dessus de leurs vrais blocs (15/10/2026 : Ton Double IA 1 076 octets, Pack SFX 1 214,
+  // Reel Cloneur™ 929, Système Stories 861 communs plus sa partie propre au lieu : 183 dossier,
+  // 625 accueil, 117 Reel, 737 story). Une extension qui grossit au-delà doit alléger ses consignes.
+  // Un bloc fait `octets` marqueurs compris (comme les vrais), plus sa partie propre au lieu.
+  const texte = (n) => 'Consigne extension. '.repeat(Math.ceil(n / 20)).slice(0, n);
+  const bloc = (nom, octets, parLieu = '') => {
+    const [tete, pied] = [`<!-- BEGIN EXTENSION: ${nom} (installation) -->\n`, `\n<!-- END EXTENSION: ${nom} -->\n`];
+    return `\n\n${tete}${texte(octets - tete.length - pied.length)}${parLieu}${pied}`;
+  };
+  const lieux = Object.entries({ LIEU_MAISON: 200, LIEU_ACCUEIL: 650, LIEU_REEL: 130, LIEU_STORY: 760 })
+    .map(([lieu, n]) => `{{#${lieu}}}\n${texte(n - 1)}{{/${lieu}}}`).join('');
+  for (const contenu of [bloc('double-ia', 1100), bloc('pack-sfx', 1250), bloc('reel-cloneur', 960),
+    bloc('systeme-stories', 900, lieux)]) {
+    fs.appendFileSync(path.join(dir, 'templates/AGENT.md.tpl'), contenu);
   }
   sync(dir);
+  // Au moins 1 Kio de marge dans ce pire cas : la place d'une consigne perso ou d'une préférence de plus.
   for (const file of ['AGENTS.md', 'CLAUDE.md', `${accueil}/AGENTS.md`, `${accueil}/CLAUDE.md`,
-    `${reel}/AGENTS.md`, `${reel}/CLAUDE.md`]) {
-    assert.ok(size(file) <= LIMIT, `${file} personnalisé : ${size(file)} octets, Codex en tronquerait la fin.`);
+    `${reel}/AGENTS.md`, `${reel}/CLAUDE.md`, 'stories/story-offre-1/AGENTS.md', 'stories/story-offre-1/CLAUDE.md']) {
+    assert.ok(size(file) <= LIMIT - 1024,
+      `${file} personnalisé, quatre extensions : ${size(file)} octets, moins de 1 Kio de marge sous la limite de Codex.`);
   }
 });
 
@@ -293,8 +307,9 @@ test('les outils écrivent en UTF-8 même dans un terminal Windows (cp1252)', (t
   // cp1252 = Latin-1 plus ces 27 signes (0x80-0x9F) ; tout autre caractère au-delà de U+00FF plante.
   const CP1252 = '€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ';
   const horsCp1252 = (ligne) => [...ligne].some((c) => c.codePointAt(0) > 0xff && !CP1252.includes(c));
-  for (const nom of fs.readdirSync(path.join(root, 'tools')).filter((f) => f.endsWith('.py'))) {
-    const source = fs.readFileSync(path.join(root, 'tools', nom), 'utf8');
+  const outilsPy = (dir) => fs.readdirSync(path.join(root, dir)).filter((f) => f.endsWith('.py')).map((f) => `${dir}/${f}`);
+  for (const nom of [...outilsPy('tools'), ...outilsPy('templates/youtube/tools')]) {
+    const source = fs.readFileSync(path.join(root, nom), 'utf8');
     const affiche = source.split('\n').some((l) => /print\(|exit\(/.test(l) && horsCp1252(l));
     if (!affiche) continue;
     assert.ok(/from lieux import|reconfigure\(encoding="utf-8"/.test(source), `${nom} affiche un caractère que Windows ne sait pas écrire`);
@@ -476,6 +491,40 @@ test('les visages sont pré-cadrés en pleine résolution et posés sans agrandi
   }
 });
 
+// Une source à 29,97 im/s (iPhone, DJI) : build_faces.py la passe à 30 im/s, la cadence du rendu, sans
+// toucher au temps. À l'instant k/30, le visage pré-cadré doit montrer l'image de la source la plus
+// proche, celle qui va avec la voix : ni une image de retard (une 29,97 lue telle quelle par le rendu),
+// ni une dérive (une source étirée à 30 im/s prend une image de retard toutes les 33 s). Sur 20 s, la
+// dérive se voit : après 16,7 s, l'image la plus proche n'a plus le numéro de l'instant.
+test('visages pré-cadrés : une source à 29,97 im/s passe à 30 im/s sans retard ni dérive', (t) => {
+  const python = pythonOrSkip(t);
+  if (!python || !ffmpegOrSkip(t)) return;
+  const dir = maison(t);
+  execFileSync(python, ['tools/nouveau_reel.py', 'Cadence', '--date', '2026-10-15'], { cwd: dir, encoding: 'utf8' });
+  const reel = path.join(dir, 'reels', `Cadence · 2026-10-15 · ${path.basename(dir)}`);
+  // Image n de la source : un gris uniforme qui porte n modulo 70, par pas de 3 niveaux (le recadrage
+  // et la compression ne le déplacent pas d'un pas).
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=black:s=1080x1920:r=30000/1001:d=20',
+    '-vf', "format=gray,geq=lum='16+3*mod(N\\,70)',format=yuv420p", '-c:v', 'libx264', '-qp', '0',
+    'assets/video/base.mp4'], { cwd: reel });
+  execFileSync(python, ['tools/build_faces.py'], { cwd: reel, encoding: 'utf8' });
+  const visage = path.join(reel, 'assets/video/visage-split.mp4');
+  assert.equal(execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=r_frame_rate',
+    '-of', 'csv=p=0', visage], { encoding: 'utf8' }).trim(), '30/1', 'visage à la cadence du rendu');
+  const lu = [...execFileSync('ffmpeg', ['-v', 'error', '-i', visage, '-vf', 'format=gray,crop=1:1:540:1460', '-f', 'rawvideo', '-'],
+    { maxBuffer: 1 << 20 })].map((y) => Math.round((y - 16) / 3));
+  assert.ok(Math.abs(lu.length - 600) <= 1, `${lu.length} images pour 20 s`);
+  let verifiees = 0;
+  for (let k = 0; k < lu.length; k += 1) {
+    const exacte = (k / 30) * (30000 / 1001);           // position de l'instant k/30 dans la source, en images
+    if (Math.abs((exacte % 1) - 0.5) < 0.02) continue;  // à mi-chemin de deux images : l'une vaut l'autre
+    assert.equal(lu[k], Math.round(exacte) % 70, `instant ${k}/30 : image ${lu[k]} (modulo 70), attendue ${Math.round(exacte)}`);
+    verifiees += 1;
+  }
+  assert.ok(verifiees > 550, `${verifiees} instants vérifiés`);
+  assert.equal(lu[590], 589 % 70, 'à 19,7 s, la source a une image de moins que le rendu');
+});
+
 // Le comportement du moteur que fenetre() compense, vérifié par un vrai rendu (lent) : à lancer à
 // chaque nouvelle version de HyperFrames (MONTEUR_RENDU=1 npm test). Une vidéo numérotée par blocs
 // remplace les visages ; à chaque image rendue, le numéro lu doit être celui de l'image.
@@ -568,61 +617,171 @@ test('les sons sont posés dans le montage, survivent au master et ne sont jamai
   assert.match(read(reel, 'index.html'), /src="assets\/Whoosh Transition\.mp3"/, 'survit au master régénéré');
 });
 
-// Une voix au niveau d'une sortie d'Adobe Podcast (vers -24 LUFS) : la pose des sons règle le gain du
-// bus pour que le Reel sorte à -16 LUFS, crêtes sous -1 dBTP, sans toucher aux volumes entre eux.
-test('les sons posent le niveau final : -16 LUFS avec une voix, aucun gain sans voix audible', (t) => {
+// Une voix au niveau d'une sortie d'Adobe Podcast (vers -24 LUFS) : le bus du montage ne monte le son que
+// dans la marge de crête du mixage (au-delà, le rendu de l'app ne monte plus rien) ; tools/finaliser.py
+// amène l'export à -16 LUFS, crêtes sous -1 dBTP, sans toucher aux volumes entre eux, et laisse une seule
+// vidéo à poster dans Téléchargements.
+test("le niveau final se pose après l'export : -16 LUFS, crêtes sous -1 dBTP, une vidéo à poster", (t) => {
   const python = pythonOrSkip(t);
   if (!python || !ffmpegOrSkip(t)) return;
+  if (spawnSync(python, ['-c', 'import PIL']).status !== 0) return t.skip('Pillow absent (contrôle de l’export)');
   const dir = maison(t);
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-home-'));
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
   execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=220:duration=12', 'assets/music/fond.mp3'], { cwd: dir });
   write(dir, 'brand.config.json', { ...config(), audio: { musicFile: 'fond.mp3', musicDb: -26.5 } });
   execFileSync(python, ['tools/nouveau_reel.py', 'Niveau', '--date', '2026-10-12'], { cwd: dir, encoding: 'utf8' });
   const reel = path.join(dir, 'reels', `Niveau · 2026-10-12 · ${path.basename(dir)}`);
-  const run = (...args) => execFileSync(python, args, { cwd: reel, encoding: 'utf8', stdio: 'pipe' });
-  const voix = (filtre) => execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc2=size=1080x1920:rate=30:duration=8',
-    '-f', 'lavfi', '-i', filtre, '-shortest', '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'aac', 'assets/video/base.mp4'], { cwd: reel });
+  // HOME de test : Téléchargements fictif ; PYTHONUSERBASE garde les modules Python de l'utilisateur.
+  const userbase = execFileSync(python, ['-c', 'import site; print(site.getuserbase())'], { encoding: 'utf8' }).trim();
+  const env = { ...process.env, HOME: home, USERPROFILE: home, PYTHONUSERBASE: userbase };
+  const run = (...args) => execFileSync(python, args, { cwd: reel, env, encoding: 'utf8', stdio: 'pipe' });
+  // Bruit rose modulé (le corps, qui fait la loudness) et claquements brefs (les crêtes) : vers -25 LUFS,
+  // crête -4 dBFS, comme une voix d'Adobe (-24 LUFS, crête -5 dBFS). Monter à -16 LUFS oblige donc à
+  // limiter les crêtes. Graine fixe : sans elle, ffmpeg tire un bruit neuf à chaque lancement et les
+  // mesures changent d'une fois sur l'autre.
+  const son = "anoisesrc=color=pink:amplitude=0.45:duration=8:seed=86,volume='0.6+0.4*sin(2*PI*1.7*t)':eval=frame[n];"
+    + "aevalsrc='0.45*lt(mod(t,0.37),0.0012)*sin(2*PI*400*t)':s=48000:d=8[c];[n][c]amix=inputs=2:normalize=0";
+  const voix = (sortie, silence = false) => execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i',
+    'testsrc2=size=1080x1920:rate=30:duration=8', '-f', 'lavfi', '-i', silence ? 'anullsrc=r=48000:cl=stereo:d=8' : son,
+    '-map', '0:v', '-map', '1:a', '-shortest', '-c:v', 'libx264', '-preset', 'ultrafast', '-c:a', 'aac', sortie], { cwd: reel });
   const lufs = (fichier) => {
     const err = spawnSync('ffmpeg', ['-nostats', '-i', fichier, '-af', 'ebur128=peak=true', '-f', 'null', '-'],
       { cwd: reel, encoding: 'utf8' }).stderr;
     return { i: Number([...err.matchAll(/I:\s+(-?[\d.]+) LUFS/g)].pop()[1]),
       crete: Number([...err.matchAll(/Peak:\s+(-?[\d.]+) dBFS/g)].pop()[1]) };
   };
+  const image = (fichier) => execFileSync('ffmpeg', ['-v', 'error', '-i', fichier, '-map', '0:v:0', '-c', 'copy', '-f', 'md5', '-'],
+    { cwd: reel, encoding: 'utf8' }).trim();
   const chaine = () => JSON.parse(read(reel, 'index.html').match(/<hf-audio-group id="mixage"[^>]*data-fx-chain="([^"]+)"/)[1]
     .replaceAll('&quot;', '"')).nodes;
 
-  // Bruit rose modulé, crêtes plus hautes que la moyenne comme une voix, vers -24 LUFS.
-  voix('anoisesrc=color=pink:amplitude=0.5:duration=8,volume=\'0.6+0.4*sin(2*PI*1.7*t)\':eval=frame');
+  // Pose des sons : le mixage est mesuré, le bus reçoit le gain vers -16 LUFS borné par sa marge de
+  // crête (-1,5 dBTP), arrondi vers le bas, puis le plafond ; les volumes entre eux ne changent pas.
+  voix('assets/video/base.mp4');
   run('tools/build_master.py', '--write');
-  const sortie = run('tools/build_sfx.py');
-  const [, niveau, gain] = sortie.match(/mixage mesuré à (-?[\d.]+) LUFS, gain ([+-][\d.]+) dB/).map(Number);
-  assert.ok(niveau < -18 && niveau > -32, `voix de test hors gabarit : ${niveau} LUFS`);
-  assert.equal(gain, Math.round((-16 - niveau) * 10) / 10);
+  const pose = run('tools/build_sfx.py');
+  const [, niveau, crete, gain] = pose.match(/mixage mesuré à (-?[\d.]+) LUFS, crête (-?[\d.]+) dBTP ; gain \+([\d.]+) dB/).map(Number);
+  assert.match(pose, /Après l'export, python3 tools\/finaliser\.py amène la vidéo à -16 LUFS/);
+  assert.ok(niveau < -18 && niveau > -30, `mixage de test hors gabarit : ${niveau} LUFS`);
+  assert.ok(-16 - niveau > -1.5 - crete, 'la marge de crête doit borner le gain (sinon le test ne prouve rien)');
+  assert.equal(gain, Math.floor((-1.5 - crete) * 10) / 10);
   assert.deepEqual(chaine().map((n) => [n.type, Object.values(n.params)[0]]), [['gain', gain], ['limiter', -1.5]]);
   assert.match(read(reel, 'index.html'), /<audio id="musique"[^>]*data-volume="0\.0473"/, 'volumes inchangés entre eux');
 
-  // Ancien export (--ffmpeg) : même niveau, mesuré sur le fichier encodé.
+  // Ancien export (--ffmpeg) : pas de rendu pour baisser le son, le gain va jusqu'à -16 LUFS sous un plafond
+  // de crête vraie ; la finalisation prend l'export le plus récent.
   fs.mkdirSync(path.join(reel, 'exports'), { recursive: true });
   fs.copyFileSync(path.join(reel, 'assets/video/base.mp4'), path.join(reel, 'exports/FINAL.mp4'));
   run('tools/build_sfx.py', '--ffmpeg');
-  const fin = lufs('exports/FINAL_SFX_MUSIC.mp4');
-  assert.ok(Math.abs(fin.i + 16) <= 0.7, `export à ${fin.i} LUFS, -16 visé`);
+  const mix = lufs('exports/FINAL_SFX_MUSIC.mp4');
+  assert.ok(Math.abs(mix.i + 16) <= 1, `mixage ffmpeg à ${mix.i} LUFS, -16 visé`);
+  assert.match(run('tools/finaliser.py', '--sans-copie'), /FINAL_SFX_MUSIC\.mp4 -> exports\/FINAL-REEL\.mp4/);
+  const fin = lufs('exports/FINAL-REEL.mp4');
+  assert.ok(Math.abs(fin.i + 16) <= 0.5, `export ffmpeg finalisé à ${fin.i} LUFS, -16 visé`);
   assert.ok(fin.crete <= -1, `crête à ${fin.crete} dBTP`);
 
-  // Voix muette (vidéo d'exemple, Reel sans voix) : niveau d'aujourd'hui, aucun gain.
-  voix('anullsrc=r=48000:cl=stereo');
-  assert.match(run('tools/build_sfx.py'), /non mesuré \(pas de voix audible/);
+  // Bouton Export de l'app : renders/<id>.mp4, sa fiche, et une copie dans Téléchargements.
+  const downloads = path.join(home, 'Downloads');
+  fs.mkdirSync(downloads, { recursive: true });
+  fs.mkdirSync(path.join(reel, 'renders'), { recursive: true });
+  const copieApp = path.join(downloads, 'Niveau 2026-10-12 15.30.mp4');
+  voix('renders/niveau_2026-10-12_15-30-00.mp4');
+  fs.copyFileSync(path.join(reel, 'renders/niveau_2026-10-12_15-30-00.mp4'), copieApp);
+  write(reel, 'renders/niveau_2026-10-12_15-30-00.meta.json', JSON.stringify({ status: 'complete', exportedTo: copieApp }));
+  const avant = lufs('renders/niveau_2026-10-12_15-30-00.mp4');
+  assert.ok(avant.i < -22 && avant.i > -28, `voix de test hors gabarit : ${avant.i} LUFS`);
+  assert.ok(avant.crete - avant.i > 15, 'voix de test sans crêtes : le limiteur ne serait pas testé');
+  const sortie = run('tools/finaliser.py');
+  const finale = lufs('exports/FINAL-REEL.mp4');
+  assert.ok(Math.abs(finale.i + 16) <= 0.5, `finalisé à ${finale.i} LUFS, -16 visé`);
+  assert.ok(finale.crete <= -1, `crête finalisée à ${finale.crete} dBTP`);
+  assert.equal(image('exports/FINAL-REEL.mp4'), image('renders/niveau_2026-10-12_15-30-00.mp4'), 'image copiée telle quelle');
+  assert.match(sortie, /S\) son : -1[56]\.\d LUFS[^\n]*OK[\s\S]*Prête à poster/);
+  assert.match(sortie, /remplace la copie posée par l'app/);
+  assert.deepEqual(fs.readdirSync(downloads), [path.basename(copieApp)], 'une seule vidéo à poster');
+  assert.ok(fs.readFileSync(copieApp).equals(fs.readFileSync(path.join(reel, 'exports/FINAL-REEL.mp4'))));
+  // Relancé : toujours une seule vidéo. Copie changée par le client : intacte, la finale à côté.
+  run('tools/finaliser.py');
+  assert.deepEqual(fs.readdirSync(downloads), [path.basename(copieApp)]);
+  fs.appendFileSync(copieApp, 'retouche');
+  assert.match(run('tools/finaliser.py'), /copiée/);
+  assert.ok(fs.readFileSync(copieApp).toString('latin1').endsWith('retouche'), 'fichier du client intact');
+  assert.ok(fs.existsSync(path.join(downloads, `${path.basename(reel)}.mp4`)));
+  assert.match(run('tools/finaliser.py'), /déjà livrée, identique/);
+  assert.equal(fs.readdirSync(downloads).length, 2);
+
+  // Rangement : la vidéo archivée sous le nom du Reel est la finalisée.
+  run('tools/ranger_reel.py');
+  const archive = path.join(home, process.platform === 'win32' ? 'Videos' : 'Movies', 'reels-publies', path.basename(reel));
+  assert.ok(fs.readFileSync(path.join(archive, `${path.basename(reel)}.mp4`)).equals(fs.readFileSync(path.join(reel, 'exports/FINAL-REEL.mp4'))));
+
+  // Voix absente : rien n'est remonté à l'aveugle, ni à la pose ni à la finalisation.
+  voix('exports/FINAL.mp4', true);
+  const muet = spawnSync(python, ['tools/finaliser.py', 'exports/FINAL.mp4', '--sans-copie'], { cwd: reel, env, encoding: 'utf8' });
+  assert.notEqual(muet.status, 0);
+  assert.match(muet.stderr, /trop faible/);
+  voix('assets/video/base.mp4', true);
+  assert.match(run('tools/build_sfx.py'), /pas de voix audible, aucun gain/);
   assert.equal(chaine()[0].params.gain, 0);
 
-  // Le vrai rendu HyperFrames applique le gain et le plafond du bus (MONTEUR_RENDU=1 npm test).
+  // Le vrai rendu HyperFrames : l'export brut sort au niveau du mixage plus le gain du bus (rien n'est
+  // baissé, la crête reste sous -1 dBTP), puis la finalisation l'amène à -16 LUFS (MONTEUR_RENDU=1 npm test).
   if (!process.env.MONTEUR_RENDU) return;
-  voix('anoisesrc=color=pink:amplitude=0.5:duration=8,volume=\'0.6+0.4*sin(2*PI*1.7*t)\':eval=frame');
+  voix('assets/video/base.mp4');
   run('tools/build_sfx.py');
   const cli = path.join(dir, 'node_modules', '.bin', process.platform === 'win32' ? 'hyperframes.cmd' : 'hyperframes');
   execFileSync(fs.existsSync(cli) ? cli : path.join(root, 'node_modules', '.bin', 'hyperframes'), ['render', '-o', 'exports/FINAL.mp4'],
     { cwd: reel, stdio: 'ignore', timeout: 600000 });
-  const rendu = lufs('exports/FINAL.mp4');
-  assert.ok(Math.abs(rendu.i + 16) <= 1, `rendu à ${rendu.i} LUFS, -16 visé`);
-  assert.ok(rendu.crete <= -1, `crête du rendu à ${rendu.crete} dBTP`);
+  const brut = lufs('exports/FINAL.mp4');
+  assert.ok(Math.abs(brut.i - (niveau + gain)) <= 0.5, `export brut à ${brut.i} LUFS, ${niveau + gain} attendus`);
+  assert.ok(brut.crete <= -1, `crête de l'export brut à ${brut.crete} dBTP`);
+  run('tools/finaliser.py', 'exports/FINAL.mp4', '--sans-copie');
+  const rendu = lufs('exports/FINAL-REEL.mp4');
+  assert.ok(Math.abs(rendu.i + 16) <= 0.2, `rendu finalisé à ${rendu.i} LUFS, -16 visé`);
+  assert.ok(rendu.crete <= -1, `crête du rendu finalisé à ${rendu.crete} dBTP`);
+});
+
+// L'encodage AAC remonte parfois la crête vraie d'un son plafonné : la finalisation (tools/niveau_final.py,
+// le cœur commun des Reels et des vidéos YouTube) abaisse alors le plafond d'autant et refait la vidéo,
+// au lieu de la refuser au contrôle. Encodage simulé : le cas se rejoue à l'identique, sans dépendre d'un
+// bruit ni de la version d'ffmpeg.
+test("finalisation : une crête remontée par l'AAC abaisse le plafond, puis la vidéo est refaite", (t) => {
+  const python = pythonOrSkip(t);
+  if (!python) return;
+  const dir = maison(t);
+  execFileSync(python, ['tools/nouveau_reel.py', 'Crete', '--date', '2026-10-15'], { cwd: dir, encoding: 'utf8' });
+  const reel = path.join(dir, 'reels', `Crete · 2026-10-15 · ${path.basename(dir)}`);
+  const essai = (cretes) => execFileSync(python, ['-c', [
+    'import pathlib, sys; sys.path.insert(0, "tools")',
+    'import niveau_final as n',
+    `ecrits, cretes = [], iter(${JSON.stringify(cretes)})`,
+    'sortie = pathlib.Path("exports/FINAL-REEL.mp4")',
+    'n.plafond_ffmpeg = lambda plafond, gain: f"plafond {plafond}"',
+    'n.ecrire = lambda src, dest, gain, plafond, debit: ecrits.append(plafond)',
+    // Export à -24 LUFS ; le gain réglé atteint la cible ; la crête lue sur le fichier encodé suit la liste.
+    'n.mesurer = lambda src, filtre="": (-16.0, -1.5) if filtre else (-16.0, next(cretes)) if src == sortie else (-24.0, -5.0)',
+    'r = n.finaliser_son(pathlib.Path("exports/FINAL.mp4"), sortie, -16.0, "320k")',
+    'print(ecrits, r["plafond"], r["crete_apres"])'].join('\n')], { cwd: reel, encoding: 'utf8' }).trim();
+  assert.equal(essai([-1.2]), '[-1.5] -1.5 -1.2', 'crête sous -1 dBTP : un seul encodage');
+  assert.equal(essai([-0.6, -1.3]), '[-1.5, -2.0] -2.0 -1.3', 'remontée de 0,4 dB : plafond abaissé de 0,5 dB');
+  assert.equal(essai([-0.2, -0.7, -0.9]), '[-1.5, -2.4, -2.8] -2.8 -0.9', 'au plus trois encodages, le contrôle tranche');
+  // L'encodage décale le niveau de 0,3 LU : le gain vise d'autant plus loin, au deuxième encodage.
+  const niveau = execFileSync(python, ['-c', [
+    'import pathlib, sys; sys.path.insert(0, "tools")',
+    'import niveau_final as n',
+    'vises, apres = [], iter([-16.3, -16.05])',
+    'sortie = pathlib.Path("exports/FINAL-REEL.mp4")',
+    'n.plafond_ffmpeg = lambda plafond, gain: f"gain {gain}"',
+    'n.ecrire = lambda src, dest, gain, plafond, debit: None',
+    'def regler(src, niveau, vise, plafond):',
+    '    vises.append(round(vise, 2))',
+    '    return vise - niveau',
+    'n.regler = regler',
+    'n.mesurer = lambda src, filtre="": (next(apres), -1.5) if src == sortie else (-24.0, -5.0)',
+    'r = n.finaliser_son(pathlib.Path("exports/FINAL.mp4"), sortie, -16.0, "320k")',
+    'print(vises, r["apres"])'].join('\n')], { cwd: reel, encoding: 'utf8' }).trim();
+  assert.equal(niveau, '[-16.0, -15.7] -16.05');
 });
 
 test("la vidéo glissée dans l'accueil part dans le Reel créé ; celle du client reste où elle est", (t) => {
@@ -777,6 +936,7 @@ test("le .gitignore garde hors de git les copies régénérées ou sous licence 
 test('les messages des outils et des scripts sont sans tiret long', () => {
   const fautifs = [];
   const fichiers = [...fs.readdirSync(path.join(root, 'tools')).filter((f) => /\.(py|sh)$/.test(f)).map((f) => `tools/${f}`),
+    ...fs.readdirSync(path.join(root, 'templates/youtube/tools')).filter((f) => f.endsWith('.py')).map((f) => `templates/youtube/tools/${f}`),
     ...fs.readdirSync(path.join(root, 'scripts')).filter((f) => f.endsWith('.mjs') && !f.includes('.test.')).map((f) => `scripts/${f}`)];
   for (const fichier of fichiers) {
     let docstring = false;

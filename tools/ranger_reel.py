@@ -5,8 +5,9 @@ Usage (depuis le dossier du Reel) :
     python3 tools/ranger_reel.py [--alleger]
 
 - copie les vidéos finales vers <Vidéos>/reels-publies/<nom du Reel>/ : les fichiers dont le nom
-  contient « FINAL » (exports/, renders/) et le dernier export réussi du bouton Export de l'app
-  HyperFrames (renders/<id>.mp4, décrit par renders/<id>.meta.json), copié en « <nom du Reel>.mp4 » ;
+  contient « FINAL » (exports/, renders/) et la vidéo postée, copiée en « <nom du Reel>.mp4 » : la
+  version finalisée (exports/FINAL-REEL.mp4, tools/finaliser.py), sinon le dernier export réussi
+  du bouton Export de l'app HyperFrames (renders/<id>.mp4, décrit par renders/<id>.meta.json) ;
 - marque le Reel publié (meta.json : monteurIa.etat = "publie") : il garde le style qu'il avait
   au moment du post et prouve que la première vidéo est derrière nous ;
 - si le débrief de la première vidéo n'a pas eu lieu, pose la note « débrief à faire » dans le
@@ -116,7 +117,10 @@ def main() -> None:
 
     finals = finales(reel)
     app = export_app(reel)
-    copies = [(p, p.name) for p in finals] + ([(app, f"{reel.name}{app.suffix}")] if app else [])
+    # La vidéo postée : la finalisée ; un export de l'app plus récent (pas encore finalisé) passe devant.
+    finalisee = reel / "exports" / "FINAL-REEL.mp4"
+    postee = finalisee if finalisee.is_file() and (not app or finalisee.stat().st_mtime >= app.stat().st_mtime) else app
+    copies = [(p, p.name) for p in finals if p != postee] + ([(postee, f"{reel.name}{postee.suffix}")] if postee else [])
     if copies:
         dest = ARCHIVE_BASE / reel.name
         dest.mkdir(parents=True, exist_ok=True)

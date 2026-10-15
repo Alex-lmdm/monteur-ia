@@ -85,10 +85,21 @@ if not MODEL.exists():
 words = []
 with tempfile.TemporaryDirectory() as tmp:
     tmp = pathlib.Path(tmp)
+    # Une prise en RACCORD avec la precedente (phrase partagee pour changer de cadre sur un mot,
+    # tools/cut_boundaries.py) se transcrit avec elle : coupee au milieu d'une liaison
+    # (« est | offert »), Whisper entend « est tout fait | Faire ». Chaque mot revient ensuite a la
+    # prise ou il commence.
+    groupes = []
     for take in sections.TAKES:
-        wav = tmp / f"t{take['i']:02d}.wav"
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(take["start"]),
-                        "-to", str(take["end"]), "-i", str(CUT),
+        if take.get("raccord") and groupes:
+            groupes[-1].append(take)
+        else:
+            groupes.append([take])
+    for groupe in groupes:
+        debut, fin = groupe[0]["start"], groupe[-1]["end"]
+        wav = tmp / f"t{groupe[0]['i']:02d}.wav"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(debut),
+                        "-to", str(fin), "-i", str(CUT),
                         "-ar", "16000", "-ac", "1", str(wav)], check=True)
         proc = subprocess.run([WHISPER, "-m", str(MODEL), "-l", LANG,
                                "-ml", "1", "-sow", "-wt", "0.01", "-np", str(wav)],
@@ -100,10 +111,12 @@ with tempfile.TemporaryDirectory() as tmp:
             text = m.group(7).strip()
             if not text:
                 continue
+            start = round(debut + secs(*m.group(1, 2, 3)), 3)
+            take = next((t for t in reversed(groupe) if start >= t["start"] - 1e-6), groupe[0])
             words.append({
                 "w": text,
-                "start": round(take["start"] + secs(*m.group(1, 2, 3)), 3),
-                "end": round(take["start"] + secs(*m.group(4, 5, 6)), 3),
+                "start": start,
+                "end": round(debut + secs(*m.group(4, 5, 6)), 3),
                 "take": take["i"],
             })
 

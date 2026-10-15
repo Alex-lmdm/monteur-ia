@@ -24,6 +24,8 @@ COMMENT :
   Les jump-cuts sont des changements de plan -> `select=gt(scene,X)` les detecte a la frame pres,
   directement dans le fichier livre. On croise avec les bornes theoriques (cumul des ISLANDS) pour
   s'assurer qu'on a bien N-1 coupes et zero faux positif.
+  Raccord (deux prises qui se touchent : une phrase partagee pour changer de cadre sur un mot) :
+  aucun saut d'image, la frontiere se deduit du debut reel de la prise d'avant, a l'image pres.
 
 Sortie = LA source de verite des frontieres de section (montage) ET des bornes de phrase
 (sous-titres) — consommee par tools/sections.py.
@@ -68,6 +70,8 @@ if _BUILD.exists():
         PAD_END = _consts.get("PAD_END", PAD_END)
         print(f"prises lues depuis {_BUILD.relative_to(ROOT)} ({len(ISLANDS)} prises)")
 TOL = 0.35   # fenetre de rapprochement theorique <-> detecte
+RACCORD = 0.005   # deux prises qui se touchent = une prise partagee (changement de cadre sans coupe)
+IMAGE = 1001 / 30000   # duree d'une image du derush (-r 30000/1001)
 
 if not CUT.exists():
     print(f"ERREUR : {CUT.relative_to(ROOT)} introuvable.")
@@ -78,7 +82,13 @@ if not CUT.exists():
 # --- bornes THEORIQUES (cumul des prises padees) -------------------------------
 theo = [0.0]
 for s, e, _ in ISLANDS:
-    theo.append(round(theo[-1] + (e + PAD_END) - (s - PAD_START), 3))
+    theo.append(round(theo[-1] + (e + PAD_END) - max(s - PAD_START, 0.0), 3))
+
+# Raccords : la prise k reprend le rush la ou la prise k-1 s'arrete (derush/build_derush.py les
+# monte d'un seul tenant). Pas de saut d'image a detecter : la frontiere se deduit du debut REEL
+# de la prise d'avant, a l'image pres.
+raccord = [False] + [abs((ISLANDS[k - 1][1] + PAD_END) - max(ISLANDS[k][0] - PAD_START, 0.0)) <= RACCORD
+                     for k in range(1, len(ISLANDS))]
 
 # --- coupes REELLES (scene change dans le fichier livre) -----------------------
 proc = subprocess.run(
@@ -92,7 +102,10 @@ dur = float(subprocess.run(
     capture_output=True, encoding="utf-8", errors="replace").stdout.strip())
 
 bounds, drifts = [0.0], []
-for m in theo[1:-1]:
+for k, m in enumerate(theo[1:-1], start=1):
+    if raccord[k]:
+        bounds.append(round(round((bounds[-1] + theo[k] - theo[k - 1]) / IMAGE) * IMAGE, 3))
+        continue
     near = [d for d in detected if abs(d - m) < TOL]
     if not near:
         raise SystemExit(f"coupe introuvable pres de {m:.3f}s : baisser le seuil scene ou verifier ISLANDS")
@@ -106,12 +119,19 @@ assert bounds == sorted(bounds), "bornes non croissantes"
 
 takes = [{"i": i, "start": bounds[i], "end": bounds[i + 1], "text": ISLANDS[i][2]}
          for i in range(len(ISLANDS))]
+for i in range(1, len(ISLANDS)):
+    if raccord[i]:
+        takes[i]["raccord"] = True   # suit la prise d'avant sans coupe (changement de cadre seul)
 OUT.write_text(json.dumps(
     {"source": str(CUT.relative_to(ROOT)), "duration": round(dur, 3),
      "method": "scene-change detection (gt(scene,0.015)) recale sur le cumul des ISLANDS",
      "takes": takes}, ensure_ascii=False, indent=2), encoding="utf-8")
 
-print(f"{len(takes)} prises, {len(drifts)} coupes -> {OUT.relative_to(ROOT)}")
-print(f"derive moyenne reel-vs-theorique : {sum(drifts)/len(drifts):+.3f}s  (max {max(drifts):+.3f}s)")
+n_raccords = sum(raccord)
+print(f"{len(takes)} prises, {len(drifts)} coupes" + (f" + {n_raccords} raccord(s)" if n_raccords else "")
+      + f" -> {OUT.relative_to(ROOT)}")
+if drifts:
+    print(f"derive moyenne reel-vs-theorique : {sum(drifts)/len(drifts):+.3f}s  (max {max(drifts):+.3f}s)")
 for t in takes:
-    print(f"  {t['i']:>2}  {t['start']:6.3f} -> {t['end']:6.3f}   {t['text'][:52]}")
+    print(f"  {t['i']:>2}  {t['start']:6.3f} -> {t['end']:6.3f}   {t['text'][:52]}"
+          + ("   (raccord : changement de cadre, sans coupe)" if t.get("raccord") else ""))

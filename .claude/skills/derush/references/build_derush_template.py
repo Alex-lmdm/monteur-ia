@@ -26,27 +26,49 @@ ISLANDS = [
 
 PAD_START = 0.04   # brand.config.json -> derush.padStart. Debut : garder l'elan d'attaque (negatif bouffe les voyelles)
 PAD_END   = 0.02   # brand.config.json -> derush.padEnd. Fin : resserree. Bornes sur ilots -40dB:d=0.18 -> ~0.10s inter-cut
+PAD_FIN   = 0.30   # la DERNIERE prise : aucune coupe apres elle, la voix retombe en entier (sinon le dernier mot est coupe)
 FPS       = "30000/1001"
 # PLEINE RESOLUTION, quasi sans perte : a l'export, le visage est recadre DANS ce fichier puis
 # agrandi (tools/build_final.py). Reduire ici en 1080x1920 (ancien reglage, crf 20 veryfast)
 # ne laissait qu'un tiers du detail du visage ; garde tel quel, il en conserve ~80 %.
 # Le passage en 1080x1920 pour le studio se fait plus tard (base.mp4, motion-design etape 3).
 CRF       = 14
+# veryfast : fichier intermediaire, deux fois moins de calcul que le reglage par defaut (mesure sur
+# un rush DJI 4K : 510 s de processeur au lieu de 944), image identique a l'oeil (PSNR 50 dB).
+PRESET    = "veryfast"
+# RACCORD : deux prises qui se touchent apres les marges (fin + PAD_END == debut suivant - PAD_START)
+# sont UNE seule prise du rush partagee en deux, pour changer de cadre sur un mot au montage
+# (« comme la », « offert »). Elles sont montees d'un seul tenant : aucune coupe, ni dans l'image
+# ni dans le son. Le partage ne vit que dans <cut>_cuts.json (tools/cut_boundaries.py).
+RACCORD   = 0.005
+
+segs = []
+for k, (s, e, _txt) in enumerate(ISLANDS):
+    a = max(s - PAD_START, 0.0); b = e + (PAD_FIN if k == len(ISLANDS) - 1 else PAD_END)
+    if segs and a < segs[-1][1] - RACCORD:
+        raise SystemExit(f"prises qui se chevauchent vers {a:.2f} s : le son serait double. "
+                         "Pour un raccord, fin + PAD_END doit egaler debut suivant - PAD_START.")
+    if segs and a <= segs[-1][1] + RACCORD:
+        segs[-1][1] = b
+    else:
+        segs.append([a, b])
 
 parts, concat_in, kept = [], "", 0.0
-for i, (s, e, _txt) in enumerate(ISLANDS):
-    a = max(s - PAD_START, 0.0); b = e + PAD_END; kept += (b - a)
+for i, (a, b) in enumerate(segs):
+    kept += (b - a)
     parts.append(f"[0:v:0]trim=start={a:.3f}:end={b:.3f},setpts=PTS-STARTPTS[v{i}];")
     parts.append(f"[0:a:0]atrim=start={a:.3f}:end={b:.3f},asetpts=PTS-STARTPTS[a{i}];")
     concat_in += f"[v{i}][a{i}]"
-filtg = "".join(parts) + f"{concat_in}concat=n={len(ISLANDS)}:v=1:a=1[v][a]"
+filtg = "".join(parts) + f"{concat_in}concat=n={len(segs)}:v=1:a=1[v][a]"
 
 cmd = ["ffmpeg", "-y", "-i", SRC, "-filter_complex", filtg,
        "-map", "[v]", "-map", "[a]", "-r", FPS,
-       "-c:v", "libx264", "-crf", str(CRF), "-pix_fmt", "yuv420p",
+       "-c:v", "libx264", "-preset", PRESET, "-crf", str(CRF), "-pix_fmt", "yuv420p",
        "-c:a", "aac", "-b:a", "192k", OUT]
 
-print(f"Prises : {len(ISLANDS)}  |  duree estimee : {kept:.1f}s")
+raccords = len(ISLANDS) - len(segs)
+print(f"Prises : {len(ISLANDS)}" + (f" (dont {raccords} raccord(s) sans coupe)" if raccords else "")
+      + f"  |  duree estimee : {kept:.1f}s")
 r = subprocess.run(cmd, capture_output=True, encoding="utf-8", errors="replace")
 print("ffmpeg exit:", r.returncode)
 if r.returncode:

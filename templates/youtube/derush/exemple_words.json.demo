@@ -1,0 +1,122 @@
+[
+ {
+  "w": "Une",
+  "start": 0.15,
+  "end": 0.518,
+  "take": 0
+ },
+ {
+  "w": "vidéo",
+  "start": 0.583,
+  "end": 0.952,
+  "take": 0
+ },
+ {
+  "w": "YouTube",
+  "start": 1.017,
+  "end": 1.385,
+  "take": 0
+ },
+ {
+  "w": "se",
+  "start": 1.45,
+  "end": 1.818,
+  "take": 0
+ },
+ {
+  "w": "monte",
+  "start": 1.883,
+  "end": 2.252,
+  "take": 0
+ },
+ {
+  "w": "autrement.",
+  "start": 2.317,
+  "end": 2.685,
+  "take": 0
+ },
+ {
+  "w": "On",
+  "start": 3.15,
+  "end": 3.426,
+  "take": 1
+ },
+ {
+  "w": "coupe",
+  "start": 3.475,
+  "end": 3.751,
+  "take": 1
+ },
+ {
+  "w": "les",
+  "start": 3.8,
+  "end": 4.076,
+  "take": 1
+ },
+ {
+  "w": "blancs,",
+  "start": 4.125,
+  "end": 4.401,
+  "take": 1
+ },
+ {
+  "w": "on",
+  "start": 4.45,
+  "end": 4.726,
+  "take": 1
+ },
+ {
+  "w": "change",
+  "start": 4.775,
+  "end": 5.051,
+  "take": 1
+ },
+ {
+  "w": "de",
+  "start": 5.1,
+  "end": 5.376,
+  "take": 1
+ },
+ {
+  "w": "cadre.",
+  "start": 5.425,
+  "end": 5.701,
+  "take": 1
+ },
+ {
+  "w": "Et",
+  "start": 6.15,
+  "end": 6.518,
+  "take": 2
+ },
+ {
+  "w": "le",
+  "start": 6.583,
+  "end": 6.952,
+  "take": 2
+ },
+ {
+  "w": "rythme",
+  "start": 7.017,
+  "end": 7.385,
+  "take": 2
+ },
+ {
+  "w": "tient",
+  "start": 7.45,
+  "end": 7.818,
+  "take": 2
+ },
+ {
+  "w": "jusqu'au",
+  "start": 7.883,
+  "end": 8.252,
+  "take": 2
+ },
+ {
+  "w": "bout.",
+  "start": 8.317,
+  "end": 8.685,
+  "take": 2
+ }
+]

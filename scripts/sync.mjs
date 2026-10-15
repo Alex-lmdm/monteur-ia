@@ -360,6 +360,7 @@ function buildPlaceholderMap(config, style) {
     STYLE_LAYOUT: config?.montage?.defaultLayout ?? style.preset.montage?.defaultLayout ?? "split",
     FIRST_VIDEO_STATUS: config?.setup?.firstVideoDone === true ? "faite" : "pas encore faite",
     MONTAGE_PREFERENCES: renderPreferences(config?.montage?.preferences),
+    YOUTUBE_PREFERENCES: renderPreferences(config?.youtube?.preferences),
     // Chemin du dossier Monteur IA vu depuis le dossier qui reçoit les instructions (vide à la
     // racine). Sert aux chemins des skills, que l'app HyperFrames ne charge pas d'elle-même.
     MAISON: "",
@@ -427,17 +428,29 @@ function generateAgentFiles(config, style) {
   for (const lieu of lieux()) {
     const { out: substituted, missing } = substitutePlaceholders(tpl, { ...map, MAISON: lieu.maison, REEL_NOM: lieu.nom });
     if (missing.size > 0) missingIdentity = true;
+    // Le pipeline des Reels (première vidéo, 7 étapes, checklist) n'est pas écrit dans une vidéo
+    // YouTube : elle suit le skill youtube, et ces règles verticales l'induiraient en erreur. Sa
+    // checklist de montage n'est pas écrite dans l'accueil, où rien ne se monte (place gardée pour
+    // les extensions sous la limite de Codex).
+    // L'aiguillage YouTube détaillé est écrit là où une vidéo YouTube peut naître (maison, accueil)
+    // et dans la vidéo elle-même ; un Reel n'en garde qu'une ligne.
+    const pipeline = lieu.bloc === "LIEU_YOUTUBE" ? ["ROUTAGE_YOUTUBE"]
+      : lieu.bloc === "LIEU_ACCUEIL" ? ["PIPELINE_REEL", "ROUTAGE_YOUTUBE"]
+      : lieu.bloc === "LIEU_MAISON" ? ["PIPELINE_REEL", "CHECKLIST_REEL", "ROUTAGE_YOUTUBE"]
+      : ["PIPELINE_REEL", "CHECKLIST_REEL"];
     for (const { file, keep } of targets) {
-      const contenu = resolveConditionals(substituted, [keep, lieu.bloc]);
+      const contenu = resolveConditionals(substituted, [keep, lieu.bloc, ...pipeline]);
       tropLong = Math.max(tropLong, Buffer.byteLength(contenu));
       ecrireSiDifferent(path.join(lieu.dir, file), contenu);
     }
-    if (lieu.bloc !== "LIEU_REEL" && lieu.bloc !== "LIEU_STORY") log(`  généré  ${rel(path.join(lieu.dir, "CLAUDE.md"))} + AGENTS.md`);
+    if (!["LIEU_REEL", "LIEU_STORY", "LIEU_YOUTUBE"].includes(lieu.bloc)) log(`  généré  ${rel(path.join(lieu.dir, "CLAUDE.md"))} + AGENTS.md`);
   }
   const nbReels = reels().length;
   if (nbReels > 0) log(`  généré  CLAUDE.md + AGENTS.md dans ${nbReels} Reel(s)`);
   const nbStories = stories().length;
   if (nbStories > 0) log(`  généré  CLAUDE.md + AGENTS.md dans ${nbStories} story(s)`);
+  const nbYoutube = youtubes().length;
+  if (nbYoutube > 0) log(`  généré  CLAUDE.md + AGENTS.md dans ${nbYoutube} vidéo(s) YouTube`);
   if (tropLong > LIMITE) {
     warn(`consignes générées de ${tropLong} octets, au-delà des ${LIMITE} que Codex lit par défaut : lance`
       + " node scripts/app-hyperframes.mjs brancher, et raccourcis les préférences apprises ou un bloc d'extension.");
@@ -474,6 +487,8 @@ const reels = () => subdirs(path.join(ROOT, "reels")).filter((d) => readMeta(d)?
 // Stories de l'extension Système Stories : un projet de l'app par story (visionneuse de la vidéo ffmpeg),
 // dont les consignes viennent du bloc LIEU_STORY de l'extension.
 const stories = () => subdirs(path.join(ROOT, "stories")).filter((d) => readMeta(d)?.monteurIa?.lieu === "story");
+// Vidéos YouTube (mode intégré, skill youtube) : un projet de l'app par vidéo, au format 16:9.
+const youtubes = () => subdirs(path.join(ROOT, "youtube")).filter((d) => readMeta(d)?.monteurIa?.lieu === "youtube");
 
 function lieux() {
   return [
@@ -481,6 +496,7 @@ function lieux() {
     ...accueils().map((dir) => ({ dir, maison: "../", bloc: "LIEU_ACCUEIL", nom: path.basename(dir) })),
     ...reels().map((dir) => ({ dir, maison: "../../", bloc: "LIEU_REEL", nom: path.basename(dir) })),
     ...stories().map((dir) => ({ dir, maison: "../../", bloc: "LIEU_STORY", nom: path.basename(dir) })),
+    ...youtubes().map((dir) => ({ dir, maison: "../../", bloc: "LIEU_YOUTUBE", nom: path.basename(dir) })),
   ];
 }
 
@@ -551,6 +567,45 @@ function refreshLieux() {
     mirrorFiles(path.join(ROOT, "tools"), path.join(dir, "tools"),
       (name) => /\.(py|sh)$/.test(name) && !isPerReelTool(name));
   }
+  for (const dir of youtubes()) {
+    if (readMeta(dir)?.monteurIa?.etat !== "publie") mirrorFiles(path.join(ROOT, "brand"), path.join(dir, "brand"), horsReleve);
+    mirrorFiles(path.join(ROOT, "assets", "vendor"), path.join(dir, "assets", "vendor"));
+    // Outils du 16:9 (templates/youtube/tools/), sauf ceux adaptés à chaque vidéo, et outils de la
+    // maison sans format (jamais les outils verticaux des Reels : même nom, autre géométrie).
+    const gabarit = path.join(ROOT, "templates", "youtube", "tools");
+    mirrorFiles(gabarit, path.join(dir, "tools"), (name) => /\.py$/.test(name) && !isPerVideoTool(path.join(gabarit, name)));
+    const pack = packSfxPourYoutube();
+    mirrorFiles(path.join(ROOT, "tools"), path.join(dir, "tools"),
+      (name) => OUTILS_COMMUNS_YOUTUBE.has(name) && (pack || !OUTILS_PACK_SFX.has(name)));
+  }
+}
+
+// Outils de la maison copiés tels quels dans une vidéo YouTube : ils ne dépendent pas du format.
+// sfx.py et sfx_mix.py : ceux du Pack SFX, s'il est installé en 1.2.0 ou plus (le mirroir ne copie que
+// l'existant).
+// Ceux du dérush adaptés à chaque vidéo (cut_boundaries, build_words) n'y sont copiés qu'à sa
+// création (tools/nouvelle_video_youtube.py, liste OUTILS_MAISON).
+const OUTILS_COMMUNS_YOUTUBE = new Set(["lieux.py", "brand_style.py", "sons.py", "niveau_final.py", "ecarts_derush.py",
+  "ranger_reel.py", "prises.py", "sfx.py", "sfx_mix.py"]);
+const isPerVideoTool = (file) => /^║.*A CHAQUE VIDEO/m.test(fs.readFileSync(file, "utf8"));
+
+// Le Pack SFX ne sonorise une vidéo YouTube qu'à partir de sa version 1.2.0 (musique et repères du
+// 16:9). Plus ancien, ses outils restent hors des vidéos : le skill youtube dit au client de le
+// retélécharger, et les sons se posent d'ici là par tools/build_sfx.py de la vidéo.
+const OUTILS_PACK_SFX = new Set(["sfx.py", "sfx_mix.py"]);
+const PACK_SFX_YOUTUBE = [1, 2, 0];
+function packSfxPourYoutube() {
+  let version;
+  try {
+    version = String(readJSON(path.join(ROOT, "assets", "sfx", ".pack-sfx-manifest.json")).version ?? "");
+  } catch {
+    return false;
+  }
+  const v = version.split(".").map(Number);
+  for (let i = 0; i < PACK_SFX_YOUTUBE.length; i += 1) {
+    if ((v[i] || 0) !== PACK_SFX_YOUTUBE[i]) return (v[i] || 0) > PACK_SFX_YOUTUBE[i];
+  }
+  return true;
 }
 
 // ---------------------------------------------------------------------------

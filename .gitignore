@@ -81,6 +81,28 @@ reels/*/brand/fonts/
 reels/*/CLAUDE.md
 reels/*/AGENTS.md
 
+# Vidéos YouTube (youtube/<nom>/, mode YouTube) : mêmes règles que les Reels.
+youtube/*/assets/video/*
+youtube/*/derush/**/*.mp4
+youtube/*/derush/**/*.mov
+youtube/*/derush/**/*.mp3
+youtube/*/derush/**/*.wav
+youtube/*/derush/**/*.m4a
+youtube/*/exports/
+youtube/*/renders/
+youtube/*/work/
+youtube/*/snapshots/
+youtube/*/probe/
+youtube/*/.thumbnails/
+youtube/*/.waveform-cache/
+youtube/*/.hyperframes/
+youtube/*/.transcode-cache/
+youtube/*/assets/sons/
+youtube/*/assets/vendor/
+youtube/*/brand/fonts/
+youtube/*/CLAUDE.md
+youtube/*/AGENTS.md
+
 # Reel Cloneur™ : analyses de Reels (vidéos tierces) et son téléchargeur
 clones/
 .reel-cloneur-venv/

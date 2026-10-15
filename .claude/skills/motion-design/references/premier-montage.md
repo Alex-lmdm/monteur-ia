@@ -28,8 +28,9 @@ au bon volume (skill `derush`, étape 7 ; nettoyage Adobe proposé au débrief).
 - le dérush par re-transcription (aucun mot coupé ni doublé) et les vraies coupes mesurées ;
 - le concept visuel sur un snapshot de la première section avant de décliner les autres ;
 - chaque section sur des images de début, milieu et fin ; les sous-titres sur les vrais mots ;
-- l'export final : `python3 tools/check_export.py [fichier]` (format, visage non agrandi, son,
-  durée). Dans l'app, le client clique sur Export : vérifie ensuite le fichier de Téléchargements.
+- l'export final : `python3 tools/finaliser.py` (niveau sonore, puis format, visage non agrandi,
+  son, durée). Dans l'app, le client clique sur Export : finalise ensuite, il remplace la copie de
+  Téléchargements par la vidéo à poster.
 
 Puis livrer et ouvrir le débrief : skill `setup`, `references/debrief-premiere-video.md`.
 Les vidéos suivantes reprennent le pipeline normal avec ses validations, et appliquent les

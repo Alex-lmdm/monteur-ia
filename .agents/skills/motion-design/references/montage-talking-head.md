@@ -49,7 +49,8 @@ référencer `compositions/…` à l'identique. Deux HTML racines = erreur de li
 `multiple_root_compositions` → on l'**écrit, on rend, puis on le supprime** (cf `tools/build_overlay.py --render`).
 
 **Contrôle obligatoire avant de livrer** : `npm run check` ne voit RIEN de tout ça (il valide la
-structure, pas la vidéo rendue). Lancer **`python3 tools/check_export.py`** sur la vidéo exportée :
+structure, pas la vidéo rendue). Après l'export, **`python3 tools/finaliser.py`** pose le niveau sonore
+puis lance `tools/check_export.py` sur la vidéo finalisée (seul : `--calque` pour l'ancien export) :
 il vérifie (A) l'opacité du calque section par section et (B) que les timelines tournent vraiment
 (un élément posé à `opacity:0` par GSAP doit être invisible au début de sa section).
 
@@ -226,7 +227,12 @@ Donc :
 - **`python3 tools/build_master.py --write`** pose alors ces vidéos **sans aucun transform** (surface
   plein cadre + `clip-path`, la forme anti carré noir), les sons déjà posés sont gardés.
 - **Export** : dans l'app HyperFrames, bouton **Export** (MP4 1080p 30 im/s, dans Téléchargements) ;
-  ailleurs `npm run render` (`exports/FINAL.mp4`). Puis `python3 tools/check_export.py [fichier]`.
+  ailleurs `npm run render` (`exports/FINAL.mp4`). Puis **`python3 tools/finaliser.py [fichier]`** :
+  le son à -16 LUFS (un même gain pour tout, crêtes vraies limitées), le contrôle `check_export.py`,
+  puis la vidéo à poster dans Téléchargements, à la place de la copie de l'app. Le montage ne
+  monte le son que dans la marge de crête du mixage (gain du bus posé avec les sons) : au-delà, le
+  rendu de l'app baisse tout dès qu'une crête vraie dépasse -1 dBTP après l'encodage (moteur de
+  l'app 0.8.155 : +8,1 dB posés, le même export que +4 dB, la marge). Le reste, c'est `finaliser.py`.
 - Un crop retrouvé à la main reste la source d'erreur n°1 : ne jamais l'écrire soi-même.
 
 **Secours, ancien export ffmpeg** (si l'export natif déraille) : `python3 tools/build_overlay.py

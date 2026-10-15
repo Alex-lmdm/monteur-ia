@@ -205,6 +205,8 @@ Après réussite seulement :
 > reste en couleur. Ensuite, tu me diras tout ce que tu aurais fait autrement, et j'apprendrai
 > ton style pour les prochaines.
 >
+> C'est une vidéo YouTube (format horizontal) ? Écris plutôt “monte ma vidéo YouTube”.
+>
 > Sur Mac et Linux, si tu veux voir ton montage sur une timeline, l'app gratuite HyperFrames est en option :
 > ouvre-y le dossier « Accueil » de ton dossier Monteur IA et glisse-y ta vidéo.
 

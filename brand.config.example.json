@@ -6,6 +6,7 @@
   "audio": { "musicFile": null, "musicDb": -26.5 },
   "derush": { "padStart": 0.04, "padEnd": 0.02, "silenceDb": -40, "islandDuration": 0.18, "camera": null, "whisperLanguage": null },
   "montage": { "defaultLayout": null, "splitTransform": null, "faceCrop": null, "fullFaceTransform": null, "fullFaceOrigin": null, "fullFaceCrop": null, "preferences": [] },
+  "youtube": { "styleChosen": false, "style": null, "punchIn": "parcimonie", "panneau": "droite", "cadrage": { "visageX": 0.5, "yeuxY": 0.40 }, "zoomSerre": 1.3, "zoomTresSerre": 1.55, "sousTitres": "appui", "derush": null, "musicDb": -30, "preferences": [], "firstVideoDone": false },
   "env": { "os": null, "agents": ["claude-code"], "ffmpegPath": null, "whisperCli": null, "whisperModel": null },
   "setup": { "completedBlocks": [], "styleChosen": false, "firstVideoDone": false, "version": 2 }
 }

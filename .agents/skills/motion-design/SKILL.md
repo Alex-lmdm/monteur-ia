@@ -2,7 +2,8 @@
 name: motion-design
 description: >-
   Motion design et montage vidéo pour la marque du créateur (Reels, Stories,
-  TikTok, YouTube) : design system de marque + workflow HyperFrames. Use when: creating a
+  TikTok ; une vidéo YouTube 16:9 se monte avec le skill youtube, qui s'appuie sur celui-ci) :
+  design system de marque + workflow HyperFrames. Use when: creating a
   composition, a clip or a motion graphic for the brand; monter une vidéo talking-head (split-screen,
   sections, export final ffmpeg); générer les sous-titres; poser les SFX et la musique. Entrée : un
   cut validé et la timeline.json produite par le skill derush.
@@ -563,6 +564,7 @@ revue. Tu valides toi-même chaque section sur snapshots, et tu découpes les so
    le montage, l'export les emporte.
 3. ▶ **Export final natif → `references/montage-talking-head.md` §4** : bouton Export de l'app
    HyperFrames, ou `npm run render`. Visages pré-cadrés (`tools/build_faces.py`) : visage net.
+   Puis `python3 tools/finaliser.py` : son à -16 LUFS, contrôle, vidéo à poster.
 
 ### 12.1 Logos → skill theSVG
 

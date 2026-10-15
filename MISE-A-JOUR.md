@@ -2,9 +2,9 @@
 
 À chaque nouvelle version, une phrase suffit. Ton IA met à jour le moteur (outils, consignes,
 nouveautés) et les extensions que tu as installées. Tout ce qui est à toi reste à toi : tes réglages,
-ton style, ta voix, tes règles de montage, tes CTA, tes images, musiques et sons, tes Reels. Si une
-nouveauté contredit un de tes réglages, **c'est ton réglage qui gagne**. Rien n'est effacé : chaque
-fichier remplacé est d'abord sauvegardé.
+ton style, ta voix, tes règles de montage, tes CTA, tes images, musiques et sons, tes Reels et tes
+vidéos YouTube. Si une nouveauté contredit un de tes réglages, **c'est ton réglage qui gagne**. Rien
+n'est effacé : chaque fichier remplacé est d'abord sauvegardé.
 
 La date de la dernière version et le pas à pas illustré sont dans ta formation, module
 « Mises à jour ».
@@ -105,6 +105,8 @@ Puis un seul message, court :
 
 - ce qui change : le moteur ; pour un Monteur IA 1 (le plan le dit), aussi chaque Reel dans son
   propre dossier et l'app HyperFrames ;
+- s'il n'a pas encore le mode YouTube (pas de `tools/nouvelle_video_youtube.py` dans `CLIENT`) :
+  il arrive avec cette version, en une phrase (il monte aussi ses vidéos YouTube horizontales) ;
 - ce qui est gardé, que ses réglages passent avant la nouvelle version, et que chaque fichier du
   moteur remplacé est sauvegardé ;
 - s'il avait retouché des fichiers du moteur (le plan les liste) : que tu reportes ses retouches
@@ -227,6 +229,8 @@ Relance enfin le plan à blanc : plus aucune extension « à mettre à jour ensu
 Dis-lui en clair :
 
 - ses Reels sont dans `reels/` (un dossier par Reel, c'est ce que l'app affiche) ;
+- s'il vient de recevoir le mode YouTube : il monte aussi ses vidéos YouTube (format horizontal),
+  il te dit « monte ma vidéo YouTube », chaque vidéo a son dossier dans `youtube/` ;
 - les vidéos finales d'un Reel déplacé portent le suffixe `-avant-mise-a-jour` : un nouvel export
   ne les écrase pas ;
 - la sauvegarde (dossier `.sauvegarde-mise-a-jour-<date>`, caché : Cmd+Maj+point dans le Finder

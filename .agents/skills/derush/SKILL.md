@@ -101,7 +101,16 @@ for s in json.load(open('work/d_seg.json'))['transcription']:
 
 ### 4. Sélection des prises (le raisonnement)
 
-Lire la liste segments + silences et, en s'appuyant sur le **script connu** :
+**D'abord l'outil** : `python3 tools/prises.py "<rush>" --script <texte> --ecrire` fait les
+étapes 1 à 4 en une commande (environ une minute pour un rush de 3 minutes) : chaque prise
+transcrite seule, les reprises et les faux départs écartés (la dernière prise propre de chaque
+phrase), les bruits et les hallucinations de Whisper retirés, le début de chaque prise recalé sur
+l'attaque de la voix, les phrases du script jamais dites et les improvisations signalées, puis
+`derush/build_derush.py` écrit (rush, marges du dossier, `ISLANDS`). **Relis son tableau** avec les
+règles ci-dessous (une improvisation à garder, un raccord, un mot raté au milieu) avant de lancer
+le dérush ; sans script (`--script` absent), il compare les prises entre elles.
+
+Les règles, qu'il applique et que tu vérifies, en s'appuyant sur le **script connu** :
 - Pour chaque phrase du script, repérer toutes les **prises candidates** (les répétitions).
 - **Garder la meilleure** : par défaut la **dernière prise complète et fluide** ; jeter les ratés
   (phrase qui « traîne » avec `...`, mot tronqué, mauvais mot, faux départ).
@@ -121,8 +130,19 @@ prises gardées. Il génère le `filter_complex` (trim/atrim + `concat`, **sans 
 **Copier le script paramétré (avec ses `ISLANDS` finaux) dans `<projet>/derush/build_derush.py`** :
 c'est la trace du montage et il est réutilisable au prochain rebuild.
 
+**Raccord** (changer de cadre sur un mot au montage, sans coupe) : partager une prise en deux îlots
+qui se **touchent** après les marges (fin du premier + `PAD_END` = début du second - `PAD_START`),
+la frontière dans un creux de la voix, juste avant le mot. Le script les monte d'un seul tenant
+(aucun saut d'image ni de son) ; `cut_boundaries.py` en tire une frontière de plus dans
+`<cut>_cuts.json` et `ecarts_derush.py` ne la mesure pas. Deux îlots qui se chevauchent arrêtent
+le script (le son serait doublé).
+
 Préférences de pacing — **valeurs par défaut recommandées, lues depuis `brand.config.json` →
-`derush`** (`padStart`, `padEnd`, `silenceDb`, `islandDuration`). Ne pas re-tuner au jugé :
+`derush`** (`padStart`, `padEnd`, `silenceDb`, `islandDuration`). Ne pas re-tuner au jugé.
+**Vidéo YouTube** (projet `youtube/<nom>/`) : même rythme que les Reels par défaut ; marges
+propres seulement si `youtube.derush` est réglé (ex. 0,10 / 0,25 pour garder la respiration).
+Différences dans le skill `youtube` §4.
+Pour un Reel :
 - **Souffle inter-prise ≈ 0,10 s, régulier.** Recette qui tient sans clipper :
   - Bornes des prises = îlots **`silencedetect=noise=<derush.silenceDb>:d=<derush.islandDuration>`**
     (défaut **-40 dB / d=0.18** : serrés + réguliers). PAS les îlots -32 dB de l'étape 2 (qui rognent
@@ -141,7 +161,7 @@ Préférences de pacing — **valeurs par défaut recommandées, lues depuis `br
     souffle + blanc à la coupe (mesuré : 0,59 s au lieu de 0,07 s).
   - Cible mesurée : moy ≈ 0,10 s, max ≈ 0,14 s (mesurer les vrais écarts inter-cut en excluant les
     pauses internes aux phrases, qui sont naturelles et à garder).
-- Sortie **en pleine résolution** (celle du rush, ex. 1728×3072 pour une DJI), `libx264 -crf 14`,
+- Sortie **en pleine résolution** (celle du rush, ex. 1728×3072 pour une DJI), `libx264 -preset veryfast -crf 14` (fichier intermédiaire : deux fois plus rapide, même image),
   `aac 192k`, `-r 30000/1001`. **Ne jamais réduire en 1080×1920 ici** : le visage est pré-cadré
   dans ce fichier pour le montage et l'export (`tools/build_faces.py`). Réduit dès le dérush (ancien réglage
   1080 crf 20), il ne gardait qu'un tiers de son détail (mesuré sur un rush DJI) ; en pleine
@@ -201,10 +221,12 @@ navigateur, tu fais tout le reste.
 > action du client en plein montage. Produire `<cut>_enhanced.mp4` avec la voix brute **mise au
 > niveau de référence** (normalisation, pas un nettoyage) : -24 LUFS, celui d'une voix sortie
 > d'Adobe Podcast, pour lequel les volumes des sons et de la musique sont réglés. Le niveau final
-> du Reel (-16 LUFS) se pose avec les sons, à l'étape SFX :
+> du Reel (-16 LUFS) se pose après l'export (`tools/finaliser.py`) :
 > ```bash
-> ffmpeg -y -i <projet>/derush/<cut>.mp4 -map 0:v:0 -map 0:a:0 -c:v copy -af loudnorm=I=-24:TP=-1.5:LRA=11 -ar 48000 -c:a aac -b:a 256k -shortest <projet>/derush/<cut>_enhanced.mp4
+> ffmpeg -y -i <projet>/derush/<cut>.mp4 -map 0:v:0 -map 0:a:0 -c:v copy -af loudnorm=I=-24:TP=-1.5:LRA=11 -ar 48000 -c:a aac -b:a 256k <projet>/derush/<cut>_enhanced.mp4
 > ```
+> ⚠️ **Jamais `-shortest` ici** : `loudnorm` garde ~0,1 s de son en réserve et `-shortest` la jette
+> en arrêtant la sortie avec l'image : le dernier mot de la vidéo était coupé (« dès ton ach »).
 > Le nettoyage Adobe est proposé au débrief, qui remplace alors l'audio sans toucher à la vidéo ni
 > aux coupes. Dès la deuxième vidéo, cette étape redevient systématique.
 

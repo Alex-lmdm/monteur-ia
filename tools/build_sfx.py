@@ -24,8 +24,10 @@ Usage (depuis le dossier du Reel) :
 
 Pose native : chaque son est copie dans assets/sons/ (un son deja dans assets/ du Reel reste ou
 il est) puis ecrit en <audio> dans le bloc SONS du master, avec les memes reglages que l'ancien mixage ffmpeg : volume en dB, coupe adoucie (60 ms),
-musique avec fondus (0.4 s / 1.2 s) et, sur tout le mix voix comprise, un gain qui amene le Reel a
--16 LUFS (le niveau des Reels du fil, mesure a la pose) puis un plafond (limiteur). Dans
+musique avec fondus (0.4 s / 1.2 s), voix, sons et musique sur un bus : un gain borne par la marge
+de crete du mixage (au-dela, le rendu HyperFrames baisserait tout), puis un plafond (limiteur). Le
+niveau final (-16 LUFS, celui des Reels du fil) se pose apres l'export, par python3
+tools/finaliser.py. Dans
 l'app HyperFrames, chaque son devient un clip de la timeline (deplacable, volume reglable) et le
 bouton Export sort la video complete. Retouches faites a la main ou dans l'app : elles sont
 protegees, l'outil refuse de les ecraser sans --ecraser (empreinte du bloc).
@@ -214,8 +216,9 @@ def ffmpeg_ou_probe():
     import sons
     inputs, filters, mixin = filtres_sfx_musique(1)
     mix = f"[0:a]{''.join(mixin)}amix=inputs={len(mixin) + 1}:normalize=0:dropout_transition=0"
-    # Niveau final, comme la pose native (tools/sons.py) : on mesure le mixage, puis un gain l'amene
-    # a -16 LUFS et le plafond garde les cretes sous -1 dBTP. L'equilibre voix/SFX/musique ne bouge pas.
+    # Ici, pas de rendu HyperFrames pour baisser le son : le mixage est mesure, un gain l'amene a -16 LUFS
+    # et le plafond (sur la crete vraie, a 192 kHz) garde les cretes sous -1,5 dBTP ; sans PNS, l'AAC
+    # n'ajoute pas de crete que le plafond n'a pas vue. tools/finaliser.py, apres, ajuste et controle.
     def lufs(entrees, graphe):
         r = subprocess.run(["ffmpeg", "-nostats", "-hide_banner"] + entrees + ["-filter_complex", graphe, "-map", "[m]",
                            "-f", "null", "-"], capture_output=True, encoding="utf-8", errors="replace")
@@ -224,10 +227,10 @@ def ffmpeg_ou_probe():
     if (lufs(["-i", str(SRC)], "[0:a]ebur128[m]") or -99.0) > -50:   # pas de gain sans voix audible
         niveau = lufs(["-i", str(SRC)] + inputs, ";".join(filters + [f"{mix},ebur128[m]"]))
     gain = sons.gain_final(niveau)
-    filters.append(f"{mix},volume={gain}dB,alimiter=limit={sons.lin(sons.LIMITE_DB)}:level=false:latency=true[aout]")
+    filters.append(f"{mix},{sons.plafond_ffmpeg(sons.LIMITE_DB, gain)}[aout]")
     cmd = (["ffmpeg", "-y", "-v", "error", "-i", str(SRC)] + inputs +
            ["-filter_complex", ";".join(filters), "-map", "0:v", "-c:v", "copy",
-            "-map", "[aout]", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(OUT)])
+            "-map", "[aout]", "-c:a", "aac", "-b:a", "192k", "-aac_pns", "0", "-movflags", "+faststart", str(OUT)])
     r = subprocess.run(cmd, capture_output=True, encoding="utf-8", errors="replace")
     print("ffmpeg exit:", r.returncode)
     if r.returncode:
@@ -236,6 +239,7 @@ def ffmpeg_ou_probe():
     print(f"{len(events)} SFX + " + (f"musique ({music_file} @ {music_db} dB)" if MUSIC else "sans musique")
           + f" -> {OUT.relative_to(ROOT)}")
     print(sons.resume_niveau({"niveau": niveau, "gain": gain, "cible": sons.CIBLE_LUFS}))
+    print("Puis python3 tools/finaliser.py : niveau ajuste, controle, video a poster.")
 
 
 if "--ffmpeg" in sys.argv or "--probe" in sys.argv:

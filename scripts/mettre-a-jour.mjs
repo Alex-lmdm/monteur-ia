@@ -16,9 +16,10 @@
  * Toute autre retouche d'un fichier du moteur, même hors zones ou hors blocs, est sauvegardée et
  * signalée dans le plan.
  * Jamais touchés : brand.config.json, brand/, ses images, logos, musiques et sons, ses extensions
- * (outils et skills), double-ia.config.json, stories/, clones/, ses Reels. Seule exception : un client de
- * Monteur IA 1 qui a déjà livré des Reels reçoit `setup.firstVideoDone: true` (la première vidéo se
- * décide désormais par dossier, plus par l'archive des Reels publiés, commune à tous ses dossiers).
+ * (outils et skills), double-ia.config.json, stories/, clones/, ses Reels et ses vidéos YouTube
+ * (youtube/). Seule exception : un client de Monteur IA 1 qui a déjà livré des Reels reçoit
+ * `setup.firstVideoDone: true` (la première vidéo se décide désormais par dossier, plus par l'archive
+ * des Reels publiés, commune à tous ses dossiers).
  * Avant d'être remplacé ou retiré, chaque fichier du client est copié (ou rangé) dans
  * `.sauvegarde-mise-a-jour-<date>/`.
  *
@@ -48,7 +49,7 @@ const WIN = process.platform === "win32";
 const TAILLE_MAX_LIVREE = 10 * 1024 * 1024;   // aucun fichier livré n'est plus gros : un rush ne se hache pas
 
 // Jamais copiés depuis la nouvelle version : générés sur place, propres à un dossier, ou au chantier.
-const JAMAIS = [/^Accueil /, /^reels\//, /^stories\//, /^clones\//, /^\.reel-cloneur-venv\//, /^exports\//, /^assets\/video\//, /^REFONTE-APP\.md$/,
+const JAMAIS = [/^Accueil /, /^reels\//, /^youtube\//, /^stories\//, /^clones\//, /^\.reel-cloneur-venv\//, /^exports\//, /^assets\/video\//, /^REFONTE-APP\.md$/,
   /^(CLAUDE|AGENTS)\.md$/, /^brand\/(tokens|fonts)\.css$/, /^brand\/fonts\//, /^brand\.config\.json$/,
   /(^|\/)\.DS_Store$/, /^\.git$/, /^\.claude\/settings\.local\.json$/, /^\.sauvegarde-mise-a-jour-/];
 const ELAGUER = new Set(["node_modules", ".git", "reels", "exports", "clones", ".reel-cloneur-venv", "worktrees", ".thumbnails", ".hyperframes",
@@ -226,13 +227,18 @@ export function genererManifeste(ref = "origin/main", racine = NEUF) {
 }
 
 // --- arborescences ------------------------------------------------------------------------------
+// Élagués seulement à la racine : les vidéos YouTube du client (youtube/), pas le gabarit du moteur
+// qui porte le même nom (templates/youtube/).
+const ELAGUER_RACINE = new Set(["youtube"]);
+
 function fichiersDe(racine, sous = "", elaguer = ELAGUER) {
   const dir = path.join(racine, sous);
   if (!existe(dir)) return [];
   if (!fs.statSync(dir).isDirectory()) return [sous];
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
     const rel = sous ? `${sous}/${e.name}` : e.name;
-    if (e.isDirectory()) return elaguer.has(e.name) || /^\.sauvegarde-mise-a-jour-/.test(e.name) ? [] : fichiersDe(racine, rel, elaguer);
+    const elague = elaguer.has(e.name) || (!sous && elaguer === ELAGUER && ELAGUER_RACINE.has(e.name));
+    if (e.isDirectory()) return elague || /^\.sauvegarde-mise-a-jour-/.test(e.name) ? [] : fichiersDe(racine, rel, elaguer);
     return e.isFile() ? [rel] : [];
   });
 }
@@ -723,7 +729,7 @@ export function decrire(plan) {
     l.push("• Première vidéo : tu as déjà monté des Reels, je le note dans tes réglages (pas de montage d'essai ni de débrief à refaire).");
   }
   l.push(`• Jamais touchés : ${plan.premiereVideoFaite ? "tes autres réglages" : "tes réglages"} et ton style (brand.config.json, brand/), ton profil de voix, tes CTA et tes polices,${plan.consignesPerso ? " tes consignes perso," : ""}`
-    + " tes images, logos, musiques et sons, tes extensions, stories/, clones/, double-ia.config.json, tes Reels.");
+    + " tes images, logos, musiques et sons, tes extensions, stories/, clones/, double-ia.config.json, tes Reels, tes vidéos YouTube.");
   return l.join("\n");
 }
 

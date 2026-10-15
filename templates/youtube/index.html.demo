@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="assets/vendor/gsap.min.js"></script>
+    <!-- PIÈGE N°1 : brand/fonts.css + brand/tokens.css DANS LE <head> DU MASTER (générés par
+         `npm run sync` depuis brand.config.json), sinon les var(--brand-*) ne se résolvent pas. -->
+    <link rel="stylesheet" href="brand/fonts.css">
+    <link rel="stylesheet" href="brand/tokens.css">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: var(--brand-bg); }
+      /* Aperçu seulement : une zone d'attente à la place du visage. Le vrai master se génère
+         après le dérush (tools/build_master.py --write) et pose la vidéo du client. */
+      .visage { position: absolute; inset: 0; overflow: hidden; background: transparent; }
+      .attente { position: absolute; inset: 0; background: var(--brand-surface); color: var(--brand-text);
+        display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 28px;
+        font-family: var(--brand-font-body); }
+      .attente svg { width: 120px; height: 120px; color: var(--brand-muted); }
+      .attente p { font-size: 48px; font-weight: 800; }
+      .attente span { font-size: 32px; color: var(--brand-muted); }
+      .appui { position: absolute; left: 960px; top: 840px; font-size: var(--brand-yt-emphase-size); }
+    </style>
+  </head>
+  <body>
+    <!-- Aperçu du style d'une vidéo YouTube, sans vidéo ni voix du client : les trois cadrages de
+         base (plein cadre, décalé avec un panneau, serré avec un texte d'appui). -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="9" data-fps="30" data-width="1920" data-height="1080">
+
+      <div id="bgbase" class="clip" data-start="0" data-duration="9" data-track-index="0" style="position:absolute; inset:0; background:var(--brand-bg);"></div>
+
+      <div id="visage-large" class="visage">
+        <div id="attente" class="attente clip" data-start="0" data-duration="9" data-track-index="10">
+          <svg viewBox="0 0 96 96" fill="none" aria-hidden="true"><rect x="12" y="22" width="52" height="52" rx="14" stroke="currentColor" stroke-width="3"/><path d="M64 40l20-12v40L64 56" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></svg>
+          <p>Ta vidéo brute arrive ici après le dérush</p><span>Écris « On monte celle-ci » dans la conversation</span>
+        </div>
+      </div>
+
+      <!-- Panneau d'une section « cote » : chemin depuis la RACINE (jamais ../). -->
+      <div id="section-exemple-panneau" class="clip" data-composition-id="exemple-panneau" data-composition-src="compositions/exemple-panneau.html"
+           data-start="3" data-duration="3" data-track-index="2" data-width="960" data-height="1080"
+           style="position:absolute; left:960px; top:0; width:960px; height:1080px; overflow:hidden;"></div>
+
+      <div id="appui-0" class="cap appui clip" data-start="7" data-duration="1.6" data-track-index="14">LE RYTHME</div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      (function () {
+        var tl = gsap.timeline({ paused: true });
+        // Le créateur glisse d'un quart d'écran pendant que le panneau entre (un seul geste).
+        tl.fromTo("#visage-large", { x: 0 }, { x: -480, duration: 0.6, ease: "power2.inOut", immediateRender: false }, 3);
+        tl.set("#visage-large", { x: 0 }, 6);
+        // Coupe sur le cadre serré (ici un zoom d'aperçu ; en vrai, la vidéo visage-serre.mp4).
+        tl.set("#visage-large", { scale: 1.3 }, 6);
+        tl.fromTo("#appui-0", { xPercent: -50, yPercent: -50, opacity: 0, scale: 0.92 }, { xPercent: -50, yPercent: -50, opacity: 1, scale: 1, duration: 0.18, ease: "power2.out" }, 7);
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>

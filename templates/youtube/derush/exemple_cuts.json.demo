@@ -1,0 +1,25 @@
+{
+  "source": "derush/exemple_enhanced.mp4",
+  "duration": 9.0,
+  "method": "scene-change detection (gt(scene,0.015)) recalé sur le cumul des ISLANDS",
+  "takes": [
+    {
+      "i": 0,
+      "start": 0.0,
+      "end": 3.0,
+      "text": "Une vidéo YouTube se monte autrement."
+    },
+    {
+      "i": 1,
+      "start": 3.0,
+      "end": 6.0,
+      "text": "On coupe les blancs, on change de cadre."
+    },
+    {
+      "i": 2,
+      "start": 6.0,
+      "end": 9.0,
+      "text": "Et le rythme tient jusqu'au bout."
+    }
+  ]
+}

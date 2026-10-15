@@ -27,9 +27,14 @@ extensions sont gardés, et si une nouveauté contredit un de tes réglages, c'e
 
 ## Ce que tu obtiens
 
-Un système de montage complet pour un seul format : le **Reel Instagram talking-head vertical**
-(1080×1920, 30 fps), c'est-à-dire ta vraie vidéo face caméra, avec du motion design par-dessus,
-section par section.
+Un système de montage complet pour le **Reel Instagram talking-head vertical** (1080×1920, 30 fps),
+c'est-à-dire ta vraie vidéo face caméra, avec du motion design par-dessus, section par section.
+
+Et, intégré, le **mode YouTube** : ta vidéo face caméra horizontale (1920×1080) montée au rythme de
+YouTube. Les coupes au rythme de tes Reels, un zoom sur ce qui compte, tu glisses sur le côté
+pour laisser place à un schéma, quelques textes appuient les points clés, et tu récupères le son au
+bon niveau, les chapitres, les sous-titres à téléverser, le titre et la description. Dis simplement
+« monte ma vidéo YouTube ».
 
 Le montage se pilote en conversation. Tu ne touches pas une ligne de code : tu écris ce que tu veux,
 l'IA le fait, tu valides ou tu corriges. Sur Mac et Linux, l'**app HyperFrames** (gratuite) te montre
@@ -145,6 +150,10 @@ Le montage suit un **pipeline en 7 étapes**, dans l'ordre. Tu dis simplement à
 7. **Publication** : « la légende », « le message DM ». La toute dernière étape.
 
 Une règle d'or : **une étape à la fois, dans l'ordre**. L'IA ne saute pas devant.
+
+Une **vidéo YouTube** suit son propre parcours (skill `youtube`) : script, tournage à l'horizontale,
+dérush, plan de montage, montage, tes retours avec le moment (« à 3:12… »), sons, export, publication.
+Chaque vidéo YouTube a son dossier dans `youtube/`, comme un Reel dans `reels/`.
 
 ---
 

@@ -66,6 +66,16 @@
   --brand-cap-y-face: 1140px;    /* plein écran visage                         */
   --brand-cap-y-media: 1100px;   /* plein écran b-roll filmé                   */
   --brand-cap-y-motion: 1500px;  /* plein écran motion / images                */
+
+  /* --- Vidéo YouTube (1920×1080, skill youtube) ---------------------------- */
+  /* Zones de sécurité du 16:9 et du lecteur YouTube, PAS du goût.             */
+  --brand-yt-safe-x: 96px;       /* zone d'action : 5 % de chaque côté         */
+  --brand-yt-safe-y: 54px;
+  --brand-yt-title-x: 192px;     /* zone titre : 10 %, textes et chiffres clés */
+  --brand-yt-title-y: 108px;
+  --brand-yt-player: 150px;      /* barre de lecture : rien de permanent dessous */
+  --brand-yt-emphase-size: calc(var(--brand-cap-size) * 1.5); /* texte d'appui */
+  --brand-yt-caption-size: calc(var(--brand-cap-size) * 0.92); /* sous-titres continus (option) */
 }
 
 /* ==========================================================================

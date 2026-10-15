@@ -76,14 +76,20 @@ start, volume_dB, trim|None)`, fichier = chemin relatif à `assets/sfx/`, ex. `s
 `assets/<fichier>` pour un son du Reel). Chaque son de la bibliothèque est copié dans `assets/sons/` et écrit en `<audio>` dans le bloc SONS d'`index.html` : volume en dB
 converti en `data-volume`, coupe adoucie et fondus en enveloppe `data-automation` (une enveloppe
 **remplace** `data-volume`, elle porte donc le niveau réel), voix + sons + musique sur le bus
-`mixage` plafonné à -0,26 dB. Dans l'app, chaque son devient un clip de la timeline. Le bloc retouché
+`mixage` : un gain mesuré à la pose, borné par la marge de crête du mixage (au-delà, le rendu
+baisserait tout), puis un plafond à -1,5 dB ; le niveau final, -16 LUFS, se pose après l'export
+(`python3 tools/finaliser.py`). Dans l'app, chaque son devient un clip de la timeline. Le bloc retouché
 à la main ou dans l'app n'est plus écrasé sans `--ecraser`. Mesuré sur un vrai Reel : même mixage
 que l'ancien ffmpeg à 0,3 dB près.
 
 **Ancien mixage ffmpeg** (secours : `python3 tools/build_sfx.py --ffmpeg`, par-dessus `exports/FINAL.mp4`) :
 - par SFX : `[i:a]atrim=0:DUR(si rogné),volume=XdB,aformat=channel_layouts=stereo:sample_rates=48000,afade=t=out:st=DUR-0.06:d=0.06(si rogné),adelay=START_ms:all=1[ei]`
-- mix : `[voice][e0][e1]…amix=inputs=N+1:normalize=0:dropout_transition=0,alimiter=limit=0.97[aout]`
-- `-map 0:v -c:v copy -map [aout] -c:a aac -b:a 192k`. Sortie `exports/FINAL_SFX_MUSIC.mp4` (même nom sans musique : SFX seuls).
+- mix : `[voice][e0][e1]…amix=inputs=N+1:normalize=0:dropout_transition=0,aresample=192000,volume=<gain vers -16 LUFS>dB,alimiter=limit=0.8414:level=false:latency=true,aresample=48000[aout]`
+  (`sons.plafond_ffmpeg()` : gain mesuré, puis plafond à -1,5 dB sur la crête vraie, à 192 kHz, car
+  à 48 kHz alimiter ne voit que les échantillons ; `tools/finaliser.py` ajuste ensuite et vérifie la
+  crête sur le fichier encodé)
+- `-map 0:v -c:v copy -map [aout] -c:a aac -b:a 192k -aac_pns 0` (le PNS, du bruit synthétisé au
+  décodage, crée des crêtes que le plafond ne voit pas). Sortie `exports/FINAL_SFX_MUSIC.mp4` (même nom sans musique : SFX seuls).
 - Vérif placement sans écoute : `python3 tools/build_sfx.py --probe` (voir plus bas, la seule méthode fiable).
 
 **Musique de fond par défaut** : `brand.config.json` → `audio.musicFile` (fichier dans
@@ -95,7 +101,7 @@ que l'ancien ffmpeg à 0,3 dB près.
 - **VOCABULAIRE** : quand le créateur dit « **mets le sound effect ET la musique** » → ça veut dire les
   SFX **+ cette musique de fond par défaut**, sauf indication contraire.
 - Recette : ajouter au mix une entrée `[m:a]atrim=0:DUR,volume=<audio.musicDb>dB,aformat=channel_layouts=stereo:sample_rates=48000,afade=t=in:st=0:d=0.4,afade=t=out:st=DUR-1.2:d=1.2[music]`
-  et l'inclure dans l'`amix` (déjà fait par `tools/build_sfx.py`). `alimiter=limit=0.97` en fin de chaîne évite toute
+  et l'inclure dans l'`amix` (déjà fait par `tools/build_sfx.py`). Le plafond en fin de chaîne évite toute
   saturation.
 
 **Vérifier le placement SANS ÉCOUTER — la seule méthode fiable.**

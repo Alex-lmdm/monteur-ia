@@ -1,0 +1,10 @@
+# Contrat `*_cuts.json` (exemple : `exemple_cuts.json`)
+
+- **Ce fichier = la SEULE source des frontières de section.** Le master (`index.html`), les visages
+  pré-cadrés, les textes d'appui et les chapitres sont dérivés des `takes[].start` / `.end`, jamais
+  des timestamps Whisper (qui démarrent 0,1 à 0,25 s trop tôt).
+- Les `start`/`end` sont **mesurés sur la vidéo dérushée livrée** (`tools/cut_boundaries.py`).
+- Format : `source` (le dérush pleine résolution), `duration`, `method`, puis `takes[]` avec `i`,
+  `start`, `end`, `text`.
+- `exemple_cuts.json` et `exemple_words.json` sont des factices pédagogiques (9 s, 3 prises) :
+  remplace-les par ceux de ta vidéo (dérush, puis `tools/build_words.py`).

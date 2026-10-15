@@ -659,3 +659,52 @@ test('extensions : comparées à leur dernière version publiée, lue en ligne, 
     delete process.env[HORS_LIGNE];
   }
 });
+
+test('un client de la version d’avant reçoit le mode YouTube sans que ses Reels ni ses vidéos YouTube bougent', (t) => {
+  if (!outilsOuSkip(t)) return;
+  // Le client est sur la version publiée avant le mode YouTube, avec un Reel en cours et une extension.
+  const AVANT_YOUTUBE = 'c9b61f3';
+  try {
+    execFileSync('git', ['cat-file', '-e', `${AVANT_YOUTUBE}^{commit}`], { cwd: root, stdio: 'ignore' });
+  } catch {
+    t.skip('historique git de la version d’avant absent');
+    return;
+  }
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-maj-youtube-'));
+  t.after(() => fs.rmSync(base, { recursive: true, force: true }));
+  const dir = path.join(base, 'Monteur IA - Studio Lumiere');
+  fs.mkdirSync(dir);
+  execFileSync('tar', ['-x', '-C', dir], { input: execFileSync('git', ['archive', '--format=tar', AVANT_YOUTUBE], { cwd: root, maxBuffer: 1 << 28 }) });
+  execFileSync(process.execPath, ['scripts/sync.mjs'], { cwd: dir, encoding: 'utf8' });
+  python(dir, 'tools/nouveau_reel.py', 'Méliès', '--date', '2026-10-14');
+  const reel = path.join('reels', 'Méliès · 2026-10-14 · Monteur IA - Studio Lumiere');
+  write(dir, `${reel}/compositions/s0-hook.html`, '<!-- montage du client -->\n');
+  write(dir, 'templates/AGENT.md.tpl', `${read(dir, 'templates/AGENT.md.tpl')}\n<!-- BEGIN EXTENSION: reel-cloneur (ajouté) -->\n`
+    + 'Consignes Reel Cloneur\n<!-- END EXTENSION: reel-cloneur -->\n');
+  // Une vidéo YouTube déjà montée (cas d'une mise à jour suivante) : jamais touchée.
+  write(dir, 'youtube/Ma vidéo/meta.json', '{"monteurIa": {"lieu": "youtube", "etat": "en-cours"}}\n');
+  write(dir, 'youtube/Ma vidéo/index.html', '<!-- montage YouTube du client -->\n');
+  write(dir, 'youtube/Ma vidéo/tools/sections.py', '# sections du client\n');
+  const intouchables = [`${reel}/compositions/s0-hook.html`, `${reel}/tools/sections.py`, 'youtube/Ma vidéo/index.html',
+    'youtube/Ma vidéo/tools/sections.py'].map((f) => [f, hash(path.join(dir, f))]);
+
+  const plan = planifier(dir, { archive: path.join(os.tmpdir(), 'monteur-archive-vide') });
+  const touches = plan.moteur.map((m) => m.rel);
+  for (const f of ['templates/youtube/tools/build_master.py', 'tools/nouvelle_video_youtube.py', '.claude/skills/youtube/SKILL.md']) {
+    assert.ok(touches.includes(f), `${f} doit arriver avec la mise à jour`);
+  }
+  assert.deepEqual(touches.filter((f) => /^(reels|youtube)\//.test(f)), [], 'ni Reel ni vidéo YouTube dans le moteur');
+  assert.deepEqual(plan.moteur.filter((m) => m.retouche), [], 'rien de retouché chez ce client');
+
+  const r = appliquer(plan, { npm: false, now: new Date(2026, 9, 15, 10, 0, 0) });
+  assert.deepEqual(r.avertissements, []);
+  for (const [f, h] of intouchables) assert.equal(hash(path.join(dir, f)), h, `${f} ne doit pas bouger`);
+  const claude = read(dir, 'CLAUDE.md');
+  assert.match(claude, /## ▶️ Vidéo YouTube \(16:9\)/);
+  assert.equal(claude.match(/BEGIN EXTENSION: reel-cloneur/g)?.length, 1, 'consignes de l’extension gardées, une fois');
+  assert.match(read(dir, `${reel}/CLAUDE.md`), /Vidéo YouTube \(16:9\) : jamais ici/);
+  assert.match(read(dir, 'youtube/Ma vidéo/CLAUDE.md'), /Tu es dans la vidéo YouTube « Ma vidéo »/);
+  // Le mode YouTube marche tout de suite dans le dossier mis à jour.
+  python(dir, 'tools/nouvelle_video_youtube.py', 'Première YouTube', '--date', '2026-10-15');
+  assert.ok(fs.existsSync(path.join(dir, 'youtube', 'Première YouTube · 2026-10-15 · Monteur IA - Studio Lumiere', 'tools/finaliser.py')));
+});

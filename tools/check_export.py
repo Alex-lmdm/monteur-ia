@@ -6,14 +6,18 @@ Usage (depuis le dossier du Reel) :
     python3 tools/check_export.py ~/Downloads/x.mp4  # une video sortie par le bouton Export de l'app
     python3 tools/check_export.py --calque           # ancien export : le calque work/overlay.mov
 
+Apres chaque export, c'est tools/finaliser.py qu'on lance : il pose le niveau sonore final, puis
+fait ce controle sur la video finalisee (celle a poster) avant de la copier dans Telechargements.
+
 Export natif (la video finale elle-meme) :
   F) format : 1080x1920, duree du montage, une piste son ;
   V) visage present et NON agrandi : la zone visage de chaque fenetre ressemble a la meme image des
      visages pre-cadres (tools/build_faces.py) ; s'ils manquent, le visage vient de base.mp4
      agrandie (moins net) -> signale ;
   T) les timelines tournent (meme principe que B ci-dessous, sur la video finale) ;
-  S) le son est la : volume integre au-dessus de -35 LUFS ; niveau et crete affiches (vises : -16 LUFS,
-     crete sous -1 dBTP, poses avec les sons par tools/sons.py).
+  S) le son est la : volume integre au-dessus de -35 LUFS ; sur la video finalisee
+     (tools/finaliser.py), -16 LUFS a 1 LU pres et crete vraie sous -1 dBTP. Un export brut sort au
+     niveau de la voix (vers -24 LUFS) : signale, sans bloquer, que le niveau final reste a poser.
 
 Ancien export (--calque) : gardes A et B sur le calque, decrites ci-dessous.
 
@@ -44,6 +48,7 @@ D'ou ce test sur le .mov, la seule verite.
      debut de section et on verifie qu'elle est quasi vide.
 """
 import io
+import json
 import pathlib
 import subprocess
 import sys
@@ -54,6 +59,7 @@ from PIL import Image
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import sections
+from sons import CIBLE_LUFS, CRETE_MAX_DBTP, niveau_sonore
 
 # Windows : une sortie lue par l'agent (redirigée) est en cp1252, et un « ✅ » y fait planter l'outil.
 for _flux in (sys.stdout, sys.stderr):
@@ -68,6 +74,7 @@ FINAL = ROOT / "exports/FINAL.mp4"
 VISAGES = {"split": ROOT / "assets/video/visage-split.mp4", "face": ROOT / "assets/video/visage-plein.mp4"}
 # Zone du visage comparee, a l'ecart des sous-titres : sous la jointure en split, le haut en plein ecran.
 ZONES = {"split": (0, 1100, 1080, 1920), "face": (0, 0, 1080, 1050)}
+TOLERANCE_LUFS = 1.0
 
 
 _MATRICES = {}
@@ -110,9 +117,9 @@ def ssim(a, b):
     return float(m.group(1)) if m else 0.0
 
 
-def verifier_final(mp4):
-    import json
-    import re
+def verifier_final(mp4, finalise=False):
+    """Controle de la video exportee ; rend le nombre de points KO. finalise : la video sortie de
+    tools/finaliser.py, dont le niveau sonore doit etre le niveau final."""
     ko = 0
     info = json.loads(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,width,height:format=duration",
                                       "-of", "json", str(mp4)], capture_output=True, encoding="utf-8", errors="replace").stdout or "{}")
@@ -163,71 +170,76 @@ def verifier_final(mp4):
         ko += not ok
         print(f"   {s['id']:<16} bande centrale ecart-type {ecart:5.1f}  {'OK' if ok else '!! JS MUET (elements visibles des le debut)'}")
 
-    err = subprocess.run(["ffmpeg", "-nostats", "-i", str(mp4), "-af", "ebur128=peak=true", "-f", "null", "-"],
-                         capture_output=True, encoding="utf-8", errors="replace").stderr
-    m = re.findall(r"I:\s+(-?[\d.]+) LUFS", err)
-    lufs = float(m[-1]) if m else -99.0
-    crete = re.findall(r"Peak:\s+(-?[\d.]+|-inf) dBFS", err)
-    ok = lufs > -35
+    lufs, crete = niveau_sonore(mp4)
+    lufs = -99.0 if lufs is None else lufs
+    present = lufs > -35
+    final = abs(lufs - CIBLE_LUFS) <= TOLERANCE_LUFS and crete <= CRETE_MAX_DBTP
+    ok = present and (final or not finalise)
     ko += not ok
-    print(f"S) son : {lufs:.1f} LUFS, crete {crete[-1] if crete else '?'} dBTP  "
-          f"{'OK' if ok else '!! KO (voix absente ou tres faible)'}")
-    # Information, sans bloquer : les sons poses par tools/sons.py amenent le Reel a -16 LUFS.
-    master = ROOT / "index.html"
-    if ok and abs(lufs + 16) > 2 and master.exists() and "SONS:DEBUT" in master.read_text(encoding="utf-8"):
-        print("   niveau loin des -16 LUFS vises : sons poses avant la mise a jour du niveau final ? "
-              "Repose-les (outil des sons), puis exporte a nouveau.")
+    etat = "OK" if ok else "!! KO (voix absente ou tres faible)" if not present else "!! KO (niveau final hors cible)"
+    print(f"S) son : {lufs:.1f} LUFS (vise {CIBLE_LUFS:.0f}), crete {crete:.1f} dBTP  {etat}")
+    if present and not final and not finalise:
+        print("   export brut : le niveau final se pose avec python3 tools/finaliser.py (il controle et livre "
+              "la video a poster)")
+    return ko
+
+
+def main():
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if "--calque" in sys.argv:
+        ko = verifier_calque()
+    else:
+        cible = pathlib.Path(args[0]).expanduser() if args else FINAL
+        if not cible.exists():
+            print(f"Rien a verifier : {cible} n'existe pas.")
+            print("Exporte d'abord la video : bouton Export de l'app, ou npm run render (exports/FINAL.mp4).")
+            sys.exit(0)
+        ko = verifier_final(cible)
     print("\n" + ("✅ EXPORT CONFORME" if ko == 0 else f"❌ {ko} point(s) à revoir avant de livrer"))
     sys.exit(1 if ko else 0)
 
 
-args = [a for a in sys.argv[1:] if not a.startswith("--")]
-if "--calque" not in sys.argv:
-    cible = pathlib.Path(args[0]).expanduser() if args else FINAL
-    if not cible.exists():
-        print(f"Rien a verifier : {cible} n'existe pas.")
-        print("Exporte d'abord la video : bouton Export de l'app, ou npm run render (exports/FINAL.mp4).")
+def verifier_calque():
+    """Gardes A et B de l'ancien export, sur le calque work/overlay.mov ; rend le nombre de points KO."""
+    if not MOV.exists():
+        print(f"Rien a verifier : {MOV.relative_to(ROOT)} n'existe pas.")
+        print("Fais d'abord le rendu du calque : python3 tools/build_overlay.py --render")
         sys.exit(0)
-    verifier_final(cible)
+    ko = 0
+    print("A) opacite du calque")
+    for s in sections.sections():
+        a = frame(round(s["start"] + s["dur"] * 0.6, 2)).split()[3]
+        m = lambda b: round(sum(a.crop(b).getdata()) / ((b[2] - b[0]) * (b[3] - b[1])))
+        top, bot = m((0, 0, 1080, 920)), m((0, 920, 1080, 1920))
+        if s.get("media"):
+            # Section MEDIA : le b-roll vit dans le master en couche video native et ne passe PAS
+            # par le calque -> le calque DOIT y etre vide. L'inverse serait le bug.
+            ok = top == 0 and bot == 0
+        elif s["fmt"] == "full":
+            ok = top == 255 and bot == 255
+        else:
+            ok = bot < 40
+        ko += not ok
+        print(f"   {s['id']:<16} haut={top:3} bas={bot:3}  {'OK' if ok else '!! KO (calque rogne / non opaque)'}")
 
-if not MOV.exists():
-    print(f"Rien a verifier : {MOV.relative_to(ROOT)} n'existe pas.")
-    print("Fais d'abord le rendu du calque : python3 tools/build_overlay.py --render")
-    sys.exit(0)
+    print("\nB) les timelines des sections tournent (elements a opacity:0 caches au debut d'un plein ecran)")
+    # Les sections MEDIA n'ont aucune animation a verifier (leur 1er quart de seconde est deja
+    # l'image, souvent claire) -> sans cette exclusion le test criait « JS MUET » sur chaque b-roll.
+    fulls = [s for s in sections.sections() if s["fmt"] == "full" and not s.get("media")]
+    if not fulls:
+        print("   (aucune section 'full' dans LAYOUT : garde B sans objet pour ce Reel)")
+    for s in fulls:
+        # Bande centrale, 0.20 s apres le debut : a cet instant les entrees GSAP ne sont pas encore
+        # jouees, donc l'element pose a opacity:0 doit laisser la zone quasi vide.
+        # Seuil a ajuster si ton motion remplit deja cette zone a t+0.20 (fond plein, gros titre fixe).
+        im = frame(round(s["start"] + 0.20, 2)).convert("L").crop((200, 900, 900, 1200))
+        px = list(im.getdata())
+        clair = sum(1 for p in px if p > 150) / len(px)
+        ok = clair < 0.02
+        ko += not ok
+        print(f"   {s['id']:<16} {clair*100:5.1f}% de pixels clairs  {'OK' if ok else '!! JS MUET (scripts non montes)'}")
+    return ko
 
-ko = 0
-print("A) opacite du calque")
-for s in sections.sections():
-    a = frame(round(s["start"] + s["dur"] * 0.6, 2)).split()[3]
-    m = lambda b: round(sum(a.crop(b).getdata()) / ((b[2] - b[0]) * (b[3] - b[1])))
-    top, bot = m((0, 0, 1080, 920)), m((0, 920, 1080, 1920))
-    if s.get("media"):
-        # Section MEDIA : le b-roll vit dans le master en couche video native et ne passe PAS
-        # par le calque -> le calque DOIT y etre vide. L'inverse serait le bug.
-        ok = top == 0 and bot == 0
-    elif s["fmt"] == "full":
-        ok = top == 255 and bot == 255
-    else:
-        ok = bot < 40
-    ko += not ok
-    print(f"   {s['id']:<16} haut={top:3} bas={bot:3}  {'OK' if ok else '!! KO (calque rogne / non opaque)'}")
 
-print("\nB) les timelines des sections tournent (elements a opacity:0 caches au debut d'un plein ecran)")
-# Les sections MEDIA n'ont aucune animation a verifier (leur 1er quart de seconde est deja
-# l'image, souvent claire) -> sans cette exclusion le test criait « JS MUET » sur chaque b-roll.
-fulls = [s for s in sections.sections() if s["fmt"] == "full" and not s.get("media")]
-if not fulls:
-    print("   (aucune section 'full' dans LAYOUT : garde B sans objet pour ce Reel)")
-for s in fulls:
-    # Bande centrale, 0.20 s apres le debut : a cet instant les entrees GSAP ne sont pas encore
-    # jouees, donc l'element pose a opacity:0 doit laisser la zone quasi vide.
-    # Seuil a ajuster si ton motion remplit deja cette zone a t+0.20 (fond plein, gros titre fixe).
-    im = frame(round(s["start"] + 0.20, 2)).convert("L").crop((200, 900, 900, 1200))
-    px = list(im.getdata())
-    clair = sum(1 for p in px if p > 150) / len(px)
-    ok = clair < 0.02
-    ko += not ok
-    print(f"   {s['id']:<16} {clair*100:5.1f}% de pixels clairs  {'OK' if ok else '!! JS MUET (scripts non montes)'}")
-
-print("\n" + ("✅ EXPORT CONFORME" if ko == 0 else f"❌ {ko} point(s) à revoir avant de livrer"))
-sys.exit(1 if ko else 0)
+if __name__ == "__main__":
+    main()
