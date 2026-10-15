@@ -19,18 +19,20 @@ Le script validé est rangé dans `work/script.md` : il sert de texte de référ
 
 ## 2. La structure
 
-1. **Hook (0 à 30 s)** : on tient tout de suite la promesse du titre. Le résultat d'abord (« À la
-   fin de cette vidéo, tu auras… »), une preuve (un chiffre, une démo annoncée), puis pourquoi
-   rester (« et la troisième méthode est celle que personne n'utilise »). Pas de « salut à tous,
-   aujourd'hui on va parler de ».
+1. **Hook (0 à 30 s)** : on tient tout de suite la promesse du titre. Le résultat d'abord, dit
+   avec les mots du créateur, une preuve tirée de son sujet (un chiffre, une démo annoncée, ce
+   qu'il a vécu), puis ce qui reste à découvrir. Aucune formule de YouTubeur : ni « salut à tous,
+   aujourd'hui on va parler de », ni « à la fin de cette vidéo, tu sauras », ni « reste bien
+   jusqu'au bout ». Si la phrase pourrait ouvrir n'importe quelle vidéo, elle est à réécrire.
 2. **Sommaire court** (optionnel, 10 s) : les parties, en une phrase. C'est une boucle ouverte : on
    la ferme à la fin.
 3. **Les parties** (une par chapitre, 1 à 3 minutes chacune) : une idée, un exemple concret, ce
    qu'il faut faire. Chaque partie commence par une phrase qui pourrait servir de titre de chapitre
-   et finit par une transition qui donne envie de la suivante (« sauf que ça ne marche que si… »).
-4. **Relances** : vers 3 min et vers 6 min, un temps fort (une démo, un chiffre, une anecdote, un
-   retournement). Toutes les 2 à 3 minutes, une petite relance (« et c'est là que ça devient
-   intéressant »).
+   et finit sur ce qui manque encore (une limite, une question que la partie suivante règle), dit
+   dans les mots du sujet, jamais par une formule de transition.
+4. **Relances** : toutes les 2 à 3 minutes, un temps fort tiré du sujet lui-même (une démo, un
+   chiffre, une anecdote vécue, un retournement). Jamais une phrase qui annonce l'intérêt sans le
+   donner (« et c'est là que ça devient intéressant ») : le temps fort suffit.
 5. **Fin** : le dénouement (on ferme la boucle du hook), puis un seul appel à l'action : la vidéo
    suivante à regarder, l'abonnement, ou la ressource **en description** (sur YouTube, on dit
    « le lien est en description »). Puis on s'arrête : 10 à 20 s pendant lesquelles l'écran de fin
