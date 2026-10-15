@@ -121,6 +121,10 @@ Puis un seul message, court :
   gardé l'ancien, le nouveau s'appelle `pack-sfx (1).zip` : c'est normal, tu prendras le bon) ;
 - termine par : **« Réponds “go” pour lancer la mise à jour. »**
 
+Le plan compare chaque extension installée à sa dernière version publiée, lue en ligne. Une ligne
+« Dernière version non lue en ligne » : relance le plan une fois ; si elle reste, continue, la règle
+locale du plan suffit (n'en parle pas au client).
+
 Le plan dit « Déjà à jour » : dis-le-lui et passe à l'étape 7. Il dit « Moteur déjà à jour » avec
 des extensions à mettre à jour : annonce-les, puis, après son « go », passe à l'étape 6.
 
@@ -171,17 +175,19 @@ Une par une, celles que le plan disait « à mettre à jour ensuite ». Leurs r�
 relance pas leur setup (`/setup-double-ia`, `/setup-stories`). Leur `INSTALL.md` finit par une
 invitation au setup ou un tableau récapitulatif : saute-les, tu conclus une seule fois, à l'étape 8.
 
-**Ton Double IA, Système Stories** (publiques) : télécharge-les dans `TMP` comme à l'étape 1, avec
-leur adresse :
+**Ton Double IA, Système Stories, Reel Cloneur™** (publiques) : télécharge celles du plan dans
+`TMP` comme à l'étape 1, avec leur adresse :
 
 ```bash
 cd "<TMP>" && curl -fL -o double-ia.tar.gz https://github.com/Alex-lmdm/double-ia/archive/refs/heads/main.tar.gz && tar -xzf double-ia.tar.gz
 cd "<TMP>" && curl -fL -o systeme-stories.tar.gz https://github.com/Alex-lmdm/systeme-stories/archive/refs/heads/main.tar.gz && tar -xzf systeme-stories.tar.gz
+cd "<TMP>" && curl -fL -o reel-cloneur.tar.gz https://github.com/Alex-lmdm/reel-cloneur/archive/refs/heads/main.tar.gz && tar -xzf reel-cloneur.tar.gz
 ```
 
 Puis, depuis `CLIENT`, suis le bloc « Le prompt d'installation » de leur `INSTALL.md`
-(`<TMP>/double-ia-main/INSTALL.md`, `<TMP>/systeme-stories-main/INSTALL.md`), avec ce dossier
-comme dossier de l'extension (pas besoin d'un autre dossier temporaire).
+(`<TMP>/double-ia-main/INSTALL.md`, `<TMP>/systeme-stories-main/INSTALL.md`,
+`<TMP>/reel-cloneur-main/INSTALL.md`), avec ce dossier comme dossier de l'extension (pas besoin
+d'un autre dossier temporaire).
 
 **Pack SFX** (privé : jamais sur GitHub) : suis l'`INSTALL.md` du pack, qui le trouve dans
 Téléchargements. Avant d'installer, vérifie que le `VERSION` du pack décompressé est au moins celle

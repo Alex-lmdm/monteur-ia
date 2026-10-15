@@ -72,7 +72,9 @@ const BLOC_EXTENSION = /\n*<!-- BEGIN EXTENSION: ([\w-]+)[\s\S]*?<!-- END EXTENS
 // donc gardé par chaque mise à jour (MISE-A-JOUR.md, étape 4).
 const BLOC_PERSO = "consignes-perso";
 // Extensions officielles (clé = nom de leur bloc de consignes) : où le client trouve leur nouvelle
-// version, et à quoi on reconnaît une version écrite pour « un Reel = un projet ».
+// version. Le plan compare l'extension installée à sa dernière version publiée, lue en ligne
+// (`versionsPubliees`) : publier une extension suffit, rien à changer ici. `aJour` n'est que la
+// règle locale, pour un plan sans réseau : à quoi on reconnaît une version déjà assez récente.
 const ecritePourLesReels = (outil) => (client) => existe(path.join(client, outil))
   && /\b(lieux|MAISON)\b/.test(lireTexte(path.join(client, outil)));
 export const EXTENSIONS = {
@@ -88,10 +90,18 @@ export const EXTENSIONS = {
   // Reel Cloneur™ (10/10/2026) : un seul outil, ses analyses vivent dans clones/, jamais touchées.
   "reel-cloneur": { nom: "Reel Cloneur™", depot: "Alex-lmdm/reel-cloneur", outils: ["cloner_reel.py"],
     aJour: (client) => existe(path.join(client, "tools/cloner_reel.py")) },
-  // Privé (sons sous licence) : le client retélécharge pack-sfx.zip depuis sa formation.
+  // Privé (sons sous licence) : le client retélécharge pack-sfx.zip depuis sa formation, qui donne
+  // aussi le numéro de sa dernière version.
   "pack-sfx": { nom: "Pack SFX", depot: null, outils: ["sfx.py", "sfx_mix.py"], versionMin: "1.1.0",
+    versionPubliee: "https://www.lemondedumarketing.fr/api/formations/pack-sfx/version",
     aJour: (client) => comparerVersions(versionPackSfx(client) ?? "0", "1.1.0") >= 0 },
 };
+// Ce que l'installation d'une extension copie chez le client, au même chemin que dans son dépôt,
+// et le fichier de ses consignes (le bloc « BEGIN EXTENSION » du modèle d'instructions).
+const FICHIERS_EXTENSION = /^(\.claude\/skills|tools)\//;
+const CONSIGNES_EXTENSION = /^templates\/agent-extension-[\w-]+\.md$/;
+// Plan sans lecture en ligne des extensions (tests, réseau coupé exprès) : règle locale seulement.
+export const HORS_LIGNE = "MONTEUR_IA_HORS_LIGNE";
 
 function comparerVersions(a, b) {
   const [x, y] = [a, b].map((v) => v.split(".").map(Number));
@@ -384,11 +394,79 @@ function actionRetouche(rel, client, manifeste) {
   return "remplace-modifie";
 }
 
+// --- extensions : leur dernière version publiée ------------------------------------------------------
+/** Les extensions installées chez le client : leurs blocs de consignes, hors consignes perso. */
+export function extensionsInstallees(client) {
+  return blocsExtensions(lireTexte(path.join(client, MODELE))).map((b) => b.nom).filter((nom) => nom !== BLOC_PERSO);
+}
+
+/**
+ * La dernière version publiée de chaque extension officielle installée, lue en ligne avant le plan.
+ * Dépôt GitHub : l'empreinte de chaque fichier que son installation copie, et ses consignes. Pack SFX
+ * (privé) : son numéro de version, donné par le site de la formation. `null` quand elle n'a pas pu
+ * être lue (pas de réseau, quota de GitHub) : le plan retombe alors sur la règle locale.
+ */
+export async function versionsPubliees(cles, { lire = globalThis.fetch, delai = 8000 } = {}) {
+  const out = {};
+  if (process.env[HORS_LIGNE] || typeof lire !== "function") return out;
+  const json = async (url) => {
+    const r = await lire(url, { headers: { "User-Agent": "monteur-ia-mise-a-jour", Accept: "application/vnd.github+json" },
+      signal: AbortSignal.timeout(delai) });
+    if (!r.ok) throw new Error(`${url} : ${r.status}`);
+    return r.json();
+  };
+  await Promise.all(cles.filter((cle) => EXTENSIONS[cle]).map(async (cle) => {
+    try {
+      out[cle] = await versionPubliee(EXTENSIONS[cle], json);
+    } catch {
+      out[cle] = null;
+    }
+  }));
+  return out;
+}
+
+async function versionPubliee(e, json) {
+  if (!e.depot) {
+    const { version } = await json(e.versionPubliee);
+    if (!/^\d+(\.\d+)*$/.test(String(version))) throw new Error(`version illisible : ${version}`);
+    return { version: String(version) };
+  }
+  const arbre = await json(`https://api.github.com/repos/${e.depot}/git/trees/main?recursive=1`);
+  if (arbre.truncated || !Array.isArray(arbre.tree)) throw new Error("arborescence incomplète");
+  const blobs = arbre.tree.filter((n) => n.type === "blob");
+  const fichiers = Object.fromEntries(blobs.filter((n) => FICHIERS_EXTENSION.test(n.path)).map((n) => [n.path, n.sha.slice(0, 12)]));
+  if (!Object.keys(fichiers).length) throw new Error("aucun fichier d'extension");
+  const modele = blobs.find((n) => CONSIGNES_EXTENSION.test(n.path));
+  const consignes = modele ? Buffer.from((await json(modele.url)).content, "base64").toString("utf8") : null;
+  return { fichiers, consignes };
+}
+
+const sansCR = (texte) => texte.replace(/\r\n/g, "\n");
+
+/** Ce qui manque ou diffère chez le client par rapport à la dernière version publiée de l'extension. */
+export function ecartsExtension(client, cle, publiee) {
+  if (publiee.version) {
+    const installee = versionPackSfx(client);
+    return comparerVersions(installee ?? "0", publiee.version) >= 0 ? [] : [`version ${installee ?? "inconnue"}`];
+  }
+  const ecarts = Object.entries(publiee.fichiers).filter(([rel, sha]) => {
+    const cible = path.join(client, rel);
+    return !existe(cible) || !empreintesClient(cible).includes(sha);
+  }).map(([rel]) => rel);
+  const publie = publiee.consignes && blocsExtensions(publiee.consignes).find((b) => b.nom === cle);
+  const installe = blocsExtensions(lireTexte(path.join(client, MODELE))).find((b) => b.nom === cle);
+  if (publie && sansCR(publie.texte) !== sansCR(installe?.texte ?? "")) ecarts.push(MODELE);
+  return ecarts;
+}
+
 // --- plan -----------------------------------------------------------------------------------------
-/** Ce que la mise à jour fera, sans rien toucher. */
-export function planifier(client, { manifeste = lireManifeste(), sujet = null, date = null, archive = archivePubliee() } = {}) {
+/**
+ * Ce que la mise à jour fera, sans rien toucher. `publiees` : la dernière version de chaque extension,
+ * lue en ligne par `versionsPubliees` ; une extension absente ou à `null` suit sa règle locale.
+ */
+export function planifier(client, { manifeste = lireManifeste(), sujet = null, date = null, archive = archivePubliee(), publiees = {} } = {}) {
   const plan = { client, v2: existe(path.join(client, "tools/lieux.py")), moteur: [], obsoletes: [],
-    extensions: [], outilsExtensions: [], extensionsAMettreAJour: [], plan: null };
+    extensions: [], outilsExtensions: [], extensionsAMettreAJour: [], extensionsHorsLigne: [], plan: null };
   const neufs = new Set(fichiersDuMoteur());
   for (const rel of neufs) {
     const cible = path.join(client, rel);
@@ -406,7 +484,8 @@ export function planifier(client, { manifeste = lireManifeste(), sujet = null, d
       continue;
     }
     if (empreintesClient(cible).includes(empreinte(fs.readFileSync(path.join(NEUF, rel))))) continue;
-    const action = livre(manifeste, rel, cible) || estOutilParReel(rel) ? "remplace" : actionRetouche(rel, client, manifeste);
+    // Le manifeste ne peut pas contenir sa propre empreinte : toujours remplacé, jamais une retouche.
+    const action = rel === MANIFESTE || livre(manifeste, rel, cible) || estOutilParReel(rel) ? "remplace" : actionRetouche(rel, client, manifeste);
     // Zones reportées, mais une retouche ailleurs dans le fichier ne passe pas : elle est signalée.
     const retouche = action === "fusion-zones" && livreNeutre(manifeste, rel, cible) === false;
     if (action) plan.moteur.push({ rel, action, ...(retouche && { retouche }) });
@@ -421,16 +500,21 @@ export function planifier(client, { manifeste = lireManifeste(), sujet = null, d
     const cible = path.join(client, rel);
     if (existe(cible) && livre(manifeste, rel, cible)) plan.obsoletes.push(rel);
   }
-  const blocs = blocsExtensions(lireTexte(path.join(client, MODELE))).map((b) => b.nom);
-  plan.extensions = blocs.filter((nom) => nom !== BLOC_PERSO);
-  plan.consignesPerso = blocs.includes(BLOC_PERSO);
+  plan.extensions = extensionsInstallees(client);
+  plan.consignesPerso = blocsExtensions(lireTexte(path.join(client, MODELE))).some((b) => b.nom === BLOC_PERSO);
   // Outils d'extension écrits pour Monteur IA 1 : ils ne connaissent pas encore les Reels séparés.
   for (const rel of fichiersDe(client, "tools")) {
     if (neufs.has(rel) || manifeste[rel] || !/\.py$/.test(rel)) continue;
     if (!/\b(lieux|MAISON)\b/.test(lireTexte(path.join(client, rel)))) plan.outilsExtensions.push(rel);
   }
-  // Extensions officielles installées mais pas encore dans leur version « un Reel = un projet ».
-  plan.extensionsAMettreAJour = plan.extensions.filter((nom) => EXTENSIONS[nom] && !EXTENSIONS[nom].aJour(client));
+  // Extensions officielles installées : différentes de leur dernière version publiée (sans réseau,
+  // pas encore à la version que demande leur règle locale).
+  for (const nom of plan.extensions.filter((cle) => EXTENSIONS[cle])) {
+    const publiee = publiees[nom];
+    if (!publiee) plan.extensionsHorsLigne.push(nom);
+    if (publiee ? ecartsExtension(client, nom, publiee).length : !EXTENSIONS[nom].aJour(client)) plan.extensionsAMettreAJour.push(nom);
+    if (publiee?.version) plan.dernierPackSfx = publiee.version;
+  }
   if (plan.extensionsAMettreAJour.includes("pack-sfx")) plan.versionPackSfx = versionPackSfx(client);
   plan.plan = planDeTravail(client, manifeste, { sujet, date, v2: plan.v2 });
   plan.premiereVideoFaite = premiereVideoDejaFaite(client, plan, archive);
@@ -550,7 +634,7 @@ function lignesExtensions(plan) {
     const e = EXTENSIONS[cle];
     if (e.depot) return `  à mettre à jour ensuite : ${e.nom}, nouvelle version sur https://github.com/${e.depot}`;
     const installee = plan.versionPackSfx ? `version ${plan.versionPackSfx} installée` : "version installée inconnue";
-    return `  à mettre à jour ensuite : ${e.nom} (${installee}, il faut la ${e.versionMin} ou plus),`
+    return `  à mettre à jour ensuite : ${e.nom} (${installee}, il faut la ${plan.dernierPackSfx ?? e.versionMin} ou plus),`
       + " pack-sfx.zip à retélécharger depuis la formation";
   });
   const connus = new Set(plan.extensions.flatMap((cle) => (EXTENSIONS[cle]?.outils ?? []).map((o) => `tools/${o}`)));
@@ -559,6 +643,10 @@ function lignesExtensions(plan) {
   return l;
 }
 
+/** Les extensions dont la dernière version n'a pas pu être lue en ligne (règle locale appliquée). */
+const ligneHorsLigne = (plan) => (plan.extensionsHorsLigne.length
+  ? [`(Dernière version non lue en ligne, vérifiée par sa règle locale : ${plan.extensionsHorsLigne.map(nomExtension).join(", ")}.)`] : []);
+
 export function decrire(plan) {
   const l = [];
   const par = (action) => plan.moteur.filter((m) => m.action === action).map((m) => m.rel);
@@ -566,8 +654,8 @@ export function decrire(plan) {
   l.push(`Dossier : ${plan.client}`);
   if (aucunChangement(plan)) {
     const extensions = lignesExtensions(plan);
-    return extensions.length ? [l[0], "Moteur déjà à jour.", "• Extensions :", ...extensions].join("\n")
-      : `${l[0]}\nDéjà à jour : rien à faire.`;
+    return (extensions.length ? [l[0], "Moteur déjà à jour.", "• Extensions :", ...extensions]
+      : [l[0], "Déjà à jour : rien à faire."]).concat(ligneHorsLigne(plan)).join("\n");
   }
   l.push(plan.v2 ? "Version : Monteur IA 2, mise à jour du moteur."
     : "Version : Monteur IA 1 (un seul plan de travail) : passage à « un Reel = un projet », pour l'app HyperFrames.");
@@ -581,7 +669,7 @@ export function decrire(plan) {
   }
   l.push(`• Extensions : ${plan.extensions.length
     ? `${plan.extensions.map(nomExtension).join(", ")} (leurs consignes et leurs réglages sont gardés)` : "aucune"}`);
-  l.push(...lignesExtensions(plan));
+  l.push(...lignesExtensions(plan), ...ligneHorsLigne(plan).map((ligne) => `  ${ligne}`));
   const p = plan.plan;
   if (p && !p.reel) {
     l.push(p.perso.length
@@ -920,7 +1008,7 @@ const dedans = (a, b) => {
   return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel));
 };
 
-function main(argv) {
+async function main(argv) {
   if (argv[0] === "--manifeste") {
     const m = genererManifeste(argv[1] || "origin/main");
     console.log(`${MANIFESTE} : ${Object.keys(m.fichiers).length} fichiers, ${m.versions} versions (${m.ref}).`);
@@ -945,7 +1033,8 @@ function main(argv) {
     console.error("La date s'écrit AAAA-MM-JJ.");
     return 2;
   }
-  const plan = planifier(client, { sujet: o.sujet, date: o.date });
+  const publiees = await versionsPubliees(extensionsInstallees(client));
+  const plan = planifier(client, { sujet: o.sujet, date: o.date, publiees });
   console.log(decrire(plan));
   if (aucunChangement(plan)) return 0;
   if (!o.appliquer) {
@@ -982,10 +1071,10 @@ function main(argv) {
 // Lancé directement (pas importé par un test) : Node donne au module son chemin réel, liens résolus
 // (dossier temporaire du Mac sous /var, dossier rangé derrière un lien) ; argv[1] garde le chemin tapé.
 if (process.argv[1] && fs.realpathSync(path.resolve(process.argv[1])) === fileURLToPath(import.meta.url)) {
-  try {
-    process.exitCode = main(process.argv.slice(2));
-  } catch (error) {
+  main(process.argv.slice(2)).then((code) => {
+    process.exitCode = code;
+  }, (error) => {
     console.error(`❌ ${error.message}`);
     process.exitCode = 1;
-  }
+  });
 }

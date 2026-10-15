@@ -7,8 +7,8 @@ import crypto from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
-  assetsReferences, aucunChangement, appliquer, calculerManifeste, cheminsDepuisLaRacine, decrire, fusionnerJson,
-  modeleAvecExtensions, neutre, planifier, reporterSons, reporterZones,
+  assetsReferences, aucunChangement, appliquer, calculerManifeste, cheminsDepuisLaRacine, decrire, ecartsExtension, fusionnerJson,
+  HORS_LIGNE, modeleAvecExtensions, neutre, planifier, reporterSons, reporterZones, versionsPubliees,
 } from './mettre-a-jour.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -490,8 +490,9 @@ test('MISE-A-JOUR.md : télécharger, montrer le plan, appliquer, brancher, avec
     + 'Consignes Pack SFX\n<!-- END EXTENSION: pack-sfx -->\n');
   const base = path.dirname(dir);
   const archive = archiveCommeGithub(base);
+  // Sans lecture en ligne des extensions : leur règle locale décide (pas de réseau dans les tests).
   const config = { ...process.env, HOME: base, USERPROFILE: base, CLAUDE_CONFIG_DIR: path.join(base, 'claude'),
-    CODEX_HOME: path.join(base, 'codex') };
+    CODEX_HOME: path.join(base, 'codex'), [HORS_LIGNE]: '1' };
   fs.mkdirSync(config.CODEX_HOME);
   const bash = (commande, cwd = dir) => execFileSync('bash', ['-c', commande], { cwd, encoding: 'utf8', env: config });
 
@@ -550,7 +551,7 @@ test('MISE-A-JOUR.md : télécharger, montrer le plan, appliquer, brancher, avec
   write(dir, 'tools/double_ia.py', 'from lieux import MAISON, REEL\n');
   write(dir, 'assets/sfx/.pack-sfx-manifest.json', '{"pack": "pack-sfx", "version": "1.1.0", "files": {}}\n');
   assert.match(bash(remplir(planBloc)), /Déjà à jour : rien à faire\./);
-  for (const url of ['double-ia', 'systeme-stories']) {
+  for (const url of ['double-ia', 'systeme-stories', 'reel-cloneur']) {
     assert.ok(blocs.some((b) => b.includes(`https://github.com/Alex-lmdm/${url}/archive/refs/heads/main.tar.gz`)), `${url} : téléchargement décrit`);
   }
   // Étape 4 : la ligne du contrôle que la commande affiche est bien celle que le fichier fait traiter.
@@ -581,4 +582,68 @@ test("Système Stories d'avant la story montée comme un Reel (déjà écrite po
   assert.equal(EXTENSIONS['systeme-stories'].aJour(dir), false, 'les retouches de l’app doivent être reportées, pas écrasées');
   fs.appendFileSync(story, 'def adopter(slug, cfg, page):\n    pass\n');
   assert.equal(EXTENSIONS['systeme-stories'].aJour(dir), true);
+});
+
+// Empreinte git d'un contenu : celle que donne l'arborescence d'un dépôt GitHub.
+const blob = (texte) => crypto.createHash('sha1').update(`blob ${Buffer.byteLength(texte)}\0`).update(texte).digest('hex');
+
+test('extensions : comparées à leur dernière version publiée, lue en ligne, sans règle à ajouter à chaque version', async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-extensions-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const consignes = '<!-- BEGIN EXTENSION: systeme-stories (ajouté par l’installation) -->\nConsignes v2\n<!-- END EXTENSION: systeme-stories -->\n';
+  const publies = { 'tools/story.py': 'def adopter():\n    pass\n', '.claude/skills/story/SKILL.md': '# Story v2\n' };
+  // Ce que répondent GitHub (arborescence de main, puis fichier des consignes) et le site de la formation.
+  const reponses = {
+    'https://api.github.com/repos/Alex-lmdm/systeme-stories/git/trees/main?recursive=1': { truncated: false, tree: [
+      ...Object.entries(publies).map(([rel, texte]) => ({ path: rel, type: 'blob', sha: blob(texte) })),
+      { path: '.claude/skills/story', type: 'tree', sha: 'x' },
+      { path: 'tests/test_outils.py', type: 'blob', sha: blob('jamais copié chez le client') },
+      { path: 'templates/agent-extension-stories.md', type: 'blob', sha: blob(consignes), url: 'https://api.github.com/consignes' },
+    ] },
+    'https://api.github.com/consignes': { content: Buffer.from(`\n\n${consignes}`).toString('base64'), encoding: 'base64' },
+    'https://www.lemondedumarketing.fr/api/formations/pack-sfx/version': { version: '1.2.0' },
+  };
+  const lire = async (url) => (url in reponses ? { ok: true, json: async () => reponses[url] } : { ok: false, status: 403 });
+  const publiees = await versionsPubliees(['systeme-stories', 'pack-sfx', 'double-ia', 'egaree'], { lire });
+  assert.equal(publiees['double-ia'], null, 'dépôt illisible (quota de GitHub) : règle locale');
+  assert.equal('egaree' in publiees, false, 'pas une extension officielle');
+  assert.deepEqual(publiees['pack-sfx'], { version: '1.2.0' });
+  assert.deepEqual(Object.keys(publiees['systeme-stories'].fichiers).sort(), ['.claude/skills/story/SKILL.md', 'tools/story.py']);
+
+  // Installée dans sa dernière version : mêmes fichiers (fins de ligne Windows comprises), mêmes consignes.
+  write(dir, 'templates/AGENT.md.tpl', `# Monteur IA\n\n${consignes}\n<!-- BEGIN EXTENSION: double-ia (ajouté) -->\nx\n<!-- END EXTENSION: double-ia -->\n`
+    + '\n<!-- BEGIN EXTENSION: pack-sfx (ajouté) -->\nx\n<!-- END EXTENSION: pack-sfx -->\n');
+  write(dir, 'tools/story.py', publies['tools/story.py'].replace(/\n/g, '\r\n'));
+  write(dir, '.claude/skills/story/SKILL.md', publies['.claude/skills/story/SKILL.md']);
+  write(dir, 'tools/double_ia.py', 'from lieux import MAISON\n');
+  write(dir, 'assets/sfx/.pack-sfx-manifest.json', '{"pack": "pack-sfx", "version": "1.2.0", "files": {}}\n');
+  assert.deepEqual(ecartsExtension(dir, 'systeme-stories', publiees['systeme-stories']), []);
+  assert.deepEqual(ecartsExtension(dir, 'pack-sfx', publiees['pack-sfx']), []);
+  const vide = path.join(dir, 'archive-vide');
+  const aJour = planifier(dir, { publiees, archive: vide });
+  assert.deepEqual(aJour.extensionsAMettreAJour, []);
+  assert.deepEqual(aJour.extensionsHorsLigne, ['double-ia']);
+
+  // Une nouvelle version publiée : un outil changé, un skill ajouté, des consignes revues ; un pack plus récent.
+  write(dir, 'tools/story.py', 'def composer():\n    pass\n');
+  fs.rmSync(path.join(dir, '.claude/skills/story'), { recursive: true });
+  edit(dir, 'templates/AGENT.md.tpl', 'Consignes v2', 'Consignes v1');
+  write(dir, 'assets/sfx/.pack-sfx-manifest.json', '{"pack": "pack-sfx", "version": "1.1.0", "files": {}}\n');
+  assert.deepEqual(ecartsExtension(dir, 'systeme-stories', publiees['systeme-stories']),
+    ['tools/story.py', '.claude/skills/story/SKILL.md', 'templates/AGENT.md.tpl']);
+  assert.deepEqual(ecartsExtension(dir, 'pack-sfx', publiees['pack-sfx']), ['version 1.1.0']);
+  const plan = planifier(dir, { publiees, archive: vide });
+  assert.deepEqual(plan.extensionsAMettreAJour, ['systeme-stories', 'pack-sfx']);
+  const texte = decrire(plan);
+  assert.match(texte, /à mettre à jour ensuite : Système Stories, nouvelle version sur https:\/\/github\.com\/Alex-lmdm\/systeme-stories/);
+  assert.match(texte, /à mettre à jour ensuite : Pack SFX \(version 1\.1\.0 installée, il faut la 1\.2\.0 ou plus\)/);
+  assert.match(texte, /Dernière version non lue en ligne, vérifiée par sa règle locale : Ton Double IA\./);
+
+  // Sans lecture en ligne voulue : rien n'est demandé au réseau, toutes les extensions suivent leur règle locale.
+  process.env[HORS_LIGNE] = '1';
+  try {
+    assert.deepEqual(await versionsPubliees(['systeme-stories'], { lire: () => assert.fail('aucune requête attendue') }), {});
+  } finally {
+    delete process.env[HORS_LIGNE];
+  }
 });
