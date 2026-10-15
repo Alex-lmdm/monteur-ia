@@ -126,6 +126,8 @@ Récapituler à l'utilisateur (champs selon le `defaultLayout` choisi en F5) :
   dérivé (plein cadre `1080×1920`, overlay `0:0`).
 
 Après OK → écrire dans `brand.config.json`, marquer le bloc `F`, `node scripts/sync.mjs`.
+Le cadrage d'un seul Reel (rush filmé plus près ou plus loin que d'habitude) ne se calibre pas ici :
+il va dans le `reel.config.json` de ce Reel (motion-design, `montage-talking-head.md` §3).
 
 > Note qualité : le visage n'est jamais agrandi par le navigateur ; il est pré-cadré en pleine
 > résolution avec ce crop (`tools/build_faces.py`). Le crop calibré ici est précisément ce qui garde

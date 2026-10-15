@@ -25,14 +25,14 @@ import sys
 
 import difflib
 import json
-import re
-import unicodedata
 
 from PIL import ImageFont
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import brand_style
 import sections
+from lieux import config
+from nombres import jetons, normaliser
 
 # Windows : une sortie lue par l'agent (redirigée) est en cp1252, et un « ✅ » y fait planter l'outil.
 for _flux in (sys.stdout, sys.stderr):
@@ -53,14 +53,26 @@ if STYLE.captions_font_file is None:
         "Depose le .ttf dans assets/fonts/, declare-le en `measureFile` dans "
         "templates/style-presets.json, puis relance."
     )
-FONT = ImageFont.truetype(str(STYLE.captions_font_file), STYLE.captions_size)  # = --brand-cap-size
+# = --brand-cap-size, a la graisse affichee ; le texte mesure est celui qui s'affiche (casse comprise).
+FONT = ImageFont.truetype(str(STYLE.captions_font_file), STYLE.captions_size)
 MAXW_HARD = 900
 
 # Bornes de phrase = les VRAIES coupes (une prise = une phrase). Surtout PAS les timestamps
 # Whisper : ils demarrent trop tot et les sous-titres partaient avant la coupe.
-SEC = sections.sections()
 TAKES = sections.TAKES
-DUR = sections.DURATION
+# Bornes posees sur les images du rendu (sections.FPS) : un sous-titre au millieme s'affichait sur
+# l'image SUIVANTE (une image de retard sur la voix, une fois sur trois). Recalees ici aussi, pour
+# rester justes avec un tools/sections.py d'avant ce calage (Reel repris d'une ancienne version).
+FPS = getattr(sections, "FPS", 30)
+
+
+def image(t):
+    """L'instant `t` pose sur l'image du rendu la plus proche (n / FPS)."""
+    return round(float(t) * FPS) / FPS
+
+
+SEC = [{**x, "start": image(x["start"]), "end": image(x["end"])} for x in sections.sections()]
+DUR = round(image(sections.DURATION), 5)
 
 # =============================================================================
 # DECOUPAGE — une ligne par phrase de la timeline, dans l'ordre des prises.
@@ -72,6 +84,13 @@ MANUAL = [
     ["on retire", "les silences"],           # take 1
     ["le rythme", "change tout"],            # take 2
 ]
+# Un chunk peut imposer son mot de depart : ["LOGO", 3] part sur le mot de rang 3 de la phrase (le
+# 4e, on compte depuis 0 comme dans <video>_words.json, signes seuls exclus). Utile quand la voix ne
+# dit pas le mot affiche (« commenter LE logo » sous-titre « LOGO », depart sur « le »).
+
+# Option (brand.config.json -> montage.sousTitresDepuisCoupe, defaut false) : le 1er sous-titre de
+# chaque phrase part sur la coupe, pas sur son 1er mot reconnu (il s'affiche des la 1re image du plan).
+DEPUIS_COUPE = (config().get("montage") or {}).get("sousTitresDepuisCoupe") is True
 
 # Une phrase par prise (cas simple). Si plusieurs prises forment UNE phrase (ex. un CTA en
 # 3 bouts), fusionne-les ici : PHRASES.append({'start': TAKES[i]['start'], 'end': TAKES[j]['end']}).
@@ -80,7 +99,7 @@ assert len(MANUAL) == len(PHRASES), f"MANUAL={len(MANUAL)} != phrases={len(PHRAS
 
 # SECTIONS = derivees de sections (meme source que le master) -> jamais desynchronisees
 SECTIONS = [(x['start'], x['y']) for x in SEC]
-BOUNDS = [s[0] for s in SECTIONS[1:]]
+BOUNDS = [s[0] for s in SECTIONS]   # 0 compris : la 1re image du Reel porte deja un sous-titre
 
 # --- timing : sur les VRAIS MOTS si <video>_words.json existe, sinon approximation ---
 # Le prorata de caracteres DERIVE : les premiers chunks durent trop et tous les suivants
@@ -94,43 +113,53 @@ if WORDS is None:
     print("    Lance `python3 tools/build_words.py` pour caler les sous-titres sur la voix.")
 
 
-def _norm(w):
-    """minuscules, sans accents ni ponctuation : les deux sources doivent matcher malgre les
-    variantes de Whisper (« 4 » / « quatre », « 100 % » / « 100% »)."""
-    w = unicodedata.normalize('NFD', w.lower())
-    w = ''.join(c for c in w if unicodedata.category(c) != 'Mn')
-    return re.sub(r'[^a-z0-9%]', '', w)
-
-
 def _align(words, chunks):
     """start de chaque chunk = start de son 1er mot. difflib plutot qu'un compteur : robuste
-    quand Whisper decoupe autrement que le decoupage manuel."""
-    wnorm = [_norm(w['w']) for w in words]
+    quand Whisper decoupe autrement que le decoupage manuel. Les deux sources sont normalisees par
+    tools/nombres.py (minuscules, sans accents ni ponctuation) et un nombre s'y ecrit d'une seule
+    facon : « 3 » / « trois », « 1 400 » / « 1400 » / « mille quatre cents », « 100 % » / « 100% »."""
+    wtoks = jetons([w['w'] for w in words])
     cwords, owner = [], []
     for k, c in enumerate(chunks):
-        for piece in c.split():
-            n = _norm(piece)
+        for n, _ in jetons(c.split()):
             if n:
                 cwords.append(n)
                 owner.append(k)
     first = {}
-    for i, j, size in difflib.SequenceMatcher(a=wnorm, b=cwords, autojunk=False).get_matching_blocks():
+    for i, j, size in difflib.SequenceMatcher(a=[n for n, _ in wtoks], b=cwords, autojunk=False).get_matching_blocks():
         for d in range(size):
             k = owner[j + d]
             if k not in first:
-                first[k] = words[i + d]['start']
+                first[k] = words[wtoks[i + d][1]]['start']
     return first
+
+
+def _chunk(c):
+    """(texte, rang du mot de depart impose ou None) : "texte" ou ["texte", rang]."""
+    if isinstance(c, (list, tuple)):
+        rang = c[1] if len(c) > 1 and isinstance(c[1], int) and not isinstance(c[1], bool) else None
+        return str(c[0]), rang
+    return c, None
 
 
 caps = []
 for pi, ph in enumerate(PHRASES):
-    chunks = MANUAL[pi]
+    lus = [_chunk(c) for c in MANUAL[pi]]
+    chunks, imposes = [t for t, _ in lus], [r for _, r in lus]
     t0, t1 = ph['start'], ph['end']
 
     starts = None
     if WORDS:
         wins = [w for w in WORDS if t0 - 1e-6 <= w['start'] < t1]
         first = _align(wins, chunks)
+        mots = [w for w in wins if normaliser(w['w'])]
+        for k, rang in enumerate(imposes):
+            if rang is None:
+                continue
+            if 0 <= rang < len(mots):
+                first[k] = mots[rang]['start']
+            else:
+                print(f"  ⚠ « {chunks[k]} » : pas de mot de rang {rang} dans la phrase {pi} ({len(mots)} mots), depart calcule.")
         if first:
             starts = []
             for k in range(len(chunks)):
@@ -143,8 +172,12 @@ for pi, ph in enumerate(PHRASES):
             for k in range(1, len(starts)):  # croissance stricte
                 starts[k] = max(starts[k], starts[k - 1] + 0.08)
             starts = [min(t, t1 - 0.05) for t in starts]
+            if DEPUIS_COUPE and imposes[0] is None:
+                starts[0] = t0
 
     if starts is None:                       # fallback : proportionnel au nb de caracteres
+        if any(r is not None for r in imposes):
+            print(f"  ⚠ phrase {pi} : depart sur un mot impose sans {WORDS_PATH.name}, timing approximatif.")
         lens = [max(len(c), 1) for c in chunks]
         tot = sum(lens); acc = 0
         starts = []
@@ -153,13 +186,14 @@ for pi, ph in enumerate(PHRASES):
             acc += L
 
     for c, t in zip(chunks, starts):
-        caps.append({'start': round(t, 3), 'text': c.upper()})
+        # Casse : celle de visual.captionsCase (capitales par defaut, comme le CSS de .cap).
+        caps.append({'start': image(t), 'text': c.upper() if STYLE.captions_case == "upper" else c})
 
 # 1) SNAP sur les frontieres de section : le sous-titre le plus proche demarre PILE dessus
 for B in BOUNDS:
     i = min(range(len(caps)), key=lambda k: abs(caps[k]['start'] - B))
     if abs(caps[i]['start'] - B) < 0.6:
-        caps[i]['start'] = round(B, 3)
+        caps[i]['start'] = B
 caps.sort(key=lambda c: c['start'])
 
 # 2) fins recalculees (timing continu), BORNEES A LA FIN DE LA SECTION.
@@ -178,8 +212,17 @@ def _section_end(t):
 for j in range(len(caps)):
     nxt = caps[j + 1]['start'] if j + 1 < len(caps) else DUR
     end = min(nxt, _section_end(caps[j]['start']))
-    caps[j]['end'] = round(end, 3)
-    caps[j]['dur'] = round(end - caps[j]['start'], 3)
+    caps[j]['end'] = end
+    caps[j]['dur'] = end - caps[j]['start']
+
+
+def _attrs(debut, duree):
+    """data-start / data-duration d'un sous-titre : depart un centieme d'image SOUS sa frontiere
+    (le rendu l'affiche des cette image, jamais la suivante), duree en images entieres (meme regle
+    que fenetre() de tools/build_master.py, pour les sections et le visage)."""
+    a, b = round(debut * FPS), round((debut + duree) * FPS)
+    return ("0" if a == 0 else f"{(a - 0.01) / FPS:.5f}"), f"{(b - a) / FPS:.5f}"
+
 
 # 3) Y = section qui contient le start
 def y_for(start):
@@ -196,8 +239,8 @@ if over:
 
 rows = "\n".join(
     f'      <div class="cap clip" id="cap-{j}" style="top:{y_for(c["start"])}px" '
-    f'data-start="{c["start"]}" data-duration="{c["dur"]}" data-track-index="{j % 4}">'
-    f'{html.escape(c["text"])}</div>'
+    f'data-start="{_attrs(c["start"], c["dur"])[0]}" data-duration="{_attrs(c["start"], c["dur"])[1]}" '
+    f'data-track-index="{j % 4}">{html.escape(c["text"])}</div>'
     for j, c in enumerate(caps))
 
 doc = f'''<!DOCTYPE html>
@@ -221,7 +264,7 @@ doc = f'''<!DOCTYPE html>
     </style>
   </head>
   <body>
-    <div id="captions" data-composition-id="captions" data-start="0" data-duration="{DUR}" data-fps="30" data-width="1080" data-height="1920">
+    <div id="captions" data-composition-id="captions" data-start="0" data-duration="{DUR}" data-fps="{FPS}" data-width="1080" data-height="1920">
 {rows}
     </div>
     <script>

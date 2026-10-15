@@ -10,6 +10,15 @@ Usage :
     from lieux import MAISON, REEL, config
     MAISON / "brand.config.json"   # réglages du client
     reel() / "index.html"          # le montage du Reel (quitte proprement hors d'un Reel)
+
+Réglages propres à un Reel : reel.config.json, à la racine du Reel, passe avant brand.config.json
+pour le cadrage du visage et la taille des sous-titres, et pour ce Reel seulement (un rush tourné
+plus près de la caméra se cadre sans décaler les Reels suivants). Clés lues, rien d'autre :
+    {"montage": {"splitTransform", "faceCrop", "fullFaceTransform", "fullFaceOrigin", "fullFaceCrop"},
+     "visual": {"captionsSize"}}
+Un transform posé sans son crop fait recalculer le crop depuis ce transform (tools/cadrage.py) : le
+crop de la maison, calé sur un autre cadrage, n'est jamais repris. scripts/sync.mjs génère le
+brand/tokens.css du Reel avec sa taille de sous-titres ; la mise à jour ne touche jamais reels/.
 """
 from __future__ import annotations
 
@@ -56,10 +65,53 @@ def reel() -> pathlib.Path:
     return REEL
 
 
+REGLAGES_REEL = "reel.config.json"
+CLES_REEL = {"montage": ("splitTransform", "faceCrop", "fullFaceTransform", "fullFaceOrigin", "fullFaceCrop"),
+             "visual": ("captionsSize",)}
+
+
+def reglages_reel(dossier=None) -> dict:
+    """Les réglages propres au Reel (reel.config.json), limités aux clés de CLES_REEL ; {} sans fichier."""
+    dossier = REEL if dossier is None else pathlib.Path(dossier)
+    fichier = dossier / REGLAGES_REEL if dossier is not None else None
+    if fichier is None or not fichier.is_file():
+        return {}
+    try:
+        brut = json.loads(fichier.read_text(encoding="utf-8"))
+    except ValueError as e:
+        sys.exit(f"ERREUR : {fichier} illisible ({e}). Corrige-le ou supprime-le : le Reel reprendra les réglages "
+                 "de brand.config.json.")
+    out = {}
+    for bloc, cles in CLES_REEL.items():
+        valeurs = {k: v for k, v in ((brut.get(bloc) or {}) if isinstance(brut, dict) else {}).items()
+                   if k in cles and v not in (None, "")}
+        if valeurs:
+            out[bloc] = valeurs
+    return out
+
+
+def avec_reglages_reel(cfg: dict, dossier=None) -> dict:
+    """Les réglages `cfg` de la maison, avec par-dessus ceux du Reel (reel.config.json) s'il en a."""
+    propres = reglages_reel(dossier)
+    if not propres:
+        return cfg
+    montage = dict(cfg.get("montage") or {})
+    r = propres.get("montage", {})
+    # Un transform du Reel sans son crop : le crop de la maison (calé sur un autre cadrage) tombe.
+    if "splitTransform" in r and "faceCrop" not in r:
+        montage.pop("faceCrop", None)
+    if ("fullFaceTransform" in r or "fullFaceOrigin" in r) and "fullFaceCrop" not in r:
+        montage.pop("fullFaceCrop", None)
+    return {**cfg, "montage": {**montage, **r}, "visual": {**(cfg.get("visual") or {}), **propres.get("visual", {})}}
+
+
 def config() -> dict:
-    """brand.config.json (généré par /setup) sinon brand.config.example.json (réglages livrés)."""
+    """brand.config.json (généré par /setup) sinon brand.config.example.json (réglages livrés), et,
+    pour un outil lancé dans un Reel, ses réglages propres (reel.config.json) par-dessus."""
+    cfg = {}
     for name in ("brand.config.json", "brand.config.example.json"):
         p = MAISON / name
         if p.exists():
-            return json.loads(p.read_text(encoding="utf-8"))
-    return {}
+            cfg = json.loads(p.read_text(encoding="utf-8"))
+            break
+    return avec_reglages_reel(cfg)

@@ -38,34 +38,59 @@ def parse_origin(origin):
     return vals[0], vals[1]
 
 
+def _longueur(valeur: str, taille: float) -> float:
+    """« -25px », « -25 », « 10% » (de la taille de la vidéo) -> pixels."""
+    v = valeur.strip()
+    if v.endswith("%"):
+        return float(v[:-1]) / 100 * taille
+    return float(re.sub(r"px$", "", v) or 0)
+
+
+def lire_transform(transform) -> tuple[tuple[float, float], tuple[float, float]]:
+    """`transform` CSS -> ((Sx, Sy), (Tx, Ty)) : un point p de la vidéo va en S·p + T (avant
+    l'origine). Lit translate(x[, y]), translateX, translateY, scale(s[, sy]), scaleX, scaleY, dans
+    l'ordre écrit (« scale(2) translate(10px, 0) » décale de 20 px à l'écran). Le reste est ignoré."""
+    sx, sy, tx, ty = 1.0, 1.0, 0.0, 0.0
+    for nom, args in re.findall(r"(translateX|translateY|translate|scaleX|scaleY|scale)\(([^)]*)\)", transform or ""):
+        vals = [a for a in re.split(r"[\s,]+", args.strip()) if a]
+        if not vals:
+            continue
+        if nom == "translate":
+            dx, dy = _longueur(vals[0], 1080), _longueur(vals[1], 1920) if len(vals) > 1 else 0.0
+        elif nom in ("translateX", "translateY"):
+            dx, dy = (_longueur(vals[0], 1080), 0.0) if nom == "translateX" else (0.0, _longueur(vals[0], 1920))
+        else:
+            fx = float(vals[0]) if nom != "scaleY" else 1.0
+            fy = (float(vals[1]) if len(vals) > 1 else fx) if nom == "scale" else (float(vals[0]) if nom == "scaleY" else 1.0)
+            sx, sy = sx * fx, sy * fy
+            continue
+        tx, ty = tx + sx * dx, ty + sy * dy
+    return (sx, sy), (tx, ty)
+
+
 def crop_from_transform(transform, top, origin=None):
     """Traduit un `transform` CSS du master en `crop=w:h:x:y` ffmpeg (pixels de base.mp4).
 
-    La <video> du master est une surface plein cadre 1080x1920 transformée. Deux cas :
-
-    - SPLIT : `transform-origin: 0 0` + `translate(Tx, Ty) scale(S)`. La zone SOURCE visible
-      dans la fenêtre [top .. 1920] est `src_x = (0 .. 1080 - Tx) / S`,
-      `src_y = (top - Ty .. 1920 - Ty) / S`.
-    - PLEIN ÉCRAN : `scale(S)` autour d'un `transform-origin` (ox, oy). L'agrandissement se fait
-      AUTOUR de ce point, donc la zone visible est décalée de `o * taille * (1 - 1/S)`.
-      Ignorer l'origin donnerait un visage décentré à l'export alors qu'il était bon au studio.
+    La <video> du master est une surface plein cadre 1080x1920 transformée autour de son
+    `transform-origin` o : un point p de la vidéo s'affiche en o + T + S·(p − o). La zone SOURCE
+    visible dans la fenêtre [0..1080] x [top..1920] est donc p = o + (écran − o − T) / S :
+    - SPLIT : origin `0 0` + `translate(Tx, Ty) scale(S)` -> src_x = −Tx / S, src_y = (top − Ty) / S ;
+    - PLEIN ÉCRAN : `scale(S)` autour de `center 34%` -> zone décalée de o · (1 − 1/S), plus la
+      translation éventuelle (`translateY(-25px) scale(1.75)` remonte la tête de 25 px).
+    Ignorer l'origin ou une translation donnerait un visage décalé à l'export alors qu'il était
+    bon au studio.
     """
     if not transform:
         return None
-    scale = re.search(r"scale\(([\d.]+)\)", transform)
-    trans = re.search(r"translate\(\s*(-?[\d.]+)px\s*,\s*(-?[\d.]+)px\s*\)", transform)
-    s = float(scale.group(1)) if scale else 1.0
-    w = round(1080 / s)
-    h = round((1920 - top) / s)
-
-    if trans:
-        tx, ty = float(trans.group(1)), float(trans.group(2))
-        x = round(-tx / s)
-        y = round((top - ty) / s)
-    else:
-        ox, oy = parse_origin(origin)
-        x = round(ox * 1080 * (1 - 1 / s))
-        y = round(oy * 1920 * (1 - 1 / s))
+    (sx, sy), (tx, ty) = lire_transform(transform)
+    if sx <= 0 or sy <= 0:
+        return None
+    fx, fy = parse_origin(origin)
+    ox, oy = fx * 1080, fy * 1920
+    w = round(1080 / sx)
+    h = round((1920 - top) / sy)
+    x = round(ox + (0 - ox - tx) / sx)
+    y = round(oy + (top - oy - ty) / sy)
 
     x, y = max(x, 0), max(y, 0)
     w, h = min(w, 1080 - x), min(h, 1920 - y)
@@ -73,8 +98,9 @@ def crop_from_transform(transform, top, origin=None):
 
 
 def crops(montage: dict) -> tuple[str, str]:
-    """(crop split, crop plein écran) en pixels de base.mp4, depuis le bloc `montage` des réglages."""
-    face = montage.get("faceCrop") or crop_from_transform(montage.get("splitTransform"), 920) \
+    """(crop split, crop plein écran) en pixels de base.mp4, depuis le bloc `montage` des réglages.
+    Origines : celles du master (tools/build_master.py), `0 0` en split, fullFaceOrigin en plein écran."""
+    face = montage.get("faceCrop") or crop_from_transform(montage.get("splitTransform"), 920, "0 0") \
         or DEFAULT_FACE_CROP
     full = montage.get("fullFaceCrop") or crop_from_transform(
         montage.get("fullFaceTransform"), 0, montage.get("fullFaceOrigin") or "center 34%") \

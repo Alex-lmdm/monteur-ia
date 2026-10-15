@@ -260,6 +260,11 @@ Deux réglages, deux phrases :
   arrondie), `shadow` (ombre portée), `underline` (souligné). Les nommer en une ligne chacun,
   laisser choisir.
 - `visual.captionsLines` (1 ou 2) et `visual.captionsPosition` : garder les défauts sauf demande.
+- Allure fine, seulement sur demande (absente = le rendu de départ) : `visual.captionsCase`
+  (`upper` | `asis`, le texte tel qu'écrit), `captionsLineHeight` (1.35), `captionsWeight` (900, ou
+  `auto` = la vraie graisse : jamais de faux gras sur une police à graisse unique), `captionsPadding`
+  (CSS, ex. `"7px 18px"`), `captionsInk` (texte sur l'accent du skin block : `contrast`, `bg`, `text`
+  ou un hex).
 
 ### D4 — Style du CTA et cadrage (optionnel, proposer sans insister)
 

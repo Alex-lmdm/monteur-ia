@@ -34,7 +34,6 @@ faux a l'export alors qu'il etait bon dans le studio. Ce script le lit dans bran
 sont absents, le CALCULE depuis le transform avec la formule du skill — plus personne n'a a le
 retrouver a la main. Il le met ensuite a l'echelle du derush.
 """
-import json
 import pathlib
 import re
 import subprocess
@@ -43,7 +42,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import brand_style
 import sections
-from lieux import MAISON  # réglages du client, partagés par tous les Reels
+from lieux import config  # réglages du client, et le cadrage propre au Reel (reel.config.json)
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 BASE = ROOT / "assets/video/base.mp4"
@@ -57,15 +56,7 @@ WINSFULL = sections.facefull_windows()  # visage plein ecran (sections "face")
 MEDIAS = [s for s in SEC if s.get("media")]
 
 
-def load_config():
-    for name in ("brand.config.json", "brand.config.example.json"):
-        p = MAISON / name
-        if p.exists():
-            return json.loads(p.read_text(encoding="utf-8"))
-    return {}
-
-
-CFG = (load_config().get("montage") or {})
+CFG = (config().get("montage") or {})
 
 
 # Le calcul du cadrage est partagé avec tools/build_faces.py (export natif) : même zone du rush.

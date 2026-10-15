@@ -162,10 +162,10 @@
   font-size: var(--brand-cap-size);
   /* Graisse maximale : règle de lisibilité en short-form (écran petit, lecture en 1 s),
      pas un choix d'identité. Sans effet sur une police à graisse unique (Anton…). */
-  font-weight: 900;
-  line-height: 1.35;
+  font-weight: {{CAPTIONS_WEIGHT}};
+  line-height: {{CAPTIONS_LINE_HEIGHT}};
   white-space: nowrap;
-  text-transform: uppercase;
+  text-transform: {{CAPTIONS_TRANSFORM}};
 }
 
 /* Skin actif (injecté depuis le style choisi) */

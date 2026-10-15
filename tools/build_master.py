@@ -24,17 +24,20 @@ POURQUOI generer plutot qu'editer a la main : les data-start / data-duration et 
 visage sont DERIVES des vraies coupes du derush. C'est ce qui empeche le bug "on voit la fin de
 la prise precedente" (frontieres du master desynchronisees des coupes reelles).
 """
-import json
 import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import sections
-from lieux import MAISON  # réglages du client, partagés par tous les Reels
+from lieux import config  # réglages du client, et ceux du Reel (reel.config.json)
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SEC = sections.sections()
-DUR = sections.DURATION
+# --- calage sur les images du rendu (30 im/s) --------------------------------------------------
+FPS = getattr(sections, "FPS", 30)   # cadence du rendu : data-fps du master, bouton Export de l'app
+# Duree du montage : un nombre entier d'images (une duree entre deux images ajoutait une image de trop
+# au rendu, sans voix ni visage).
+DUR = round(round(sections.DURATION * FPS) / FPS, 5)
 FACES = sections.face_windows()          # visage en split (moitie basse)
 FACEFULL = sections.facefull_windows()   # visage PLEIN ECRAN (sections "face")
 
@@ -46,16 +49,9 @@ DEFAULT_FULLFACE_TRANSFORM = "scale(1.4)"
 DEFAULT_FULLFACE_ORIGIN = "center 34%"
 
 
-def load_config():
-    """brand.config.json (genere par /setup) sinon brand.config.example.json (defauts livres)."""
-    for name in ("brand.config.json", "brand.config.example.json"):
-        p = MAISON / name
-        if p.exists():
-            return json.loads(p.read_text(encoding="utf-8"))
-    return {}
-
-
-CFG = load_config()
+# brand.config.json (genere par /setup, sinon brand.config.example.json), et par-dessus le cadrage
+# propre a ce Reel s'il en a un (reel.config.json, cf. tools/lieux.py).
+CFG = config()
 SPLIT_TRANSFORM = (CFG.get("montage") or {}).get("splitTransform") or DEFAULT_SPLIT_TRANSFORM
 FULLFACE_TRANSFORM = (CFG.get("montage") or {}).get("fullFaceTransform") or DEFAULT_FULLFACE_TRANSFORM
 FULLFACE_ORIGIN = (CFG.get("montage") or {}).get("fullFaceOrigin") or DEFAULT_FULLFACE_ORIGIN
@@ -74,10 +70,7 @@ SRC_PLEIN = "assets/video/visage-plein.mp4" if NATIF_PLEIN else "assets/video/ba
 CSS_SPLIT = "transform: none;" if NATIF_SPLIT else f"transform-origin: 0 0; transform: {SPLIT_TRANSFORM};"
 CSS_PLEIN = "transform: none;" if NATIF_PLEIN else f"transform: {FULLFACE_TRANSFORM}; transform-origin: {FULLFACE_ORIGIN};"
 
-# --- calage des videos sur les images du rendu (30 im/s) --------------------------------------
-FPS = 30   # cadence du rendu : data-fps du master, bouton Export de l'app
-
-
+# --- calage des videos et des sections sur les images du rendu ---------------------------------
 def fenetre(st: float, d: float, media: bool = True) -> tuple[str, str, str]:
     """data-start, data-media-start et data-duration d'une <video> posee sur [st, st + d[, calees
     sur les images du rendu. Mesure sur HyperFrames 0.8 (videos numerotees) : le rendu compte le
@@ -85,7 +78,9 @@ def fenetre(st: float, d: float, media: bool = True) -> tuple[str, str, str]:
     depart entre deux images (les coupes du derush) affichait donc l'image d'avant : le visage
     arrivait 33 a 59 ms apres la voix. Depart ecrit un centieme d'image SOUS la frontiere, entree
     un centieme AU-DESSUS : les deux tombent sur la meme image (avec cet arrondi, comme au plus
-    pres). media=False : video qui commence au debut de son fichier (b-roll)."""
+    pres). media=False : video qui commence au debut de son fichier (b-roll), ou section. Une section
+    posee au millieme (2,667 s = image 80,01) s'affichait une image APRES le visage (image 81) : a la
+    coupe, l'ancienne section et ses sous-titres restaient visibles une image de trop."""
     debut, fin = round(float(st) * FPS), round((float(st) + float(d)) * FPS)
     depart = "0" if debut == 0 else f"{(debut - 0.01) / FPS:.5f}"
     entree = ("0" if debut == 0 else f"{(debut + 0.01) / FPS:.5f}") if media else "0"
@@ -123,10 +118,11 @@ for s in SEC:
             f'data-start="{depart}" data-media-start="{entree}" data-duration="{duree}" '
             f'data-track-index="{ti}"></video>')
         continue
+    depart, _, duree = fenetre(s["start"], s["dur"], media=False)
     rows.append(
         f'      <div id="section-{s["id"]}" class="clip" data-composition-id="{s["id"]}" '
         f'data-composition-src="compositions/{s["id"]}.html" '
-        f'data-start="{s["start"]}" data-duration="{s["dur"]}" data-track-index="{ti}" '
+        f'data-start="{depart}" data-duration="{duree}" data-track-index="{ti}" '
         f'data-width="1080" data-height="{h}" '
         f'style="position:absolute; left:0; top:0; width:1080px; height:{h}px; overflow:hidden;"></div>')
 
@@ -164,7 +160,7 @@ doc = f'''<!DOCTYPE html>
   <body>
     <!--
       MASTER : GENERE par tools/build_master.py (ne pas editer a la main).
-      1080x1920, 30 fps, {DUR} s. {len(SEC)} section(s), {len(FACES)} fenetre(s) visage.
+      1080x1920, {FPS} fps, {DUR} s. {len(SEC)} section(s), {len(FACES)} fenetre(s) visage.
 
       Les data-start / data-duration viennent des VRAIES coupes du derush
       (via tools/sections.py -> {sections.CUTS_PATH.relative_to(ROOT)}, mesurees par
@@ -173,7 +169,7 @@ doc = f'''<!DOCTYPE html>
 
       Ordre DOM = layering : bgbase < visage split < sections < captions.
     -->
-    <div id="root" data-composition-id="main" data-start="0" data-duration="{DUR}" data-fps="30" data-width="1080" data-height="1920">
+    <div id="root" data-composition-id="main" data-start="0" data-duration="{DUR}" data-fps="{FPS}" data-width="1080" data-height="1920">
 
       <!-- Fond de marque (seul aplat opaque autorise, tout en bas de la pile). -->
       <div id="bgbase" class="clip" data-start="0" data-duration="{DUR}" data-track-index="0" style="position:absolute; inset:0; background:{BG};"></div>

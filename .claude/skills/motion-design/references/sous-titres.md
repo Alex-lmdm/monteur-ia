@@ -15,6 +15,9 @@ tout.
   `shadow` (ombre portée), `underline` (souligné). Description de chacun dans `captionSkins` de
   `templates/style-presets.json`.
 - Nombre de lignes : `visual.captionsLines` (défaut 1) · Taille : `--brand-cap-size` = `visual.captionsSize` (défaut 50 px ; `montage_captions.py` mesure la largeur à cette taille).
+- Casse, graisse, interligne, marge, encre : `visual.captionsCase` / `captionsWeight` / `captionsLineHeight`
+  / `captionsPadding` / `captionsInk` (détail : skill setup, bloc D). En `asis`, `MANUAL` s'écrit avec
+  la casse voulue à l'écran ; la mesure de largeur suit.
 - Pour **essayer** un autre skin sur une seule compo : ajouter `cap-skin-<nom>` à un `.cap`.
   Pour **changer le défaut** de toutes les vidéos : `/setup visuel`, jamais une règle CSS en dur.
 
@@ -151,5 +154,18 @@ sur **son 1er mot** (alignement `difflib`, robuste aux variantes « 4 »/« quat
 **durée** à `section.end`, le dernier sous-titre d'une section reste affiché ~0,5 s **sur la
 section suivante** (il « bave » sur le plan d'après — très visible quand on passe du split au
 plein écran).
+
+**Bornes sur les images du rendu (30 im/s).** Le rendu n'affiche un clip qu'à partir de la première
+image `n / 30` qui suit son `data-start` : une borne au millième (2,667 s = image 80,01) part une
+image en retard. `tools/sections.py` (`FPS`, `image()`) pose donc sections, sous-titres et durée du
+montage sur l'image la plus proche, comme le visage ; la 1re image du Reel porte déjà un sous-titre.
+Un sous-titre écrit à la main : `data-start` un centième d'image sous sa frontière, durée en images
+entières (`_attrs()` de `tools/montage_captions.py`).
+
+**Départ d'un sous-titre.** Par défaut, sur son 1er mot reconnu. `montage.sousTitresDepuisCoupe: true`
+(brand.config.json) fait partir le 1er sous-titre de chaque prise sur la coupe : le plan s'ouvre déjà
+sous-titré. Un chunk de `MANUAL` peut imposer son mot : `["LOGO", 3]` part sur le mot de rang 3 de la
+prise (compté depuis 0, comme dans `<video>_words.json`), quand la voix ne dit pas le mot affiché
+(« commenter le logo » sous-titré « LOGO », dès « le ») ou que Whisper l'écrit autrement (« ils » / « il »).
 
 Détail dans `references/patterns.md`.

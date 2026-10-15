@@ -23,7 +23,8 @@ Le fichier arrive dans `assets/` du Reel avec sa durée, et pour un bruitage son
 (secondes entre le début du fichier et l'impact). Mesuré sur 39 sons : MP3 48 kHz stéréo, même
 niveau technique que le pack, mais normalisés près du maximum (pic vers -1,5 dB), avec 20 à 50 ms
 de silence avant le son et des queues longues (whooshes de 1,3 à 1,6 s) : rogne-les (`trim`, le
-fondu de sortie est automatique) pour un son sec. Pour les poser :
+fondu de sortie est automatique) pour un son sec. Rogné au début, un tel son est découpé en fichier
+par `tools/sons.py` (`assets/sons/<nom>-rogne-….wav`) : il garde son attaque au rendu. Pour les poser :
 - **jamais d'`<audio>` écrit à la main** : hors du bloc SONS, il disparaît à la prochaine
   régénération du master ;
 - un bruitage → un event de `tools/build_sfx.py` : `("assets/<fichier>", instant_visé − peakOffset,

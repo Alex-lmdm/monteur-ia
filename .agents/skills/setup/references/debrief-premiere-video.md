@@ -90,6 +90,7 @@ voir (cadrage, taille des sous-titres) s'écrivent pendant la correction, à l'e
 | Un mélange (ex. accroche en plein écran, le reste en split) | `montage.defaultLayout` = le cadrage majoritaire, et le mélange en préférence |
 | Cadrage du visage recalé pendant la correction | `montage.splitTransform` ou `montage.fullFaceTransform` / `fullFaceOrigin` (réglage technique : l'écrire dès qu'il est validé à l'image) |
 | Taille des sous-titres | `visual.captionsSize` (en px, la valeur validée à la correction) |
+| Allure des sous-titres (casse, graisse, interligne, marge, couleur du texte) | `visual.captionsCase` / `captionsWeight` / `captionsLineHeight` / `captionsPadding` / `captionsInk` (skill setup, bloc D) |
 | Sa musique | fichier dans `assets/music/`, `audio.musicFile` (et `audio.musicDb` s'il la veut plus ou moins forte) |
 | Rythme des coupes | les valeurs `derush.padStart` / `padEnd` réellement appliquées et validées à la correction |
 | Voix nettoyée | rien : dès la deuxième vidéo, le nettoyage fait partie du dérush |

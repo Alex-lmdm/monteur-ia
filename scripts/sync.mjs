@@ -105,7 +105,7 @@ function pickReadable(base, candidates) {
  * Fusionne le preset choisi et les surcharges explicites de brand.config.json.
  * La config gagne toujours : le preset n'est qu'un point de départ.
  */
-function resolveStyle(config, presetsFile) {
+function resolveStyle(config, presetsFile, { avertir = warn } = {}) {
   const presets = presetsFile.presets;
   const wanted = config?.visual?.stylePreset ?? null;
   const preset = presets.find((p) => p.id === wanted) ?? presets.find((p) => p.isUnset) ?? presets[0];
@@ -136,7 +136,59 @@ function resolveStyle(config, presetsFile) {
   const chosen = config?.setup?.styleChosen === true || (Boolean(wanted) && !preset.isUnset);
   const capSize = Number(visual.captionsSize);
   const captionsSize = Number.isFinite(capSize) && capSize >= 30 && capSize <= 100 ? Math.round(capSize) : 50;
-  return { preset, visual: { ...visual, text, captionsSize, ...derived }, chosen };
+  const resolved = { ...visual, text, captionsSize, ...derived };
+  return { preset, visual: resolved, chosen, captions: captionLook(resolved, presetsFile, avertir) };
+}
+
+/**
+ * Allure des sous-titres, réglages optionnels de `visual` (miroir : tools/brand_style.py). Absents,
+ * tokens.css reste celui d'avant à l'octet près : capitales, graisse 900, interligne 1,35, marge et
+ * encre du skin.
+ *   captionsCase       "upper" (défaut) | "asis" : le texte tel qu'écrit dans le découpage.
+ *   captionsLineHeight interligne (défaut 1.35) : la hauteur du bandeau.
+ *   captionsWeight     100 à 900, ou "auto" = la vraie graisse de la police (la plus forte déclarée
+ *                      dans style-presets.json) : une police à graisse unique n'est jamais grossie
+ *                      par un faux gras du navigateur.
+ *   captionsPadding    marge du bandeau, en CSS ("7px 18px", "0.15em 0.4em").
+ *   captionsInk        texte posé sur l'accent (skin block) : "contrast" (défaut, calculée), "bg",
+ *                      "text" ou un hex.
+ */
+function captionLook(v, presetsFile, warn) {
+  const look = { transform: "uppercase", lineHeight: "1.35", weight: "900", padding: null, ink: null, inkHex: v.contrast };
+  const regle = (cle, attendu) => warn(`visual.${cle} « ${v[cle]} » ignoré (${attendu}) : réglage par défaut gardé.`);
+  if (v.captionsCase !== undefined) {
+    const casse = String(v.captionsCase).toLowerCase().replace(/[^a-z]/g, "");
+    if (casse === "asis") look.transform = "none";
+    else if (casse !== "upper") regle("captionsCase", "upper ou asis");
+  }
+  if (v.captionsLineHeight !== undefined) {
+    const lh = Number(v.captionsLineHeight);
+    if (Number.isFinite(lh) && lh >= 0.8 && lh <= 3) look.lineHeight = String(lh);
+    else regle("captionsLineHeight", "un nombre entre 0.8 et 3");
+  }
+  if (v.captionsWeight !== undefined) {
+    const poids = (presetsFile.fonts?.[v.fontCaptions]?.faces ?? []).map((f) => Number(f.weight ?? 400)).filter(Number.isFinite);
+    const w = Number(v.captionsWeight);
+    if (String(v.captionsWeight).toLowerCase() === "auto") look.weight = String(poids.length ? Math.max(...poids) : 900);
+    else if (Number.isFinite(w) && w >= 100 && w <= 900) look.weight = String(Math.round(w));
+    else regle("captionsWeight", "100 à 900, ou auto");
+  }
+  if (v.captionsPadding !== undefined) {
+    const p = typeof v.captionsPadding === "number" ? `${v.captionsPadding}px` : String(v.captionsPadding).trim().replace(/\s+/g, " ");
+    if (/^(0|\d*\.?\d+(px|em|rem))( (0|\d*\.?\d+(px|em|rem))){0,3}$/.test(p)) look.padding = p;
+    else regle("captionsPadding", "1 à 4 longueurs CSS, ex. \"7px 18px\"");
+  }
+  if (v.captionsInk !== undefined) {
+    const ink = String(v.captionsInk).trim();
+    const nommees = { bg: ["var(--brand-bg)", v.bg], text: ["var(--brand-text)", v.text] };
+    if (ink.toLowerCase() === "contrast") look.ink = null;
+    else if (nommees[ink.toLowerCase()]) [look.ink, look.inkHex] = nommees[ink.toLowerCase()];
+    else if (ink.startsWith("#") && hexToRgb(ink)) [look.ink, look.inkHex] = [ink, ink];
+    else regle("captionsInk", "contrast, bg, text ou un hex");
+    if (look.ink && v.captionsSkin !== "block") warn(`visual.captionsInk ne s'applique qu'au skin block (skin actif : ${v.captionsSkin}).`);
+    if (look.ink && contrastRatio(look.inkHex, v.accent) < 3) warn(`Sous-titres : encre ${ink} peu lisible sur l'accent (ratio ${contrastRatio(look.inkHex, v.accent).toFixed(1)}:1).`);
+  }
+  return look;
 }
 
 /** Corps CSS de chaque skin de sous-titres. Une seule source de vérité. */
@@ -165,21 +217,26 @@ const CAPTION_SKINS = {
   text-shadow: 0 2px 6px var(--brand-stroke);`,
 };
 
-function buildCaptionCss(skinName) {
+function buildCaptionCss(skinName, look = {}, avertir = warn) {
   const skin = CAPTION_SKINS[skinName] ? skinName : "plate";
   if (!CAPTION_SKINS[skinName]) {
-    warn(`Skin de sous-titres inconnu « ${skinName} » : repli sur « plate ».`);
+    avertir(`Skin de sous-titres inconnu « ${skinName} » : repli sur « plate ».`);
   }
-  const active = `.cap {\n${CAPTION_SKINS[skin]}\n}`;
+  // Marge et encre réglées (visual.captionsPadding / captionsInk) : sur le skin actif seulement.
+  let body = CAPTION_SKINS[skin];
+  if (look.padding) body = body.replace(/^  padding: [^;]*;$/m, `  padding: ${look.padding};`);
+  if (look.ink && skin === "block") body = body.replace("color: var(--brand-contrast);", `color: ${look.ink};`);
+  const active = `.cap {\n${body}\n}`;
   const all = Object.entries(CAPTION_SKINS)
     .map(([name, body]) => `.cap.cap-skin-${name} {\n${body}\n}`)
     .join("\n\n");
   return { active, all };
 }
 
-function generateTokensCss(style, presetsFile) {
+/** Le contenu de tokens.css pour un style résolu. */
+function renderTokensCss(style, avertir = warn) {
   const v = style.visual;
-  const caption = buildCaptionCss(v.captionsSkin);
+  const caption = buildCaptionCss(v.captionsSkin, style.captions, avertir);
   const map = {
     STYLE_PRESET_ID: style.chosen ? style.preset.id : `${style.preset.id}, style de départ, pas encore personnalisé (/setup visuel)`,
     VISUAL_BG: v.bg,
@@ -195,12 +252,19 @@ function generateTokensCss(style, presetsFile) {
     FONT_CAPTIONS: v.fontCaptions,
     CAPTIONS_SKIN: v.captionsSkin,
     CAPTIONS_SIZE: v.captionsSize,
+    CAPTIONS_WEIGHT: style.captions.weight,
+    CAPTIONS_LINE_HEIGHT: style.captions.lineHeight,
+    CAPTIONS_TRANSFORM: style.captions.transform,
     CAPTIONS_SKIN_ACTIVE_CSS: caption.active,
     CAPTIONS_SKINS_ALL_CSS: caption.all,
   };
   const tpl = fs.readFileSync(path.join(ROOT, "templates", "tokens.css.tpl"), "utf8");
-  const out = tpl.replace(/\{\{([A-Z0-9_]+)\}\}/g, (whole, key) => (key in map ? String(map[key]) : whole));
-  ecrireSiDifferent(path.join(ROOT, "brand", "tokens.css"), out);
+  return tpl.replace(/\{\{([A-Z0-9_]+)\}\}/g, (whole, key) => (key in map ? String(map[key]) : whole));
+}
+
+function generateTokensCss(style, presetsFile) {
+  const v = style.visual;
+  ecrireSiDifferent(path.join(ROOT, "brand", "tokens.css"), renderTokensCss(style));
   log(`  généré  brand/tokens.css  (style: ${style.preset.id}, sous-titres: ${v.captionsSkin})`);
 
   // Contrôle de lisibilité — on n'échoue pas, on prévient (c'est le goût de l'utilisateur).
@@ -554,7 +618,30 @@ function mirrorFiles(src, dest, keep = () => true) {
 const isPerReelTool = (name) =>
   /^║.*A CHAQUE REEL/m.test(fs.readFileSync(path.join(ROOT, "tools", name), "utf8"));
 
-function refreshLieux() {
+// Réglages propres à un Reel (reel.config.json, à sa racine) : cadrage du visage et taille des
+// sous-titres, lus par les outils (tools/lieux.py, mêmes clés) ; ici, seule la taille compte (son
+// brand/tokens.css). Jamais touché par la synchro ni par la mise à jour (reels/).
+const REGLAGES_REEL = "reel.config.json";
+function visualDuReel(dir) {
+  const fichier = path.join(dir, REGLAGES_REEL);
+  if (!fs.existsSync(fichier)) return null;
+  let reglages;
+  try {
+    reglages = readJSON(fichier);
+  } catch (e) {
+    warn(`${rel(fichier)} illisible (${e.message}) : ce Reel garde le style de la maison.`);
+    return null;
+  }
+  const taille = reglages?.visual?.captionsSize;
+  if (taille === undefined || taille === null || taille === "") return null;
+  if (!(Number(taille) >= 30 && Number(taille) <= 100)) {
+    warn(`${rel(fichier)} : visual.captionsSize « ${taille} » ignoré (30 à 100 px).`);
+    return null;
+  }
+  return { captionsSize: Number(taille) };
+}
+
+function refreshLieux(config, presetsFile) {
   const horsReleve = (name) => name !== RELEVE_POLICES;   // le relevé des polices reste dans la maison
   for (const dir of accueils()) {
     mirrorFiles(path.join(ROOT, "brand"), path.join(dir, "brand"), horsReleve);
@@ -562,7 +649,16 @@ function refreshLieux() {
   }
   for (const dir of reels()) {
     // Un Reel publié garde le style qu'il avait au moment du post.
-    if (readMeta(dir)?.monteurIa?.etat !== "publie") mirrorFiles(path.join(ROOT, "brand"), path.join(dir, "brand"), horsReleve);
+    const propre = visualDuReel(dir);
+    if (readMeta(dir)?.monteurIa?.etat !== "publie") {
+      mirrorFiles(path.join(ROOT, "brand"), path.join(dir, "brand"), (name) => horsReleve(name) && !(propre && name === "tokens.css"));
+      if (propre) {
+        const style = resolveStyle({ ...config, visual: { ...(config.visual ?? {}), ...propre } }, presetsFile, { avertir: () => {} });
+        if (ecrireSiDifferent(path.join(dir, "brand", "tokens.css"), renderTokensCss(style, () => {}))) {
+          log(`  généré  ${rel(path.join(dir, "brand", "tokens.css"))} (${REGLAGES_REEL} : sous-titres ${style.visual.captionsSize} px)`);
+        }
+      }
+    }
     mirrorFiles(path.join(ROOT, "assets", "vendor"), path.join(dir, "assets", "vendor"));
     mirrorFiles(path.join(ROOT, "tools"), path.join(dir, "tools"),
       (name) => /\.(py|sh)$/.test(name) && !isPerReelTool(name));
@@ -745,7 +841,7 @@ function main() {
 
   log("\nAccueil et Reels (projets de l'app HyperFrames) :");
   ensureAccueil(config, process.argv.includes("--template"));
-  refreshLieux();
+  refreshLieux(config, presetsFile);
 
   log("\nGénération des fichiers agent :");
   generateAgentFiles(config, style);

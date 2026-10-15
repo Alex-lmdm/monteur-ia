@@ -13,6 +13,9 @@ Un évènement est un dict : {"src": Path, "start": s, "vol": dB, "trim": (t0, t
 faire lui-même (variante « af » : accélérer, inverser…, musique trop courte à boucler) est
 préparé en fichier par ffmpeg dans assets/sons/, puis posé tel quel. Un son déjà rangé dans
 assets/ du Reel (trouvé dans l'app par find_sound_effect ou find_music) y reste : pas de copie.
+Hors du catalogue (sfx_dir), un son rogné au début est lui aussi préparé en fichier : le rendu
+HyperFrames, lancé au milieu d'un fichier (data-media-start), en perd les premières millisecondes
+(28 ms mesurées sur un bruit de verre de l'app rogné à 0,35 s, l'attaque du son).
 
 Réglages repris de l'ancien mixage ffmpeg, mesurés à 0,3 dB près sur un vrai Reel :
 volume en dB -> data-volume ; fondus en enveloppe data-automation (une enveloppe REMPLACE
@@ -253,6 +256,28 @@ def _preparer_variante(e, dossier: Path, sfx_dir: Path | None) -> tuple[str, flo
     return nom, duree(dest)
 
 
+def _du_catalogue(src: Path, sfx_dir: Path | None) -> bool:
+    """Le son vient-il du catalogue (assets/sfx/ de la maison, Pack SFX compris) ?"""
+    if sfx_dir is None:
+        return False
+    try:
+        src.resolve().relative_to(Path(sfx_dir).resolve())
+    except ValueError:
+        return False
+    return True
+
+
+def _preparer_rognage(src: Path, t0: float, t1: float, dossier: Path) -> str:
+    """Le segment [t0, t1] d'un son, découpé à l'échantillon près par ffmpeg, en WAV (cadence et
+    canaux de la source) : posé depuis le début du fichier, il garde son attaque. -> nom du fichier."""
+    signature = hashlib.sha1(f"{src.resolve()}|{t0}|{t1}|{src.stat().st_size}".encode()).hexdigest()[:8]
+    nom = f"{src.stem}-rogne-{signature}.wav"
+    if not (dossier / nom).exists():
+        _ffmpeg(["-i", str(src), "-af", f"atrim=start={t0:.6f}:end={t1:.6f},asetpts=PTS-STARTPTS",
+                 "-c:a", "pcm_s16le", str(dossier / nom)])
+    return nom
+
+
 def _preparer_musique(musique: Path, dossier: Path, total: float, reel: Path) -> str:
     """La musique (chemin pour src), bouclée en WAV si elle est plus courte que la vidéo ; sinon
     copiée telle quelle, ou laissée en place si elle est déjà dans assets/ du Reel."""
@@ -297,14 +322,18 @@ def lignes(reel: Path, evenements, musique: Path | None, musique_db: float, tota
             nom, garde = _preparer_variante(e, dossier, sfx_dir)
             chemin, debut = f"assets/sons/{nom}", 0.0
         else:
-            chemin = _dans_le_reel(reel, src)
-            if not chemin:
-                nom = _nom(src, sfx_dir)
-                _copie(src, dossier / nom)
-                chemin = f"assets/sons/{nom}"
             complet = duree(src)
             t0, t1 = e.get("trim") or (0.0, complet)
-            debut, garde = t0, min(t1, complet) - t0
+            if t0 > 0 and not _du_catalogue(src, sfx_dir):   # rogné au début, hors catalogue
+                chemin, debut = f"assets/sons/{_preparer_rognage(src, t0, min(t1, complet), dossier)}", 0.0
+            else:
+                chemin = _dans_le_reel(reel, src)
+                if not chemin:
+                    nom = _nom(src, sfx_dir)
+                    _copie(src, dossier / nom)
+                    chemin = f"assets/sons/{nom}"
+                debut = t0
+            garde = min(t1, complet) - t0
         garde = round(garde, 3)
         start = round(max(float(e["start"]), 0.0), 3)
         piste = next((i for i, fin in enumerate(fins) if fin <= start), None)

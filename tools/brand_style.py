@@ -18,11 +18,12 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
 import sys
 from dataclasses import dataclass
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from lieux import MAISON  # noqa: E402
+from lieux import MAISON, avec_reglages_reel  # noqa: E402
 
 # Réglages, presets et polices vivent dans la maison, même quand l'outil tourne dans un Reel.
 ROOT = MAISON
@@ -34,11 +35,12 @@ def _read_json(path: pathlib.Path) -> dict:
 
 
 def _load_config() -> dict:
+    """Les réglages de la maison et, dans un Reel, son reel.config.json par-dessus (tools/lieux.py)."""
     for name in ("brand.config.json", "brand.config.example.json"):
         cfg = _read_json(ROOT / name)
         if cfg:
-            return cfg
-    return {}
+            return avec_reglages_reel(cfg)
+    return avec_reglages_reel({})
 
 
 def _hex_to_rgb(value: str) -> tuple[int, int, int] | None:
@@ -94,6 +96,12 @@ class Style:
     default_layout: str
     cta_style: str
     captions_font_file: pathlib.Path | None  # .ttf lisible par PIL, pour mesurer la largeur
+    # Allure des sous-titres (visual.captions*, mêmes règles que scripts/sync.mjs, captionLook) :
+    captions_case: str = "upper"         # "upper" (défaut) ou "asis" : le texte tel qu'écrit
+    captions_weight: int = 900           # graisse affichée ("auto" = la plus forte de la police)
+    captions_line_height: float = 1.35
+    captions_padding: str | None = None  # None = la marge du skin
+    captions_ink: str | None = None      # None = --brand-contrast (skin block)
 
     @property
     def bg_hex(self) -> str:
@@ -107,6 +115,29 @@ def _caption_size(value) -> int:
     except (TypeError, ValueError):
         return 50
     return size if 30 <= size <= 100 else 50
+
+
+def _caption_case(value) -> str:
+    return "asis" if re.sub(r"[^a-z]", "", str(value or "").lower()) == "asis" else "upper"
+
+
+def _caption_weight(value, faces) -> int:
+    if str(value).lower() == "auto":
+        poids = [int(f.get("weight") or 400) for f in faces if str(f.get("weight") or 400).isdigit()]
+        return max(poids) if poids else 900
+    try:
+        w = round(float(value))
+    except (TypeError, ValueError):
+        return 900
+    return w if 100 <= w <= 900 else 900
+
+
+def _caption_line_height(value) -> float:
+    try:
+        lh = float(value)
+    except (TypeError, ValueError):
+        return 1.35
+    return lh if 0.8 <= lh <= 3 else 1.35
 
 
 def style() -> Style:
@@ -137,6 +168,16 @@ def style() -> Style:
     measure_path = ROOT / "assets/fonts" / measure if measure else None
     if measure_path is not None and not measure_path.exists():
         measure_path = None
+    # La mesure suit la graisse affichée quand la police en déclare un .ttf/.otf (sinon measureFile).
+    # Un faux gras du navigateur épaissit les traits sans élargir les lettres : même mesure.
+    faces = (fonts.get(visual["fontCaptions"]) or {}).get("faces") or []
+    weight = _caption_weight(visual.get("captionsWeight", 900), faces)
+    for f in faces:
+        fichier = ROOT / "assets/fonts" / str(f.get("file") or "")
+        if str(f.get("weight") or 400) == str(weight) and fichier.suffix.lower() in (".ttf", ".otf") \
+                and f.get("style", "normal") == "normal" and fichier.exists():
+            measure_path = fichier
+            break
 
     return Style(
         preset_id=preset["id"],
@@ -162,6 +203,11 @@ def style() -> Style:
         or (preset.get("cta") or {}).get("style")
         or "comment-field",
         captions_font_file=measure_path,
+        captions_case=_caption_case(visual.get("captionsCase")),
+        captions_weight=weight,
+        captions_line_height=_caption_line_height(visual.get("captionsLineHeight", 1.35)),
+        captions_padding=str(visual["captionsPadding"]) if visual.get("captionsPadding") not in (None, "") else None,
+        captions_ink=str(visual["captionsInk"]) if visual.get("captionsInk") not in (None, "", "contrast") else None,
     )
 
 

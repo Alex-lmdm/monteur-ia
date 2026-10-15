@@ -25,9 +25,23 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #     Ici : la demo du template (3 prises sur 8 s, cf derush/README-exemple.md).
 CUTS_PATH = ROOT / "derush/exemple_cuts.json"
 
+# Cadence du rendu (data-fps du master, bouton Export de l'app). Les coupes sont mesurees au
+# millieme dans le derush ; le rendu, lui, n'affiche que des images (n / FPS). Une borne posee entre
+# deux images s'affichait sur la SUIVANTE : sous-titre en retard d'une image, ancienne section encore
+# visible une image apres la coupe alors que le visage avait deja change. Toutes les bornes du montage
+# (sections, sous-titres, duree) sont donc posees sur l'image la plus proche, comme les fenetres du
+# visage (tools/build_master.py, fenetre()).
+FPS = 30
+
+
+def image(t):
+    """L'instant `t` pose sur l'image du rendu la plus proche (n / FPS)."""
+    return round(float(t) * FPS) / FPS
+
+
 CUTS = json.loads(CUTS_PATH.read_text(encoding="utf-8"))
 TAKES = CUTS["takes"]
-DURATION = CUTS["duration"]
+DURATION = round(image(CUTS["duration"]), 5)   # duree du montage : un nombre entier d'images
 
 # >>> A REMPLIR A CHAQUE NOUVEAU REEL : la table des sections.
 #   (id, format, [index des prises couvertes], {options})
@@ -86,13 +100,17 @@ def sections():
         else:
             y = Y_MEDIA if media else Y_FULL
         out.append({"id": sid, "fmt": fmt, "takes": idx, "media": media,
-                    "start": round(start, 3), "end": round(end, 3),
-                    "dur": round(end - start, 3),
+                    "start": round(start, 3), "end": round(end, 3), "dur": None,
                     "y": y})
     assert out[0]["start"] == 0.0, "la 1re section doit demarrer a 0"
-    assert abs(out[-1]["end"] - DURATION) < 0.01, "la derniere section doit finir a la fin du cut"
+    assert abs(out[-1]["end"] - CUTS["duration"]) < 0.01, "la derniere section doit finir a la fin du cut"
     for a, b in zip(out, out[1:]):
         assert abs(a["end"] - b["start"]) < 1e-6, f"trou/chevauchement entre {a['id']} et {b['id']}"
+    # Bornes sur les images du rendu (cf. FPS) : la meme coupe donne la meme image partout.
+    for s in out:
+        s["start"] = image(s["start"])
+        s["end"] = DURATION if s is out[-1] else image(s["end"])
+        s["dur"] = s["end"] - s["start"]
     return out
 
 

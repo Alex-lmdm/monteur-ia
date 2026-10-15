@@ -193,6 +193,11 @@ que la voix off, jamais un fichier séparé → ne se compose pas), `data-start`
 = hauteur (plus petit = plus haut) · 1re valeur = horizontal. ⚠️ **NE PAS dragger/resizer la vidéo dans
 le studio** (repositionne la surface → re-déclenche le carré noir). Une fois calé, reporter les valeurs
 dans `montage.splitTransform`.
+**Un seul Reel tourné à une autre distance** (plus près de la caméra) : son cadrage va dans
+`reel.config.json` à la racine du Reel (`{"montage": {"splitTransform": …}, "visual": {"captionsSize": …}}` ;
+lus aussi : `faceCrop`, `fullFaceTransform`, `fullFaceOrigin`, `fullFaceCrop`), jamais dans `brand.config.json` :
+les Reels suivants gardent celui de la maison. Puis `npm run sync` (depuis la maison), `build_faces.py`
+et `build_master.py --write`.
 
 **Correspondance transform ↔ crop (indispensable à `/setup` et à l'export)** : le crop de `base.mp4`
 qui CORRESPOND au transform de l'exemple = **`crop=771:714:154:364,scale=1080:1000`** (overlay à `0:920`
