@@ -1,9 +1,13 @@
 # Mettre à jour Monteur IA (tu l'as déjà installé)
 
-Cette version range chaque Reel dans son propre dossier et, si tu veux, s'ouvre dans l'app gratuite
-HyperFrames (Mac, Linux). Elle garde tout ce qui est à toi : tes réglages, ton style, ta voix, tes CTA, tes images,
-musiques et sons, tes extensions, tes Reels. Rien de ce qui est à toi n'est effacé : un fichier du
-moteur que tu avais retouché est d'abord sauvegardé.
+À chaque nouvelle version, une phrase suffit. Ton IA met à jour le moteur (outils, consignes,
+nouveautés) et les extensions que tu as installées. Tout ce qui est à toi reste à toi : tes réglages,
+ton style, ta voix, tes règles de montage, tes CTA, tes images, musiques et sons, tes Reels. Si une
+nouveauté contredit un de tes réglages, **c'est ton réglage qui gagne**. Rien n'est effacé : chaque
+fichier remplacé est d'abord sauvegardé.
+
+La date de la dernière version et le pas à pas illustré sont dans ta formation, module
+« Mises à jour ».
 
 1. Ouvre ton dossier Monteur IA dans Claude Code ou Codex, comme pour monter une vidéo.
 2. Colle cette phrase :
@@ -15,9 +19,9 @@ Mets Monteur IA à jour : suis https://github.com/Alex-lmdm/monteur-ia/blob/main
 3. Ton IA télécharge la nouvelle version et te montre ce qu'elle va faire, sans rien toucher.
    Réponds **« go »**.
 
-Elle met ton dossier à jour, branche ton monteur sur l'app HyperFrames, puis met à jour tes
-extensions. Tu as le Pack SFX ? C'est le seul geste à faire toi-même : le retélécharger depuis ta
-formation (elle te dit où, au moment du « go »).
+Elle met ton dossier à jour, puis tes extensions. Tu as le Pack SFX et une nouvelle version est
+sortie ? C'est le seul geste à faire toi-même : le retélécharger depuis ta formation (elle te dit
+où, au moment du « go »).
 
 Tu as plusieurs dossiers Monteur IA, un par client ou par format ? Dis-le-lui : elle les met à jour
 un par un.
@@ -46,6 +50,13 @@ tiret long dans tes messages.
   accord à chaque étape.
 - Plusieurs dossiers Monteur IA : un seul message de plan qui les présente tous, un seul « go »
   pour tous, puis la mise à jour de chacun, l'un après l'autre, et une seule conclusion.
+- **Ce que le client a personnalisé passe avant la nouvelle version.** Un réglage à lui (ses
+  réglages et préférences de montage dans `brand.config.json`, ses consignes perso, ses zones
+  personnalisées, une retouche d'un fichier du moteur) n'est jamais remplacé par une valeur par
+  défaut de la nouvelle version, même quand elle diffère : la nouvelle valeur ne vaut que pour ce
+  qu'il n'a pas réglé. Dans le doute, garde le sien et dis-le-lui en une phrase.
+- Tu ne mets à jour que les extensions déjà installées dans son dossier (le plan les liste). Tu
+  n'en installes jamais une qu'il n'a pas, même si son dépôt est public : il ne l'a pas achetée.
 
 ### 1. Télécharger la nouvelle version
 
@@ -92,8 +103,12 @@ node "<NEUF>/scripts/app-hyperframes.mjs" etat
 
 Puis un seul message, court :
 
-- ce qui change : le moteur, chaque Reel dans son propre dossier, l'app HyperFrames ;
-- ce qui est gardé, et que chaque fichier du moteur remplacé est sauvegardé ;
+- ce qui change : le moteur ; pour un Monteur IA 1 (le plan le dit), aussi chaque Reel dans son
+  propre dossier et l'app HyperFrames ;
+- ce qui est gardé, que ses réglages passent avant la nouvelle version, et que chaque fichier du
+  moteur remplacé est sauvegardé ;
+- s'il avait retouché des fichiers du moteur (le plan les liste) : que tu reportes ses retouches
+  dans la nouvelle version, là où les mises à jour les gardent ;
 - s'il y a un **Reel en cours** : le nom qu'il aura dans l'app (le plan l'affiche), avec un sujet
   lisible en deux ou trois mots à la place de celui que le plan devine depuis ses coupes (`melies`
   devient « Méliès ») ; il peut corriger sujet et date dans sa réponse. Si le plan dit seulement
@@ -101,8 +116,8 @@ Puis un seul message, court :
 - ce que `etat` dit « à brancher » (Claude Code, Codex, ou les deux) : « je règle aussi <celui-là>
   pour qu'il lise les consignes de ton monteur dans l'app, ton réglage actuel est sauvegardé » ;
 - les extensions « à mettre à jour ensuite » : leurs réglages sont gardés. Pour le **Pack SFX**,
-  demande-lui de le retélécharger pendant la mise à jour : dans sa formation, module Pack SFX,
-  leçon « Installe ton Pack SFX », bouton jaune ; le fichier arrive dans Téléchargements (s'il a
+  demande-lui de le retélécharger pendant la mise à jour : dans sa formation, module « Mises à
+  jour » (ou module Pack SFX), bouton jaune ; le fichier arrive dans Téléchargements (s'il a
   gardé l'ancien, le nouveau s'appelle `pack-sfx (1).zip` : c'est normal, tu prendras le bon) ;
 - termine par : **« Réponds “go” pour lancer la mise à jour. »**
 
@@ -130,8 +145,10 @@ elle reprend là où elle s'est arrêtée si tu relances exactement la même com
 - Fichiers du moteur qu'il avait retouchés (le plan les liste, `templates/AGENT.md.tpl` et les
   fichiers à zones compris) : compare sa version (dans la sauvegarde) à la nouvelle et dis-lui en
   une phrase ce qu'il avait changé. Une note ou un commentaire : dis-le, sans question. Un vrai
-  réglage : propose de le reporter, avec ses mots à lui, là où les mises à jour le gardent, jamais
-  dans un fichier du moteur (il serait remplacé à la prochaine) :
+  réglage : reporte-le sans redemander (son « go » couvre ce report, annoncé dans le plan), avec
+  ses mots à lui, là où les mises à jour le gardent, jamais dans un fichier du moteur (il serait
+  remplacé à la prochaine). En cas de conflit avec la nouvelle version, c'est son réglage qui
+  reste :
   - une consigne pour l'IA : à la fin de `templates/AGENT.md.tpl`, entre
     `<!-- BEGIN EXTENSION: consignes-perso -->` et `<!-- END EXTENSION: consignes-perso -->`, puis
     `node scripts/sync.mjs` ;
@@ -169,7 +186,7 @@ comme dossier de l'extension (pas besoin d'un autre dossier temporaire).
 **Pack SFX** (privé : jamais sur GitHub) : suis l'`INSTALL.md` du pack, qui le trouve dans
 Téléchargements. Avant d'installer, vérifie que le `VERSION` du pack décompressé est au moins celle
 que le plan demandait : sinon c'est l'ancien fichier, redemande-lui le téléchargement (formation,
-module Pack SFX, leçon « Installe ton Pack SFX », bouton jaune). S'il ne peut pas le faire
+module « Mises à jour » ou module Pack SFX, bouton jaune). S'il ne peut pas le faire
 maintenant : d'ici là, les sons du pack se posent encore à l'ancienne (vidéo finale sortie depuis la
 conversation, pas par le bouton Export de l'app) ; il lui suffira de redire la phrase de mise à jour
 quand il aura le fichier.

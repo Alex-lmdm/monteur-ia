@@ -12,15 +12,16 @@ Ce repo accompagne la formation **[Monteur IA](https://www.lemondedumarketing.fr
 La formation te montre chaque étape en vidéo, pas-à-pas. Le repo s'utilise aussi seul si tu es déjà à l'aise
 avec Claude Code ou Codex.
 
-**Tu utilises déjà Monteur IA ?** Pour passer à cette version (un dossier par Reel, l'app gratuite HyperFrames en option),
-ouvre ton dossier Monteur IA dans Claude Code ou Codex et colle cette phrase :
+**Tu utilises déjà Monteur IA ?** Pour passer à la dernière version, ouvre ton dossier Monteur IA
+dans Claude Code ou Codex et colle cette phrase :
 
 ```text
 Mets Monteur IA à jour : suis https://github.com/Alex-lmdm/monteur-ia/blob/main/MISE-A-JOUR.md
 ```
 
 Ton IA te montre ce qu'elle va faire, tu réponds « go ». Tes réglages, ta voix, tes sons et tes
-extensions sont gardés ([détails](MISE-A-JOUR.md)).
+extensions sont gardés, et si une nouveauté contredit un de tes réglages, c'est le tien qui gagne
+([détails](MISE-A-JOUR.md)).
 
 ---
 
