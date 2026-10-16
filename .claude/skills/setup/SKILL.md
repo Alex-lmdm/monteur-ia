@@ -244,7 +244,8 @@ Si le preset lui va tel quel, **passer**. Sinon :
 - **Accent** (`visual.accent`) : `npm run sync` vérifie automatiquement les ratios de contraste et
   avertit si l'accent ou le texte passe mal sur le fond. **Relayer l'avertissement**, proposer 2-3
   alternatives plus contrastées, et laisser trancher : c'est son goût, pas le tien.
-- `visual.surface`, `visual.text` : dérivés du preset, on n'en parle que s'il le demande.
+- `visual.surface`, `visual.text` (et le gris secondaire) : ceux du preset tant qu'ils vont avec son fond,
+  recalculés par la synchro sinon (texte blanc sur un fond sombre) ; on n'en parle que s'il le demande.
 
 ### D3 — Les sous-titres (le marqueur d'identité le plus visible)
 

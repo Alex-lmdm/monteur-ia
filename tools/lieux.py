@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
 import sys
 
 # Windows : une sortie lue par l'agent (redirigée) est en cp1252, et un « ✅ » y fait planter l'outil.
@@ -66,12 +67,48 @@ def reel() -> pathlib.Path:
 
 
 REGLAGES_REEL = "reel.config.json"
-CLES_REEL = {"montage": ("splitTransform", "faceCrop", "fullFaceTransform", "fullFaceOrigin", "fullFaceCrop"),
-             "visual": ("captionsSize",)}
+CLES_REEL = {"montage": ("splitTransform", "faceCrop", "fullFaceTransform", "fullFaceOrigin", "fullFaceCrop")}
+# `visual` : tout le style de CE Reel (couleurs, polices, sous-titres), les mêmes clés que le `visual`
+# de brand.config.example.json, validées comme dans scripts/sync.mjs (visualDuReel) : une valeur que
+# la synchro ignore est ignorée ici aussi, pour que les outils et le rendu voient le même style.
+COULEURS_REEL = ("bg", "accent", "surface", "text", "muted")
+POLICES_REEL = ("fontBody", "fontDisplay", "fontCaptions")
+
+
+def _visual_valide(brut: dict) -> dict:
+    def lire(nom):
+        try:
+            return json.loads((MAISON / nom).read_text(encoding="utf-8")) if MAISON else {}
+        except (OSError, ValueError):
+            return {}
+    connues = (lire("brand.config.example.json").get("visual") or {}).keys()
+    presets = lire("templates/style-presets.json")
+    out = {}
+    for cle, val in brut.items():
+        if val in (None, "") or cle not in connues:
+            continue
+        if cle == "captionsSize":
+            try:
+                ok = 30 <= float(val) <= 100
+            except (TypeError, ValueError):
+                ok = False
+        elif cle in COULEURS_REEL:
+            ok = isinstance(val, str) and re.fullmatch(r"#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})", val.strip()) is not None
+        elif cle in POLICES_REEL:
+            ok = val in (presets.get("fonts") or {})
+        elif cle == "captionsSkin":
+            ok = val in (presets.get("captionSkins") or {}) and val != "_comment"
+        elif cle == "stylePreset":
+            ok = any(p.get("id") == val for p in presets.get("presets") or [])
+        else:
+            ok = True
+        if ok:
+            out[cle] = val
+    return out
 
 
 def reglages_reel(dossier=None) -> dict:
-    """Les réglages propres au Reel (reel.config.json), limités aux clés de CLES_REEL ; {} sans fichier."""
+    """Les réglages propres au Reel (reel.config.json) : le cadrage (CLES_REEL) et le style (`visual`) ; {} sans fichier."""
     dossier = REEL if dossier is None else pathlib.Path(dossier)
     fichier = dossier / REGLAGES_REEL if dossier is not None else None
     if fichier is None or not fichier.is_file():
@@ -87,6 +124,9 @@ def reglages_reel(dossier=None) -> dict:
                    if k in cles and v not in (None, "")}
         if valeurs:
             out[bloc] = valeurs
+    visual = _visual_valide((brut.get("visual") or {}) if isinstance(brut, dict) else {})
+    if visual:
+        out["visual"] = visual
     return out
 
 

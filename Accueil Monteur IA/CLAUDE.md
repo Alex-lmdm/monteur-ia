@@ -129,6 +129,8 @@ préférences apprises (section suivante) appliquées d'office.
 À appliquer d'office à chaque vidéo. Elles priment sur les réglages par défaut, jamais sur une
 demande explicite du moment. Si le client change d'avis, mets à jour `montage.preferences`
 (après son OK sur la nouvelle formulation) puis `node ../scripts/sync.mjs`.
+Hors réglages (sous-titres mot par mot, autre style…) : fabrique-le pour cette vidéo
+(`reel.config.json`), puis demande s'il le garde par défaut.
 
 _Aucune pour l'instant : elles s'apprennent au débrief de la première vidéo._
 

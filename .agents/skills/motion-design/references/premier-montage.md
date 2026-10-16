@@ -38,6 +38,9 @@ préférences apprises (fichier agent, section 🧠).
 
 ## Direction visuelle prête à utiliser
 
+Le client a déjà son style (ses couleurs, un style choisi) : c'est le sien qui s'applique, par les
+tokens ; ce qui suit sur Papier ne vaut que pour le style de départ. La méthode, elle, est la même.
+
 **Papier est un habillage éditorial abouti.** Le fond est blanc cassé, les formes et les labels
 noirs, les sous-titres blancs sur bandeau noir. La vidéo du visage garde ses couleurs naturelles.
 Toutes les valeurs proviennent des tokens du preset, jamais d'une identité inventée ou empruntée.

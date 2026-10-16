@@ -34,6 +34,7 @@ const config = () => JSON.parse(read(root, 'brand.config.example.json'));
 test('un dossier neuf fonctionne en Papier sans identité ni questionnaire', (t) => {
   const dir = fixture(t);
   const output = sync(dir);
+  assert.match(read(dir, 'CLAUDE.md'), /Habillage noir et blanc, ta vidéo reste en[\s\S]*Réglages de base : style Papier,/);
   assert.match(output, /Personnalisation possible plus tard/);
   assert.doesNotMatch(output, /⚠️|❌|obligatoire|PAS ENCORE PERSONNALISÉ/);
   assert.match(read(dir, 'brand/tokens.css'), /--brand-bg: #f7f7f5/);
@@ -129,8 +130,8 @@ test('AGENTS.md et CLAUDE.md tiennent dans la limite de lecture de Codex', (t) =
   write(dir, 'stories/story-offre-1/meta.json', { monteurIa: { lieu: 'story', etat: 'en-cours' } });
   // Pire cas réel : les quatre extensions officielles, chacune avec ses consignes. Budgets un peu
   // au-dessus de leurs vrais blocs (15/10/2026 : Ton Double IA 1 076 octets, Pack SFX 1 214,
-  // Reel Cloneur™ 929, Système Stories 861 communs plus sa partie propre au lieu : 183 dossier,
-  // 625 accueil, 117 Reel, 737 story). Une extension qui grossit au-delà doit alléger ses consignes.
+  // Reel Cloneur™ 897 depuis son mode style du 16/10, Système Stories 861 communs plus sa partie
+  // propre au lieu : 183 dossier, 625 accueil, 117 Reel, 737 story). Une extension qui grossit au-delà doit alléger ses consignes.
   // Un bloc fait `octets` marqueurs compris (comme les vrais), plus sa partie propre au lieu.
   const texte = (n) => 'Consigne extension. '.repeat(Math.ceil(n / 20)).slice(0, n);
   const bloc = (nom, octets, parLieu = '') => {
@@ -139,7 +140,7 @@ test('AGENTS.md et CLAUDE.md tiennent dans la limite de lecture de Codex', (t) =
   };
   const lieux = Object.entries({ LIEU_MAISON: 200, LIEU_ACCUEIL: 650, LIEU_REEL: 130, LIEU_STORY: 760 })
     .map(([lieu, n]) => `{{#${lieu}}}\n${texte(n - 1)}{{/${lieu}}}`).join('');
-  for (const contenu of [bloc('double-ia', 1100), bloc('pack-sfx', 1250), bloc('reel-cloneur', 960),
+  for (const contenu of [bloc('double-ia', 1100), bloc('pack-sfx', 1250), bloc('reel-cloneur', 930),
     bloc('systeme-stories', 900, lieux)]) {
     fs.appendFileSync(path.join(dir, 'templates/AGENT.md.tpl'), contenu);
   }
@@ -222,6 +223,67 @@ test('garder Papier compte comme un choix et la taille des sous-titres est régl
   write(dir, 'brand.config.json', own);
   sync(dir, '--style-only');
   assert.match(read(dir, 'brand/tokens.css'), /--brand-cap-size: 50px;/);
+});
+
+// Bloc D du setup : « s'il a déjà une identité, prendre SES couleurs » (ou le mode style de Reel
+// Cloneur™). Sans preset nommé, le style ne s'annonce plus « Papier », et le texte, la surface et
+// le gris secondaire de Papier, pensés pour un fond blanc, ne restent pas sur un fond sombre.
+test('ses couleurs sans preset : le style s’appelle « Tes couleurs » et tout reste lisible', (t) => {
+  const dir = fixture(t);
+  const own = config();
+  own.visual.bg = '#202022';
+  own.visual.accent = '#ffee00';
+  own.setup.styleChosen = true;
+  write(dir, 'brand.config.json', own);
+  const output = sync(dir);
+  assert.match(output, /Sync terminé, style « Tes couleurs »/);
+  assert.doesNotMatch(output, /⚠️|Style Papier disponible/);
+  const claude = read(dir, 'CLAUDE.md');
+  assert.match(claude, /Style visuel actif : Tes couleurs\*\*\. Fond `#202022`, accent `#ffee00`/);
+  // Sa première vidéo se monte et s'annonce dans son style, pas en « Papier noir et blanc ».
+  assert.match(claude, /Réglages de base : ton style « Tes couleurs »/);
+  assert.match(claude, /Habillage à tes couleurs, ta vidéo reste en/);
+  assert.doesNotMatch(claude, /Style visuel actif : Papier|Habillage noir et blanc|Réglages de base : style Papier/);
+  const css = read(dir, 'brand/tokens.css');
+  assert.match(css, /--brand-text: #ffffff;/);
+  for (const [cle, papier] of [['surface', '#e8e8e4'], ['muted', '#6e6e68']]) {
+    assert.doesNotMatch(css, new RegExp(`--brand-${cle}: ${papier};`), `${cle} de Papier gardé sur un fond sombre`);
+  }
+  // Un preset nommé dont le client change l'accent : son nom, « avec tes couleurs ».
+  own.visual = { ...own.visual, stylePreset: 'midnight', bg: null, accent: '#ff9900' };
+  write(dir, 'brand.config.json', own);
+  assert.match(sync(dir), /style « Minuit, avec tes couleurs »/);
+  // Une couleur que le client a réglée lui-même est gardée, même illisible : la synchro prévient.
+  own.visual = { ...own.visual, stylePreset: null, bg: '#202022', accent: '#ffee00', muted: '#303030' };
+  write(dir, 'brand.config.json', own);
+  const avertie = spawnSync(process.execPath, ['scripts/sync.mjs', '--style-only'], { cwd: dir, encoding: 'utf8' });
+  assert.match(read(dir, 'brand/tokens.css'), /--brand-muted: #303030;/);
+  assert.match(avertie.stdout + avertie.stderr, /Texte secondaire \(visual\.muted\) peu lisible/);
+});
+
+test('les outils Python résolvent les mêmes couleurs que la synchro', (t) => {
+  if (!pythonOrSkip(t)) return;
+  const dir = fixture(t);
+  for (const outil of ['brand_style.py', 'lieux.py']) {
+    fs.mkdirSync(path.join(dir, 'tools'), { recursive: true });
+    fs.copyFileSync(path.join(root, 'tools', outil), path.join(dir, 'tools', outil));
+  }
+  const cas = [{}, { stylePreset: 'midnight' }, { bg: '#202022', accent: '#ffee00' }, { bg: '#ffffff', accent: '#e63946' },
+    { stylePreset: 'ink', bg: '#101820', text: '#f5f5f5' }];
+  for (const visual of cas) {
+    const own = config();
+    own.visual = { ...own.visual, ...visual };
+    write(dir, 'brand.config.json', own);
+    sync(dir, '--style-only');
+    const css = read(dir, 'brand/tokens.css');
+    const jeton = (nom) => new RegExp(`--brand-${nom}: (#[0-9a-f]{6});`, 'i').exec(css)[1].toLowerCase();
+    const py = JSON.parse(execFileSync('python3', ['-c',
+      'import json, brand_style as b; s = b.style(); print(json.dumps({k: getattr(s, k) for k in ("bg", "surface", "text", "muted", "accent", "contrast")}))'],
+    { cwd: path.join(dir, 'tools'), encoding: 'utf8' }));
+    for (const [nom, cle] of [['bg', 'bg'], ['surface', 'surface'], ['text', 'text'], ['muted', 'muted'], ['accent', 'accent'], ['contrast', 'contrast']]) {
+      assert.equal(py[cle].toLowerCase(), jeton(nom), `${JSON.stringify(visual)} : ${nom}`);
+    }
+  }
 });
 
 test('tous les presets conservent leurs couleurs et leurs polices locales', (t) => {

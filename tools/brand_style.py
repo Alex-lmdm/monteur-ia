@@ -76,10 +76,19 @@ def _pick_readable(base: str, candidates: list[str]) -> str:
     return max((c for c in candidates if c), key=lambda c: _contrast(base, c))
 
 
+def _mix(a: str, b: str, t: float) -> str:
+    """Mélange linéaire de deux couleurs (t=0 -> a, t=1 -> b), arrondi comme Math.round de sync.mjs."""
+    ra, rb = _hex_to_rgb(a), _hex_to_rgb(b)
+    if not ra or not rb:
+        return a
+    return "#" + "".join(f"{min(255, max(0, int(x + (y - x) * t + 0.5))):02x}" for x, y in zip(ra, rb))
+
+
 @dataclass(frozen=True)
 class Style:
     preset_id: str
     chosen: bool
+    perso: bool            # fond ou accent du client, autres que ceux du preset
     bg: str
     surface: str
     text: str
@@ -160,8 +169,19 @@ def style() -> Style:
     visual = {**preset["visual"], **overrides}
 
     bg = visual["bg"]
-    text = visual.get("text") or _pick_readable(bg, ["#ffffff", "#111111"])
+    lisible = _pick_readable(bg, ["#ffffff", "#111111"])
+
+    # Même règle que sync.mjs (resolveStyle) : le texte, la surface et le gris secondaire du preset
+    # qui ne vont plus avec le fond du client sont recalculés ; une valeur qu'il a réglée est gardée.
+    def garde(cle: str, va) -> bool:
+        return cle in overrides or (visual.get(cle) not in (None, "") and va(visual[cle]))
+
+    text = visual["text"] if garde("text", lambda c: _contrast(c, bg) >= 4.5) else lisible
+    surface = visual["surface"] if garde("surface", lambda c: _contrast(c, bg) < 1.6) else _mix(bg, lisible, 0.07)
+    muted = visual["muted"] if garde("muted", lambda c: _contrast(c, bg) >= 4.5) else _mix(text, bg, 0.42)
     accent = visual["accent"]
+    perso = any(cle in overrides and str(overrides[cle]).lower() != str(preset["visual"].get(cle)).lower()
+                for cle in ("bg", "accent"))
 
     fonts = presets_file.get("fonts") or {}
     measure = (fonts.get(visual["fontCaptions"]) or {}).get("measureFile")
@@ -183,10 +203,11 @@ def style() -> Style:
         preset_id=preset["id"],
         chosen=(cfg.get("setup") or {}).get("styleChosen") is True
         or (bool(wanted) and not preset.get("isUnset")),
+        perso=perso,
         bg=bg,
-        surface=visual["surface"],
+        surface=surface,
         text=text,
-        muted=visual.get("muted") or text,
+        muted=muted,
         accent=accent,
         contrast=_pick_readable(accent, [bg, text, "#ffffff", "#111111"]),
         stroke="#0b0b0b" if _luminance(text) > 0.5 else "#ffffff",
@@ -213,7 +234,8 @@ def style() -> Style:
 
 if __name__ == "__main__":
     s = style()
-    print(f"style      : {s.preset_id}{'' if s.chosen else '  (style de depart, pas encore personnalise : /setup visuel)'}")
+    suite = "  (avec tes couleurs)" if s.perso else "" if s.chosen else "  (style de depart, pas encore personnalise : /setup visuel)"
+    print(f"style      : {s.preset_id}{suite}")
     print(f"couleurs   : fond {s.bg} · accent {s.accent} · texte {s.text}")
     print(f"polices    : body {s.font_body} · sous-titres {s.font_captions} (skin {s.captions_skin})")
     print(f"cadrage    : {s.default_layout} · CTA {s.cta_style}")

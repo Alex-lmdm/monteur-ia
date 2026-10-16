@@ -381,7 +381,7 @@ test('cadrage : translateX, translateY, translate et scale lus dans leur ordre, 
 // ---------------------------------------------------------------------------
 // 6. Réglages propres à un Reel (reel.config.json) : cadrage du visage et taille des sous-titres
 // ---------------------------------------------------------------------------
-test('reel.config.json cadre ce Reel et règle ses sous-titres sans toucher aux autres ; rien sans le fichier', async (t) => {
+test('reel.config.json cadre ce Reel et lui donne son propre style sans toucher aux autres ; rien sans le fichier', async (t) => {
   if (!outils(t, { pil: true, ffmpeg: true })) return;
   const dir = maison(t);
   // La maison : un cadrage calibré, crop compris (installation de la recette).
@@ -393,25 +393,36 @@ test('reel.config.json cadre ce Reel et règle ses sous-titres sans toucher aux 
   // Tourné plus près de la caméra : cadrage et sous-titres de CE Reel. Un transform sans crop fait
   // recalculer le crop (celui de la maison suit un autre cadrage).
   write(proche, 'reel.config.json', { montage: { splitTransform: 'translate(-164px, 461px) scale(1.22)' },
-    visual: { captionsSize: 46, captionsSkin: 'outline' }, audio: { musicFile: 'ignore.mp3' } });
+    visual: { captionsSize: 46, captionsSkin: 'outline', accent: '#ff2e7e', fontCaptions: 'Anton', bg: 'pas une couleur' },
+    audio: { musicFile: 'ignore.mp3' } });
   const lu = (reel, code) => JSON.parse(python(reel, '-c', `import json, sys; sys.path.insert(0, "tools"); ${code}`));
   assert.deepEqual(lu(proche, 'from cadrage import crops; from lieux import config; print(json.dumps(crops(config()["montage"])))'),
     ['885:820:134:376', '771:1371:154:187']);
   assert.deepEqual(lu(autre, 'from cadrage import crops; from lieux import config; print(json.dumps(crops(config()["montage"])))'),
     ['771:714:154:389', '771:1371:154:187']);
-  const style = 'import brand_style; s = brand_style.style(); print(json.dumps([s.captions_size, s.captions_skin]))';
-  assert.deepEqual(lu(proche, style), [46, 'block'], 'seules les clés du cadrage et de la taille sont lues');
-  assert.deepEqual(lu(autre, style), [50, 'block']);
+  const style = 'import brand_style; s = brand_style.style(); print(json.dumps([s.captions_size, s.captions_skin, s.accent, s.font_captions, s.bg]))';
+  const maisonStyle = lu(autre, style);
+  // Le style de CE Reel : taille, apparence, couleur et police des sous-titres ; une valeur invalide
+  // (le fond) est ignorée, comme par la synchro. L'audio n'est jamais lu ici.
+  assert.deepEqual(lu(proche, style), [46, 'outline', '#ff2e7e', 'Anton', maisonStyle[4]]);
+  assert.deepEqual(maisonStyle.slice(0, 2), [50, 'block']);
   assert.match(python(proche, 'tools/build_faces.py'), /zone 885:820:134:376 du rush/);
   python(proche, 'tools/build_master.py', '--write');
   fs.rmSync(path.join(proche, 'assets/video/visage-split.mp4'));
   python(proche, 'tools/build_master.py', '--write');
   assert.match(read(proche, 'index.html'), /transform: translate\(-164px, 461px\) scale\(1\.22\)/, 'aperçu sans visages pré-cadrés');
 
-  // La synchro donne au Reel ses sous-titres de 46 px, garde le fichier, et n'écrit plus rien ensuite.
-  sync(dir);
-  assert.match(read(proche, 'brand/tokens.css'), /--brand-cap-size: 46px;/);
-  assert.equal(read(proche, 'brand/tokens.css').replace('46px', '50px'), read(dir, 'brand/tokens.css'));
+  // La synchro donne au Reel son style (sous-titres de 46 px en contour, accent rose, Anton déclarée
+  // pour toute la maison), signale le fond invalide, garde le fichier, et n'écrit plus rien ensuite.
+  const sortie = spawnSync(process.execPath, ['scripts/sync.mjs'], { cwd: dir, encoding: 'utf8' });
+  assert.match(sortie.stderr, /visual\.bg « pas une couleur » ignoré/);
+  const tokens = read(proche, 'brand/tokens.css');
+  for (const attendu of [/--brand-cap-size: 46px;/, /--brand-accent: #ff2e7e;/, /skin CHOISI \(outline\)/, /Anton/]) assert.match(tokens, attendu);
+  assert.match(read(dir, 'brand/fonts.css'), /font-family: "Anton"/);
+  assert.match(read(proche, 'brand/fonts.css'), /font-family: "Anton"/);
+  // Ses instructions annoncent son style à lui ; celles des autres Reels, le style de base.
+  assert.match(read(proche, 'CLAUDE.md'), /Style visuel actif : propre à ce Reel[^\n]*accent `#ff2e7e`/);
+  assert.doesNotMatch(read(autre, 'CLAUDE.md'), /propre à ce Reel/);
   assert.equal(read(autre, 'brand/tokens.css'), avant.tokens, 'les autres Reels gardent le style de la maison');
   python(autre, 'tools/build_master.py', '--write');
   assert.equal(read(autre, 'index.html'), avant.master);

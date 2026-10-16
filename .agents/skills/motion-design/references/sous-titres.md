@@ -3,12 +3,12 @@
 > Lu quand des sous-titres sont à produire. Le découpage se décide **par unité grammaticale**, pas par
 > largeur : lire ce fichier AVANT d'écrire le moindre chunk.
 
-## Apparence : ne rien décider, tout hériter
+## Apparence : le style par défaut vient des réglages, le reste se fabrique
 
-**Tu n'écris JAMAIS le style d'un sous-titre.** Police, couleurs, fond, contour, arrondi : tout est
-déjà résolu dans `brand/tokens.css` (généré depuis `brand.config.json` + le preset de style). Une
-compo de sous-titres charge `brand/fonts.css` + `brand/tokens.css`, pose `class="cap"`, et c'est
-tout.
+**Par défaut, tu ne décides rien** : police, couleurs, fond, contour, arrondi sont résolus dans
+`brand/tokens.css` (généré depuis `brand.config.json` + le preset de style). Une compo de
+sous-titres charge `brand/fonts.css` + `brand/tokens.css`, pose `class="cap"`, et c'est tout ;
+chaque sous-titre arrive d'un bloc.
 
 - Police : `visual.fontCaptions` · Apparence : `visual.captionsSkin`, parmi **5 skins** —
   `block` (fond plein dans l'accent), `outline` (contour, sans fond), `plate` (plaque arrondie),
@@ -21,10 +21,22 @@ tout.
 - Pour **essayer** un autre skin sur une seule compo : ajouter `cap-skin-<nom>` à un `.cap`.
   Pour **changer le défaut** de toutes les vidéos : `/setup visuel`, jamais une règle CSS en dur.
 
+**Le client veut autre chose : tu le fabriques.** Mots qui arrivent un par un, mot prononcé
+surligné (karaoké), sous-titres en escalier, mot fort plus gros, petit saut, emoji : rien n'est
+interdit, aucune liste fermée. Pour CE Reel :
+- le minutage de chaque mot est dans `derush/<vidéo>_words.json` (outil `build_words.py`), que
+  `tools/montage_captions.py` lit déjà : ce fichier est propre au Reel, adapte-le (un `<span>` par
+  mot, ses temps en attributs) et anime dans la timeline `captions` de `captions.html`, déterminée
+  et calée sur les mots (jamais d'animation CSS qui tourne seule) ;
+- couleurs et polices restent des `var(--brand-*)` ; une couleur ou une police propre à ce Reel va
+  dans le `visual` de son `reel.config.json` (montage-talking-head.md §3), jamais en dur ;
+- montre-le, ajuste ; une fois validé, demande s'il le garde pour ses prochaines vidéos (une
+  préférence qui le décrit) ou pour ce Reel seulement.
+
 ⛔ **Un `background`, une `color` ou un `font-family` écrit en dur dans une compo de sous-titres est
 un bug**, pas un raccourci : il survit au changement de style et fait sortir la vidéo suivante avec
-l'apparence de la précédente. Si le créateur veut modifier l'allure de ses sous-titres, la réponse
-est `/setup visuel` ou un nouveau skin, jamais un patch local.
+l'apparence de la précédente. Une allure à part se fait par les tokens, `reel.config.json` ou
+`/setup visuel`, jamais par un hex dans la compo.
 
 ---
 

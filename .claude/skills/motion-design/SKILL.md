@@ -46,7 +46,8 @@ sombre ni jaune.
 
 ## 0. Principe fondateur — MOTION FIRST, ZÉRO REDONDANCE TEXTE
 
-**La règle absolue du motion design de la marque :**
+**La règle par défaut du motion design de la marque** (une préférence du client ou sa demande du
+moment la remplace : des gros titres, s'il les veut, se font) :
 
 > **Pas de gros texte. Pas de hook textuel. Pas de mot cinématique. Pas de titre plein écran.**
 > Le motion design est 100% visuel : schémas, icônes, animations, flows, dataviz, comparaisons.
@@ -202,7 +203,10 @@ formats STATIQUES : sa spéc est dans `references/coluna-statique.md`, ne l'util
   conçue pour s'intégrer dans une vidéo qui a déjà son fond.
 
 ### Transitions
-- **Cut sec** (par défaut), **slide rapide** (200-300 ms), **fade très court**. Ces trois-là, et rien d'autre.
+- **Cut sec** (par défaut), **slide rapide** (200-300 ms), **fade très court** : les trois de base.
+- Le client en veut une autre (flash, zoom brusque, flou, whip), ou son style cloné en a une : tu
+  la construis (registre HyperFrames : `whip-pan-cut`, `zoom-through-transition`…), pour ce Reel,
+  puis il dit s'il la garde par défaut.
 
 ### Apparition de texte
 - **Par mot ou par bloc**, jamais lettre par lettre.

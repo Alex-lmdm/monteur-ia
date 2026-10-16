@@ -115,7 +115,7 @@ puis un **débrief** où il dit ce qu'il aurait fait autrement, et tu retiens to
 
 1. **Il envoie sa vidéo brute** (sinon, demande seulement de la glisser ici). Annonce une fois :
    > « Je m'occupe de tout le montage avec les réglages de base, sans te poser de questions :
-   > coupes, sous-titres, animations, bruitages. Habillage noir et blanc, ta vidéo reste en
+   > coupes, sous-titres, animations, bruitages. {{HABILLAGE_PREMIERE}}, ta vidéo reste en
    > couleur. Ça me prend souvent une demi-heure, tu peux faire autre chose. Quand c'est prêt, tu me diras
    > tout ce que tu aurais fait autrement, et j'apprendrai ton style pour les prochaines. »
 2. **Monte d'une traite** : dérush (3) → montage (4) → SFX (6) → export. **Exception à l'ordre
@@ -123,7 +123,7 @@ puis un **débrief** où il dit ce qu'il aurait fait autrement, et tu retiens to
    section, pas d'accord avant les SFX. Les **contrôles automatiques restent obligatoires**
    (re-transcription = texte prononcé, `_cuts.json`, `npm run check`, snapshots,
    `finaliser.py` après l'export) : tu valides toi-même ce que le client aurait validé.
-   Réglages de base : style Papier, cadrage `split` adapté au visage réel, bruitages (`sfx-musique.md`),
+   Réglages de base : {{STYLE_PREMIERE}}, cadrage `split` adapté au visage réel, bruitages (`sfx-musique.md`),
    pas de musique, **voix brute** (le nettoyage Adobe demande une action du client : il est
    proposé au débrief). Méthode : skill `motion-design`, `references/premier-montage.md`.
    Sujet du Reel : 2 à 4 mots tirés de ses premières phrases (transcris-les), jamais une question.
@@ -158,6 +158,8 @@ préférences apprises (section suivante) appliquées d'office.
 À appliquer d'office à chaque vidéo. Elles priment sur les réglages par défaut, jamais sur une
 demande explicite du moment. Si le client change d'avis, mets à jour `montage.preferences`
 (après son OK sur la nouvelle formulation) puis `node {{MAISON}}scripts/sync.mjs`.
+Hors réglages (sous-titres mot par mot, autre style…) : fabrique-le pour cette vidéo
+(`reel.config.json`), puis demande s'il le garde par défaut.
 
 {{MONTAGE_PREFERENCES}}
 

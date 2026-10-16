@@ -120,7 +120,14 @@ function resolveStyle(config, presetsFile, { avertir = warn } = {}) {
 
   // Couleurs dérivées : jamais demandées à l'utilisateur, toujours calculées.
   const bg = visual.bg;
-  const text = visual.text ?? pickReadable(bg, ["#ffffff", "#111111"]);
+  const lisible = pickReadable(bg, ["#ffffff", "#111111"]);
+  // Le texte, la surface et le gris secondaire d'un preset sont pensés pour SON fond. Le client
+  // donne le sien sans eux (bloc D : « prendre SES couleurs ») : ceux qui ne vont plus avec sont
+  // recalculés (le texte noir de Papier sur un fond presque noir) ; ceux qui vont restent tels quels,
+  // à l'octet près. Une valeur réglée par le client est toujours gardée (le sync avertit seulement).
+  const garde = (cle, va) => overrides[cle] !== undefined || (visual[cle] !== undefined && va(visual[cle]));
+  const text = garde("text", (c) => contrastRatio(c, bg) >= 4.5) ? visual.text : lisible;
+  const surface = garde("surface", (c) => contrastRatio(c, bg) < 1.6) ? visual.surface : mix(bg, lisible, 0.07);
   const accent = visual.accent;
   const derived = {
     // Ce qu'on pose SUR un aplat d'accent (texte d'un sous-titre en bloc plein).
@@ -128,16 +135,30 @@ function resolveStyle(config, presetsFile, { avertir = warn } = {}) {
     // Contour de lisibilité : l'opposé du texte.
     stroke: luminance(text) > 0.5 ? "#0b0b0b" : "#ffffff",
     // Surface qui tranche avec le fond (claire sur un thème sombre, et l'inverse).
-    surfaceContrast: mix(visual.surface ?? bg, pickReadable(bg, ["#ffffff", "#111111"]), 0.82),
-    muted: visual.muted ?? mix(text, bg, 0.42),
+    surfaceContrast: mix(surface ?? bg, lisible, 0.82),
+    muted: garde("muted", (c) => contrastRatio(c, bg) >= 4.5) ? visual.muted : mix(text, bg, 0.42),
   };
 
   // Choisi = un preset nommé, ou un choix explicite enregistré (garder Papier en est un).
   const chosen = config?.setup?.styleChosen === true || (Boolean(wanted) && !preset.isUnset);
+  // Ses couleurs à lui (fond ou accent autres que ceux du preset) : le nom du preset seul mentirait
+  // (« Papier » sur un fond presque noir). Sans preset nommé, le style s'appelle « Tes couleurs ».
+  const perso = ["bg", "accent"].some((cle) => overrides[cle] !== undefined
+    && String(overrides[cle]).toLowerCase() !== String(preset.visual[cle]).toLowerCase());
+  const label = !perso ? preset.label : preset.isUnset ? "Tes couleurs" : `${preset.label}, avec tes couleurs`;
   const capSize = Number(visual.captionsSize);
   const captionsSize = Number.isFinite(capSize) && capSize >= 30 && capSize <= 100 ? Math.round(capSize) : 50;
-  const resolved = { ...visual, text, captionsSize, ...derived };
-  return { preset, visual: resolved, chosen, captions: captionLook(resolved, presetsFile, avertir) };
+  const resolved = { ...visual, text, surface, captionsSize, ...derived };
+  return { preset, label, perso, visual: resolved, chosen, captions: captionLook(resolved, presetsFile, avertir) };
+}
+
+/** Papier tel que livré (non choisi, ou gardé tel quel) : ni couleurs du client, ni autre preset. */
+const styleDeDepart = (style) => !style.perso && (style.preset.isUnset || style.preset.id === "neutral");
+
+/** Le style dans un message ou un commentaire : son nom, et s'il attend encore d'être personnalisé. */
+function styleDecrit(style) {
+  if (style.perso) return `${style.preset.id}, avec les couleurs du client`;
+  return style.chosen ? style.preset.id : `${style.preset.id}, style de départ, pas encore personnalisé (/setup visuel)`;
 }
 
 /**
@@ -238,7 +259,7 @@ function renderTokensCss(style, avertir = warn) {
   const v = style.visual;
   const caption = buildCaptionCss(v.captionsSkin, style.captions, avertir);
   const map = {
-    STYLE_PRESET_ID: style.chosen ? style.preset.id : `${style.preset.id}, style de départ, pas encore personnalisé (/setup visuel)`,
+    STYLE_PRESET_ID: styleDecrit(style),
     VISUAL_BG: v.bg,
     VISUAL_SURFACE: v.surface,
     VISUAL_SURFACE_CONTRAST: v.surfaceContrast,
@@ -265,13 +286,15 @@ function renderTokensCss(style, avertir = warn) {
 function generateTokensCss(style, presetsFile) {
   const v = style.visual;
   ecrireSiDifferent(path.join(ROOT, "brand", "tokens.css"), renderTokensCss(style));
-  log(`  généré  brand/tokens.css  (style: ${style.preset.id}, sous-titres: ${v.captionsSkin})`);
+  log(`  généré  brand/tokens.css  (style: ${style.perso ? `${style.preset.id}, tes couleurs` : style.preset.id}, sous-titres: ${v.captionsSkin})`);
 
   // Contrôle de lisibilité — on n'échoue pas, on prévient (c'est le goût de l'utilisateur).
   const rAccentBg = contrastRatio(v.accent, v.bg);
   const rTextBg = contrastRatio(v.text, v.bg);
   if (rTextBg < 7) warn(`Texte peu lisible sur le fond (ratio ${rTextBg.toFixed(1)}:1, viser ≥ 7).`);
   if (rAccentBg < 3) warn(`Accent peu lisible sur le fond (ratio ${rAccentBg.toFixed(1)}:1, viser ≥ 3).`);
+  const rMutedBg = contrastRatio(v.muted, v.bg);
+  if (rMutedBg < 3) warn(`Texte secondaire (visual.muted) peu lisible sur le fond (ratio ${rMutedBg.toFixed(1)}:1, viser ≥ 4,5).`);
   return presetsFile;
 }
 
@@ -335,7 +358,11 @@ function copierPolices(fontsDir, voulues, source) {
 function generateFontsCss(style, presetsFile) {
   const v = style.visual;
   const table = presetsFile.fonts ?? {};
-  const families = [...new Set([v.fontBody, v.fontDisplay, v.fontCaptions].filter(Boolean))];
+  // Celles du style de la maison, puis celles qu'un Reel en cours a pour lui seul (reel.config.json) :
+  // fonts.css est le même pour toute la maison, les copies des Reels en héritent.
+  const desReels = reels().filter((d) => readMeta(d)?.monteurIa?.etat !== "publie")
+    .flatMap((d) => POLICES.map((cle) => visualDuReel(d, presetsFile, () => {})?.[cle]));
+  const families = [...new Set([v.fontBody, v.fontDisplay, v.fontCaptions, ...desReels].filter(Boolean))];
 
   // Les polices utilisées sont copiées À CÔTÉ de fonts.css (brand/fonts/) : url("fonts/…") se
   // résout pareil dans le navigateur, l'aperçu et le rendu de HyperFrames 0.8, sans chemin en
@@ -417,11 +444,15 @@ function buildPlaceholderMap(config, style) {
     MUSIC_FILE: audio.musicFile ?? "(aucune, à fournir)",
     MUSIC_DB: audio.musicDb,
     CAMERA: derush.camera,
-    STYLE_PRESET: style.chosen ? style.preset.label : `${style.preset.label}, prêt à monter, personnalisable plus tard`,
+    STYLE_PRESET: style.chosen || style.perso ? style.label : `${style.label}, prêt à monter, personnalisable plus tard`,
     STYLE_ACCENT: style.visual.accent,
     STYLE_BG: style.visual.bg,
     STYLE_CAPTIONS: `${style.visual.fontCaptions}, skin « ${style.visual.captionsSkin} »`,
     STYLE_LAYOUT: config?.montage?.defaultLayout ?? style.preset.montage?.defaultLayout ?? "split",
+    // Première vidéo : « Papier » et « noir et blanc » ne valent que pour le style de départ tel quel ;
+    // un client qui a déjà ses couleurs (ou un autre style) est monté et annoncé dans le sien.
+    HABILLAGE_PREMIERE: styleDeDepart(style) ? "Habillage noir et blanc" : "Habillage à tes couleurs",
+    STYLE_PREMIERE: styleDeDepart(style) ? "style Papier" : `ton style « ${style.label} »`,
     FIRST_VIDEO_STATUS: config?.setup?.firstVideoDone === true ? "faite" : "pas encore faite",
     MONTAGE_PREFERENCES: renderPreferences(config?.montage?.preferences),
     YOUTUBE_PREFERENCES: renderPreferences(config?.youtube?.preferences),
@@ -489,8 +520,17 @@ function generateAgentFiles(config, style) {
   // prévenir ; « brancher » relève cette limite, mais un dossier pas encore branché la subit.
   const LIMITE = 32 * 1024;
   let tropLong = 0;
+  const presetsFile = loadStylePresets();
   for (const lieu of lieux()) {
-    const { out: substituted, missing } = substitutePlaceholders(tpl, { ...map, MAISON: lieu.maison, REEL_NOM: lieu.nom });
+    // Un Reel qui a son propre style (reel.config.json) l'annonce dans ses instructions, pas celui
+    // de la maison : l'agent qui le monte lirait sinon « Papier » sur un Reel anthracite et jaune.
+    const propre = lieu.bloc === "LIEU_REEL" ? visualDuReel(lieu.dir, presetsFile, () => {}) : null;
+    let lieuMap = map;
+    if (propre) {
+      const styleReel = resolveStyle({ ...config, visual: { ...(config.visual ?? {}), ...propre } }, presetsFile, { avertir: () => {} });
+      lieuMap = { ...buildPlaceholderMap(config, styleReel), STYLE_PRESET: "propre à ce Reel (`reel.config.json`), le style de base ne change pas" };
+    }
+    const { out: substituted, missing } = substitutePlaceholders(tpl, { ...lieuMap, MAISON: lieu.maison, REEL_NOM: lieu.nom });
     if (missing.size > 0) missingIdentity = true;
     // Le pipeline des Reels (première vidéo, 7 étapes, checklist) n'est pas écrit dans une vidéo
     // YouTube : elle suit le skill youtube, et ces règles verticales l'induiraient en erreur. Sa
@@ -618,27 +658,38 @@ function mirrorFiles(src, dest, keep = () => true) {
 const isPerReelTool = (name) =>
   /^║.*A CHAQUE REEL/m.test(fs.readFileSync(path.join(ROOT, "tools", name), "utf8"));
 
-// Réglages propres à un Reel (reel.config.json, à sa racine) : cadrage du visage et taille des
-// sous-titres, lus par les outils (tools/lieux.py, mêmes clés) ; ici, seule la taille compte (son
-// brand/tokens.css). Jamais touché par la synchro ni par la mise à jour (reels/).
+// Réglages propres à un Reel (reel.config.json, à sa racine) : cadrage du visage (`montage`) et
+// style de CE Reel seulement (`visual` : couleurs, polices, sous-titres), lus par les outils
+// (tools/lieux.py, mêmes clés) ; ici, le `visual` fait son brand/tokens.css. Un client qui veut
+// une vidéo dans un tout autre style l'a sans toucher à son style de base. Jamais touché par la
+// synchro ni par la mise à jour (reels/).
 const REGLAGES_REEL = "reel.config.json";
-function visualDuReel(dir) {
+const POLICES = ["fontBody", "fontDisplay", "fontCaptions"];
+const COULEURS = ["bg", "accent", "surface", "text", "muted"];
+function visualDuReel(dir, presetsFile = loadStylePresets(), avertir = warn) {
   const fichier = path.join(dir, REGLAGES_REEL);
   if (!fs.existsSync(fichier)) return null;
   let reglages;
   try {
     reglages = readJSON(fichier);
   } catch (e) {
-    warn(`${rel(fichier)} illisible (${e.message}) : ce Reel garde le style de la maison.`);
+    avertir(`${rel(fichier)} illisible (${e.message}) : ce Reel garde le style de la maison.`);
     return null;
   }
-  const taille = reglages?.visual?.captionsSize;
-  if (taille === undefined || taille === null || taille === "") return null;
-  if (!(Number(taille) >= 30 && Number(taille) <= 100)) {
-    warn(`${rel(fichier)} : visual.captionsSize « ${taille} » ignoré (30 à 100 px).`);
-    return null;
+  const propre = {};
+  const connues = Object.keys(readJSON(path.join(ROOT, "brand.config.example.json")).visual ?? {});
+  for (const [cle, val] of Object.entries(reglages?.visual ?? {})) {
+    if (val === undefined || val === null || val === "") continue;
+    const ignore = (attendu) => avertir(`${rel(fichier)} : visual.${cle} « ${val} » ignoré (${attendu}).`);
+    if (!connues.includes(cle)) ignore("réglage inconnu");
+    else if (cle === "captionsSize" && !(Number(val) >= 30 && Number(val) <= 100)) ignore("30 à 100 px");
+    else if (COULEURS.includes(cle) && !hexToRgb(val)) ignore("une couleur en hex, ex. #202022");
+    else if (POLICES.includes(cle) && !presetsFile.fonts?.[val]) ignore("police absente de templates/style-presets.json");
+    else if (cle === "captionsSkin" && !CAPTION_SKINS[val]) ignore(Object.keys(CAPTION_SKINS).join(", "));
+    else if (cle === "stylePreset" && !presetsFile.presets.some((p) => p.id === val)) ignore("preset inconnu");
+    else propre[cle] = cle === "captionsSize" ? Number(val) : val;
   }
-  return { captionsSize: Number(taille) };
+  return Object.keys(propre).length ? propre : null;
 }
 
 function refreshLieux(config, presetsFile) {
@@ -649,13 +700,13 @@ function refreshLieux(config, presetsFile) {
   }
   for (const dir of reels()) {
     // Un Reel publié garde le style qu'il avait au moment du post.
-    const propre = visualDuReel(dir);
     if (readMeta(dir)?.monteurIa?.etat !== "publie") {
+      const propre = visualDuReel(dir, presetsFile);
       mirrorFiles(path.join(ROOT, "brand"), path.join(dir, "brand"), (name) => horsReleve(name) && !(propre && name === "tokens.css"));
       if (propre) {
         const style = resolveStyle({ ...config, visual: { ...(config.visual ?? {}), ...propre } }, presetsFile, { avertir: () => {} });
         if (ecrireSiDifferent(path.join(dir, "brand", "tokens.css"), renderTokensCss(style, () => {}))) {
-          log(`  généré  ${rel(path.join(dir, "brand", "tokens.css"))} (${REGLAGES_REEL} : sous-titres ${style.visual.captionsSize} px)`);
+          log(`  généré  ${rel(path.join(dir, "brand", "tokens.css"))} (${REGLAGES_REEL} : ${Object.keys(propre).join(", ")})`);
         }
       }
     }
@@ -859,14 +910,14 @@ function main() {
     err("Terminé AVEC erreurs (voir ci-dessus).");
     process.exit(1);
   }
-  if (!style.chosen) {
+  if (!style.chosen && !style.perso) {
     log("✅ Réglages synchronisés. Style Papier disponible pour ton premier montage.");
     log("L'habillage est blanc cassé et noir ; ta vidéo reste en couleur.");
     log("Personnalisation possible plus tard avec /setup visuel.");
     log("Ce message confirme les réglages, pas les tests d'installation.");
     return;
   }
-  log(`✅ Sync terminé, style « ${style.preset.label} ».`);
+  log(`✅ Sync terminé, style « ${style.label} ».`);
 }
 
 main();
