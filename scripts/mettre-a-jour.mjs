@@ -15,6 +15,9 @@
  * scripts, les consignes de ses extensions et ses consignes perso (blocs du modèle d'instructions).
  * Toute autre retouche d'un fichier du moteur, même hors zones ou hors blocs, est sauvegardée et
  * signalée dans le plan.
+ * Une extension devenue une partie du moteur (Reel Cloneur™, le 16/10/2026) : ses fichiers, tels que
+ * l'extension les avait installés, sont remplacés comme ceux du moteur, et son bloc de consignes est
+ * retiré du modèle d'instructions (le moteur porte les siennes).
  * Jamais touchés : brand.config.json, brand/, ses images, logos, musiques et sons, ses extensions
  * (outils et skills), double-ia.config.json, stories/, clones/, ses Reels et ses vidéos YouTube
  * (youtube/). Seule exception : un client de Monteur IA 1 qui a déjà livré des Reels reçoit
@@ -45,6 +48,9 @@ import zlib from "node:zlib";
 
 export const NEUF = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MANIFESTE = "scripts/versions-livrees.json";
+// Les versions publiées des extensions devenues une partie du moteur, lues une fois dans l'historique
+// de leur dépôt : installées chez un client, elles se reconnaissent comme des fichiers livrés.
+const MANIFESTE_INTEGREES = "scripts/versions-extensions-integrees.json";
 const WIN = process.platform === "win32";
 const TAILLE_MAX_LIVREE = 10 * 1024 * 1024;   // aucun fichier livré n'est plus gros : un rush ne se hache pas
 
@@ -91,14 +97,18 @@ export const EXTENSIONS = {
       && /\bdef composer\(/.test(lireTexte(path.join(client, "tools/story.py")))
       && /"--brief"/.test(lireTexte(path.join(client, "tools/story.py")))      // script d'abord dans l'app
       && /\bdef adopter\(/.test(lireTexte(path.join(client, "tools/story.py"))) },   // retouches de l'app reportées, musique, B-rolls (09/10/2026)
-  // Reel Cloneur™ (10/10/2026) : un seul outil, ses analyses vivent dans clones/, jamais touchées.
-  "reel-cloneur": { nom: "Reel Cloneur™", depot: "Alex-lmdm/reel-cloneur", outils: ["cloner_reel.py"],
-    aJour: (client) => existe(path.join(client, "tools/cloner_reel.py")) },
   // Privé (sons sous licence) : le client retélécharge pack-sfx.zip depuis sa formation, qui donne
   // aussi le numéro de sa dernière version.
   "pack-sfx": { nom: "Pack SFX", depot: null, outils: ["sfx.py", "sfx_mix.py"], versionMin: "1.1.0",
     versionPubliee: "https://www.lemondedumarketing.fr/api/formations/pack-sfx/version",
     aJour: (client) => comparerVersions(versionPackSfx(client) ?? "0", "1.1.0") >= 0 },
+};
+// Extensions devenues une partie du moteur (clé = nom de leur ancien bloc de consignes) : leurs fichiers
+// sont livrés avec Monteur IA, leurs consignes vivent dans le modèle d'instructions. Chez un client qui
+// les avait installées, l'ancien bloc est retiré : gardé, il doublerait les consignes du moteur.
+// Leurs analyses (clones/) et leur téléchargeur (.reel-cloneur-venv/) restent au client.
+export const INTEGREES = {
+  "reel-cloneur": { nom: "Reel Cloneur™" },   // extension du 10/10/2026, dans le moteur depuis le 16/10
 };
 // Ce que l'installation d'une extension copie chez le client, au même chemin que dans son dépôt,
 // et le fichier de ses consignes (le bloc « BEGIN EXTENSION » du modèle d'instructions).
@@ -148,8 +158,12 @@ function empreintesClient(fichier) {
 }
 
 export function lireManifeste(racine = NEUF) {
-  const p = path.join(racine, MANIFESTE);
-  return existe(p) ? JSON.parse(lireTexte(p)).fichiers : {};
+  const lire = (rel) => (existe(path.join(racine, rel)) ? JSON.parse(lireTexte(path.join(racine, rel))).fichiers : {});
+  const fichiers = lire(MANIFESTE);
+  for (const [rel, versions] of Object.entries(lire(MANIFESTE_INTEGREES))) {
+    fichiers[rel] = [...new Set([...(fichiers[rel] ?? []), ...versions])];
+  }
+  return fichiers;
 }
 
 /** Le fichier du client est-il exactement une version livrée de ce chemin ? */
@@ -312,10 +326,11 @@ export function blocsExtensions(modele) {
   return [...modele.matchAll(BLOC_EXTENSION)].map((m) => ({ nom: m[1], texte: m[0].trim() }));
 }
 
-/** Le modèle d'instructions neuf, suivi des consignes des extensions installées chez le client. */
+/** Le modèle d'instructions neuf, suivi des consignes des extensions installées chez le client (hors
+ *  celles devenues une partie du moteur : le modèle neuf porte déjà leurs consignes). */
 export function modeleAvecExtensions(neuf, ancien) {
   const base = neuf.replace(BLOC_EXTENSION, "\n").replace(/\s*$/, "\n");
-  return base + blocsExtensions(ancien).map((b) => `\n${b.texte}\n`).join("");
+  return base + blocsExtensions(ancien).filter((b) => !INTEGREES[b.nom]).map((b) => `\n${b.texte}\n`).join("");
 }
 
 /** Les chemins « ../ » des sous-compositions (refusés par HyperFrames 0.8) partent de la racine du
@@ -404,9 +419,16 @@ function actionRetouche(rel, client, manifeste) {
 }
 
 // --- extensions : leur dernière version publiée ------------------------------------------------------
-/** Les extensions installées chez le client : leurs blocs de consignes, hors consignes perso. */
+/** Les extensions installées chez le client : leurs blocs de consignes, hors consignes perso et hors
+ *  extensions devenues une partie du moteur. */
 export function extensionsInstallees(client) {
-  return blocsExtensions(lireTexte(path.join(client, MODELE))).map((b) => b.nom).filter((nom) => nom !== BLOC_PERSO);
+  return blocsExtensions(lireTexte(path.join(client, MODELE))).map((b) => b.nom)
+    .filter((nom) => nom !== BLOC_PERSO && !INTEGREES[nom]);
+}
+
+/** Les extensions que le client avait installées et qui font désormais partie du moteur. */
+export function extensionsIntegrees(client) {
+  return blocsExtensions(lireTexte(path.join(client, MODELE))).map((b) => b.nom).filter((nom) => INTEGREES[nom]);
 }
 
 /**
@@ -503,7 +525,7 @@ export function ecartsExtension(client, cle, publiee) {
  */
 export function planifier(client, { manifeste = lireManifeste(), sujet = null, date = null, archive = archivePubliee(), publiees = {} } = {}) {
   const plan = { client, v2: existe(path.join(client, "tools/lieux.py")), moteur: [], obsoletes: [],
-    extensions: [], outilsExtensions: [], extensionsAMettreAJour: [], extensionsHorsLigne: [], plan: null };
+    extensions: [], integrees: [], outilsExtensions: [], extensionsAMettreAJour: [], extensionsHorsLigne: [], plan: null };
   const neufs = new Set(fichiersDuMoteur());
   for (const rel of neufs) {
     const cible = path.join(client, rel);
@@ -538,6 +560,7 @@ export function planifier(client, { manifeste = lireManifeste(), sujet = null, d
     if (existe(cible) && livre(manifeste, rel, cible)) plan.obsoletes.push(rel);
   }
   plan.extensions = extensionsInstallees(client);
+  plan.integrees = extensionsIntegrees(client);
   plan.consignesPerso = blocsExtensions(lireTexte(path.join(client, MODELE))).some((b) => b.nom === BLOC_PERSO);
   // Outils d'extension écrits pour Monteur IA 1 : ils ne connaissent pas encore les Reels séparés.
   for (const rel of fichiersDe(client, "tools")) {
@@ -707,6 +730,9 @@ export function decrire(plan) {
   l.push(`• Extensions : ${plan.extensions.length
     ? `${plan.extensions.map(nomExtension).join(", ")} (leurs consignes et leurs réglages sont gardés)` : "aucune"}`);
   l.push(...lignesExtensions(plan), ...ligneHorsLigne(plan).map((ligne) => `  ${ligne}`));
+  for (const cle of plan.integrees) {
+    l.push(`• ${INTEGREES[cle].nom} fait maintenant partie de Monteur IA : il se met à jour avec lui, plus d'extension à part (ce qu'il a préparé est gardé).`);
+  }
   const p = plan.plan;
   if (p && !p.reel) {
     l.push(p.perso.length

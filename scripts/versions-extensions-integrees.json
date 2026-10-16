@@ -1,0 +1,15 @@
+{
+  "extensions": {
+    "reel-cloneur": { "depot": "Alex-lmdm/reel-cloneur", "ref": "618df6cb1b02fe50d797883e233a48fa85d03fd7" }
+  },
+  "fichiers": {
+    ".claude/skills/reel-cloneur/SKILL.md": ["16ff4064bff0","1e2e67d9b7c5","2052a9a220f9","2b4cf16feb78","362613884e41","50b0d052dcd4","e28eefa95cc2"],
+    ".claude/skills/reel-cloneur/references/grille-analyse.md": ["339861d7faf9","9a9227bb9ea8"],
+    ".claude/skills/reel-cloneur/references/grille-style.md": ["3914555ca636"],
+    ".claude/skills/reel-cloneur/references/mode-style.md": ["dab54db1f120"],
+    ".claude/skills/reel-cloneur/references/modele-analyse.md": ["02ccff8ff249","30d9e163ddcc","d2a3be210b86","eefcf437160a"],
+    ".claude/skills/reel-cloneur/references/modele-script.md": ["321320cbf5ef","5319e2a558fe","ceb1cbeba5d0","fedadd59dd51"],
+    ".claude/skills/reel-cloneur/references/modele-style.md": ["a4405ea3545c"],
+    "tools/cloner_reel.py": ["04193bfd1f7d","2d9b11c803a4","3c2766d5a573","5b67d3187df4","7ec4a55abc23","9cbc33b39d78","b41f05bd406e"]
+  }
+}

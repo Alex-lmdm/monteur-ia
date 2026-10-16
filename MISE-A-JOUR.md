@@ -107,6 +107,10 @@ Puis un seul message, court :
   propre dossier et l'app HyperFrames ;
 - s'il n'a pas encore le mode YouTube (pas de `tools/nouvelle_video_youtube.py` dans `CLIENT`) :
   il arrive avec cette version, en une phrase (il monte aussi ses vidéos YouTube horizontales) ;
+- s'il n'a pas encore Reel Cloneur™ (pas de `tools/cloner_reel.py` dans `CLIENT`) : il arrive avec
+  cette version, en une phrase (il clone le script ou le style de montage d'un Reel, le sien
+  compris). Le plan dit « Reel Cloneur™ fait maintenant partie de Monteur IA » : il l'avait installé
+  à part, dis-lui qu'il se met désormais à jour avec son monteur, ses clones gardés ;
 - ce qui est gardé, que ses réglages passent avant la nouvelle version, et que chaque fichier du
   moteur remplacé est sauvegardé ;
 - s'il avait retouché des fichiers du moteur (le plan les liste) : que tu reportes ses retouches
@@ -177,19 +181,20 @@ Une par une, celles que le plan disait « à mettre à jour ensuite ». Leurs r�
 relance pas leur setup (`/setup-double-ia`, `/setup-stories`). Leur `INSTALL.md` finit par une
 invitation au setup ou un tableau récapitulatif : saute-les, tu conclus une seule fois, à l'étape 8.
 
-**Ton Double IA, Système Stories, Reel Cloneur™** (publiques) : télécharge celles du plan dans
-`TMP` comme à l'étape 1, avec leur adresse :
+**Ton Double IA, Système Stories** (publiques) : télécharge celles du plan dans `TMP` comme à
+l'étape 1, avec leur adresse :
 
 ```bash
 cd "<TMP>" && curl -fL -o double-ia.tar.gz https://github.com/Alex-lmdm/double-ia/archive/refs/heads/main.tar.gz && tar -xzf double-ia.tar.gz
 cd "<TMP>" && curl -fL -o systeme-stories.tar.gz https://github.com/Alex-lmdm/systeme-stories/archive/refs/heads/main.tar.gz && tar -xzf systeme-stories.tar.gz
-cd "<TMP>" && curl -fL -o reel-cloneur.tar.gz https://github.com/Alex-lmdm/reel-cloneur/archive/refs/heads/main.tar.gz && tar -xzf reel-cloneur.tar.gz
 ```
 
 Puis, depuis `CLIENT`, suis le bloc « Le prompt d'installation » de leur `INSTALL.md`
-(`<TMP>/double-ia-main/INSTALL.md`, `<TMP>/systeme-stories-main/INSTALL.md`,
-`<TMP>/reel-cloneur-main/INSTALL.md`), avec ce dossier comme dossier de l'extension (pas besoin
-d'un autre dossier temporaire).
+(`<TMP>/double-ia-main/INSTALL.md`, `<TMP>/systeme-stories-main/INSTALL.md`), avec ce dossier comme
+dossier de l'extension (pas besoin d'un autre dossier temporaire).
+
+**Reel Cloneur™** n'est plus une extension : il fait partie du moteur depuis le 16/10/2026 et vient
+d'être mis à jour avec lui (étape 4). Ne télécharge rien pour lui.
 
 **Pack SFX** (privé : jamais sur GitHub) : suis l'`INSTALL.md` du pack, qui le trouve dans
 Téléchargements. Avant d'installer, vérifie que le `VERSION` du pack décompressé est au moins celle
@@ -231,6 +236,8 @@ Dis-lui en clair :
 - ses Reels sont dans `reels/` (un dossier par Reel, c'est ce que l'app affiche) ;
 - s'il vient de recevoir le mode YouTube : il monte aussi ses vidéos YouTube (format horizontal),
   il te dit « monte ma vidéo YouTube », chaque vidéo a son dossier dans `youtube/` ;
+- s'il vient de recevoir Reel Cloneur™ : il colle le lien d'un Reel, d'un TikTok ou d'un Short (ou
+  glisse une vidéo, la sienne aussi) et te dit « clone ce Reel » ;
 - les vidéos finales d'un Reel déplacé portent le suffixe `-avant-mise-a-jour` : un nouvel export
   ne les écrase pas ;
 - la sauvegarde (dossier `.sauvegarde-mise-a-jour-<date>`, caché : Cmd+Maj+point dans le Finder

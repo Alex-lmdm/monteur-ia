@@ -36,6 +36,12 @@ pour laisser place à un schéma, quelques textes appuient les points clés, et 
 bon niveau, les chapitres, les sous-titres à téléverser, le titre et la description. Dis simplement
 « monte ma vidéo YouTube ».
 
+Et, intégré aussi, **Reel Cloneur™** : colle le lien d'un Reel, d'un TikTok ou d'un YouTube Short (ou
+glisse la vidéo) et dis « clone ce Reel ». Ton IA clone au choix son **script** (même mécanique, ton
+sujet, ta voix, jamais ses phrases) ou son **style de montage** (rythme, cadrage, sous-titres,
+transitions, couleurs), ou les deux. Ta propre vidéo marche aussi : il reprend ton style pour tes
+prochaines vidéos.
+
 Le montage se pilote en conversation. Tu ne touches pas une ligne de code : tu écris ce que tu veux,
 l'IA le fait, tu valides ou tu corriges. Sur Mac et Linux, l'**app HyperFrames** (gratuite) te montre
 en plus ton montage sur une timeline, comme un logiciel de montage : tu le regardes, tu retouches à
@@ -154,6 +160,10 @@ Une règle d'or : **une étape à la fois, dans l'ordre**. L'IA ne saute pas dev
 Une **vidéo YouTube** suit son propre parcours (skill `youtube`) : script, tournage à l'horizontale,
 dérush, plan de montage, montage, tes retours avec le moment (« à 3:12… »), sons, export, publication.
 Chaque vidéo YouTube a son dossier dans `youtube/`, comme un Reel dans `reels/`.
+
+Un **clone** (skill `reel-cloneur`) : « clone ce Reel » avec un lien ou une vidéo. Ton IA te demande le
+script, le style de montage ou les deux, et range son travail dans `clones/`, un dossier par Reel cloné.
+Le petit outil qui télécharge les vidéos s'installe tout seul au premier lien collé.
 
 ---
 

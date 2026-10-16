@@ -128,10 +128,11 @@ test('AGENTS.md et CLAUDE.md tiennent dans la limite de lecture de Codex', (t) =
   const reel = `reels/Un sujet de Reel volontairement assez long · 2026-10-12 · ${own.brand.name}`;
   write(dir, `${reel}/meta.json`, { monteurIa: { lieu: 'reel', etat: 'en-cours' } });
   write(dir, 'stories/story-offre-1/meta.json', { monteurIa: { lieu: 'story', etat: 'en-cours' } });
-  // Pire cas réel : les quatre extensions officielles, chacune avec ses consignes. Budgets un peu
-  // au-dessus de leurs vrais blocs (15/10/2026 : Ton Double IA 1 076 octets, Pack SFX 1 214,
-  // Reel Cloneur™ 897 depuis son mode style du 16/10, Système Stories 861 communs plus sa partie
-  // propre au lieu : 183 dossier, 625 accueil, 117 Reel, 737 story). Une extension qui grossit au-delà doit alléger ses consignes.
+  // Pire cas réel : les trois extensions officielles, chacune avec ses consignes (Reel Cloneur™, dans
+  // le moteur depuis le 16/10/2026, est déjà dans le template). Budgets un peu au-dessus de leurs
+  // vrais blocs (15/10/2026 : Ton Double IA 1 076 octets, Pack SFX 1 214, Système Stories 861 communs
+  // plus sa partie propre au lieu : 183 dossier, 625 accueil, 117 Reel, 737 story). Une extension qui
+  // grossit au-delà doit alléger ses consignes.
   // Un bloc fait `octets` marqueurs compris (comme les vrais), plus sa partie propre au lieu.
   const texte = (n) => 'Consigne extension. '.repeat(Math.ceil(n / 20)).slice(0, n);
   const bloc = (nom, octets, parLieu = '') => {
@@ -140,8 +141,7 @@ test('AGENTS.md et CLAUDE.md tiennent dans la limite de lecture de Codex', (t) =
   };
   const lieux = Object.entries({ LIEU_MAISON: 200, LIEU_ACCUEIL: 650, LIEU_REEL: 130, LIEU_STORY: 760 })
     .map(([lieu, n]) => `{{#${lieu}}}\n${texte(n - 1)}{{/${lieu}}}`).join('');
-  for (const contenu of [bloc('double-ia', 1100), bloc('pack-sfx', 1250), bloc('reel-cloneur', 930),
-    bloc('systeme-stories', 900, lieux)]) {
+  for (const contenu of [bloc('double-ia', 1100), bloc('pack-sfx', 1250), bloc('systeme-stories', 900, lieux)]) {
     fs.appendFileSync(path.join(dir, 'templates/AGENT.md.tpl'), contenu);
   }
   sync(dir);
@@ -149,7 +149,7 @@ test('AGENTS.md et CLAUDE.md tiennent dans la limite de lecture de Codex', (t) =
   for (const file of ['AGENTS.md', 'CLAUDE.md', `${accueil}/AGENTS.md`, `${accueil}/CLAUDE.md`,
     `${reel}/AGENTS.md`, `${reel}/CLAUDE.md`, 'stories/story-offre-1/AGENTS.md', 'stories/story-offre-1/CLAUDE.md']) {
     assert.ok(size(file) <= LIMIT - 1024,
-      `${file} personnalisé, quatre extensions : ${size(file)} octets, moins de 1 Kio de marge sous la limite de Codex.`);
+      `${file} personnalisé, trois extensions : ${size(file)} octets, moins de 1 Kio de marge sous la limite de Codex.`);
   }
 });
 

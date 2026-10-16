@@ -552,9 +552,11 @@ test('MISE-A-JOUR.md : télécharger, montrer le plan, appliquer, brancher, avec
   write(dir, 'tools/double_ia.py', 'from lieux import MAISON, REEL\n');
   write(dir, 'assets/sfx/.pack-sfx-manifest.json', '{"pack": "pack-sfx", "version": "1.1.0", "files": {}}\n');
   assert.match(bash(remplir(planBloc)), /Déjà à jour : rien à faire\./);
-  for (const url of ['double-ia', 'systeme-stories', 'reel-cloneur']) {
+  for (const url of ['double-ia', 'systeme-stories']) {
     assert.ok(blocs.some((b) => b.includes(`https://github.com/Alex-lmdm/${url}/archive/refs/heads/main.tar.gz`)), `${url} : téléchargement décrit`);
   }
+  // Reel Cloneur™ fait partie du moteur : plus rien à télécharger à part.
+  assert.ok(!blocs.some((b) => b.includes('Alex-lmdm/reel-cloneur')), 'Reel Cloneur™ ne se télécharge plus comme une extension');
   // Étape 4 : la ligne du contrôle que la commande affiche est bien celle que le fichier fait traiter.
   assert.match(read(root, 'scripts/mettre-a-jour.mjs'), /contrôle HyperFrames \(lint\) : \$\{/);
   assert.match(doc, /« contrôle HyperFrames \(lint\) : à revoir »/);
@@ -679,8 +681,8 @@ test('un client de la version d’avant reçoit le mode YouTube sans que ses Ree
   python(dir, 'tools/nouveau_reel.py', 'Méliès', '--date', '2026-10-14');
   const reel = path.join('reels', 'Méliès · 2026-10-14 · Monteur IA - Studio Lumiere');
   write(dir, `${reel}/compositions/s0-hook.html`, '<!-- montage du client -->\n');
-  write(dir, 'templates/AGENT.md.tpl', `${read(dir, 'templates/AGENT.md.tpl')}\n<!-- BEGIN EXTENSION: reel-cloneur (ajouté) -->\n`
-    + 'Consignes Reel Cloneur\n<!-- END EXTENSION: reel-cloneur -->\n');
+  write(dir, 'templates/AGENT.md.tpl', `${read(dir, 'templates/AGENT.md.tpl')}\n<!-- BEGIN EXTENSION: double-ia (ajouté) -->\n`
+    + 'Consignes Ton Double IA\n<!-- END EXTENSION: double-ia -->\n');
   // Une vidéo YouTube déjà montée (cas d'une mise à jour suivante) : jamais touchée.
   write(dir, 'youtube/Ma vidéo/meta.json', '{"monteurIa": {"lieu": "youtube", "etat": "en-cours"}}\n');
   write(dir, 'youtube/Ma vidéo/index.html', '<!-- montage YouTube du client -->\n');
@@ -690,7 +692,8 @@ test('un client de la version d’avant reçoit le mode YouTube sans que ses Ree
 
   const plan = planifier(dir, { archive: path.join(os.tmpdir(), 'monteur-archive-vide') });
   const touches = plan.moteur.map((m) => m.rel);
-  for (const f of ['templates/youtube/tools/build_master.py', 'tools/nouvelle_video_youtube.py', '.claude/skills/youtube/SKILL.md']) {
+  for (const f of ['templates/youtube/tools/build_master.py', 'tools/nouvelle_video_youtube.py', '.claude/skills/youtube/SKILL.md',
+    'tools/cloner_reel.py', '.claude/skills/reel-cloneur/SKILL.md']) {
     assert.ok(touches.includes(f), `${f} doit arriver avec la mise à jour`);
   }
   assert.deepEqual(touches.filter((f) => /^(reels|youtube)\//.test(f)), [], 'ni Reel ni vidéo YouTube dans le moteur');
@@ -701,10 +704,99 @@ test('un client de la version d’avant reçoit le mode YouTube sans que ses Ree
   for (const [f, h] of intouchables) assert.equal(hash(path.join(dir, f)), h, `${f} ne doit pas bouger`);
   const claude = read(dir, 'CLAUDE.md');
   assert.match(claude, /## ▶️ Vidéo YouTube \(16:9\)/);
-  assert.equal(claude.match(/BEGIN EXTENSION: reel-cloneur/g)?.length, 1, 'consignes de l’extension gardées, une fois');
+  assert.equal(claude.match(/BEGIN EXTENSION: double-ia/g)?.length, 1, 'consignes de l’extension gardées, une fois');
+  assert.equal(claude.match(/## 🧬 Reel Cloneur™ : intégré/g)?.length, 1, 'Reel Cloneur™ arrive avec le moteur');
   assert.match(read(dir, `${reel}/CLAUDE.md`), /Vidéo YouTube \(16:9\) : jamais ici/);
   assert.match(read(dir, 'youtube/Ma vidéo/CLAUDE.md'), /Tu es dans la vidéo YouTube « Ma vidéo »/);
   // Le mode YouTube marche tout de suite dans le dossier mis à jour.
   python(dir, 'tools/nouvelle_video_youtube.py', 'Première YouTube', '--date', '2026-10-15');
   assert.ok(fs.existsSync(path.join(dir, 'youtube', 'Première YouTube · 2026-10-15 · Monteur IA - Studio Lumiere', 'tools/finaliser.py')));
+});
+
+// L'extension Reel Cloneur™ telle que son INSTALL.md l'installait (dépôt Alex-lmdm/reel-cloneur, dernière
+// version publiée, 618df6c) : reconstituée depuis le moteur, qui l'a reprise avec deux retouches.
+function installerAncienneExtension(dir) {
+  fs.cpSync(path.join(root, '.claude/skills/reel-cloneur'), path.join(dir, '.claude/skills/reel-cloneur'), { recursive: true });
+  fs.rmSync(path.join(dir, '.claude/skills/reel-cloneur/CREDITS.md'));
+  edit(dir, '.claude/skills/reel-cloneur/references/grille-analyse.md', '`CREDITS.md` de ce skill)', '`CREDITS.md` de l\'extension)');
+  edit(dir, '.claude/skills/reel-cloneur/SKILL.md', /- \*\*« Le téléchargeur n'est pas installé »\*\* \(premier lien[\s\S]*?n'en a pas\n  besoin\./,
+    '- **« Le téléchargeur n\'est pas installé »** : lance `python3 tools/cloner_reel.py installer`, puis\n  recommence.');
+  fs.copyFileSync(path.join(root, 'tools/cloner_reel.py'), path.join(dir, 'tools/cloner_reel.py'));
+  fs.appendFileSync(path.join(dir, 'templates/AGENT.md.tpl'), '\n\n<!-- BEGIN EXTENSION: reel-cloneur (ajouté par l\'installation de Reel'
+    + ' Cloneur ; ne pas dupliquer) -->\n\n## 🟠 Extension installée : Reel Cloneur™\n\nCharge le skill **`reel-cloneur`**.\n\n'
+    + '<!-- END EXTENSION: reel-cloneur -->\n');
+}
+
+test('Reel Cloneur™ installé comme extension : il passe dans le moteur, sans doublon ni retouche, ses clones gardés', (t) => {
+  if (!outilsOuSkip(t)) return;
+  // La dernière version publiée avant l'intégration (16/10/2026).
+  const AVANT = '40e7147';
+  try {
+    execFileSync('git', ['cat-file', '-e', `${AVANT}^{commit}`], { cwd: root, stdio: 'ignore' });
+  } catch {
+    t.skip('historique git de la version d’avant absent');
+    return;
+  }
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-maj-cloneur-'));
+  t.after(() => fs.rmSync(base, { recursive: true, force: true }));
+  const dir = path.join(base, 'Monteur IA - Studio Lumiere');
+  fs.mkdirSync(dir);
+  execFileSync('tar', ['-x', '-C', dir], { input: execFileSync('git', ['archive', '--format=tar', AVANT], { cwd: root, maxBuffer: 1 << 28 }) });
+  installerAncienneExtension(dir);
+  write(dir, 'templates/AGENT.md.tpl', `${read(dir, 'templates/AGENT.md.tpl')}\n<!-- BEGIN EXTENSION: double-ia (ajouté) -->\n`
+    + 'Consignes Ton Double IA\n<!-- END EXTENSION: double-ia -->\n');
+  execFileSync(process.execPath, ['scripts/sync.mjs'], { cwd: dir, encoding: 'utf8' });
+  write(dir, 'clones/2026-10-12-un-reel/analyse.md', '# analyse du client\n');
+  write(dir, '.reel-cloneur-venv/pyvenv.cfg', 'home = /usr\n');
+  const intouchables = ['clones/2026-10-12-un-reel/analyse.md', '.reel-cloneur-venv/pyvenv.cfg'].map((f) => [f, hash(path.join(dir, f))]);
+
+  // La version installée est bien une version publiée de l'extension, que le moteur reconnaît.
+  const integrees = JSON.parse(read(root, 'scripts/versions-extensions-integrees.json')).fichiers;
+  const blob = (f) => crypto.createHash('sha1').update(`blob ${fs.statSync(f).size}\0`).update(fs.readFileSync(f)).digest('hex').slice(0, 12);
+  for (const rel of ['.claude/skills/reel-cloneur/SKILL.md', '.claude/skills/reel-cloneur/references/grille-analyse.md', 'tools/cloner_reel.py']) {
+    assert.ok(integrees[rel].includes(blob(path.join(dir, rel))), `${rel} : version publiée de l'extension`);
+  }
+
+  const plan = planifier(dir, { archive: path.join(os.tmpdir(), 'monteur-archive-vide') });
+  assert.deepEqual(plan.integrees, ['reel-cloneur']);
+  assert.deepEqual(plan.extensions, ['double-ia'], 'plus une extension à mettre à jour à part');
+  const action = (rel) => plan.moteur.find((m) => m.rel === rel)?.action;
+  assert.equal(action('.claude/skills/reel-cloneur/SKILL.md'), 'remplace', 'fichier de l’extension remplacé, pas une retouche');
+  assert.equal(action('.claude/skills/reel-cloneur/CREDITS.md'), 'ajout');
+  assert.equal(action('tools/cloner_reel.py'), undefined, 'déjà identique');
+  assert.equal(action('templates/AGENT.md.tpl'), 'modele');
+  assert.deepEqual(plan.moteur.filter((m) => m.retouche || m.action === 'remplace-modifie'), [], 'rien de retouché chez ce client');
+  const texte = decrire(plan);
+  assert.match(texte, /• Extensions : Ton Double IA \(/);
+  assert.match(texte, /• Reel Cloneur™ fait maintenant partie de Monteur IA : il se met à jour avec lui/);
+
+  const r = appliquer(plan, { npm: false, now: new Date(2026, 9, 16, 15, 0, 0) });
+  assert.deepEqual(r.avertissements, []);
+  for (const [f, h] of intouchables) assert.equal(hash(path.join(dir, f)), h, `${f} ne doit pas bouger`);
+  const modele = read(dir, 'templates/AGENT.md.tpl');
+  assert.doesNotMatch(modele, /BEGIN EXTENSION: reel-cloneur/, 'ancien bloc retiré');
+  assert.equal(modele.match(/BEGIN EXTENSION: double-ia/g)?.length, 1, 'les autres extensions gardées');
+  for (const f of ['CLAUDE.md', 'AGENTS.md']) {
+    const consignes = read(dir, f);
+    assert.equal(consignes.match(/Reel Cloneur™ : intégré/g)?.length, 1, `${f} : consignes du moteur, une fois`);
+    assert.doesNotMatch(consignes, /Extension installée : Reel Cloneur/, `${f} : plus de consignes en double`);
+  }
+  assert.equal(read(dir, '.agents/skills/reel-cloneur/references/grille-analyse.md'),
+    read(root, '.claude/skills/reel-cloneur/references/grille-analyse.md'), 'copie Codex à jour');
+  assert.ok(fs.existsSync(path.join(r.sauvegarde, 'moteur/.claude/skills/reel-cloneur/SKILL.md')), 'version de l’extension sauvegardée');
+  assert.ok(aucunChangement(planifier(dir, { archive: path.join(os.tmpdir(), 'monteur-archive-vide') })), 'une seconde passe ne fait rien');
+});
+
+test('un fichier de l’extension Reel Cloneur™ retouché par le client reste signalé', (t) => {
+  if (!outilsOuSkip(t)) return;
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-cloneur-retouche-'));
+  t.after(() => fs.rmSync(base, { recursive: true, force: true }));
+  const dir = path.join(base, 'client');
+  fs.mkdirSync(dir);
+  execFileSync('tar', ['-x', '-C', dir], { input: execFileSync('git', ['archive', '--format=tar', 'HEAD'], { cwd: root, maxBuffer: 1 << 28 }) });
+  installerAncienneExtension(dir);
+  fs.appendFileSync(path.join(dir, '.claude/skills/reel-cloneur/references/modele-script.md'), '\nMa règle à moi.\n');
+  const plan = planifier(dir, { archive: path.join(os.tmpdir(), 'monteur-archive-vide') });
+  assert.equal(plan.moteur.find((m) => m.rel === '.claude/skills/reel-cloneur/references/modele-script.md')?.action, 'remplace-modifie');
+  assert.match(decrire(plan), /que tu avais retouchés[^\n]*reel-cloneur\/references\/modele-script\.md/);
 });
