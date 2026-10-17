@@ -345,9 +345,10 @@ Renseigne dans `brand.config.json` les chemins de ffmpeg et de whisper détecté
 npx hyperframes doctor
 ```
 ✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker, Kokoro ou MusicGen absents, version plus récente
-disponible ou mémoire basse = bénin, ce n'est pas un échec.) Tu peux lancer `/setup visuel` : les
-couleurs et les sous-titres peuvent être personnalisés plus tard. Tu peux aussi envoyer ta vidéo
-et demander un premier montage avec le style Papier, sans questionnaire préalable.
+disponible ou mémoire basse = bénin, ce n'est pas un échec.) Envoie ta première vidéo brute et
+écris « on monte celle-ci » : elle est montée avec le style Papier, sans questionnaire préalable,
+puis le débrief apprend ton style. Tu peux aussi personnaliser avant, ou à tout moment, avec
+`/setup visuel`.
 
 ### Windows
 
@@ -424,9 +425,10 @@ d'environnement `PRODUCER_FORCE_SCREENSHOT=true` (évite les rendus blancs/lents
 npx hyperframes doctor
 ```
 ✅ Succès : Node, FFmpeg/FFprobe et Chrome au vert. (Docker, Kokoro ou MusicGen absents, version plus récente
-disponible ou mémoire basse = bénin, ce n'est pas un échec.) Tu peux lancer `/setup visuel` : les
-couleurs et les sous-titres peuvent être personnalisés plus tard. Tu peux aussi envoyer ta vidéo
-et demander un premier montage avec le style Papier, sans questionnaire préalable.
+disponible ou mémoire basse = bénin, ce n'est pas un échec.) Envoie ta première vidéo brute et
+écris « on monte celle-ci » : elle est montée avec le style Papier, sans questionnaire préalable,
+puis le débrief apprend ton style. Tu peux aussi personnaliser avant, ou à tout moment, avec
+`/setup visuel`.
 
 ---
 

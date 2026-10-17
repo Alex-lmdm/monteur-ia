@@ -1,10 +1,10 @@
 ---
 name: setup
 description: >-
-  L'Empreinte — l'onboarding de personnalisation du Monteur IA. Lance-le UNE fois après
-  l'installation pour transférer TON goût (ta voix, tes couleurs, ton funnel, ton cadrage) à ton
-  monteur. Use when the user says "setup", "configure mon système", "onboarding", "empreinte",
-  "personnalise mon monteur" ou "personnalise mon style". Ne pas lancer ce questionnaire
+  L'Empreinte : la personnalisation complète du Monteur IA, optionnelle et disponible à tout moment
+  (le plus souvent après la première vidéo et son débrief) pour transférer TON goût (ta voix, tes
+  couleurs, ton funnel, ton cadrage) à ton monteur. Use when the user says "setup", "configure mon
+  système", "onboarding", "empreinte", "personnalise mon monteur" ou "personnalise mon style". Ne pas lancer ce questionnaire
   automatiquement après installation ou lorsqu’une personne demande simplement son premier montage.
   Aussi : `/setup <bloc>` (identite, voix, funnel, visuel, derush, technique) pour refaire un bloc,
   et le débrief de la première vidéo (references/debrief-premiere-video.md), ouvert par le fichier

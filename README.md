@@ -187,9 +187,9 @@ finissent par la marque du client.
 
 **Mes vidéos vont ressembler à celles des autres utilisateurs ?**
 Non, et le système est construit pour l'empêcher. **Aucune couleur de marque n'est livrée** : les
-couleurs, les polices et l'allure des sous-titres sont générées depuis ton `/setup`, et le style
-de départ est volontairement en noir et blanc : beau, mais neutre, et il te le rappelle. Ce qui
-est partagé, c'est la **méthode** : le rythme des coupes, le découpage des sous-titres, les safe
+couleurs, les polices et l'allure des sous-titres viennent de tes retours (le débrief de ta
+première vidéo, ou `/setup`), et le style de départ est volontairement en noir et blanc : beau,
+mais neutre, et il te le rappelle. Ce qui est partagé, c'est la **méthode** : le rythme des coupes, le découpage des sous-titres, les safe
 zones Instagram, les règles de motion. Ça, c'est ce que tu es venu chercher. Le reste est à toi.
 
 **Je peux changer de style après avoir fait des vidéos ?**
@@ -198,8 +198,8 @@ variables. Tu relances `/setup visuel`, et tes prochains montages sortent dans l
 Un Reel déjà publié garde le sien.
 
 **Quel type de vidéos ?**
-Un seul format : le Reel Instagram **talking-head vertical** (toi face caméra, 1080×1920).
-Le système est réglé pour ça et le fait très bien.
+Toi face caméra : le Reel **vertical** (1080×1920), et la vidéo YouTube **horizontale**
+(1920×1080) avec le mode YouTube intégré. Le système est réglé pour ça et le fait très bien.
 
 **Claude Code ou Codex ?**
 Les deux marchent, dans la conversation comme dans l'app. Claude Code va avec l'abonnement Claude
