@@ -143,7 +143,7 @@ question du §3 de `mode-style.md` ; s'il s'en remet à toi, c'est « aucune mus
 | Piège | Pourquoi c'est faux |
 |---|---|
 | Recopier des moments au lieu de règles | la vidéo du client n'a pas les mêmes phrases : on applique la règle à ses moments à lui |
-| Faire plus que l'original | jamais plus de zooms, d'animations, de bruitages ni un visage plus gros que dans la vidéo : un style se reconnaît à sa retenue autant qu'à ses effets |
+| Faire plus que l'original | jamais plus de zooms, d'animations, de bruitages ni un visage plus gros que dans la vidéo : un style se reconnaît à sa retenue autant qu'à ses effets. Seule exception : le recadrage qui fait de la place aux cartes (mode-style.md §4), la place des cartes passe avant la taille du visage |
 | Mettre un fondu là où l'original coupe sec | les coupes sèches font partie du style |
 | Croire le rythme d'après les seules coupes franches | zooms, textes et illustrations changent l'image sans couper |
 | Prendre des cartes posées sur le décor pour un écran partagé | derrière la carte, la pièce filmée : sections « decor », jamais un aplat |

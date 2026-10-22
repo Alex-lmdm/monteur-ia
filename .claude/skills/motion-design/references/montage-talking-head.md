@@ -104,6 +104,14 @@ une sous-comp isolée : un dossier `probe/` avec `index.html` = copie de la comp
 `probe/assets` et un symlink `probe/brand`** (sans eux les chemins `assets/…` et `brand/…` partent en 404), puis **supprimer
 `probe/`** (deux compositions racines = erreur de lint).
 
+**Piège de plus : la durée d'une section ne se lit pas sur sa racine.**
+Montée dans le master, la racine d'une sous-comp (`<div id="<section>" data-duration=…>`) perd son
+`data-duration` quand le script tourne : `getAttribute('data-duration')` rend `null`, un tween
+calé sur « durée − x » part à 0 s et cache le contenu (titres invisibles dans le montage, justes en
+snapshot isolé), et `--zoom "#<section>"` ne trouve plus cet id (l'hôte `#section-<section>` le
+remplace). → Écris la durée en dur dans le script de la section, ou lis-la sur l'élément `.clip`
+de la scène (vu sur deux styles du catalogue, 22/10/2026).
+
 ## 1. La règle de format (le défaut vient de la config)
 
 Le cadrage de départ vient de `brand.config.json` → `montage.defaultLayout` (posé par le preset

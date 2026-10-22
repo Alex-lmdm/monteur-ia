@@ -80,7 +80,7 @@ coupes sèches seulement. »). Langue : celle du client.
 *(Bloc technique pour le montage : le client n'a pas besoin de le lire.)*
 
 - `visual` : {stylePreset si l'un colle, sinon bg / accent / text en hex} · fontCaptions {…} ·
-  captionsSkin {block | outline | plate | shadow | underline | soft} · captionsCase {upper | asis} ·
+  captionsSkin {block | outline | plate | shadow | underline | soft | card} · captionsCase {upper | asis} ·
   captionsLines {1 | 2} · captionsPosition {…} · captionsSize {px, si différent de 50}
 - `montage.defaultLayout` : {split | faceplein | decor} · alternance : {…} · `montage.decorTransform` :
   {aucun | « scale(S) », tête du client plus haute que dans l'original}

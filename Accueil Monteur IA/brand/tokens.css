@@ -149,7 +149,7 @@
 /* ==========================================================================
    SOUS-TITRES — base commune + skin actif
 
-   `.cap` porte le skin CHOISI (block). Les 6 skins restent disponibles
+   `.cap` porte le skin CHOISI (block). Les 7 skins restent disponibles
    en classes `.cap-skin-<nom>` : pour en essayer un autre sur une compo, ajoute la
    classe. Pour changer le défaut de toutes tes vidéos : `/setup visuel`.
    ========================================================================== */
@@ -175,7 +175,7 @@
   padding: 8px 20px;
 }
 
-/* Les 6 skins, nommés — pour override ponctuel sur une compo */
+/* Les 7 skins, nommés — pour override ponctuel sur une compo */
 .cap.cap-skin-block {
   color: var(--brand-contrast);
   background: var(--brand-accent);
@@ -218,6 +218,14 @@
   background: none;
   padding: 0;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55), 0 0 3px rgba(0, 0, 0, 0.45);
+}
+
+.cap.cap-skin-card {
+  color: #141414;
+  background: #ffffff;
+  padding: 8px 22px;
+  border-radius: var(--brand-cap-radius);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
 }
 
 /* ==========================================================================

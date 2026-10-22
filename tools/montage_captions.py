@@ -133,15 +133,24 @@ if WORDS is None:
     print(f"  ⚠ {WORDS_PATH.name} absent -> timing APPROXIMATIF (proportionnel au texte).")
     print("    Lance `python3 tools/build_words.py` pour caler les sous-titres sur la voix.")
 
+def mots_de(pi, ph):
+    """Les mots de la phrase `pi` : ceux de sa prise (champ `take` de tools/build_words.py) quand une
+    phrase = une prise, sinon ceux qui commencent dans sa fenetre. Par la prise, un mot horodate un
+    peu avant la coupe (Whisper avance, ou un fichier de mots recale a la main) reste dans sa phrase."""
+    if len(PHRASES) == len(TAKES) and all("take" in w for w in WORDS):
+        return [w for w in WORDS if w["take"] == TAKES[pi].get("i", pi)]
+    return [w for w in WORDS if ph['start'] - 1e-6 <= w['start'] < ph['end']]
+
+
 if MOTS:
     if WORDS is None:
         raise SystemExit(f"ERREUR : --mots decoupe la voix : lance d'abord `python3 tools/build_words.py` ({WORDS_PATH.name}).")
     MANUAL = []
-    for ph in PHRASES:
+    for pi, ph in enumerate(PHRASES):
         dits, avant = [], ""
-        for w in WORDS:
+        for w in mots_de(pi, ph):
             m = w['w'].strip()
-            if not m or not (ph['start'] - 1e-6 <= w['start'] < ph['end']):
+            if not m:
                 continue
             if any(c.isalnum() for c in m):
                 dits.append(avant + m)
@@ -192,7 +201,7 @@ for pi, ph in enumerate(PHRASES):
 
     starts = None
     if WORDS:
-        wins = [w for w in WORDS if t0 - 1e-6 <= w['start'] < t1]
+        wins = mots_de(pi, ph)
         first = _align(wins, chunks)
         mots = [w for w in wins if normaliser(w['w'])]
         for k, rang in enumerate(imposes):

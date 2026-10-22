@@ -522,6 +522,11 @@ test('sous-titres mot à mot (--mots) : la voix telle que transcrite, ponctuatio
   mots.splice(7, 0, { w: '?', start: 2.69, end: 2.7, take: 1 });   // fin de la phrase d'avant, rendue au début de la suivante
   write(reel, 'derush/exemple_words.json', mots);
   assert.equal(sousTitres(reel, '--mots', '1').caps[6].texte, 'QUELQU’UN', 'jamais « ?QUELQU’UN »');
+  // Un mot horodaté un peu avant sa coupe (Whisper en avance) reste dans sa phrase, grâce à sa prise.
+  const avance = JSON.parse(read(reel, 'derush/exemple_words.json'));
+  avance.find((w) => w.w === 'Quelqu’un').start = 2.6;
+  write(reel, 'derush/exemple_words.json', avance);
+  assert.ok(sousTitres(reel, '--mots', '1').caps.some((c) => c.texte === 'QUELQU’UN'), 'le premier mot de la phrase n’est pas perdu');
   write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
     .replace('    ("exemple-section", "split", [0, 1, 2]),', '    ("s0-hook", "split", [0]),\n    ("s1", "split", [1, 2]),'));
   const sans = sousTitres(reel, '--mots', '1', '--sans', 's0-hook').caps;

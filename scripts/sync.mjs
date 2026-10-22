@@ -240,6 +240,11 @@ const CAPTION_SKINS = {
   background: none;
   padding: 0;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55), 0 0 3px rgba(0, 0, 0, 0.45);`,
+  card: `  color: #141414;
+  background: #ffffff;
+  padding: 8px 22px;
+  border-radius: var(--brand-cap-radius);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);`,
 };
 
 function buildCaptionCss(skinName, look = {}, avertir = warn) {

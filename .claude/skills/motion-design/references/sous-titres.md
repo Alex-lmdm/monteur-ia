@@ -10,9 +10,9 @@
 sous-titres charge `brand/fonts.css` + `brand/tokens.css`, pose `class="cap"`, et c'est tout ;
 chaque sous-titre arrive d'un bloc.
 
-- Police : `visual.fontCaptions` · Apparence : `visual.captionsSkin`, parmi **6 skins** —
+- Police : `visual.fontCaptions` · Apparence : `visual.captionsSkin`, parmi **7 skins** —
   `block` (fond plein dans l'accent), `outline` (contour, sans fond), `plate` (plaque arrondie),
-  `shadow` (ombre portée), `underline` (souligné), `soft` (texte blanc, ombre douce). Description de
+  `shadow` (ombre portée), `underline` (souligné), `soft` (texte blanc, ombre douce), `card` (plaque blanche, texte sombre). Description de
   chacun dans `captionSkins` de `templates/style-presets.json`.
 - **Un Reel monté dans un style cloné ou un style du catalogue** suit la règle de sa fiche, même
   si elle contredit ce fichier (un mot à la fois, ponctuation gardée…) : `python3

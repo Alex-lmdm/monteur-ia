@@ -15,7 +15,8 @@
     "plate": "Plaque sombre arrondie, légèrement translucide, texte clair. Discret, se pose sur n'importe quelle image.",
     "shadow": "Texte clair avec une ombre portée dure décalée dans l'accent. Pas de fond.",
     "underline": "Texte clair souligné d'une barre pleine dans l'accent. Pas de fond.",
-    "soft": "Texte blanc avec une ombre douce, sans fond ni contour. Le plus discret, posé directement sur la vidéo."
+    "soft": "Texte blanc avec une ombre douce, sans fond ni contour. Le plus discret, posé directement sur la vidéo.",
+    "card": "Plaque blanche arrondie, texte sombre, ombre légère. Lisible sur n'importe quelle image, comme une étiquette."
   },
 
   "ctaStyles": {

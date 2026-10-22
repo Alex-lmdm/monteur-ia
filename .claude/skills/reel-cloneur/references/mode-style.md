@@ -79,7 +79,7 @@ Ce que Monteur IA reproduit, et ce qu'il approche seulement :
 |---|---|
 | Couleurs de l'habillage (fond, accent, texte) | ses couleurs, à la valeur près, pour une vidéo ou pour toutes |
 | Police des sous-titres | Inter, Anton ou Archivo Black livrées ; la police exacte si le client fournit le fichier (skill `setup`, bloc D3) |
-| Allure des sous-titres | 6 apparences (bandeau plein, contour, plaque arrondie, ombre portée, souligné, ombre douce), taille, majuscules ou non, graisse, interligne, 1 ou 2 lignes, position |
+| Allure des sous-titres | 7 apparences (bandeau plein, contour, plaque arrondie, ombre portée, souligné, ombre douce, plaque claire), taille, majuscules ou non, graisse, interligne, 1 ou 2 lignes, position |
 | Un, deux ou trois mots par sous-titre, ponctuation gardée | `python3 tools/montage_captions.py --mots 1` (ou 2, 3) : la voix telle que transcrite |
 | Mot surligné quand il est prononcé, en escalier… | se fabrique pour la vidéo, sur le minutage de chaque mot |
 | Cadrage : visage plein écran, écran partagé, cartes posées sur le décor filmé, alternance | les trois cadrages (sections `face`, `split`, `decor`) et leur alternance ; tête du client trop haute pour les cartes : sa vidéo recadrée (§4) |
