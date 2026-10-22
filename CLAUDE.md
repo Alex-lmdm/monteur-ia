@@ -76,10 +76,16 @@ livrée : un Reel publié dans `reels/` (`meta.json` : `monteurIa.etat` = `"publ
 suit l'ordre verrouillé normal. Le setup n'est jamais un prérequis.
 
 Un débutant ne sait pas décrire son style ; devant sa propre vidéo montée, il sait dire ce qu'il
-aime ou pas. Donc : **aucune question avant**, un montage complet avec les réglages de base,
-puis un **débrief** où il dit ce qu'il aurait fait autrement, et tu retiens tout.
+aime ou pas. Donc : **une seule question avant** (le style, avec un choix par défaut), un montage
+complet, puis un **débrief** où il dit ce qu'il aurait fait autrement, et tu retiens tout.
 
-1. **Il envoie sa vidéo brute** (sinon, demande seulement de la glisser ici). Annonce une fois :
+1. **Il envoie sa vidéo brute** (sinon, demande seulement de la glisser ici). S'il n'a pas déjà
+   nommé un style, une question à choix (avec l'outil de question s'il y en a un) : « Je la monte
+   comment ? 1. Mes réglages de base (par défaut) · 2. Un des 11 styles de la formation, module 2 :
+   donne son numéro · 3. Comme un Reel que tu aimes : colle son lien. » Sans réponse claire : 1.
+   Choix 2 : skill `reel-cloneur`, `styles/README.md` ; choix 3 : `reel-cloneur`, mode style ; le
+   style remplace les réglages de base pour cette vidéo, le reste de cette section s'applique.
+   Annonce une fois (un style choisi : « dans le style … » au lieu des réglages et de l'habillage) :
    > « Je m'occupe de tout le montage avec les réglages de base, sans te poser de questions :
    > coupes, sous-titres, animations, bruitages. Habillage noir et blanc, ta vidéo reste en
    > couleur. Ça me prend souvent une demi-heure, tu peux faire autre chose. Quand c'est prêt, tu me diras
@@ -108,11 +114,12 @@ puis un **débrief** où il dit ce qu'il aurait fait autrement, et tu retiens to
 **Dès la deuxième vidéo**, l'ordre verrouillé et toutes ses validations s'appliquent, avec les
 préférences apprises (section suivante) appliquées d'office.
 
-- Le questionnaire `/setup` reste disponible à tout moment (« personnalise mon style ») ; ne le
-  lance pas de toi-même. Le débrief, lui, fait partie de la première vidéo.
 - **Débrief repoussé** : si `work/premiere-video.md` annonce « débrief à faire » (la note
   survit au rangement du Reel), le reproposer une fois en début de conversation, suivre ce que dit la
   note, puis la supprimer, qu'il accepte ou non.
+
+- Le questionnaire `/setup` reste disponible à tout moment (« personnalise mon style ») ; ne le
+  lance pas de toi-même. Le débrief, lui, fait partie de la première vidéo.
 - Ne pas marquer `setup.styleChosen = true` sans choix explicite (garder le noir et blanc en est
   un). Ne jamais écraser une identité déjà renseignée. L'habillage ne filtre jamais le visage.
 - Ne jamais inventer une identité « en attendant » : tokens `var(--brand-*)`, polices livrées,

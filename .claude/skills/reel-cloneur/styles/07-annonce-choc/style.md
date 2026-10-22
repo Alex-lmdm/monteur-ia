@@ -1,4 +1,4 @@
-Style n°07 · Annonce choc · d'après @danmartell (https://www.youtube.com/shorts/mk1zJd9Rm4c)
+# Style n°07 · Annonce choc · d'après @danmartell (https://www.youtube.com/shorts/mk1zJd9Rm4c)
 
 Idéal pour : annoncer une nouveauté, un outil ou un conseil fort, face caméra, en 30 à 45 secondes.
 Ce qu'il faut dans ta vidéo brute : toi face caméra, assis ou debout, avec un peu de mur au-dessus de ta tête, et une première phrase qui annonce la nouvelle.

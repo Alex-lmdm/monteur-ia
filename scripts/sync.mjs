@@ -553,8 +553,11 @@ function generateAgentFiles(config, style) {
       : lieu.bloc === "LIEU_ACCUEIL" ? ["PIPELINE_REEL", "ROUTAGE_YOUTUBE"]
       : lieu.bloc === "LIEU_MAISON" ? ["PIPELINE_REEL", "CHECKLIST_REEL", "ROUTAGE_YOUTUBE"]
       : ["PIPELINE_REEL", "CHECKLIST_REEL"];
+    // La marche à suivre de la première vidéo n'est écrite que tant qu'elle reste à faire : ensuite,
+    // une ligne suffit, et la place revient aux préférences apprises et aux extensions.
+    const premiere = config?.setup?.firstVideoDone === true ? "PREMIERE_FAITE" : "PREMIERE_A_FAIRE";
     for (const { file, keep } of targets) {
-      const contenu = resolveConditionals(substituted, [keep, lieu.bloc, ...pipeline]);
+      const contenu = resolveConditionals(substituted, [keep, lieu.bloc, ...pipeline, premiere]);
       tropLong = Math.max(tropLong, Buffer.byteLength(contenu));
       ecrireSiDifferent(path.join(lieu.dir, file), contenu);
     }

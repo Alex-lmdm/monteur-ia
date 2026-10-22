@@ -33,6 +33,11 @@ Adapter les exemples à ce qui a réellement été monté, garder la structure :
 > Réponds comme tu veux, en vrac ou en vocal. « Rien à changer » est aussi une réponse.
 > Je corrige cette vidéo avec tes retours, puis je retiens tout pour les prochaines. »
 
+**Montée dans un style qu'il a choisi** (un style du catalogue, ou le style d'un Reel qu'il a
+collé) : « C'est une version de base… » devient « Je l'ai montée dans le style n°4 « Le classement »,
+sans rien savoir de tes goûts » (ou « comme le Reel que tu m'as donné ») ; la ligne des couleurs
+devient « garder les couleurs de ce style, ou mettre les tiennes ». Le reste du message ne change pas.
+
 ## 2. Écouter, traduire, clarifier
 
 - Accepter les retours vagues et les traduire en changements concrets. Au plus **une question de
@@ -94,6 +99,7 @@ voir (cadrage, taille des sous-titres) s'écrivent pendant la correction, à l'e
 | Sa musique | fichier dans `assets/music/`, `audio.musicFile` (et `audio.musicDb` s'il la veut plus ou moins forte) |
 | Rythme des coupes | les valeurs `derush.padStart` / `padEnd` réellement appliquées et validées à la correction |
 | Voix nettoyée | rien : dès la deuxième vidéo, le nettoyage fait partie du dérush |
+| Le style choisi à la première vidéo, qu'il garde | skill `reel-cloneur`, `references/mode-style.md` §4 « Pour toutes ses vidéos » (style du catalogue : `styles/README.md`, étape 3) ; ses autres retours s'écrivent par-dessus, comme ci-dessous |
 | Animations (type, quantité, position), B-roll, bruitages, tout le reste | `montage.preferences` |
 | « Le reste c'est bon », ou un point dont il ne parle pas (musique, voix, coupes…) | rien : les réglages de base restent. Sans musique, `tools/build_sfx.py` mixe les bruitages seuls. |
 
@@ -113,7 +119,8 @@ me dire de changer quelque chose. »
 
 **« Rien à changer »** : même résumé (« je garde ce style tel quel »), puis après OK
 `visual.stylePreset = "neutral"` si aucun style n'était choisi, `setup.styleChosen = true`,
-`setup.firstVideoDone = true`, sync.
+`setup.firstVideoDone = true`, sync. Vidéo montée dans un style qu'il a choisi : « je garde ce
+style pour toutes tes vidéos », puis la ligne « Le style choisi » du tableau.
 
 **Il veut débriefer plus tard** : ne rien enregistrer et laisser `firstVideoDone` à `false` ;
 noter « débrief à faire » dans `work/premiere-video.md` du dossier Monteur IA (la note survit au

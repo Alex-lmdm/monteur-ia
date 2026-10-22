@@ -40,7 +40,7 @@ Le mode script, dans cet ordre, sans autre question préalable :
 4. **Livrer `script.md`** : 3 accroches sur la même mécanique, le corps calqué temps par temps, son
    appel à l'action, dans sa voix, format prompteur, et les choix de montage (§5).
 
-**Première vidéo du client :** la règle « aucune question avant » de CLAUDE.md (section
+**Première vidéo du client :** la règle « une seule question avant » (le style) de CLAUDE.md (section
 « Première vidéo ») concerne le montage. Elle ne s'applique pas aux questions du Reel Cloneur, qui
 se posent toujours.
 

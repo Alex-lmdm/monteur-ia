@@ -36,6 +36,9 @@ construites), et parfois `outils/` (un script propre au style, que sa fiche expl
    du tableau, numéro et nom, chacun avec la raison en une ligne ; les exemples en vidéo sont dans
    la formation, module 2. Sa vidéo ne colle pas au style choisi (un « Top outils » sans outil
    cité) : dis-le en une ligne et propose le plus proche ; s'il maintient, tu montes dans le sien.
+   À la première vidéo du client (question du style, section « Première vidéo » des consignes),
+   demande dans un seul message ce que la colonne « En plus de la vidéo brute » réclame, puis monte
+   d'une traite comme le veut cette section.
 2. **Comme un style cloné, pour cette vidéo seulement** : suis `references/mode-style.md`, §4,
    « Sur une vidéo », avec le kit à la place de `clones/<dossier>/` :
    - le `--brief` du nouveau Reel pointe vers la fiche, vue depuis le Reel :

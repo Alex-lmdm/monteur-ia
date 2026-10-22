@@ -1,4 +1,4 @@
-Style n°03 · Liste de conseils · d'après @BrockMesarich (https://www.youtube.com/shorts/rxOcBowQcS0)
+# Style n°03 · Liste de conseils · d'après @BrockMesarich (https://www.youtube.com/shorts/rxOcBowQcS0)
 
 Idéal pour : une vidéo qui énumère (tes 3 à 6 conseils, outils, étapes ou erreurs), avec un appel à l'action à la fin.
 
