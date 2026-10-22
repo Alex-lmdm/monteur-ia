@@ -69,6 +69,9 @@ DECOR_TRANSFORM = (CFG.get("montage") or {}).get("decorTransform") or DEFAULT_DE
 DECOR_ORIGIN = (CFG.get("montage") or {}).get("decorOrigin") or DEFAULT_DECOR_ORIGIN
 DETOURE_TRANSFORM = (CFG.get("montage") or {}).get("detoureTransform") or DEFAULT_DETOURE_TRANSFORM
 DETOURE_ORIGIN = (CFG.get("montage") or {}).get("detoureOrigin") or DEFAULT_DETOURE_ORIGIN
+# Place de la personne detouree dans l'image (CSS, ex. « translate(220px, 300px) scale(0.6) ») : la
+# rapetisser ou la deplacer ne coute pas de nettete, contrairement a un zoom.
+DETOURE_PLACE = (CFG.get("montage") or {}).get("detourePlace") or "none"
 # Le fond n'est JAMAIS ecrit en dur ici : le master charge brand/tokens.css, donc
 # `var(--brand-bg)` suffit et suit le style de chacun. C'est aussi le motif que
 # tools/build_overlay.py cherche pour fabriquer le calque alpha.
@@ -88,8 +91,8 @@ CSS_PLEIN = "transform: none;" if NATIF_PLEIN else f"transform: {FULLFACE_TRANSF
 CSS_DECOR = "transform: none;" if NATIF_DECOR else f"transform: {DECOR_TRANSFORM}; transform-origin: {DECOR_ORIGIN};"
 # Personne detouree : la video transparente de tools/build_faces.py ; sans elle (pas encore detouree),
 # l'apercu montre la video filmee entiere a sa place.
-NATIF_DETOURE = (ROOT / "assets/video/visage-detoure.webm").exists()
-SRC_DETOURE = "assets/video/visage-detoure.webm" if NATIF_DETOURE else "assets/video/base.mp4"
+# Une video transparente par passage (tools/build_faces.py), qui demarre au debut du passage.
+NATIF_DETOURE = bool(DETOURE) and all((ROOT / f"assets/video/visage-detoure-{n}.webm").exists() for n in range(len(DETOURE)))
 CSS_DETOURE = "transform: none;" if NATIF_DETOURE else f"transform: {DETOURE_TRANSFORM}; transform-origin: {DETOURE_ORIGIN};"
 
 # --- calage des videos et des sections sur les images du rendu ---------------------------------
@@ -125,7 +128,15 @@ faces_full = "\n".join(calque(f"facefull{i}", SRC_PLEIN, st, d, 11) for i, (st, 
 faces_decor = "\n".join(calque(f"decor{i}", SRC_DECOR, st, d, 12) for i, (st, d) in enumerate(DECOR))
 
 # --- calque personne detouree DEVANT les sections "detoure" -----------------------------------
-faces_detoure = "\n".join(calque(f"detoure{i}", SRC_DETOURE, st, d, 15) for i, (st, d) in enumerate(DETOURE))
+def calque_detoure(i: int, st: float, d: float) -> str:
+    if not NATIF_DETOURE:
+        return calque(f"detoure{i}", "assets/video/base.mp4", st, d, 15)
+    depart, entree, duree = fenetre(st, d, media=False)
+    return (f'        <video id="detoure{i}" src="assets/video/visage-detoure-{i}.webm" muted playsinline data-layout-allow-overflow '
+            f'data-start="{depart}" data-media-start="{entree}" data-duration="{duree}" data-track-index="15"></video>')
+
+
+faces_detoure = "\n".join(calque_detoure(i, st, d) for i, (st, d) in enumerate(DETOURE))
 
 # --- sections : une sous-comp par ligne de LAYOUT --------------------------------------------
 # ⛔ Une section MEDIA (b-roll) est une <video> POSEE ICI, pas une sous-comp : dans une sous-comp
@@ -187,7 +198,8 @@ doc = f'''<!DOCTYPE html>
       .face-decor video {{ position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover;
         {CSS_DECOR} }}
       /* Personne DETOUREE (sections "detoure") : video transparente posee DEVANT la section. */
-      .face-detoure {{ position: absolute; inset: 0; overflow: hidden; background: transparent; }}
+      .face-detoure {{ position: absolute; inset: 0; overflow: hidden; background: transparent;
+        transform: {DETOURE_PLACE}; transform-origin: center center; }}
       .face-detoure video {{ position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover;
         {CSS_DETOURE} }}
       /* B-roll : pre-cadre a la zone par ffmpeg (fond flou compris) -> aucun recadrage ici. */

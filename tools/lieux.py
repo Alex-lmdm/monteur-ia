@@ -69,7 +69,7 @@ def reel() -> pathlib.Path:
 REGLAGES_REEL = "reel.config.json"
 CLES_REEL = {"montage": ("splitTransform", "faceCrop", "fullFaceTransform", "fullFaceOrigin", "fullFaceCrop",
                          "decorTransform", "decorOrigin", "decorCrop",
-                         "detoureTransform", "detoureOrigin", "detoureCrop")}
+                         "detoureTransform", "detoureOrigin", "detoureCrop", "detourePlace")}
 # `visual` : tout le style de CE Reel (couleurs, polices, sous-titres), les mêmes clés que le `visual`
 # de brand.config.example.json, validées comme dans scripts/sync.mjs (visualDuReel) : une valeur que
 # la synchro ignore est ignorée ici aussi, pour que les outils et le rendu voient le même style.

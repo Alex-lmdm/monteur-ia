@@ -587,8 +587,12 @@ test('cadrage détouré : la personne passe devant la section, détourée une fo
     + 'ffmpeg -v error -y -i "$2" -c:v libvpx-vp9 -deadline realtime -cpu-used 8 -pix_fmt yuva420p -an "$4"\n');
   const env = { ...process.env, MONTEUR_HYPERFRAMES: `sh ${faux}` };
   const faces = () => execFileSync('python3', ['tools/build_faces.py'], { cwd: reel, encoding: 'utf8', env });
-  assert.match(faces(), /visage-detoure\.webm : zone 1080:1920:0:0 du rush, personne détourée/);
-  assert.match(faces(), /déjà détourée \(même zone, même dérush\)/, 'pas trois minutes de calcul à chaque fois');
+  // Seul le passage montré est détouré (2,67 s à 8 s), pas toute la vidéo.
+  assert.match(faces(), /visage-detoure-0\.webm : 2\.67 s, 5\.33 s, zone 1080:1920:0:0 du rush, personne détourée/);
+  assert.match(faces(), /déjà détourée \(1 passage\(s\), même zone, même dérush\)/, 'pas le calcul à chaque fois');
+  const duree = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0',
+    path.join(reel, 'assets/video/visage-detoure-0.webm')], { encoding: 'utf8' }));
+  assert.ok(Math.abs(duree - 5.33) < 0.1, `le passage seul : ${duree} s`);
   assert.ok(!fs.existsSync(path.join(reel, 'work/visage-detoure-source.mp4')), 'le fichier de travail part');
 
   python(reel, 'tools/build_master.py', '--write');
@@ -596,7 +600,11 @@ test('cadrage détouré : la personne passe devant la section, détourée une fo
   const ordre = ['<div class="face-decor">', '===== SECTIONS =====', '<div class="face-detoure">', '<div class="face-full">']
     .map((m) => master.indexOf(m));
   assert.deepEqual([...ordre].sort((a, b) => a - b), ordre, 'la personne passe après les sections, avant le visage plein écran');
-  assert.match(master, /<video id="detoure0" src="assets\/video\/visage-detoure\.webm"/);
+  assert.match(master, /<video id="detoure0" src="assets\/video\/visage-detoure-0\.webm"[^>]*data-start="2\.6\d+" data-media-start="0"/);
+  // Rapetissée et déplacée sans perte de netteté : la place se règle dans reel.config.json.
+  write(reel, 'reel.config.json', { montage: { detourePlace: 'translate(220px, 300px) scale(0.6)' } });
+  python(reel, 'tools/build_master.py', '--write');
+  assert.match(read(reel, 'index.html'), /\.face-detoure \{[^}]*transform: translate\(220px, 300px\) scale\(0\.6\)/);
   assert.match(master, /id="section-s1"[^>]*data-track-index="5" data-width="1080" data-height="1920"/);
   assert.deepEqual([...new Set(sousTitres(reel).caps.map((c) => c.y))], [920, 1250]);
 

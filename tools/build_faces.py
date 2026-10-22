@@ -13,10 +13,11 @@ Produit dans assets/video/ :
   - visage-plein.mp4 : 1080x1920, le visage plein écran (sections « face ») ;
   - visage-decor.mp4 : 1080x1920, la vidéo filmée posée sous les cartes (sections « decor »), entière
     ou cadrée par montage.decorTransform ;
-  - visage-detoure.webm : 1080x1920 transparent, la personne sans son décor (sections « detoure »),
-    détourée sur cet ordinateur par `hyperframes remove-background` (la première fois, le modèle de
-    170 Mo se télécharge ; ensuite quelques minutes pour un Reel). Refaite seulement si la zone ou le
-    dérush changent.
+  - visage-detoure-<n>.webm : 1080x1920 transparent, la personne sans son décor, une vidéo par
+    passage détouré (sections « detoure »), détourée sur cet ordinateur par `hyperframes
+    remove-background` (la première fois, le modèle de 170 Mo se télécharge ; ensuite environ 8 s de
+    calcul par seconde détourée). Seuls les passages montrés sont détourés, et refaits seulement si
+    la zone, le dérush ou les passages changent.
 
 Pourquoi des vidéos plein cadre : une <video> qui ne couvre qu'une partie de l'écran peut ne pas
 se peindre dans le studio (bug « carré noir », motion-design/references/visage-carre-noir.md).
@@ -42,9 +43,20 @@ BASE = ROOT / "assets/video/base.mp4"
 SPLIT_OUT = ROOT / "assets/video/visage-split.mp4"
 PLEIN_OUT = ROOT / "assets/video/visage-plein.mp4"
 DECOR_OUT = ROOT / "assets/video/visage-decor.mp4"
-DETOURE_OUT = ROOT / "assets/video/visage-detoure.webm"
-DETOURE_ETAT = ROOT / "assets/video/visage-detoure.json"   # ce qui a été détouré : évite de refaire 3 minutes de calcul
+DETOURE_DOSSIER = ROOT / "assets/video"
+DETOURE_ETAT = ROOT / "assets/video/visage-detoure.json"   # ce qui a été détouré : évite de refaire le calcul
 DETOURE_SOURCE = ROOT / "work/visage-detoure-source.mp4"
+
+
+def detoure_out(n: int) -> pathlib.Path:
+    """La vidéo transparente du n-ième passage détouré (fenêtres « detoure » fusionnées)."""
+    return DETOURE_DOSSIER / f"visage-detoure-{n}.webm"
+
+
+def effacer_detoures() -> None:
+    for f in DETOURE_DOSSIER.glob("visage-detoure*.webm"):
+        f.unlink()
+    DETOURE_ETAT.unlink(missing_ok=True)
 # Fichier de travail quasi sans perte : il est ré-encodé une seule fois, au rendu final.
 ENCODE = ["-c:v", "libx264", "-crf", "12", "-preset", "medium", "-pix_fmt", "yuv420p",
           "-an", "-movflags", "+faststart"]
@@ -60,33 +72,45 @@ def encode(src: pathlib.Path, filtre: str, out: pathlib.Path) -> None:
         sys.exit(f"ERREUR : ffmpeg n'a pas pu produire {out.relative_to(ROOT)}.")
 
 
-def detourer(src: pathlib.Path, zone: str) -> None:
-    """La personne sans son décor : la zone cadrée en 1080x1920, puis le détourage local (vidéo transparente)."""
+def detourer(src: pathlib.Path, zone: str, fenetres) -> None:
+    """La personne sans son décor, passage par passage : chaque fenêtre « detoure » coupée dans le rush,
+    cadrée en 1080x1920, puis détourée en local (vidéo transparente qui démarre au début du passage)."""
     import json
     import os
     import shlex
-    etat = {"source": str(src.relative_to(ROOT)), "zone": zone, "date": src.stat().st_mtime}
-    if DETOURE_OUT.exists() and DETOURE_ETAT.exists():
+    etat = {"source": str(src.relative_to(ROOT)), "zone": zone, "date": src.stat().st_mtime,
+            "fenetres": [[round(st, 3), round(d, 3)] for st, d in fenetres]}
+    if DETOURE_ETAT.exists() and all(detoure_out(n).exists() for n in range(len(fenetres))):
         try:
             if json.loads(DETOURE_ETAT.read_text(encoding="utf-8")) == etat:
-                print(f"• {DETOURE_OUT.relative_to(ROOT)} : déjà détourée (même zone, même dérush)")
+                print(f"• personne déjà détourée ({len(fenetres)} passage(s), même zone, même dérush)")
                 return
         except ValueError:
             pass
+    effacer_detoures()
     DETOURE_SOURCE.parent.mkdir(exist_ok=True)
-    encode(src, f"crop={zone},scale=1080:1920:flags=lanczos,setsar=1", DETOURE_SOURCE)
     # MONTEUR_HYPERFRAMES : une autre commande hyperframes (tests, installation à part).
     hf = shlex.split(os.environ.get("MONTEUR_HYPERFRAMES") or "npx --no-install hyperframes")
-    print("• détourage de la personne (la première fois, téléchargement du modèle de 170 Mo)…")
-    r = subprocess.run([*hf, "remove-background", str(DETOURE_SOURCE), "-o", str(DETOURE_OUT), "--quality", "balanced"],
-                       capture_output=True, encoding="utf-8", errors="replace", cwd=ROOT)
-    if r.returncode or not DETOURE_OUT.exists():
-        print((r.stderr or r.stdout)[-1500:])
-        sys.exit("ERREUR : le détourage a échoué (hyperframes remove-background). Relance ; si ça persiste, "
-                 "passe ces sections en « decor ».")
+    total = sum(d for _, d in fenetres)
+    print(f"• détourage de la personne : {len(fenetres)} passage(s), {total:.1f} s (environ {round(total * 8 / 60) or 1} "
+          "min ; la première fois, téléchargement du modèle de 170 Mo)…")
+    for n, (st, d) in enumerate(fenetres):
+        cmd = ["ffmpeg", "-y", "-v", "error", "-ss", f"{st:.4f}", "-t", f"{d:.4f}", "-i", str(src), "-map", "0:v:0",
+               "-vf", f"crop={zone},scale=1080:1920:flags=lanczos,setsar=1,fps=30", *ENCODE, str(DETOURE_SOURCE)]
+        r = subprocess.run(cmd, capture_output=True, encoding="utf-8", errors="replace")
+        if r.returncode:
+            print(r.stderr[-1500:])
+            sys.exit("ERREUR : ffmpeg n'a pas pu couper le passage à détourer.")
+        out = detoure_out(n)
+        r = subprocess.run([*hf, "remove-background", str(DETOURE_SOURCE), "-o", str(out), "--quality", "balanced"],
+                           capture_output=True, encoding="utf-8", errors="replace", cwd=ROOT)
+        if r.returncode or not out.exists():
+            print((r.stderr or r.stdout)[-1500:])
+            sys.exit("ERREUR : le détourage a échoué (hyperframes remove-background). Relance ; si ça persiste, "
+                     "passe ces sections en « decor ».")
+        print(f"• {out.relative_to(ROOT)} : {st:.2f} s, {d:.2f} s, zone {zone} du rush, personne détourée")
     DETOURE_ETAT.write_text(json.dumps(etat), encoding="utf-8")
     DETOURE_SOURCE.unlink(missing_ok=True)
-    print(f"• {DETOURE_OUT.relative_to(ROOT)} : zone {zone} du rush, personne détourée")
 
 
 def main() -> None:
@@ -124,10 +148,9 @@ def main() -> None:
     else:
         DECOR_OUT.unlink(missing_ok=True)
     if detoure_wins:
-        detourer(src, scale_crop(detoure_crop, k, w, h) if detoure_crop else f"{w}:{h}:0:0")
+        detourer(src, scale_crop(detoure_crop, k, w, h) if detoure_crop else f"{w}:{h}:0:0", detoure_wins)
     else:
-        DETOURE_OUT.unlink(missing_ok=True)
-        DETOURE_ETAT.unlink(missing_ok=True)
+        effacer_detoures()
     print("Ensuite : python3 tools/build_master.py --write (le master pose ces vidéos sans les agrandir).")
 
 

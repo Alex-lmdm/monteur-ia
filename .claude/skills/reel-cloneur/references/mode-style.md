@@ -83,7 +83,7 @@ Ce que Monteur IA reproduit, et ce qu'il approche seulement :
 | Un, deux ou trois mots par sous-titre, ponctuation gardée | `python3 tools/montage_captions.py --mots 1` (ou 2, 3) : la voix telle que transcrite |
 | Mot surligné quand il est prononcé, en escalier… | se fabrique pour la vidéo, sur le minutage de chaque mot |
 | Cadrage : visage plein écran, écran partagé, cartes posées sur le décor filmé, alternance | les trois cadrages (sections `face`, `split`, `decor`) et leur alternance ; tête du client trop haute pour les cartes : sa vidéo recadrée (§4) |
-| Personne détourée, sans son décor, devant une page, un aplat ou des objets ; texte derrière la tête | sections `detoure` : détourage sur l'ordinateur du client (environ 3 minutes, modèle de 170 Mo la première fois), dis-le-lui avant de lancer |
+| Personne détourée, sans son décor, devant une page, un aplat ou des objets ; texte derrière la tête | sections `detoure` : détourage des seuls passages montrés sur l'ordinateur du client (environ 8 s de calcul par seconde détourée, modèle de 170 Mo la première fois : dis-le-lui avant de lancer) ; personne plus petite ou déplacée : `montage.detourePlace` |
 | Zooms sur le visage | zooms animés (préférence) |
 | Rythme des coupes, silences retirés | coupes plus ou moins serrées (marges du dérush) et préférence de rythme |
 | Animations, schémas, logos, textes à l'écran, images d'illustration | motion design de Monteur IA (préférences : densité, type, place) |

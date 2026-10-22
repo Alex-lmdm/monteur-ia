@@ -137,9 +137,13 @@ Format de section en plus, choisi section par section (jamais un `defaultLayout`
 
 - **`detoure`** : la **personne détourée**, sans son décor, passe **devant** la section (sous-comp
   **1080×1920** qui peint le fond : page web, aplat, objets, texte derrière la tête). `tools/build_faces.py`
-  détoure la vidéo sur l'ordinateur (`hyperframes remove-background`, modèle de 170 Mo téléchargé la
-  première fois, environ 3 minutes pour un Reel ; refait seulement si la zone ou le dérush changent)
-  et pose `visage-detoure.webm` (transparente). Cadrage = `montage.detoureTransform` / `detoureOrigin`.
+  détoure sur l'ordinateur les seuls passages montrés (`hyperframes remove-background`, modèle de
+  170 Mo téléchargé la première fois, environ 8 s de calcul par seconde détourée ; refait seulement si
+  la zone, le dérush ou les passages changent) et pose une `visage-detoure-<n>.webm` transparente par
+  passage. Cadrage : `montage.detoureTransform` / `detoureOrigin` pour zoomer (pré-cadré, net) ;
+  `montage.detourePlace` (CSS, ex. `"translate(220px, 300px) scale(0.6)"`) pour rapetisser ou déplacer
+  la personne dans l'image, sans perte de netteté. Un texte posé exprès derrière la personne porte
+  `data-layout-allow-occlusion` (sur le texte lui-même) : sinon `npm run check` le signale caché.
   Sous-titres sur le buste (`Y_DETOURE`). Export par le bouton Export ou `npm run render` : l'ancien
   export ffmpeg ne sait pas poser la personne devant les visuels.
 
