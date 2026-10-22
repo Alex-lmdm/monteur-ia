@@ -257,9 +257,9 @@ Deux réglages, deux phrases :
   ⚠️ Une police de sous-titres a besoin d'un **`.ttf` de mesure** (`measureFile`) : PIL ne lit pas
   le woff2, et sans lui `tools/montage_captions.py` ne peut plus garantir une seule ligne.
   **JAMAIS de Google Fonts en ligne** (rendu non déterministe / hors-ligne cassé).
-- **Le skin** (`visual.captionsSkin`) : les 5 apparences sont décrites dans `captionSkins` de
+- **Le skin** (`visual.captionsSkin`) : les 6 apparences sont décrites dans `captionSkins` de
   `templates/style-presets.json` — `block` (fond plein), `outline` (contour), `plate` (plaque
-  arrondie), `shadow` (ombre portée), `underline` (souligné). Les nommer en une ligne chacun,
+  arrondie), `shadow` (ombre portée), `underline` (souligné), `soft` (texte blanc, ombre douce). Les nommer en une ligne chacun,
   laisser choisir.
 - `visual.captionsLines` (1 ou 2) et `visual.captionsPosition` : garder les défauts sauf demande.
 - Allure fine, seulement sur demande (absente = le rendu de départ) : `visual.captionsCase`

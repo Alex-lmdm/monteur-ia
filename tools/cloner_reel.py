@@ -20,6 +20,7 @@ Usage :
     python3 tools/cloner_reel.py verifier      # contrôle des outils (smoke test)
     python3 tools/cloner_reel.py comparer clones/<dossier>[/brouillon.md]   # le script reprend-il des phrases ?
     python3 tools/cloner_reel.py couleurs clones/<dossier>/frames/<image>.jpg [--zone bas]   # couleurs exactes
+    python3 tools/cloner_reel.py cote-a-cote clones/<dossier> <rendu.mp4 ou snapshot.png> 6.0:5.8 12.5   # original | montage
 
 Règles : jamais de cookies ni de connexion au compte du client ; si un lien ne se télécharge pas,
 l'outil le dit simplement et propose de glisser le fichier vidéo à la place. Relancer l'outil sur
@@ -622,6 +623,45 @@ def detecter_coupes(ffmpeg: str, video: pathlib.Path, duree: float):
     return coupes, visible
 
 
+# Changements d'image : une coupe change toute l'image, mais une carte qui en remplace une autre au-dessus
+# d'un visage qui continue, ou un titre qui arrive, ne change qu'une bande. Le score « scene » de ffmpeg
+# les rate quand les deux cartes se ressemblent (même fond crème) : 8 coupes trouvées sur un Reel qui
+# change d'image 16 fois (essai du 21/10/2026). On cherche donc, dans chaque tiers de l'image (haut,
+# milieu, bas), les sauts nets : une différence avec l'image d'avant bien au-dessus de ses voisines.
+BANDES = (("haut", 0), ("milieu", 1), ("bas", 2))
+SAUT_LARGEUR, SAUT_HAUTEUR = 64, 72          # image réduite, 24 lignes par bande
+SAUT_MIN, SAUT_FOIS = 6.0, 4.0               # un saut : au moins 6 niveaux de gris, 4 fois ses voisines
+
+
+def detecter_changements(ffmpeg: str, video: pathlib.Path, duree: float, fps: int = 30):
+    """(changements, par bande) : les instants où une bande de l'image change d'un coup (coupe comprise)."""
+    r = subprocess.run([str(c) for c in (ffmpeg, "-v", "error", "-i", video, "-an", "-vf",
+                        f"fps={fps},scale={SAUT_LARGEUR}:{SAUT_HAUTEUR},format=gray", "-f", "rawvideo", "-")],
+                       capture_output=True, timeout=1800)
+    brut = r.stdout or b""
+    n = SAUT_LARGEUR * SAUT_HAUTEUR
+    images = [brut[i:i + n] for i in range(0, len(brut) - n + 1, n)]
+    par_bande = {}
+    tiers = n // 3
+    for nom, k in BANDES:
+        bandes = [im[k * tiers:(k + 1) * tiers] for im in images]
+        d = [0.0] + [sum(abs(a - b) for a, b in zip(bandes[i], bandes[i - 1])) / tiers for i in range(1, len(bandes))]
+        sauts = []
+        for i in range(1, len(d)):
+            voisins = d[max(1, i - 15):i] + d[i + 1:i + 16]
+            fond = mediane(voisins) or 0.0
+            if d[i] >= SAUT_MIN and d[i] >= SAUT_FOIS * fond + 2 and d[i] == max(d[max(1, i - 3):i + 4]):
+                t = i / fps
+                if 0.0 < t < duree - 0.1 and (not sauts or t - sauts[-1] >= 0.25):
+                    sauts.append(round(t, 2))
+        par_bande[nom] = sauts
+    changements = []
+    for t in sorted(t for v in par_bande.values() for t in v):
+        if not changements or t - changements[-1] >= 0.25:
+            changements.append(t)
+    return changements, par_bande
+
+
 def choisir_images(duree: float, coupes, visible: float = 0.0):
     """Une image juste après chaque coupe, 2/s sur les 5 premières s visibles, 1/s ensuite, la dernière ; 60 au plus.
     Une ouverture noire n'a pas d'image à elle : la première image est la première qui montre quelque chose."""
@@ -775,6 +815,13 @@ def analyser_plans(dossier: pathlib.Path, ffmpeg: str, largeur: int, media: dict
         lecture = {"uneParUne": [im["fichier"] for im in images if im["t"] < fin_hook], "planches": planches}
     rythme = ("très rapide" if moyenne < 1.5 else "rapide" if moyenne < 3 else "posé" if moyenne < 6
               else "plan quasi unique")
+    changements, par_bande = detecter_changements(ffmpeg, dossier / "media.mp4", duree)
+    # Une coupe franche est aussi un changement d'image (une coupe sur un fondu peut échapper aux sauts).
+    for c in coupes:
+        if all(abs(c - t) >= 0.25 for t in changements):
+            changements.append(c)
+    changements.sort()
+    intervalles = [b - a for a, b in zip([0.0] + changements, changements + [duree])]
     shots = {
         "duree": duree,
         "seuilScene": SCENE_SEUIL,
@@ -786,13 +833,21 @@ def analyser_plans(dossier: pathlib.Path, ffmpeg: str, largeur: int, media: dict
         "ouvertureNoireJusqua": visible or None,
         "planLePlusLong": max((p["duree"] for p in plans), default=duree),
         "rythme": rythme,
+        "changements": changements,
+        "nbChangements": len(changements),
+        "changementsParMinute": round(60 * len(changements) / duree, 1) if duree else 0,
+        "changementMedian": round(mediane(intervalles) or duree, 2),
+        "changementsParBande": par_bande,
+        "changementsParMinuteParBande": {k: round(60 * len(v) / duree, 1) if duree else 0 for k, v in par_bande.items()},
         "plans": plans,
         "largeurImages": largeur,
         "images": images,
         "lecture": lecture,
         "_note": "Coupes franches détectées par changement d'image (seuil 0.3, sur l'image entière et sur sa "
                  "zone centrale) : un zoom brusque ou un texte plein écran compte comme une coupe, un fondu lent "
-                 "ou une animation dans un plan n'en est pas une. Vérifie sur les images. Lecture : les images des 5 "
+                 "ou une animation dans un plan n'en est pas une. Changements : les coupes, plus tout saut net "
+                 "d'un tiers de l'image (une carte qui en remplace une autre au-dessus du visage, un titre qui "
+                 "arrive) : c'est le rythme que l'on voit, celui à reproduire et à comparer. Vérifie sur les images. Lecture : les images des 5 "
                  "premières secondes une par une (lecture.uneParUne), le reste en planches de 6 (lecture.planches, "
                  "de gauche à droite puis de haut en bas, heure en haut à gauche, étiquette jaune = juste après "
                  "une coupe). Texte illisible sur une planche : ouvre l'image seule dans frames/.",
@@ -981,6 +1036,10 @@ def analyser_rythme(shots: dict) -> dict:
     debut = tranches[0]["coupes"] if tranches else 0
     suite = [tr["coupes"] for tr in tranches[1:]]
     moy_suite = sum(suite) / len(suite) if suite else 0
+    changements = shots.get("changements")
+    if changements is not None:
+        rythme_vu = (f"{len(changements)} changements d'image ({shots.get('changementsParMinute')} par minute), "
+                     f"un toutes les {shots.get('changementMedian')} s le plus souvent")
     if not coupes:
         lecture = "un seul plan, aucune coupe franche : le rythme vient des animations ou du zoom (voir les images)"
     else:
@@ -988,6 +1047,8 @@ def analyser_rythme(shots: dict) -> dict:
                    f"(de {min(plans):.1f} à {max(plans):.1f} s)")
         if debut >= moy_suite + 2:
             lecture += f" ; accroche plus nerveuse : {debut} coupes sur les 5 premières secondes"
+    if changements is not None:
+        lecture = f"{rythme_vu} ; {lecture}"
     return {"planMedian": round(mediane(plans) or duree, 2), "planLePlusCourt": round(min(plans or [duree]), 2),
             "planLePlusLong": round(max(plans or [duree]), 2), "coupesParTranche5s": tranches, "lecture": lecture}
 
@@ -1183,7 +1244,7 @@ def cloner(source: str, largeur, langue, refaire: bool, style: bool = False) -> 
     t0 = time.time()
     shots = lire_json(dossier / "shots.json")
     if (refaire or shots is None or shots.get("largeurImages") != largeur or not (dossier / "frames").exists()
-            or "ouvertureNoireJusqua" not in shots or "lecture" not in shots):
+            or "ouvertureNoireJusqua" not in shots or "lecture" not in shots or "changements" not in shots):
         dire("• coupes et images…")
         refait = True
         shots = analyser_plans(dossier, ffmpeg, largeur, media)
@@ -1215,8 +1276,10 @@ def cloner(source: str, largeur, langue, refaire: bool, style: bool = False) -> 
     dire(f"   vues {n(meta.get('vues'))} · likes {n(meta.get('likes'))} · commentaires {n(meta.get('commentaires'))}")
     dire(f"   {len(transcript.get('phrases') or [])} phrases transcrites (langue : {transcript.get('langue')})")
     dire(f"   {shots['nbCoupes']} coupes (dont {shots['coupes0a3s']} sur 0-3 s, {shots['coupes0a10s']} sur 0-10 s), "
-         f"plan moyen {shots['dureeMoyennePlan']} s, rythme {shots['rythme']} (coupes franches seulement : "
-         "les animations et zooms se voient sur les images)")
+         f"plan moyen {shots['dureeMoyennePlan']} s, rythme {shots['rythme']} (coupes franches seulement)")
+    dire(f"   {shots['nbChangements']} changements d'image (coupes, cartes, titres) : {shots['changementsParMinute']} "
+         f"par minute, un toutes les {shots['changementMedian']} s le plus souvent ; par tiers de l'image : "
+         + ", ".join(f"{k} {v}" for k, v in (shots.get("changementsParMinuteParBande") or {}).items()))
     lec = shots["lecture"]
     if lec["planches"]:
         dire(f"   à lire : {len(lec['uneParUne'])} images une par une (les 5 premières secondes, dans frames/), puis "
@@ -1245,12 +1308,52 @@ def cloner(source: str, largeur, langue, refaire: bool, style: bool = False) -> 
              "ensuite, suis le skill reel-cloneur.")
 
 
+# ------------------------------------------------------------------ contrôle côte à côte
+def cote_a_cote(dossier_txt: str, rendu_txt: str, paires) -> int:
+    """Une image par paire d'instants : l'original à gauche, le montage à droite, à la même taille.
+
+    Sert au kit du style (mode-style.md) : chaque pièce signature se compare à l'original avant d'être
+    remplie, et le montage fini se contrôle sur l'accroche, chaque pièce et la fin. « 6.0:5.8 » = 6,0 s
+    dans l'original, 5,8 s dans le montage ; « 12.5 » seul = le même instant dans les deux. Le montage
+    peut être une image (un snapshot de la pièce) : seul l'instant de l'original compte alors."""
+    ffmpeg = binaire("ffmpegPath", "ffmpeg")
+    dossier = pathlib.Path(dossier_txt).expanduser()
+    original = dossier / "media.mp4" if dossier.is_dir() else dossier
+    rendu = pathlib.Path(rendu_txt).expanduser()
+    image_fixe = rendu.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")   # un snapshot de la pièce
+    if not ffmpeg or not original.exists() or not rendu.exists():
+        arret(f"Introuvable : {original if not original.exists() else rendu} (ou ffmpeg).")
+    if not paires:
+        arret(f"Usage : {PY} tools/cloner_reel.py cote-a-cote clones/<dossier> <ton rendu.mp4> 6.0:5.8 12.5 …")
+    sortie = (dossier if dossier.is_dir() else dossier.parent) / "kit" / "apercu"
+    sortie.mkdir(parents=True, exist_ok=True)
+    cadre = "scale=540:960:force_original_aspect_ratio=decrease,pad=540:960:(ow-iw)/2:(oh-ih)/2:color=black"
+    faits = []
+    for paire in paires:
+        try:
+            t_ref, t_rendu = (float(x) for x in (paire.split(":") if ":" in paire else (paire, paire)))
+        except ValueError:
+            arret(f"« {paire} » : écris un instant en secondes (12.5) ou deux (6.0:5.8).")
+        image = sortie / f"paire-{t_ref:06.2f}-{t_rendu:06.2f}.jpg"
+        entree = ["-i", rendu] if image_fixe else ["-ss", f"{t_rendu:.3f}", "-i", rendu]
+        r = lancer([ffmpeg, "-v", "error", "-y", "-ss", f"{t_ref:.3f}", "-i", original, *entree, "-filter_complex", f"[0:v]{cadre}[a];[1:v]{cadre}[b];[a][b]hstack=2",
+                    "-frames:v", "1", "-q:v", "3", image], timeout=120)
+        if r.returncode or not image.exists():
+            arret(f"Image impossible à {paire} : {r.stderr.strip()[-300:]}")
+        faits.append(image)
+    dire(f"{len(faits)} paire{'s' if len(faits) > 1 else ''} (original à gauche, montage à droite) :")
+    for f in faits:
+        dire(f"  {f}")
+    return 0
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="Reel Cloneur : prépare l'analyse d'un Reel (lien ou fichier).")
     p.add_argument("source", help="lien du Reel / TikTok / Short, chemin d'un fichier vidéo, ou « installer » / "
-                   "« verifier » / « comparer » / « couleurs »")
-    p.add_argument("dossier", nargs="?", help="avec « comparer » : le dossier clones/<…> à vérifier ; "
+                   "« verifier » / « comparer » / « couleurs » / « cote-a-cote »")
+    p.add_argument("dossier", nargs="?", help="avec « comparer » ou « cote-a-cote » : le dossier clones/<…> ; "
                    "avec « couleurs » : l'image")
+    p.add_argument("reste", nargs="*", help="avec « cote-a-cote » : ton rendu, puis les instants (12.5 ou 6.0:5.8)")
     p.add_argument("--style", action="store_true",
                    help="prépare aussi le style de montage (rythme, couleurs, rafales d'images) : style.json")
     p.add_argument("--zone", choices=["haut", "milieu", "bas"], help="avec « couleurs » : une bande de l'image")
@@ -1271,6 +1374,10 @@ def main() -> None:
         if not a.dossier:
             arret(f"Usage : {PY} tools/cloner_reel.py couleurs clones/<dossier>/frames/<image>.jpg [--zone bas]")
         sys.exit(couleurs_image(a.dossier, a.zone))
+    elif a.source in ("cote-a-cote", "côte-à-côte"):
+        if not a.dossier or not a.reste:
+            arret(f"Usage : {PY} tools/cloner_reel.py cote-a-cote clones/<dossier> <ton rendu.mp4> 6.0:5.8 12.5 …")
+        sys.exit(cote_a_cote(a.dossier, a.reste[0], a.reste[1:]))
     else:
         cloner(a.source, a.largeur, a.langue, a.refaire, a.style)
 

@@ -88,6 +88,26 @@ MANUAL = [
 # 4e, on compte depuis 0 comme dans <video>_words.json, signes seuls exclus). Utile quand la voix ne
 # dit pas le mot affiche (« commenter LE logo » sous-titre « LOGO », depart sur « le »).
 
+# --mots N (1 a 3) : le decoupage vient de la voix au lieu de MANUAL, N mots par sous-titre, tels
+# que la transcription les ecrit (ponctuation comprise). C'est le « mot a mot » des styles qui
+# l'imposent (style clone, style du catalogue) ; sans l'option, MANUAL reste la regle.
+MOTS = None
+if "--mots" in sys.argv:
+    try:
+        MOTS = int(sys.argv[sys.argv.index("--mots") + 1])
+    except (IndexError, ValueError):
+        MOTS = 0
+    if not 1 <= MOTS <= 3:
+        raise SystemExit("ERREUR : --mots attend 1, 2 ou 3 (le nombre de mots par sous-titre).")
+# --sans s0-hook,s5 : aucun sous-titre dans ces sections (une accroche ou une carte qui porte deja le
+# texte, quand le style le veut). Sans l'option, toutes les sections en ont.
+SANS = set()
+if "--sans" in sys.argv:
+    try:
+        SANS = {x.strip() for x in sys.argv[sys.argv.index("--sans") + 1].split(",") if x.strip()}
+    except IndexError:
+        raise SystemExit("ERREUR : --sans attend les sections sans sous-titres, ex. --sans s0-hook,s5-cta.")
+
 # Option (brand.config.json -> montage.sousTitresDepuisCoupe, defaut false) : le 1er sous-titre de
 # chaque phrase part sur la coupe, pas sur son 1er mot reconnu (il s'affiche des la 1re image du plan).
 DEPUIS_COUPE = (config().get("montage") or {}).get("sousTitresDepuisCoupe") is True
@@ -95,7 +115,6 @@ DEPUIS_COUPE = (config().get("montage") or {}).get("sousTitresDepuisCoupe") is T
 # Une phrase par prise (cas simple). Si plusieurs prises forment UNE phrase (ex. un CTA en
 # 3 bouts), fusionne-les ici : PHRASES.append({'start': TAKES[i]['start'], 'end': TAKES[j]['end']}).
 PHRASES = [{'start': t['start'], 'end': t['end']} for t in TAKES]
-assert len(MANUAL) == len(PHRASES), f"MANUAL={len(MANUAL)} != phrases={len(PHRASES)}"
 
 # SECTIONS = derivees de sections (meme source que le master) -> jamais desynchronisees
 SECTIONS = [(x['start'], x['y']) for x in SEC]
@@ -111,6 +130,26 @@ WORDS = json.loads(WORDS_PATH.read_text(encoding='utf-8')) if WORDS_PATH.exists(
 if WORDS is None:
     print(f"  ⚠ {WORDS_PATH.name} absent -> timing APPROXIMATIF (proportionnel au texte).")
     print("    Lance `python3 tools/build_words.py` pour caler les sous-titres sur la voix.")
+
+if MOTS:
+    if WORDS is None:
+        raise SystemExit(f"ERREUR : --mots decoupe la voix : lance d'abord `python3 tools/build_words.py` ({WORDS_PATH.name}).")
+    MANUAL = []
+    for ph in PHRASES:
+        dits, avant = [], ""
+        for w in WORDS:
+            m = w['w'].strip()
+            if not m or not (ph['start'] - 1e-6 <= w['start'] < ph['end']):
+                continue
+            if any(c.isalnum() for c in m):
+                dits.append(avant + m)
+                avant = ""
+            elif m in ("«", "(", "[", "“", "‘") or not dits:     # un signe qui ouvre : avec le mot suivant
+                avant += m + (" " if m == "«" else "")
+            else:                                               # un signe seul : avec son mot
+                dits[-1] += (" " if m in ("?", "!", ":", ";", "»") else "") + m
+        MANUAL.append([" ".join(dits[i:i + MOTS]) for i in range(0, len(dits), MOTS)])
+assert len(MANUAL) == len(PHRASES), f"MANUAL={len(MANUAL)} != phrases={len(PHRASES)}"
 
 
 def _align(words, chunks):
@@ -186,8 +225,13 @@ for pi, ph in enumerate(PHRASES):
             acc += L
 
     for c, t in zip(chunks, starts):
+        if SANS and any(x["id"] in SANS and x["start"] - 1e-6 <= image(t) < x["end"] for x in SEC):
+            continue
         # Casse : celle de visual.captionsCase (capitales par defaut, comme le CSS de .cap).
         caps.append({'start': image(t), 'text': c.upper() if STYLE.captions_case == "upper" else c})
+
+if not caps:
+    raise SystemExit("ERREUR : aucun sous-titre a ecrire (decoupage vide, ou toutes les sections dans --sans).")
 
 # 1) SNAP sur les frontieres de section : le sous-titre le plus proche demarre PILE dessus
 for B in BOUNDS:
@@ -248,8 +292,9 @@ doc = f'''<!DOCTYPE html>
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1080, height=1920">
-    <!-- SOUS-TITRES — genere par tools/montage_captions.py depuis derush/<video>_cuts.json.
-         Regles : 2-3 mots par sous-titre, AUCUNE ponctuation finale, jamais a cheval sur 2 phrases. -->
+    <!-- SOUS-TITRES : genere par tools/montage_captions.py depuis derush/<video>_cuts.json.
+         Decoupage : MANUAL (2-3 mots, sans ponctuation finale), ou --mots N (la voix telle que
+         transcrite) ; jamais a cheval sur 2 phrases. -->
     <script src="assets/vendor/gsap.min.js"></script>
     <!-- L'apparence de .cap (police, couleurs, skin « {STYLE.captions_skin} ») vient ENTIEREMENT
          de brand/tokens.css, genere depuis TON style. Ne rien redefinir ici : une regle en dur

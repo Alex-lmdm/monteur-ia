@@ -86,7 +86,7 @@ voir (cadrage, taille des sous-titres) s'écrivent pendant la correction, à l'e
 |---|---|
 | Couleurs, polices, sous-titres (skin, lignes, position) | `visual.*` selon le bloc D, puis `setup.styleChosen = true` |
 | « Je garde le noir et blanc » | `visual.stylePreset = "neutral"`, `setup.styleChosen = true` |
-| Visage plein écran ou split par défaut | `montage.defaultLayout` (`"faceplein"` ou `"split"`) |
+| Visage plein écran, split ou cartes posées sur le décor filmé par défaut | `montage.defaultLayout` (`"faceplein"`, `"split"` ou `"decor"`) |
 | Un mélange (ex. accroche en plein écran, le reste en split) | `montage.defaultLayout` = le cadrage majoritaire, et le mélange en préférence |
 | Cadrage du visage recalé pendant la correction | `montage.splitTransform` ou `montage.fullFaceTransform` / `fullFaceOrigin` (réglage technique : l'écrire dès qu'il est validé à l'image) |
 | Taille des sous-titres | `visual.captionsSize` (en px, la valeur validée à la correction) |

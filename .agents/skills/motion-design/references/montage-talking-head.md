@@ -107,7 +107,7 @@ une sous-comp isolée : un dossier `probe/` avec `index.html` = copie de la comp
 ## 1. La règle de format (le défaut vient de la config)
 
 Le cadrage de départ vient de `brand.config.json` → `montage.defaultLayout` (posé par le preset
-de style, ajustable au bloc F du setup). Deux valeurs :
+de style, ajustable au bloc F du setup). Trois valeurs :
 
 - **`"split"`** : chaque section démarre en **split-screen** —
   motion design en HAUT (**1080×920**), **visage en BAS**. Le cadrage du visage = `montage.splitTransform`.
@@ -115,10 +115,19 @@ de style, ajustable au bloc F du setup). Deux valeurs :
   cadrage = `montage.fullFaceTransform`), et le motion/les visuels se posent **PAR-DESSUS** le visage
   en **surimpression `background: transparent`** (jamais un panneau opaque qui coupe l'écran). On voit
   le créateur en continu ; les animations flottent près de sa tête.
+- **`"decor"`** : la **vidéo filmée reste entière**, décor compris, et les cartes, titres ou captures
+  se posent **par-dessus, en haut** : sections `decor` de `tools/sections.py` (sous-comp **1080×1920**
+  à fond **transparent**, posée sur la vidéo ; sous-titres juste sous les cartes, `Y_DECOR`). Cadrage =
+  `montage.decorTransform` / `decorOrigin` : sans réglage, la vidéo telle que filmée ; tête trop haute
+  pour laisser la place aux cartes → `"scale(1.5)"` autour de `"center top"` la fait descendre
+  (`tools/build_faces.py` prépare `visage-decor.mp4` en pleine résolution). C'est le format des Reels
+  « cartes au-dessus de la tête » (styles clonés, styles du catalogue) : jamais remplacé par un écran
+  partagé sur fond uni. C'est aussi la façon de poser des visuels sur la vidéo plein écran : une
+  section `face` n'a pas de sous-comp.
 
 **Dans les deux cas, le créateur dirige section par section** — il peut passer n'importe quelle
 section en : visage plein écran seul, visuel/motion plein écran seul (recouvre le visage), ou split.
-Formats techniques de section : `1080×920` (split) ou `1080×1920` (full). On commence TOUT sur le
+Formats techniques de section : `1080×920` (split) ou `1080×1920` (full, decor). On commence TOUT sur le
 `defaultLayout` choisi, puis on ajuste au fil des retours.
 
 > Ancien nom : `montage.splitByDefault` (booléen) a été remplacé par `montage.defaultLayout`. Si tu

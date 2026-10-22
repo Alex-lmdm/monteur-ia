@@ -448,3 +448,113 @@ test('reel.config.json cadre ce Reel et lui donne son propre style sans toucher 
   const ignore = (rel) => spawnSync('git', ['check-ignore', '-q', '--no-index', rel], { cwd: dir }).status;
   assert.deepEqual([ignore('reels/Proche · 2026-10-15/reel.config.json'), ignore('reels/Proche · 2026-10-15/exports/FINAL.mp4')], [1, 0]);
 });
+
+// ---------------------------------------------------------------------------
+// 5. Cartes sur le décor : la vidéo filmée reste plein cadre, les cartes se posent dessus
+// ---------------------------------------------------------------------------
+// Le format des Reels « cartes au-dessus de la tête » (style cloné ou style du catalogue) : jamais un
+// écran partagé sur un fond uni. Un Reel sans section « decor » garde exactement son montage d'avant.
+test('cadrage décor : la vidéo filmée passe sous les cartes, cadrée par reel.config.json ; sans décor, rien ne change', (t) => {
+  if (!outils(t, { pil: true, ffmpeg: true })) return;
+  const dir = maison(t);
+  const reel = nouveauReel(dir, 'Decor');
+  plan(reel, PRISES_HORS_IMAGES, { layout: LAYOUT_SPLIT_FULL_SPLIT });
+  python(reel, 'tools/build_master.py', '--write');
+  const avant = read(reel, 'index.html');
+  assert.doesNotMatch(avant, /<video id="decor/, 'sans section décor, aucun calque décor');
+
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
+    .replace(LAYOUT_SPLIT_FULL_SPLIT, '    ("s0", "split", [0]),\n    ("s1", "decor", [1, 2]),'));
+  // Visage trop haut pour laisser la place aux cartes : la vidéo agrandie depuis le haut le fait descendre.
+  // Le skin « ombre douce » et le texte secondaire (`muted`) sont des réglages valides d'un Reel.
+  write(reel, 'reel.config.json', { montage: { decorTransform: 'scale(1.5)' },
+    visual: { captionsSkin: 'soft', muted: '#555555' } });
+  const lu = (code) => JSON.parse(python(reel, '-c', `import json, sys; sys.path.insert(0, "tools"); ${code}`));
+  assert.equal(lu('from cadrage import crop_decor; from lieux import config; print(json.dumps(crop_decor(config()["montage"])))'),
+    '720:1280:180:0', 'scale(1.5) autour de « center top » : le haut du cadre, agrandi');
+  assert.deepEqual(lu('import brand_style; s = brand_style.style(); print(json.dumps([s.captions_skin, s.muted]))'), ['soft', '#555555']);
+
+  assert.match(python(reel, 'tools/build_faces.py'), /visage-decor\.mp4 : zone 720:1280:180:0 du rush, sous les cartes/);
+  assert.equal(execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height',
+    '-of', 'csv=p=0', path.join(reel, 'assets/video/visage-decor.mp4')], { encoding: 'utf8' }).trim(), '1080,1920');
+  python(reel, 'tools/build_master.py', '--write');
+  const master = read(reel, 'index.html');
+  // La vidéo filmée AVANT les sections (les cartes se peignent dessus), sur la fenêtre de la section,
+  // posée sans agrandissement ; la section est plein cadre, sur sa propre piste.
+  assert.ok(master.indexOf('<div class="face-decor">') < master.indexOf('===== SECTIONS ====='));
+  assert.match(master, /<video id="decor0" src="assets\/video\/visage-decor\.mp4"[^>]*data-start="2\.6\d+"/);
+  assert.match(master, /\.face-decor video \{[^}]*transform: none;/);
+  assert.match(master, /id="section-s1"[^>]*data-track-index="4" data-width="1080" data-height="1920"/);
+  fs.rmSync(path.join(reel, 'assets/video/visage-decor.mp4'));
+  python(reel, 'tools/build_master.py', '--write');
+  assert.match(read(reel, 'index.html'), /\.face-decor video \{[^}]*transform: scale\(1\.5\); transform-origin: center top;/,
+    'aperçu sans vidéo pré-cadrée : le cadrage du Reel');
+
+  // Les sous-titres de la section décor passent juste sous les cartes.
+  const { caps } = sousTitres(reel);
+  assert.deepEqual([...new Set(caps.map((c) => c.y))], [920, 760]);
+
+  // La synchro accepte ces réglages sans rien signaler et donne au Reel son skin.
+  const sortie = spawnSync(process.execPath, ['scripts/sync.mjs'], { cwd: dir, encoding: 'utf8' });
+  assert.doesNotMatch(sortie.stderr, /reel\.config\.json/);
+  const tokens = read(reel, 'brand/tokens.css');
+  assert.match(tokens, /skin CHOISI \(soft\)/);
+  assert.match(tokens, /--brand-muted: #555555;/);
+  assert.match(read(dir, 'brand/tokens.css'), /\.cap\.cap-skin-soft \{/, 'le skin reste disponible partout');
+});
+
+test('sous-titres mot à mot (--mots) : la voix telle que transcrite, ponctuation comprise ; sans l’option, le découpage écrit', (t) => {
+  if (!outils(t, { pil: true })) return;
+  const reel = nouveauReel(maison(t));
+  plan(reel, PRISES_HORS_IMAGES);
+  const ecrit = sousTitres(reel).caps;
+  assert.equal(ecrit.length, 7, 'le découpage MANUAL');
+  const { caps } = sousTitres(reel, '--mots', '1');
+  assert.equal(caps.length, 16, 'un sous-titre par mot dit');
+  assert.deepEqual(caps.slice(0, 4).map((c) => c.texte), ['DÉSOLÉ', 'POUR', 'LES', 'GRAPHISTES,']);
+  assert.equal(image(caps[1].start), image(0.28), 'chaque mot part sur sa voix');
+  assert.equal(sousTitres(reel, '--mots', '2').caps.length, 8, '6, 6 et 4 mots : 3 + 3 + 2');
+  // Un signe que Whisper rend seul suit son mot ; --sans laisse une section sans sous-titres.
+  const mots = JSON.parse(read(reel, 'derush/exemple_words.json'));
+  mots.splice(6, 0, { w: '?', start: 1.3, end: 1.35, take: 0 });
+  write(reel, 'derush/exemple_words.json', mots);
+  assert.deepEqual(sousTitres(reel, '--mots', '1').caps.slice(4, 6).map((c) => c.texte), ['MAIS', 'CLAUDE ?']);
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
+    .replace('    ("exemple-section", "split", [0, 1, 2]),', '    ("s0-hook", "split", [0]),\n    ("s1", "split", [1, 2]),'));
+  const sans = sousTitres(reel, '--mots', '1', '--sans', 's0-hook').caps;
+  assert.equal(sans.length, 10, 'les 6 mots de l’accroche sans sous-titre');
+  assert.ok(sans.every((c) => c.start >= 2.6));
+  const refus = spawnSync('python3', ['tools/montage_captions.py', '--mots', '4'], { cwd: reel, encoding: 'utf8' });
+  assert.notEqual(refus.status, 0);
+  assert.match(refus.stderr, /--mots attend 1, 2 ou 3/);
+});
+
+// ---------------------------------------------------------------------------
+// 6. Reel Cloneur : le rythme qu'on voit (cartes comprises) et le contrôle côte à côte
+// ---------------------------------------------------------------------------
+// Une vidéo dont la carte du haut change à 1,5 s et 3 s sans coupe (le visage, en bas, ne bouge pas),
+// puis une vraie coupe à 4,5 s. L'ancien relevé ne voyait que la coupe : c'est le cas du Reel
+// « 10/10 Claude Skills » (8 coupes trouvées pour 16 changements d'image, essai du 21/10/2026).
+test('Reel Cloneur : un changement de carte sans coupe compte dans le rythme ; côte à côte, original et montage', (t) => {
+  if (!outils(t, { ffmpeg: true })) return;
+  const dir = maison(t);
+  const clone = path.join(dir, 'clones', 'essai');
+  fs.mkdirSync(clone, { recursive: true });
+  const carte = (x, quand) => `drawbox=x=${x}:y=70:w=120:h=60:color=0x202020@1:t=fill:enable='${quand}'`;
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=0x606060:s=360x640:r=30:d=6', '-vf',
+    ['drawbox=x=20:y=40:w=320:h=150:color=0xf0e8dc@1:t=fill', carte(40, 'lt(t,1.5)'), carte(200, 'between(t,1.5,3)'),
+      carte(120, 'gte(t,3)'), "drawbox=x=0:y=0:w=360:h=640:color=0x1060c0@1:t=fill:enable='gte(t,4.5)'"].join(','),
+    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', path.join(clone, 'media.mp4')]);
+  const [changements, coupes] = JSON.parse(python(path.join(dir, 'tools'), '-c', [
+    'import json, pathlib, sys', 'sys.argv = ["x"]', 'import cloner_reel as c',
+    `v = pathlib.Path(${JSON.stringify(path.join(clone, 'media.mp4'))})`,
+    'print(json.dumps([c.detecter_changements("ffmpeg", v, 6.0)[0], c.detecter_coupes("ffmpeg", v, 6.0)[0]]))'].join('\n')));
+  assert.deepEqual(changements.map((x) => Math.round(x * 10) / 10), [1.5, 3, 4.5]);
+  assert.ok(coupes.length < changements.length, 'les coupes franches seules ratent les cartes');
+
+  const sortie = python(dir, 'tools/cloner_reel.py', 'cote-a-cote', clone, path.join(clone, 'media.mp4'), '1.0', '2.0:5.0');
+  assert.match(sortie, /2 paires \(original à gauche, montage à droite\)/);
+  const paire = path.join(clone, 'kit/apercu/paire-002.00-005.00.jpg');
+  assert.equal(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', paire],
+    { encoding: 'utf8' }).trim(), '1080,960');
+});

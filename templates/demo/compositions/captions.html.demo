@@ -16,7 +16,7 @@
          généré depuis ton style (`/setup visuel`). Ne redéfinis rien ici : une règle en dur
          survivrait à un changement de style et casserait la cohérence de la vidéo.
          Pour essayer un autre skin sur cette compo seulement, ajoute une classe à un `.cap` :
-         cap-skin-block · cap-skin-outline · cap-skin-plate · cap-skin-shadow · cap-skin-underline -->
+         cap-skin-block · cap-skin-outline · cap-skin-plate · cap-skin-shadow · cap-skin-underline · cap-skin-soft -->
     <link rel="stylesheet" href="brand/fonts.css">
     <link rel="stylesheet" href="brand/tokens.css">
     <style>

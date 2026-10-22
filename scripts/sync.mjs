@@ -236,6 +236,10 @@ const CAPTION_SKINS = {
   padding: 0 0 12px;
   border-bottom: 8px solid var(--brand-accent);
   text-shadow: 0 2px 6px var(--brand-stroke);`,
+  soft: `  color: #ffffff;
+  background: none;
+  padding: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55), 0 0 3px rgba(0, 0, 0, 0.45);`,
 };
 
 function buildCaptionCss(skinName, look = {}, avertir = warn) {
@@ -677,7 +681,8 @@ function visualDuReel(dir, presetsFile = loadStylePresets(), avertir = warn) {
     return null;
   }
   const propre = {};
-  const connues = Object.keys(readJSON(path.join(ROOT, "brand.config.example.json")).visual ?? {});
+  // Les couleurs du style, `muted` compris, même quand le fichier d'exemple ne les liste pas toutes.
+  const connues = [...Object.keys(readJSON(path.join(ROOT, "brand.config.example.json")).visual ?? {}), ...COULEURS];
   for (const [cle, val] of Object.entries(reglages?.visual ?? {})) {
     if (val === undefined || val === null || val === "") continue;
     const ignore = (attendu) => avertir(`${rel(fichier)} : visual.${cle} « ${val} » ignoré (${attendu}).`);

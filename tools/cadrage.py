@@ -108,6 +108,17 @@ def crops(montage: dict) -> tuple[str, str]:
     return face, full
 
 
+def crop_decor(montage: dict):
+    """Zone du rush posée sous les cartes (sections « decor »), en pixels de base.mp4 ; None = la vidéo
+    entière, telle que filmée. Origine : celle du master (montage.decorOrigin, « center top » par défaut)."""
+    if montage.get("decorCrop"):
+        return montage["decorCrop"]
+    transform = montage.get("decorTransform")
+    if not transform or transform.strip() == "none":
+        return None
+    return crop_from_transform(transform, 0, montage.get("decorOrigin") or "center top")
+
+
 def probe(path):
     """(largeur, hauteur, color_transfer, durée) du flux vidéo."""
     out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",

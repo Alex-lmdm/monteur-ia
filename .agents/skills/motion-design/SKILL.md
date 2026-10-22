@@ -506,7 +506,7 @@ calées sur les timestamps. **Corriger les mots propres à ta niche mal transcri
 jargon → cf. tes homophones connus).
 ✅ *Critère* : chaque section a un `start`/`end` en secondes issu des timestamps, la liste couvre 100 %
 de la durée sans trou ni chevauchement, et le format de chaque section est décidé (cadrage de départ =
-`montage.defaultLayout` — `"split"` ou `"faceplein"` —, le créateur écarte du défaut section par
+`montage.defaultLayout` — `"split"`, `"faceplein"` ou `"decor"` —, le créateur écarte du défaut section par
 section — `references/montage-talking-head.md`).
 
 **Étape 3 — Transcoder la vidéo → `assets/video/base.mp4`.**

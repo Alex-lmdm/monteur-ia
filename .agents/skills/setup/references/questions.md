@@ -84,7 +84,7 @@ sonne faux. » On n'écrit qu'après OK.
 | D5 | « Police des titres ? » | `visual.fontDisplay` | celle du preset | Inter / Anton / ArchivoBlack livrées ; si autre → fichiers dans `assets/fonts/` + déclaration dans la table `fonts` de `templates/style-presets.json`. **Jamais Google Fonts en ligne** |
 | D6 | « Et pour le texte courant ? » | `visual.fontBody` | celle du preset | idem D5 |
 | D7 | « Pour les sous-titres ? C'est ce qui te rend reconnaissable le plus vite — si tu as ta police, c'est le moment. » | `visual.fontCaptions` | celle du preset | idem D5, **plus** : un `.ttf` de mesure (`measureFile`) est obligatoire, PIL ne lit pas le woff2 |
-| D8 | « Tes sous-titres, ils ressemblent à quoi ? » puis lister les 5 skins de `captionSkins` en une ligne chacun | `visual.captionsSkin` | celui du preset | `block`/`outline`/`plate`/`shadow`/`underline` |
+| D8 | « Tes sous-titres, ils ressemblent à quoi ? » puis lister les 6 skins de `captionSkins` en une ligne chacun | `visual.captionsSkin` | celui du preset | `block`/`outline`/`plate`/`shadow`/`underline`/`soft` |
 | D9 | « Sur 1 ou 2 lignes ? » | `visual.captionsLines` | `1` | `1` ou `2` |
 | D10 | « Où tu les places par défaut ? (jointure du split / centre-bas) » | `visual.captionsPosition` | celui du preset | libellé simple |
 | D11 | « Le style de ta section CTA ? (facultatif) » puis lister `ctaStyles` | `cta.style` | celui du preset | id existant |

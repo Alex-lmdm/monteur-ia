@@ -10,7 +10,9 @@ Usage (depuis le dossier du Reel) :
 Produit dans assets/video/ :
   - visage-split.mp4 : 1080x1920, le visage cadré dans la moitié basse (sous la jointure, y=920),
     le haut reste noir et caché par le clip-path du master ;
-  - visage-plein.mp4 : 1080x1920, le visage plein écran (sections « face »).
+  - visage-plein.mp4 : 1080x1920, le visage plein écran (sections « face ») ;
+  - visage-decor.mp4 : 1080x1920, la vidéo filmée posée sous les cartes (sections « decor »), entière
+    ou cadrée par montage.decorTransform.
 
 Pourquoi des vidéos plein cadre : une <video> qui ne couvre qu'une partie de l'écran peut ne pas
 se peindre dans le studio (bug « carré noir », motion-design/references/visage-carre-noir.md).
@@ -28,13 +30,14 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import sections  # noqa: E402
-from cadrage import crops, face_source, scale_crop  # noqa: E402
+from cadrage import crop_decor, crops, face_source, scale_crop  # noqa: E402
 from lieux import config  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 BASE = ROOT / "assets/video/base.mp4"
 SPLIT_OUT = ROOT / "assets/video/visage-split.mp4"
 PLEIN_OUT = ROOT / "assets/video/visage-plein.mp4"
+DECOR_OUT = ROOT / "assets/video/visage-decor.mp4"
 # Fichier de travail quasi sans perte : il est ré-encodé une seule fois, au rendu final.
 ENCODE = ["-c:v", "libx264", "-crf", "12", "-preset", "medium", "-pix_fmt", "yuv420p",
           "-an", "-movflags", "+faststart"]
@@ -54,7 +57,10 @@ def main() -> None:
     if not BASE.exists():
         sys.exit("ERREUR : assets/video/base.mp4 introuvable (fais d'abord le dérush).")
     split_wins, plein_wins = sections.face_windows(), sections.facefull_windows()
-    face_crop, full_crop = crops(config().get("montage") or {})
+    decor_wins = getattr(sections, "decor_windows", lambda: [])()   # un sections.py d'avant n'en a pas
+    montage = config().get("montage") or {}
+    face_crop, full_crop = crops(montage)
+    decor_crop = crop_decor(montage)
     src, k, repli = face_source(ROOT, BASE, sections.CUTS, sections.DURATION)
     w, h = round(1080 * k), round(1920 * k)
     print(f"visage lu dans : {src.relative_to(ROOT)} ({w}x{h})")
@@ -73,6 +79,12 @@ def main() -> None:
         print(f"• {PLEIN_OUT.relative_to(ROOT)} : zone {zone} du rush, visage plein écran")
     else:
         PLEIN_OUT.unlink(missing_ok=True)
+    if decor_wins:
+        zone = scale_crop(decor_crop, k, w, h) if decor_crop else f"{w}:{h}:0:0"
+        encode(src, f"crop={zone},scale=1080:1920:flags=lanczos,setsar=1", DECOR_OUT)
+        print(f"• {DECOR_OUT.relative_to(ROOT)} : zone {zone} du rush, sous les cartes")
+    else:
+        DECOR_OUT.unlink(missing_ok=True)
     print("Ensuite : python3 tools/build_master.py --write (le master pose ces vidéos sans les agrandir).")
 
 

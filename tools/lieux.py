@@ -67,7 +67,8 @@ def reel() -> pathlib.Path:
 
 
 REGLAGES_REEL = "reel.config.json"
-CLES_REEL = {"montage": ("splitTransform", "faceCrop", "fullFaceTransform", "fullFaceOrigin", "fullFaceCrop")}
+CLES_REEL = {"montage": ("splitTransform", "faceCrop", "fullFaceTransform", "fullFaceOrigin", "fullFaceCrop",
+                         "decorTransform", "decorOrigin", "decorCrop")}
 # `visual` : tout le style de CE Reel (couleurs, polices, sous-titres), les mêmes clés que le `visual`
 # de brand.config.example.json, validées comme dans scripts/sync.mjs (visualDuReel) : une valeur que
 # la synchro ignore est ignorée ici aussi, pour que les outils et le rendu voient le même style.
@@ -81,7 +82,8 @@ def _visual_valide(brut: dict) -> dict:
             return json.loads((MAISON / nom).read_text(encoding="utf-8")) if MAISON else {}
         except (OSError, ValueError):
             return {}
-    connues = (lire("brand.config.example.json").get("visual") or {}).keys()
+    # Les couleurs du style, `muted` compris, même quand le fichier d'exemple ne les liste pas toutes.
+    connues = set((lire("brand.config.example.json").get("visual") or {}).keys()) | set(COULEURS_REEL)
     presets = lire("templates/style-presets.json")
     out = {}
     for cle, val in brut.items():
@@ -142,6 +144,8 @@ def avec_reglages_reel(cfg: dict, dossier=None) -> dict:
         montage.pop("faceCrop", None)
     if ("fullFaceTransform" in r or "fullFaceOrigin" in r) and "fullFaceCrop" not in r:
         montage.pop("fullFaceCrop", None)
+    if ("decorTransform" in r or "decorOrigin" in r) and "decorCrop" not in r:
+        montage.pop("decorCrop", None)
     return {**cfg, "montage": {**montage, **r}, "visual": {**(cfg.get("visual") or {}), **propres.get("visual", {})}}
 
 

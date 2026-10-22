@@ -40,8 +40,10 @@ laquelle suivre. Le message du §3 dit sur combien de vidéos la liste s'appuie.
 
 Lis, dans cet ordre :
 1. `meta.json` (plateforme, compte ; `musique` = le son déclaré par la plateforme, s'il y en a un) ;
-2. `style.json` : `rythme` (plans, coupes par tranche de 5 s), `couleurs` (couleurs vives qui
-   reviennent, avec leur valeur ; allure claire ou sombre, vive ou sobre) ;
+2. `shots.json` → `changements` (chaque changement d'image mesuré : coupe, carte qui en remplace
+   une autre, titre qui arrive ; `changementsParMinute`, `changementMedian`) et `style.json` :
+   `rythme` (plans, coupes par tranche de 5 s), `couleurs` (couleurs vives qui reviennent, avec leur
+   valeur ; allure claire ou sombre, vive ou sobre) ;
 3. les images comme au §1 du skill : les 5 premières secondes une par une, puis chaque planche ;
 4. **chaque rafale** (`style.json` → `rafales`) : des images rapprochées, l'heure en haut à gauche.
    « sous-titres » : 8 images en 1,2 s pendant une phrase (les paroles sont dans la rafale) ; tu y
@@ -77,16 +79,36 @@ Ce que Monteur IA reproduit, et ce qu'il approche seulement :
 |---|---|
 | Couleurs de l'habillage (fond, accent, texte) | ses couleurs, à la valeur près, pour une vidéo ou pour toutes |
 | Police des sous-titres | Inter, Anton ou Archivo Black livrées ; la police exacte si le client fournit le fichier (skill `setup`, bloc D3) |
-| Allure des sous-titres | 5 apparences (bandeau plein, contour, plaque arrondie, ombre portée, souligné), taille, majuscules ou non, graisse, interligne, 1 ou 2 lignes, position |
-| Sous-titre mot par mot, mot surligné quand il est prononcé, en escalier… | se fabrique pour la vidéo, sur le minutage de chaque mot |
-| Cadrage (visage plein écran, écran partagé, alternance) | les deux cadrages et leur alternance |
+| Allure des sous-titres | 6 apparences (bandeau plein, contour, plaque arrondie, ombre portée, souligné, ombre douce), taille, majuscules ou non, graisse, interligne, 1 ou 2 lignes, position |
+| Un, deux ou trois mots par sous-titre, ponctuation gardée | `python3 tools/montage_captions.py --mots 1` (ou 2, 3) : la voix telle que transcrite |
+| Mot surligné quand il est prononcé, en escalier… | se fabrique pour la vidéo, sur le minutage de chaque mot |
+| Cadrage : visage plein écran, écran partagé, cartes posées sur le décor filmé, alternance | les trois cadrages (sections `face`, `split`, `decor`) et leur alternance ; tête du client trop haute pour les cartes : sa vidéo recadrée (§4) |
 | Zooms sur le visage | zooms animés (préférence) |
 | Rythme des coupes, silences retirés | coupes plus ou moins serrées (marges du dérush) et préférence de rythme |
 | Animations, schémas, logos, textes à l'écran, images d'illustration | motion design de Monteur IA (préférences : densité, type, place) |
 | Gros titres plein écran | se font : le réglage de base les évite, une demande ou un style cloné le remplace |
 | Transitions | coupe sèche, glissé rapide, fondu court de base ; toute autre (flash, flou, zoom brusque) se fabrique |
-| Musique de fond, bruitages | sa musique (fichier fourni) et ses bruitages, si le client confirme qu'il y en a |
+| Musique de fond, bruitages | sa musique (fichier fourni) et ses bruitages, si le client confirme qu'il y en a ; s'il s'en remet à toi : aucune musique |
 | Étalonnage de l'image (teinte, grain, contraste) | jamais par défaut : le monteur ne retouche pas l'image filmée, sauf si le client le demande pour une vidéo |
+
+### Les pièces signature : le kit du style
+
+Ce qu'on reconnaît d'un style tient souvent en 2 à 4 **pièces** : une carte titre, une carte
+schéma, le bandeau de l'accroche, l'allure des sous-titres. Une fiche les décrit ; un kit les garde
+**construites**, prêtes à resservir. Note-les dans `style.md` (« Les gestes signature »). Elles se
+construisent au premier montage dans ce style (§4) : chacune une fois, puis comparée à l'original
+avant d'être remplie avec le contenu du client, puis rangée dans `clones/<dossier>/kit/` :
+
+```
+clones/<dossier>/kit/
+  compositions/<piece>.html   la pièce, construite comme une section de Reel (couleurs et polices
+                              en var(--brand-*), textes à remplacer signalés en commentaire)
+  reel.config.json            le `visual` et le cadrage (`montage`) du style, à poser dans un Reel
+  apercu/                     les paires référence / montage du contrôle (outil « cote-a-cote »)
+```
+
+Un style du catalogue de Monteur IA est un kit déjà construit et contrôlé, livré avec le produit :
+on l'applique comme un style cloné, sans refaire ce travail.
 
 ---
 
@@ -103,6 +125,10 @@ D'abord le fichier, puis le message, sa version courte. Dans cet ordre :
    ligne par point, avec l'équivalent.
 4. **Le son**, une question : « Je n'entends pas la vidéo : il y a une musique de fond ? Des
    bruitages (un souffle sur les changements de plan, un « pop » quand un texte apparaît) ? »
+   S'il s'en remet à toi (« comme l'original », « je ne sais pas ») : ni musique ni bruitages.
+   Dis-le en une ligne : « Je pars sans musique ni bruitages ; si l'original en a, dis-le-moi et
+   envoie-moi ta musique. » Jamais de « l'original n'a pas de
+   musique » : tu ne l'as pas entendu.
 5. **La suite**, selon ce qu'il a dit :
    - **Il a glissé sa vidéo brute avec** (« monte ma vidéo dans ce style ») : « Je monte ta vidéo
      dans ce style, pour elle seulement : tes réglages ne bougent pas. Quand tu l'auras validée, je
@@ -133,16 +159,48 @@ suivantes.
    suis le skill reel-cloneur, references/mode-style.md, §4, pour toutes mes vidéos."` (ajoute
    `--ouvrir` s'il travaille dans l'app HyperFrames ; le chemin du Reel créé s'affiche). Le chemin
    de la fiche est écrit vu depuis le Reel (`reels/<nom>/`, deux dossiers sous le dossier Monteur IA).
-2. Écris à la racine de ce Reel un **`reel.config.json`** avec le `visual` de la fiche (couleurs,
-   polices, allure, taille, casse et position des sous-titres : les mêmes clés que dans
-   `brand.config.json`), puis `npm run sync` depuis le dossier Monteur IA : ce Reel, et lui seul, a
-   ce style. Police à une seule graisse (Anton, Archivo Black…) : `captionsWeight` = `"auto"`, sinon
-   le navigateur la grossit d'un faux gras. Tout le reste (rythme, cadrage, zooms, animations, transitions, sons) est dans la fiche,
+2. Écris à la racine de ce Reel un **`reel.config.json`** : celui du kit s'il existe, sinon le
+   `visual` de la fiche (couleurs, polices, allure, taille, casse et position des sous-titres : les
+   mêmes clés que dans `brand.config.json`) et son recadrage (`montage.decorTransform`, ci-dessous ;
+   le cadrage de chaque section, lui, s'écrit dans `tools/sections.py`), puis
+   `npm run sync` depuis le dossier Monteur IA : ce Reel, et lui seul, a ce style. Police à une
+   seule graisse (Anton, Archivo Black…) : `captionsWeight` = `"auto"`, sinon le navigateur la
+   grossit d'un faux gras. Tout le reste (rythme, animations, transitions, sons) est dans la fiche,
    que le montage de ce Reel suit.
-3. Le montage se fait comme d'habitude dans ce Reel, avec ses validations. Ce qui sort des réglages
-   de Monteur IA (sous-titres mot par mot ou karaoké, transition marquée, gros titres) se fabrique
-   pour ce Reel (skill `motion-design`, `references/sous-titres.md`).
-4. Vidéo validée : « On garde ce style pour tes prochaines vidéos ? ». Oui : « Pour toutes ses vidéos » ci-dessous, avec les
+3. **Le cadrage est celui de l'original.** Cartes posées sur le décor filmé : sections `decor`
+   (`tools/sections.py`), la vidéo du client reste entière sous les cartes. **Jamais un écran partagé
+   sur un fond uni à la place** : c'est ce qu'on reconnaît en premier. Sa tête est plus haute que
+   dans l'original et les cartes la couvriraient : recadre sa vidéo depuis le haut, dans
+   `reel.config.json` → `montage.decorTransform` = `"scale(S)"`, S = hauteur du haut de la tête dans
+   l'original ÷ dans sa vidéo (en % de la hauteur, sur une image de chaque), entre 1,2 et 1,8.
+   Vérifie sur un snapshot (tête entière, cartes au-dessus) ; au-delà de 1,8 l'image perd en
+   netteté : garde 1,8 et réduis un peu les cartes.
+4. **La fiche passe avant les règles de base.** Ce Reel suit `style.md` même là où le montage de
+   base dit autre chose (motion-design §0 « pas de gros titre », `sous-titres.md` « 2 à 3 mots sans
+   ponctuation », une police unique imposée par un skill de marque, une préférence du client sur le
+   même point). Ses demandes pendant ce montage passent avant la fiche.
+5. **Les pièces signature** (§2, le kit) : s'il y a un kit, copie ses `compositions/` dans le Reel
+   et remplis-les. Sinon, construis chaque pièce une fois, compare-la à l'original avant de la
+   remplir (`python3 tools/cloner_reel.py cote-a-cote clones/<dossier> <rendu ou snapshot.png>
+   <t original>[:<t rendu>] …` ; un `npx hyperframes snapshot` de la pièce suffit : place, taille,
+   police, couleurs ; deux allers-retours au plus), puis range-la dans
+   `clones/<dossier>/kit/compositions/` avec le `reel.config.json` du Reel.
+6. **Ce que l'original affiche et que sa vidéo ne dit pas** (un prix, un chiffre, un nom sur une
+   carte) : demande-le en une seule question groupée avant de construire les cartes. Sans réponse,
+   une carte sans chiffre plutôt qu'un chiffre inventé ou pris dans un autre de ses Reels.
+7. Le montage se fait comme d'habitude dans ce Reel, avec ses validations. Ce qui sort des réglages
+   de Monteur IA (sous-titres karaoké, transition marquée, gros titres) se fabrique pour ce Reel
+   (skill `motion-design`, `references/sous-titres.md`) ; un, deux ou trois mots par sous-titre :
+   `python3 tools/montage_captions.py --mots 1` (ou 2, 3) ; une section sans sous-titres (une
+   accroche qui porte déjà son texte) : `--sans <id>`. Nettoyage de la voix : proposé comme
+   d'habitude ; s'il t'a dit de tout faire sans lui, voix remise au niveau, nettoyage proposé à la
+   livraison, comme à la première vidéo.
+8. **Contrôle avant de livrer** : `python3 tools/cloner_reel.py <vidéo exportée> --style`, puis
+   compare ses `changementsParMinuteParBande` à ceux de l'original, sur le tiers de l'image où vit
+   le style (le haut pour des cartes au-dessus de la tête) : un écart de plus d'un quart, une règle
+   a été oubliée. Le bas de l'image bouge avec les mains (plus encore après un recadrage) : il ne
+   compte pas. Puis 3 ou 4 paires `cote-a-cote` (accroche, chaque pièce signature, fin).
+9. Vidéo validée : « On garde ce style pour tes prochaines vidéos ? ». Oui : « Pour toutes ses vidéos » ci-dessous, avec les
    retouches qu'il a demandées pendant le montage. Non : rien d'autre, il reste sur ce Reel.
 
 **Pour toutes ses vidéos** (sur son oui, ou d'emblée s'il a dit « garde-le »).
@@ -159,9 +217,13 @@ suivantes.
      chacune (les valeurs fines vont dans la fiche), qui remplacent les anciennes sur le même sujet
      (jamais deux consignes contraires) ; les préférences sont relues à chaque conversation et la
      place y est comptée ;
-   - le détail complet : copie `style.md` dans **`brand/style-montage.md`** (il remplace l'ancien)
-     et ajoute une préférence : « Style de montage cloné : détail dans brand/style-montage.md du
-     dossier Monteur IA, à relire avant chaque montage ».
+   - le détail complet : copie `style.md` dans **`brand/style-montage.md`** (il remplace l'ancien),
+     le kit s'il existe dans **`brand/style-montage/`** (ses `compositions/` et son
+     `reel.config.json` ; il remplace l'ancien), et ajoute une préférence : « Style de montage
+     cloné : détail dans brand/style-montage.md du dossier Monteur IA (pièces dans
+     brand/style-montage/), à relire avant chaque montage » ;
+   - cadrage sur le décor : `montage.defaultLayout` = `"decor"`, et son recadrage
+     (`decorTransform`) dans `montage` s'il en fallait un.
 3. `setup.styleChosen = true`. S'il n'a encore monté aucune vidéo (`setup.firstVideoDone` n'est
    pas `true`), passe-le à `true` : sa première vidéo se montera directement dans ce style, avec
    les validations habituelles, au lieu des réglages de base.

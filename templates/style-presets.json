@@ -14,7 +14,8 @@
     "outline": "Texte seul avec un gros contour sombre, sans fond. Le style le plus courant en short-form.",
     "plate": "Plaque sombre arrondie, légèrement translucide, texte clair. Discret, se pose sur n'importe quelle image.",
     "shadow": "Texte clair avec une ombre portée dure décalée dans l'accent. Pas de fond.",
-    "underline": "Texte clair souligné d'une barre pleine dans l'accent. Pas de fond."
+    "underline": "Texte clair souligné d'une barre pleine dans l'accent. Pas de fond.",
+    "soft": "Texte blanc avec une ombre douce, sans fond ni contour. Le plus discret, posé directement sur la vidéo."
   },
 
   "ctaStyles": {

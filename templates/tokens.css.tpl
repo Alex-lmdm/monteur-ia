@@ -149,7 +149,7 @@
 /* ==========================================================================
    SOUS-TITRES — base commune + skin actif
 
-   `.cap` porte le skin CHOISI ({{CAPTIONS_SKIN}}). Les 5 skins restent disponibles
+   `.cap` porte le skin CHOISI ({{CAPTIONS_SKIN}}). Les 6 skins restent disponibles
    en classes `.cap-skin-<nom>` : pour en essayer un autre sur une compo, ajoute la
    classe. Pour changer le défaut de toutes tes vidéos : `/setup visuel`.
    ========================================================================== */
@@ -171,7 +171,7 @@
 /* Skin actif (injecté depuis le style choisi) */
 {{CAPTIONS_SKIN_ACTIVE_CSS}}
 
-/* Les 5 skins, nommés — pour override ponctuel sur une compo */
+/* Les 6 skins, nommés — pour override ponctuel sur une compo */
 {{CAPTIONS_SKINS_ALL_CSS}}
 
 /* ==========================================================================

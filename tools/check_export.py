@@ -71,9 +71,11 @@ for _flux in (sys.stdout, sys.stderr):
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MOV = ROOT / "work/overlay.mov"
 FINAL = ROOT / "exports/FINAL.mp4"
-VISAGES = {"split": ROOT / "assets/video/visage-split.mp4", "face": ROOT / "assets/video/visage-plein.mp4"}
-# Zone du visage comparee, a l'ecart des sous-titres : sous la jointure en split, le haut en plein ecran.
-ZONES = {"split": (0, 1100, 1080, 1920), "face": (0, 0, 1080, 1050)}
+VISAGES = {"split": ROOT / "assets/video/visage-split.mp4", "face": ROOT / "assets/video/visage-plein.mp4",
+           "decor": ROOT / "assets/video/visage-decor.mp4"}
+# Zone du visage comparee, a l'ecart des sous-titres : sous la jointure en split, le haut en plein ecran,
+# sous les cartes et les sous-titres quand la video filmee est posee sous les cartes (decor).
+ZONES = {"split": (0, 1100, 1080, 1920), "face": (0, 0, 1080, 1050), "decor": (0, 1100, 1080, 1920)}
 TOLERANCE_LUFS = 1.0
 
 

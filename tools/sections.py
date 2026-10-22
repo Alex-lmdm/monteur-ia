@@ -51,6 +51,11 @@ DURATION = round(image(CUTS["duration"]), 5)   # duree du montage : un nombre en
 #     face   -> VISAGE plein ecran, aucun motion (pas de compositions/<id>.html a creer).
 #               Sert a casser le rythme : on enleve tout le decor et on revient sur toi.
 #               Cadrage = brand.config.json -> montage.fullFaceTransform (calibre par /setup).
+#     decor  -> la VIDEO FILMEE plein ecran, decor compris, et la sous-composition PAR-DESSUS
+#               (fond transparent : cartes, titres, captures posees sur le decor, en haut). C'est
+#               le format des Reels « cartes au-dessus de la tete » : jamais un ecran partage.
+#               Cadrage = montage.decorTransform / decorOrigin (sans reglage : la video telle que
+#               filmee ; visage trop haut -> scale(1.5) autour de « center top » le fait descendre).
 #
 #   {"media": "fichier.mp4"} -> la section n'est PAS une sous-composition : c'est une <video>
 #   posee directement dans le master (couche video NATIVE, compositee ensuite par ffmpeg).
@@ -83,6 +88,7 @@ Y_FACE = 1140    # visage plein ecran : un peu SOUS le centre, sinon le sous-tit
 Y_FULL = 1500    # sous la fenetre plein ecran (motion / images)
 Y_MEDIA = 1100   # b-roll plein ecran : juste SOUS le milieu. A 1500 le sous-titre tombe sur le
                  # bas de l'image (souvent la partie inutile : bureau, clavier, decor).
+Y_DECOR = 760    # cartes sur le decor : juste SOUS les cartes du haut, au-dessus de la tete.
 
 
 def sections():
@@ -97,6 +103,8 @@ def sections():
             y = Y_SPLIT
         elif fmt == "face":
             y = Y_FACE
+        elif fmt == "decor":
+            y = Y_DECOR
         else:
             y = Y_MEDIA if media else Y_FULL
         out.append({"id": sid, "fmt": fmt, "takes": idx, "media": media,
@@ -136,6 +144,11 @@ def facefull_windows():
     return _merge_windows("face")
 
 
+def decor_windows():
+    """Fenetres video filmee plein ecran SOUS les cartes (sections 'decor'), contigues fusionnees."""
+    return _merge_windows("decor")
+
+
 if __name__ == "__main__":
     for s in sections():
         print(f'{s["id"]:<16} {s["fmt"]:<5} {s["start"]:6.3f} -> {s["end"]:6.3f}  '
@@ -147,4 +160,9 @@ if __name__ == "__main__":
     if ff:
         print("fenetres visage (plein ecran) :")
         for st, d in ff:
+            print(f"  {st:6.3f}  +{d:.3f}")
+    dd = decor_windows()
+    if dd:
+        print("fenetres decor (video plein ecran sous les cartes) :")
+        for st, d in dd:
             print(f"  {st:6.3f}  +{d:.3f}")

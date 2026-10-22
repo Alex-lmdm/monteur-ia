@@ -10,10 +10,13 @@
 sous-titres charge `brand/fonts.css` + `brand/tokens.css`, pose `class="cap"`, et c'est tout ;
 chaque sous-titre arrive d'un bloc.
 
-- Police : `visual.fontCaptions` · Apparence : `visual.captionsSkin`, parmi **5 skins** —
+- Police : `visual.fontCaptions` · Apparence : `visual.captionsSkin`, parmi **6 skins** —
   `block` (fond plein dans l'accent), `outline` (contour, sans fond), `plate` (plaque arrondie),
-  `shadow` (ombre portée), `underline` (souligné). Description de chacun dans `captionSkins` de
-  `templates/style-presets.json`.
+  `shadow` (ombre portée), `underline` (souligné), `soft` (texte blanc, ombre douce). Description de
+  chacun dans `captionSkins` de `templates/style-presets.json`.
+- **Un Reel monté dans un style cloné ou un style du catalogue** suit la règle de sa fiche, même
+  si elle contredit ce fichier (un mot à la fois, ponctuation gardée…) : `python3
+  tools/montage_captions.py --mots 1` (ou 2, 3) découpe la voix telle que transcrite.
 - Nombre de lignes : `visual.captionsLines` (défaut 1) · Taille : `--brand-cap-size` = `visual.captionsSize` (défaut 50 px ; `montage_captions.py` mesure la largeur à cette taille).
 - Casse, graisse, interligne, marge, encre : `visual.captionsCase` / `captionsWeight` / `captionsLineHeight`
   / `captionsPadding` / `captionsInk` (détail : skill setup, bloc D). En `asis`, `MANUAL` s'écrit avec
