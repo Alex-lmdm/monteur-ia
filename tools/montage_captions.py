@@ -118,7 +118,9 @@ PHRASES = [{'start': t['start'], 'end': t['end']} for t in TAKES]
 
 # SECTIONS = derivees de sections (meme source que le master) -> jamais desynchronisees
 SECTIONS = [(x['start'], x['y']) for x in SEC]
-BOUNDS = [s[0] for s in SECTIONS]   # 0 compris : la 1re image du Reel porte deja un sous-titre
+# 0 compris : la 1re image du Reel porte deja un sous-titre. Jamais le debut d'une section --sans : le
+# dernier mot de la section d'avant y serait accroche et resterait affiche sur toute la section.
+BOUNDS = [x['start'] for x in SEC if x['id'] not in SANS]
 
 # --- timing : sur les VRAIS MOTS si <video>_words.json existe, sinon approximation ---
 # Le prorata de caracteres DERIVE : les premiers chunks durent trop et tous les suivants
@@ -144,10 +146,11 @@ if MOTS:
             if any(c.isalnum() for c in m):
                 dits.append(avant + m)
                 avant = ""
-            elif m in ("«", "(", "[", "“", "‘") or not dits:     # un signe qui ouvre : avec le mot suivant
+            elif m in ("«", "(", "[", "“", "‘"):                  # un signe qui ouvre : avec le mot suivant
                 avant += m + (" " if m == "«" else "")
-            else:                                               # un signe seul : avec son mot
+            elif dits:                                          # un signe seul : avec son mot
                 dits[-1] += (" " if m in ("?", "!", ":", ";", "»") else "") + m
+            # un signe qui ferme en tête de phrase (la fin de la phrase d'avant) : on le laisse
         MANUAL.append([" ".join(dits[i:i + MOTS]) for i in range(0, len(dits), MOTS)])
 assert len(MANUAL) == len(PHRASES), f"MANUAL={len(MANUAL)} != phrases={len(PHRASES)}"
 
@@ -239,6 +242,8 @@ for B in BOUNDS:
     if abs(caps[i]['start'] - B) < 0.6:
         caps[i]['start'] = B
 caps.sort(key=lambda c: c['start'])
+if SANS:
+    caps = [c for c in caps if not any(x["id"] in SANS and x["start"] - 1e-6 <= c["start"] < x["end"] for x in SEC)]
 
 # 2) fins recalculees (timing continu), BORNEES A LA FIN DE LA SECTION.
 #    Sans cette borne, le dernier sous-titre d'une section reste affiche sur la suivante :

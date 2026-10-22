@@ -73,9 +73,11 @@ MOV = ROOT / "work/overlay.mov"
 FINAL = ROOT / "exports/FINAL.mp4"
 VISAGES = {"split": ROOT / "assets/video/visage-split.mp4", "face": ROOT / "assets/video/visage-plein.mp4",
            "decor": ROOT / "assets/video/visage-decor.mp4"}
-# Zone du visage comparee, a l'ecart des sous-titres : sous la jointure en split, le haut en plein ecran,
-# sous les cartes et les sous-titres quand la video filmee est posee sous les cartes (decor).
-ZONES = {"split": (0, 1100, 1080, 1920), "face": (0, 0, 1080, 1050), "decor": (0, 1100, 1080, 1920)}
+# Zone du visage comparee, a l'ecart des sous-titres : sous la jointure en split, le haut en plein ecran.
+# Sous les cartes (decor), une piece peut couvrir le buste ou le haut : on garde la meilleure de deux zones,
+# le milieu (la tete) et le bas (le buste), il suffit que la video filmee y soit.
+ZONES = {"split": [(0, 1100, 1080, 1920)], "face": [(0, 0, 1080, 1050)],
+         "decor": [(0, 700, 1080, 1300), (0, 1100, 1080, 1920)]}
 TOLERANCE_LUFS = 1.0
 
 
@@ -139,14 +141,14 @@ def verifier_final(mp4, finalise=False):
         if s["fmt"] not in VISAGES or s.get("media"):
             continue
         t = round(s["start"] + s["dur"] * 0.5, 2)
-        zone = ZONES[s["fmt"]]
         if not VISAGES[s["fmt"]].exists():
             print(f"   {s['id']:<16} visage lu dans base.mp4 agrandie (moins net) : lance python3 tools/build_faces.py "
                   "puis python3 tools/build_master.py --write")
             continue
-        image = grab(mp4, t, "RGB").crop(zone)
+        image = grab(mp4, t, "RGB")
+        reference = {k: grab(VISAGES[s["fmt"]], round(t + k / 30, 4), "RGB") for k in (-1, 0, 1)}
         # A une image pres : la ressemblance juge la presence et la nettete, l'ecart la synchro.
-        scores = {k: ssim(image, grab(VISAGES[s["fmt"]], round(t + k / 30, 4), "RGB").crop(zone)) for k in (-1, 0, 1)}
+        scores = {k: max(ssim(image.crop(z), ref.crop(z)) for z in ZONES[s["fmt"]]) for k, ref in reference.items()}
         score = max(scores.values())
         decalages.append(max(scores, key=scores.get) if score - scores[0] > 0.01 else 0)
         ok = score >= 0.85
@@ -168,9 +170,16 @@ def verifier_final(mp4, finalise=False):
         px = list(band.getdata())
         moy = sum(px) / len(px)
         ecart = (sum((p - moy) ** 2 for p in px) / len(px)) ** 0.5
-        ok = ecart < 12
+        # Une section qui s'ouvre deja pleine (un style qui coupe directement sur un ecran) : ses timelines
+        # tournent si la bande bouge ensuite. Une section figee de bout en bout reste signalee.
+        bouge = 0.0
+        if ecart >= 12:
+            plus_tard = grab(mp4, round(s["start"] + min(0.9, s["dur"] * 0.6), 2), "L").crop((200, 900, 900, 1200))
+            bouge = sum(abs(a - b) for a, b in zip(px, plus_tard.getdata())) / len(px)
+        ok = ecart < 12 or bouge >= 2
         ko += not ok
-        print(f"   {s['id']:<16} bande centrale ecart-type {ecart:5.1f}  {'OK' if ok else '!! JS MUET (elements visibles des le debut)'}")
+        detail = f"bande centrale ecart-type {ecart:5.1f}" + (f", mouvement {bouge:4.1f}" if ecart >= 12 else "")
+        print(f"   {s['id']:<16} {detail}  {'OK' if ok else '!! JS MUET (elements visibles des le debut, rien ne bouge)'}")
 
     lufs, crete = niveau_sonore(mp4)
     lufs = -99.0 if lufs is None else lufs

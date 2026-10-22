@@ -123,7 +123,7 @@ def _caption_size(value) -> int:
         size = round(float(value))
     except (TypeError, ValueError):
         return 50
-    return size if 30 <= size <= 100 else 50
+    return size if 30 <= size <= 160 else 50
 
 
 def _caption_case(value) -> str:

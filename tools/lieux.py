@@ -92,7 +92,7 @@ def _visual_valide(brut: dict) -> dict:
             continue
         if cle == "captionsSize":
             try:
-                ok = 30 <= float(val) <= 100
+                ok = 30 <= float(val) <= 160
             except (TypeError, ValueError):
                 ok = False
         elif cle in COULEURS_REEL:

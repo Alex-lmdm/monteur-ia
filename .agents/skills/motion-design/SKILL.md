@@ -473,8 +473,11 @@ animations (GSAP, CSS, Anime), prendre des images à des instants choisis (débu
 fin de chaque animation), puis les regarder réellement :
 
 ```bash
-npx hyperframes snapshot --at 0.3,1.2,2.5
+npx hyperframes snapshot --at 0.3,1.2,2.5 --describe false
 ```
+
+`--describe false` toujours : sans lui, une clé Gemini présente sur l'ordinateur (`GEMINI_API_KEY`)
+fait analyser chaque image par un service payant.
 
 - Chaque tween tombe sur le bon temps de la voix.
 - Un élément resté figé d'une image à l'autre = bug silencieux à corriger. La console du

@@ -630,7 +630,9 @@ def detecter_coupes(ffmpeg: str, video: pathlib.Path, duree: float):
 # milieu, bas), les sauts nets : une différence avec l'image d'avant bien au-dessus de ses voisines.
 BANDES = (("haut", 0), ("milieu", 1), ("bas", 2))
 SAUT_LARGEUR, SAUT_HAUTEUR = 64, 72          # image réduite, 24 lignes par bande
-SAUT_MIN, SAUT_FOIS = 6.0, 4.0               # un saut : au moins 6 niveaux de gris, 4 fois ses voisines
+# Un saut : au moins 4 niveaux de gris (une carte claire sur un mur clair change peu : 6 en ratait la
+# moitié, essai du 22/10/2026), et 4 fois ses voisines.
+SAUT_MIN, SAUT_FOIS = 4.0, 4.0
 
 
 def detecter_changements(ffmpeg: str, video: pathlib.Path, duree: float, fps: int = 30):

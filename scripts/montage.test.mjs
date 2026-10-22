@@ -519,11 +519,19 @@ test('sous-titres mot à mot (--mots) : la voix telle que transcrite, ponctuatio
   mots.splice(6, 0, { w: '?', start: 1.3, end: 1.35, take: 0 });
   write(reel, 'derush/exemple_words.json', mots);
   assert.deepEqual(sousTitres(reel, '--mots', '1').caps.slice(4, 6).map((c) => c.texte), ['MAIS', 'CLAUDE ?']);
+  mots.splice(7, 0, { w: '?', start: 2.69, end: 2.7, take: 1 });   // fin de la phrase d'avant, rendue au début de la suivante
+  write(reel, 'derush/exemple_words.json', mots);
+  assert.equal(sousTitres(reel, '--mots', '1').caps[6].texte, 'QUELQU’UN', 'jamais « ?QUELQU’UN »');
   write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
     .replace('    ("exemple-section", "split", [0, 1, 2]),', '    ("s0-hook", "split", [0]),\n    ("s1", "split", [1, 2]),'));
   const sans = sousTitres(reel, '--mots', '1', '--sans', 's0-hook').caps;
   assert.equal(sans.length, 10, 'les 6 mots de l’accroche sans sous-titre');
   assert.ok(sans.every((c) => c.start >= 2.6));
+  // Une section --sans au milieu : aucun mot de la section d'avant n'y déborde.
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
+    .replace('    ("s0-hook", "split", [0]),\n    ("s1", "split", [1, 2]),', '    ("s0", "split", [0]),\n    ("s1-carte", "split", [1]),\n    ("s2", "split", [2]),'));
+  const milieu = sousTitres(reel, '--mots', '1', '--sans', 's1-carte').caps;
+  assert.ok(milieu.every((c) => c.start + c.dur <= 2.67 + 1e-3 || c.start >= 5.33), 'rien d’affiché sur la carte');
   const refus = spawnSync('python3', ['tools/montage_captions.py', '--mots', '4'], { cwd: reel, encoding: 'utf8' });
   assert.notEqual(refus.status, 0);
   assert.match(refus.stderr, /--mots attend 1, 2 ou 3/);

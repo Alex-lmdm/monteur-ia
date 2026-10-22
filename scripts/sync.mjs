@@ -147,7 +147,7 @@ function resolveStyle(config, presetsFile, { avertir = warn } = {}) {
     && String(overrides[cle]).toLowerCase() !== String(preset.visual[cle]).toLowerCase());
   const label = !perso ? preset.label : preset.isUnset ? "Tes couleurs" : `${preset.label}, avec tes couleurs`;
   const capSize = Number(visual.captionsSize);
-  const captionsSize = Number.isFinite(capSize) && capSize >= 30 && capSize <= 100 ? Math.round(capSize) : 50;
+  const captionsSize = Number.isFinite(capSize) && capSize >= 30 && capSize <= 160 ? Math.round(capSize) : 50;
   const resolved = { ...visual, text, surface, captionsSize, ...derived };
   return { preset, label, perso, visual: resolved, chosen, captions: captionLook(resolved, presetsFile, avertir) };
 }
@@ -687,7 +687,7 @@ function visualDuReel(dir, presetsFile = loadStylePresets(), avertir = warn) {
     if (val === undefined || val === null || val === "") continue;
     const ignore = (attendu) => avertir(`${rel(fichier)} : visual.${cle} « ${val} » ignoré (${attendu}).`);
     if (!connues.includes(cle)) ignore("réglage inconnu");
-    else if (cle === "captionsSize" && !(Number(val) >= 30 && Number(val) <= 100)) ignore("30 à 100 px");
+    else if (cle === "captionsSize" && !(Number(val) >= 30 && Number(val) <= 160)) ignore("30 à 160 px");
     else if (COULEURS.includes(cle) && !hexToRgb(val)) ignore("une couleur en hex, ex. #202022");
     else if (POLICES.includes(cle) && !presetsFile.fonts?.[val]) ignore("police absente de templates/style-presets.json");
     else if (cle === "captionsSkin" && !CAPTION_SKINS[val]) ignore(Object.keys(CAPTION_SKINS).join(", "));

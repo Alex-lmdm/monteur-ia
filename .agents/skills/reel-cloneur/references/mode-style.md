@@ -173,9 +173,10 @@ suivantes.
    sur un fond uni à la place** : c'est ce qu'on reconnaît en premier. Sa tête est plus haute que
    dans l'original et les cartes la couvriraient : recadre sa vidéo depuis le haut, dans
    `reel.config.json` → `montage.decorTransform` = `"scale(S)"`, S = hauteur du haut de la tête dans
-   l'original ÷ dans sa vidéo (en % de la hauteur, sur une image de chaque), entre 1,2 et 1,8.
-   Vérifie sur un snapshot (tête entière, cartes au-dessus) ; au-delà de 1,8 l'image perd en
-   netteté : garde 1,8 et réduis un peu les cartes.
+   l'original ÷ dans sa vidéo (en % de la hauteur, sur une image de chaque). S sous 1,1 : pas de
+   recadrage (sous 1, sa tête est plus basse que dans l'original : remonte un peu les cartes) ;
+   de 1,1 à 1,8 : `scale(S)` ; au-delà de 1,8 l'image perd en netteté : garde 1,8 et réduis un peu
+   les cartes. Vérifie sur un snapshot (tête entière, cartes au-dessus).
 4. **La fiche passe avant les règles de base.** Ce Reel suit `style.md` même là où le montage de
    base dit autre chose (motion-design §0 « pas de gros titre », `sous-titres.md` « 2 à 3 mots sans
    ponctuation », une police unique imposée par un skill de marque, une préférence du client sur le
