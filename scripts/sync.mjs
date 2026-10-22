@@ -278,6 +278,8 @@ function renderTokensCss(style, avertir = warn) {
     VISUAL_CONTRAST: v.contrast,
     VISUAL_STROKE: v.stroke,
     FONT_DISPLAY: v.fontDisplay,
+    // Police d'accent (un mot manuscrit, une machine à écrire, une serif de titre) : celle des titres sans réglage.
+    FONT_ACCENT: v.fontAccent || v.fontDisplay,
     FONT_BODY: v.fontBody,
     FONT_CAPTIONS: v.fontCaptions,
     CAPTIONS_SKIN: v.captionsSkin,
@@ -371,7 +373,7 @@ function generateFontsCss(style, presetsFile) {
   // fonts.css est le même pour toute la maison, les copies des Reels en héritent.
   const desReels = reels().filter((d) => readMeta(d)?.monteurIa?.etat !== "publie")
     .flatMap((d) => POLICES.map((cle) => visualDuReel(d, presetsFile, () => {})?.[cle]));
-  const families = [...new Set([v.fontBody, v.fontDisplay, v.fontCaptions, ...desReels].filter(Boolean))];
+  const families = [...new Set([v.fontBody, v.fontDisplay, v.fontCaptions, v.fontAccent, ...desReels].filter(Boolean))];
 
   // Les polices utilisées sont copiées À CÔTÉ de fonts.css (brand/fonts/) : url("fonts/…") se
   // résout pareil dans le navigateur, l'aperçu et le rendu de HyperFrames 0.8, sans chemin en
@@ -673,7 +675,7 @@ const isPerReelTool = (name) =>
 // une vidéo dans un tout autre style l'a sans toucher à son style de base. Jamais touché par la
 // synchro ni par la mise à jour (reels/).
 const REGLAGES_REEL = "reel.config.json";
-const POLICES = ["fontBody", "fontDisplay", "fontCaptions"];
+const POLICES = ["fontBody", "fontDisplay", "fontCaptions", "fontAccent"];
 const COULEURS = ["bg", "accent", "surface", "text", "muted"];
 function visualDuReel(dir, presetsFile = loadStylePresets(), avertir = warn) {
   const fichier = path.join(dir, REGLAGES_REEL);

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°10 « AVIS PRODUIT » · PIÈCE « DEMANDE TAPÉE » (haut d'écran partagé)  ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+    Ce que c'est : une zone de saisie (dessin neutre, pas une copie d'interface) où la demande
+    faite à l'outil se tape mot à mot, chaque mot à l'instant où la voix le dit ; le bouton
+    d'envoi s'enfonce à la fin. L'équivalent de l'écran filmé « je lui demande… ».
+    Taille : section « split » 1080×920 ; barre (logo + nom de l'outil) à 180 px, saisie de 300
+    à 770 px, à 100 px des bords.
+    Quand : chaque fois que la voix cite la demande qu'on tape (« tu lui dis : … »), 2 à 4 s.
+    À remplacer :
+      1. l'id « avis10-demande-tapee » PARTOUT par l'id de la section ;
+      2. data-duration (racine et panneau) et DUREE = durée de la section ;
+      3. EMPLACEMENT .a10-logo : le vrai logo de l'outil (skill thesvg, couleurs d'origine,
+         copié dans assets/logos/) : <img class="a10-logo" src="assets/logos/<outil>.svg" alt="">
+         et .a10-nom : son nom ;
+      4. .a10-puce : l'extension ou le plugin utilisé (icône + nom), ou supprimer la puce ;
+      5. .a10-texte : la demande, mot pour mot comme dite (un <span class="a10-mot"> par mot) ;
+      6. TEMPS : l'instant de chaque mot (derush/<cut>_words.json, début du mot moins le début
+         de la section), autant de valeurs que de mots.
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #avis10-demande-tapee { position:absolute; inset:0; width:1080px; height:920px; overflow:hidden; }
+    #avis10-demande-tapee .a10-fond { position:absolute; inset:0; background:var(--brand-bg); font-family:var(--brand-font-body); color:var(--brand-text); }
+    #avis10-demande-tapee .a10-barre { position:absolute; left:var(--brand-safe-x); right:var(--brand-safe-x); top:180px;
+      display:flex; align-items:center; gap:18px; }
+    #avis10-demande-tapee .a10-logo { width:58px; height:58px; border-radius:50%; background:var(--brand-text); flex:none; }
+    #avis10-demande-tapee .a10-nom { font-size:40px; font-weight:700; letter-spacing:-0.5px; }
+    #avis10-demande-tapee .a10-puce { margin-left:auto; display:flex; align-items:center; gap:12px; padding:10px 22px 10px 12px;
+      border-radius:999px; background:var(--brand-surface); font-size:30px; font-weight:600;
+      box-shadow:0 2px 10px color-mix(in srgb, var(--brand-text) 12%, transparent); }
+    #avis10-demande-tapee .a10-puce-icone { width:44px; height:44px; border-radius:11px; background:var(--brand-accent); }
+    #avis10-demande-tapee .a10-saisie { position:absolute; left:var(--brand-safe-x); right:var(--brand-safe-x); top:300px; height:470px;
+      background:var(--brand-surface); border-radius:40px; padding:44px 48px;
+      box-shadow:0 10px 36px color-mix(in srgb, var(--brand-text) 14%, transparent);
+      border:2px solid color-mix(in srgb, var(--brand-text) 10%, transparent); }
+    #avis10-demande-tapee .a10-texte { font-size:52px; line-height:1.28; font-weight:500; letter-spacing:-0.5px; }
+    #avis10-demande-tapee .a10-mot { visibility:hidden; }
+    #avis10-demande-tapee .a10-envoyer { position:absolute; right:36px; bottom:36px; width:92px; height:92px; border-radius:50%;
+      background:var(--brand-text); display:flex; align-items:center; justify-content:center; }
+    #avis10-demande-tapee .a10-envoyer svg { width:46px; height:46px; }
+  </style>
+</head>
+<body>
+  <div id="avis10-demande-tapee" data-composition-id="avis10-demande-tapee" data-start="0" data-duration="3.6" data-fps="30" data-width="1080" data-height="920">
+    <div id="avis10-demande-tapee-panneau" class="clip" data-start="0" data-duration="3.6" data-track-index="0">
+      <div class="a10-fond">
+        <div class="a10-barre">
+          <!-- EMPLACEMENT : le logo de l'outil (theSVG), en <img class="a10-logo" …>. -->
+          <span class="a10-logo"></span>
+          <span class="a10-nom">Nom de l'outil</span>
+          <span class="a10-puce"><span class="a10-puce-icone"></span>Extension</span>
+        </div>
+        <div class="a10-saisie">
+          <div class="a10-texte"><span class="a10-mot a10-m0">Écris</span> <span class="a10-mot a10-m1">ici</span> <span class="a10-mot a10-m2">la</span> <span class="a10-mot a10-m3">demande</span> <span class="a10-mot a10-m4">exacte,</span> <span class="a10-mot a10-m5">mot</span> <span class="a10-mot a10-m6">pour</span> <span class="a10-mot a10-m7">mot</span></div>
+          <div class="a10-envoyer"><svg viewBox="0 0 46 46" aria-hidden="true"><path d="M23 36V11M12 21l11-11 11 11" style="fill:none; stroke:var(--brand-surface); stroke-width:5; stroke-linecap:round; stroke-linejoin:round"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'avis10-demande-tapee';
+      var DUREE = 3.6;
+      var TEMPS = [0.2, 0.45, 0.6, 0.8, 1.15, 1.5, 1.7, 1.9];   // un instant par mot
+      var scope = '#' + ID + ' ';
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      for (var i = 0; i < TEMPS.length; i++) tl.set(scope + '.a10-m' + i, { visibility: 'visible' }, TEMPS[i]);
+      var fin = TEMPS[TEMPS.length - 1];
+      tl.to(scope + '.a10-envoyer', { scale: 0.86, duration: 0.08 }, fin + 0.35);
+      tl.to(scope + '.a10-envoyer', { scale: 1, duration: 0.12 }, fin + 0.43);
+      tl.set(scope + '.a10-saisie', { opacity: 1 }, DUREE - 0.01);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

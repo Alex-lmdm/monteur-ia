@@ -37,6 +37,7 @@
   --brand-font-display: Anton, Impact, Haettenschweiler, "Arial Narrow", sans-serif;
   --brand-font-body: Inter, "Avenir Next", Arial, system-ui, sans-serif;
   --brand-font-captions: Inter, "Arial Black", Impact, sans-serif;
+  --brand-font-accent: Anton, Georgia, serif;
   --brand-font-mono: "Courier New", ui-monospace, monospace;
 
   /* --- Sous-titres : réglages du skin « block » ---------------- */

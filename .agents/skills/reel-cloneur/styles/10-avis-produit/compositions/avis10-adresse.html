@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°10 « AVIS PRODUIT » · PIÈCE « OÙ ALLER » (haut d'écran partagé)       ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+    Ce que c'est : le vrai logo de l'outil, en grand, et son adresse dans une pastille, quand la
+    voix dit où aller (« tu vas sur… »). Variante courte de l'écran produit.
+    Taille : section « split » 1080×920 ; logo de 240 px vers 220 px, pastille vers 560 px.
+    Quand : la première étape d'un tutoriel, 1 à 2 s, une fois par vidéo.
+    À remplacer :
+      1. l'id « avis10-adresse » PARTOUT par l'id de la section ;
+      2. data-duration (racine et panneau) et DUREE = durée de la section ;
+      3. EMPLACEMENT .a10-logo : le vrai logo (skill thesvg, couleurs d'origine, copié dans
+         assets/logos/) : <img class="a10-logo" src="assets/logos/<outil>.svg" alt="<outil>"> ;
+      4. le texte de la pastille : l'adresse publique, sans « https:// » ;
+      5. ADRESSE : l'instant où la pastille arrive (le nom dit par la voix).
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #avis10-adresse { position:absolute; inset:0; width:1080px; height:920px; overflow:hidden; }
+    #avis10-adresse .a10-fond { position:absolute; inset:0; background:var(--brand-bg); font-family:var(--brand-font-body); color:var(--brand-text); }
+    #avis10-adresse .a10-logo { position:absolute; left:50%; top:220px; width:240px; height:240px; margin-left:-120px;
+      border-radius:56px; background:var(--brand-text); }
+    #avis10-adresse .a10-adresse-pastille { position:absolute; left:50%; top:560px; transform:translateX(-50%); display:flex; align-items:center; gap:18px;
+      padding:22px 40px; border-radius:999px; background:var(--brand-surface); font-size:48px; font-weight:600; white-space:nowrap;
+      box-shadow:0 8px 28px color-mix(in srgb, var(--brand-text) 14%, transparent); }
+    #avis10-adresse .a10-adresse-pastille svg { width:42px; height:42px; }
+  </style>
+</head>
+<body>
+  <div id="avis10-adresse" data-composition-id="avis10-adresse" data-start="0" data-duration="1.6" data-fps="30" data-width="1080" data-height="920">
+    <div id="avis10-adresse-panneau" class="clip" data-start="0" data-duration="1.6" data-track-index="0">
+      <div class="a10-fond">
+        <!-- EMPLACEMENT : le logo de l'outil (theSVG), en <img class="a10-logo" …>. -->
+        <div class="a10-logo"></div>
+        <div class="a10-adresse-pastille"><svg viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="16" style="fill:none; stroke:var(--brand-muted); stroke-width:3.5"/><path d="M5 21h32M21 5c6 5 6 27 0 32M21 5c-6 5-6 27 0 32" style="fill:none; stroke:var(--brand-muted); stroke-width:3"/></svg>site-du-produit.com</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'avis10-adresse';
+      var DUREE = 1.6;
+      var ADRESSE = 0.75;
+      var scope = '#' + ID + ' ';
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      tl.fromTo(scope + '.a10-logo', { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.25, ease: 'expo.out' }, 0.03);
+      tl.fromTo(scope + '.a10-adresse-pastille', { opacity: 0 }, { opacity: 1, duration: 0.15 }, ADRESSE);
+      tl.set(scope + '.a10-fond', { opacity: 1 }, DUREE - 0.01);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

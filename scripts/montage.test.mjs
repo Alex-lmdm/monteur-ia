@@ -612,3 +612,43 @@ test('cadrage détouré : la personne passe devant la section, détourée une fo
   assert.notEqual(ancien.status, 0);
   assert.match(ancien.stderr, /ne sait pas poser une personne detouree/);
 });
+
+// ---------------------------------------------------------------------------
+// 8. Le catalogue de styles (skill reel-cloneur, styles/) : chaque kit tient debout tout seul
+// ---------------------------------------------------------------------------
+test('catalogue de styles : chaque kit a sa fiche, ses pièces, des réglages acceptés et des polices livrées', (t) => {
+  const dossier = path.join(root, '.claude/skills/reel-cloneur/styles');
+  const kits = fs.readdirSync(dossier).filter((d) => /^\d\d-/.test(d)).sort();
+  assert.ok(kits.length >= 10, `${kits.length} kits`);
+  const index = read(dossier, 'README.md');
+  const polices = JSON.parse(read(root, 'templates/style-presets.json')).fonts;
+  const connues = new Set([...Object.keys(config().visual), 'muted']);
+  for (const kit of kits) {
+    const n = Number(kit.slice(0, 2));
+    assert.match(read(path.join(dossier, kit), 'style.md'), new RegExp(`Style n°${kit.slice(0, 2)} · `), `${kit} : en-tête de la fiche`);
+    assert.match(index, new RegExp(`^\\| ${n} \\| `, 'm'), `${kit} : dans l'index`);
+    const visual = JSON.parse(read(path.join(dossier, kit), 'reel.config.json')).visual;
+    for (const [cle, val] of Object.entries(visual)) {
+      assert.ok(connues.has(cle), `${kit} : réglage inconnu ${cle}`);
+      if (/^font/.test(cle)) assert.ok(polices[val]?.faces, `${kit} : police ${val} absente de la table`);
+    }
+    for (const face of Object.entries(polices).filter(([nom]) => Object.values(visual).includes(nom)).flatMap(([, p]) => p.faces)) {
+      assert.ok(fs.existsSync(path.join(root, 'assets/fonts', face.file)), `${kit} : ${face.file} livrée`);
+    }
+    const pieces = fs.readdirSync(path.join(dossier, kit, 'compositions')).filter((f) => f.endsWith('.html'));
+    assert.ok(pieces.length >= 2, `${kit} : pièces`);
+    for (const piece of pieces) {
+      const html = read(path.join(dossier, kit, 'compositions'), piece);
+      assert.doesNotMatch(html, /@font-face|url\([^)]*(assets\/fonts|polices)\//, `${kit}/${piece} : les polices viennent de brand/fonts.css`);
+    }
+  }
+  if (!outils(t)) return;
+  // La synchro accepte les réglages de chaque kit sans en écarter aucun.
+  const dir = maison(t);
+  const reel = nouveauReel(dir, 'Catalogue');
+  for (const kit of kits) {
+    fs.copyFileSync(path.join(dossier, kit, 'reel.config.json'), path.join(reel, 'reel.config.json'));
+    const sortie = spawnSync(process.execPath, ['scripts/sync.mjs'], { cwd: dir, encoding: 'utf8' });
+    assert.doesNotMatch(sortie.stderr + sortie.stdout, /ignoré|absente de la table|manquant/, `${kit} : réglages refusés`);
+  }
+});

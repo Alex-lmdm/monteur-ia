@@ -159,7 +159,8 @@
       "mesurer la largeur d'un sous-titre. PIL ne sait pas lire le woff2 : sans ce .ttf, le",
       "découpage ne peut plus garantir une seule ligne. Obligatoire pour une police de sous-titres.",
       "Une police absente de cette table = l'utilisateur fournit ses fichiers, /setup les ajoute ici",
-      "et les dépose dans assets/fonts/. JAMAIS de Google Fonts en ligne (rendu non déterministe)."
+      "et les dépose dans assets/fonts/. JAMAIS de Google Fonts en ligne (rendu non déterministe).",
+      "Polices des styles du catalogue (skill reel-cloneur, styles/) : licence SIL OFL, texte dans assets/fonts/OFL-<police>.txt."
     ],
     "Inter": {
       "measureFile": "Inter-900.ttf",
@@ -178,6 +179,36 @@
     "ArchivoBlack": {
       "measureFile": "ArchivoBlack-400.ttf",
       "faces": [{ "weight": 400, "style": "normal", "file": "ArchivoBlack-400.woff2", "format": "woff2" }]
+    },
+    "DMSerifDisplay": {
+      "faces": [{ "weight": 400, "style": "italic", "file": "DMSerifDisplay-Italic.ttf", "format": "truetype" }]
+    },
+    "SourceSerif4": {
+      "faces": [{ "weight": "200 900", "style": "italic", "file": "SourceSerif4-Italic-VF.ttf", "format": "truetype" }]
+    },
+    "OpenSans": {
+      "measureFile": "OpenSans-800-italic.ttf",
+      "faces": [{ "weight": 800, "style": "italic", "file": "OpenSans-800-italic.ttf", "format": "truetype" }]
+    },
+    "MrDafoe": {
+      "faces": [{ "weight": 400, "style": "normal", "file": "MrDafoe-Regular.ttf", "format": "truetype" }]
+    },
+    "Poppins": {
+      "measureFile": "Poppins-Bold.ttf",
+      "faces": [{ "weight": 700, "style": "normal", "file": "Poppins-Bold.ttf", "format": "truetype" }]
+    },
+    "Fraunces": {
+      "faces": [{ "weight": "100 900", "style": "normal", "file": "Fraunces-VF.ttf", "format": "truetype" }]
+    },
+    "AbrilFatface": {
+      "faces": [{ "weight": 400, "style": "normal", "file": "AbrilFatface-Regular.ttf", "format": "truetype" }]
+    },
+    "CourierPrime": {
+      "measureFile": "CourierPrime-Bold.ttf",
+      "faces": [
+        { "weight": 400, "style": "normal", "file": "CourierPrime-Regular.ttf", "format": "truetype" },
+        { "weight": 700, "style": "normal", "file": "CourierPrime-Bold.ttf", "format": "truetype" }
+      ]
     }
   }
 }

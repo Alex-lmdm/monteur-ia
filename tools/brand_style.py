@@ -111,6 +111,7 @@ class Style:
     captions_line_height: float = 1.35
     captions_padding: str | None = None  # None = la marge du skin
     captions_ink: str | None = None      # None = --brand-contrast (skin block)
+    font_accent: str | None = None       # visual.fontAccent ; None = celle des titres (--brand-font-accent)
 
     @property
     def bg_hex(self) -> str:
@@ -229,6 +230,7 @@ def style() -> Style:
         captions_line_height=_caption_line_height(visual.get("captionsLineHeight", 1.35)),
         captions_padding=str(visual["captionsPadding"]) if visual.get("captionsPadding") not in (None, "") else None,
         captions_ink=str(visual["captionsInk"]) if visual.get("captionsInk") not in (None, "", "contrast") else None,
+        font_accent=visual.get("fontAccent") or visual["fontDisplay"],
     )
 
 

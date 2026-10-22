@@ -1,0 +1,19 @@
+{
+  "visual": {
+    "bg": "#0E1A24",
+    "accent": "#2CAAFF",
+    "surface": "#1A2A36",
+    "text": "#FFFFFF",
+    "muted": "#B8C4CE",
+    "fontDisplay": "Inter",
+    "fontBody": "Inter",
+    "fontCaptions": "Inter",
+    "captionsSkin": "soft",
+    "captionsPosition": "sous-le-menton",
+    "captionsLines": 1,
+    "captionsSize": 46,
+    "captionsCase": "asis",
+    "captionsLineHeight": 1.2,
+    "captionsWeight": 600
+  }
+}

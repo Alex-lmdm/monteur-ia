@@ -10,6 +10,20 @@ commercial, tant que les polices ne sont pas vendues seules.
 | Anton (woff2) | Sous-titres / display | © The Anton Project Authors | [OFL 1.1](https://openfontlicense.org/open-font-license-official-text/) |
 | Archivo Black (woff2) | Sous-titres / display | © Omnibus-Type | [OFL 1.1](https://openfontlicense.org/open-font-license-official-text/) |
 
+Polices des styles du catalogue (skill `reel-cloneur`, dossier `styles/`), chacune avec son texte
+de licence `OFL-<police>.txt` dans ce dossier (SIL OFL 1.1, dépôt github.com/google/fonts) :
+
+| Police | Style du catalogue | Copyright | Licence |
+|--------|--------------------|-----------|---------|
+| DM Serif Display Italic (ttf) | 01 Top outils | © Colophon Foundry, Adobe | `OFL-DMSerifDisplay.txt` |
+| Source Serif 4 Italic (ttf variable) | 03 Liste de conseils | © The Source Serif 4 Project Authors | `OFL-SourceSerif4.txt` |
+| Open Sans ExtraBold Italic (ttf) | 06 Démo sur ordinateur | © The Open Sans Project Authors | `OFL-OpenSans.txt` |
+| Mr Dafoe (ttf) | 07 Annonce choc | © Alejandro Paul | `OFL-MrDafoe.txt` |
+| Poppins Bold (ttf) | 08 Réponse à un abonné, 10 Avis produit | © The Poppins Project Authors | `OFL-Poppins.txt` |
+| Fraunces (ttf variable) | 08 Réponse à un abonné | © The Fraunces Project Authors | `OFL-Fraunces.txt` |
+| Abril Fatface (ttf) | 09 Collage illustré | © TypeTogether | `OFL-AbrilFatface.txt` |
+| Courier Prime (ttf) | 09 Collage illustré | © The Courier Prime Project Authors | `OFL-CourierPrime.txt` |
+
 Texte intégral de la licence : https://openfontlicense.org/open-font-license-official-text/
 
 ## Mettre TA police

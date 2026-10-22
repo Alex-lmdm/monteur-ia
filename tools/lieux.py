@@ -74,7 +74,7 @@ CLES_REEL = {"montage": ("splitTransform", "faceCrop", "fullFaceTransform", "ful
 # de brand.config.example.json, validées comme dans scripts/sync.mjs (visualDuReel) : une valeur que
 # la synchro ignore est ignorée ici aussi, pour que les outils et le rendu voient le même style.
 COULEURS_REEL = ("bg", "accent", "surface", "text", "muted")
-POLICES_REEL = ("fontBody", "fontDisplay", "fontCaptions")
+POLICES_REEL = ("fontBody", "fontDisplay", "fontCaptions", "fontAccent")
 
 
 def _visual_valide(brut: dict) -> dict:

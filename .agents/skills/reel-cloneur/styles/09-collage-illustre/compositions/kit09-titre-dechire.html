@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    KIT N°09 « COLLAGE ILLUSTRÉ » · PIÈCE : TITRE SUR PAPIER DÉCHIRÉ (section DECOR, 1080x1920,
+    fond transparent, posée sur la vidéo filmée ; 3 s d'exemple)
+    Ce que c'est : une grande feuille de papier sombre au bord bas déchiré descend du haut (0,32 s) et
+    couvre le haut de l'image jusqu'à 770 px (40 %) ; le titre en trois lignes arrive : petites lignes en
+    machine à écrire dont les lettres volent et se posent, mot-clé à empattements blanc sur bandeau ocre
+    qui se déroule ; un trait de craie commente la tête ; à la fin (2,68 s → 2,98 s) la feuille tombe et
+    couvre tout l'écran : la section suivante (collage) commence sur cette feuille.
+    Quand : UNE fois par vidéo, l'accroche (0,5 à 1 s après le début, 1,5 à 3 s). La vidéo dessous est
+    recadrée pour que le haut de la tête tombe à 40 % (montage.decorTransform, voir style.md).
+    À remplacer : les trois lignes du titre ; le trait de craie ; la chute de la feuille = 0,3 s avant la
+    fin de la section (le tl.to sur .feuille).
+    Couleurs : var(--brand-*) seulement (fond = --brand-bg, 2e papier = --brand-surface, papier
+    chaud = mélange fond + accent, blanc des bandes et des étiquettes = --brand-text, encre = --brand-bg,
+    bandeau et traits forts = --brand-accent, impression passée = --brand-muted) : le reel.config.json du
+    kit les règle. Polices : Inter (réglages), « Courier Prime » (machine à écrire, --brand-font-accent) et « Abril
+    Fatface » (mot-clé, --brand-font-display), livrées avec Monteur IA (licences OFL
+    jointes) ; sans elles, repli sur var(--brand-font-mono) / var(--brand-font-display).
+    Temps : en secondes depuis le début de la section, à caler sur les mots
+    (derush/<vidéo>_words.json) ; data-duration du calque et de la racine = durée de la section.
+    Tout est déterministe : formes déchirées précalculées, aucun hasard au rendu.
+    Renommer la pièce = renommer l'id PARTOUT (racine, data-composition-id, calque, filtres
+    #<id>-craie/-grain/-taches, constante ID du script), et garder un id différent de toute classe.
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #kit09-titre-dechire { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden; background:transparent;
+      --kit-machine: var(--brand-font-accent), var(--brand-font-mono); --kit-titre: var(--brand-font-display), var(--brand-font-display);
+      --kit-blanc: var(--brand-text); --kit-encre: var(--brand-bg);
+      --kit-ombre: color-mix(in srgb, var(--brand-stroke) 55%, transparent); }
+    #kit09-titre-dechire * { box-sizing:border-box; margin:0; padding:0; }
+    #kit09-titre-dechire .calque { position:absolute; inset:0; }
+    /* Papier : teinte (--p) + trame de points + plis ; le grain et les taches viennent de .grain. */
+    #kit09-titre-dechire .papier { position:absolute; inset:0; background:var(--p); }
+    #kit09-titre-dechire .trame { position:absolute; inset:0; opacity:.55;
+      background-image: radial-gradient(color-mix(in srgb, var(--brand-text) 11%, transparent) 1.4px, transparent 2px);
+      background-size: 9px 9px;
+      -webkit-mask-image: radial-gradient(ellipse 60% 40% at 18% 22%, var(--brand-text) 0%, transparent 70%), radial-gradient(ellipse 55% 35% at 85% 78%, var(--brand-text) 0%, transparent 70%);
+      mask-image: radial-gradient(ellipse 60% 40% at 18% 22%, var(--brand-text) 0%, transparent 70%), radial-gradient(ellipse 55% 35% at 85% 78%, var(--brand-text) 0%, transparent 70%); }
+    #kit09-titre-dechire .pli-v { position:absolute; top:0; bottom:0; left:102px; width:7px;
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-text) 22%, transparent) 40%, color-mix(in srgb, var(--brand-stroke) 45%, transparent) 60%, transparent); }
+    #kit09-titre-dechire .pli-h { position:absolute; left:0; right:0; top:1300px; height:6px; rotate:-.35deg;
+      background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand-text) 18%, transparent) 45%, color-mix(in srgb, var(--brand-stroke) 40%, transparent) 60%, transparent); }
+    #kit09-titre-dechire .impression { position:absolute; inset:0; overflow:hidden; opacity:.075; }
+    #kit09-titre-dechire .imp-l { position:absolute; white-space:nowrap; font-family:var(--brand-font-accent); font-size:34px; letter-spacing:.08em; color:var(--brand-muted); }
+    #kit09-titre-dechire .imp-m { scale:-1 1; }
+    #kit09-titre-dechire .grain { position:absolute; inset:0; width:1080px; height:1920px; pointer-events:none; }
+    #kit09-titre-dechire .grain .taches { fill:var(--brand-text); opacity:.045; }
+    #kit09-titre-dechire .grain .poussiere { fill:var(--brand-text); opacity:.55; }
+    #kit09-titre-dechire .vignette { position:absolute; inset:0; background: radial-gradient(ellipse 75% 65% at 50% 45%, transparent 55%, color-mix(in srgb, var(--brand-stroke) 50%, transparent) 100%); }
+    #kit09-titre-dechire .scene { position:absolute; inset:0; }
+    /* Découpes : photo détourée, ombre portée de papier collé. */
+    #kit09-titre-dechire .decoupe { position:absolute; }
+    #kit09-titre-dechire .dc-ombre { filter: drop-shadow(0 20px 22px var(--kit-ombre)); }
+    #kit09-titre-dechire .dc-boite { overflow:hidden; }
+    #kit09-titre-dechire .decoupe img { display:block; width:100%; height:auto; }
+    /* Étiquettes : logo sur un carré de papier blanc déchiré. */
+    #kit09-titre-dechire .etiquette { position:absolute; }
+    #kit09-titre-dechire .et-ombre { position:absolute; inset:0; filter: drop-shadow(0 14px 16px var(--kit-ombre)); }
+    #kit09-titre-dechire .et-papier { position:absolute; inset:0; background:var(--kit-blanc); display:flex; align-items:center; justify-content:center; }
+    #kit09-titre-dechire .et-papier img { width:64%; height:64%; object-fit:contain; }
+    /* Mot machine à écrire : chaque lettre porte son bout de bande blanche (la bande s'allonge). */
+    #kit09-titre-dechire .bande { position:absolute; display:flex; white-space:nowrap; font-family:var(--brand-font-accent); font-weight:400;
+      color:var(--kit-encre); line-height:1; filter: drop-shadow(0 8px 10px var(--kit-ombre)); }
+    #kit09-titre-dechire .bande i { font-style:normal; background:var(--kit-blanc); padding:.16em 0 .12em; }
+    #kit09-titre-dechire .bande i:first-child { padding-left:.32em; }
+    #kit09-titre-dechire .bande i:last-child { padding-right:.32em; }
+    /* Lettres découpées (lettre de rançon) : une lettre = un bout de papier. */
+    #kit09-titre-dechire .rancon { position:absolute; display:flex; align-items:center; gap:.08em; font-family:var(--brand-font-accent);
+      color:var(--kit-encre); line-height:1; filter: drop-shadow(0 8px 10px var(--kit-ombre)); }
+    #kit09-titre-dechire .rancon b { display:block; font-weight:400; background:var(--kit-blanc); padding:.1em .14em .08em; }
+    #kit09-titre-dechire .rancon b.gras { font-weight:700; }
+    #kit09-titre-dechire .rancon b.esp { width:.4em; background:none; padding:0; }
+    /* Craie : trait tracé à la main, grain de craie par le filtre. */
+    #kit09-titre-dechire .craie { position:absolute; overflow:visible; fill:none; stroke-linecap:round; stroke-linejoin:round; filter:url(#kit09-titre-dechire-craie); }
+    #kit09-titre-dechire .craie path { stroke-dasharray:1; stroke-dashoffset:1; }
+    #kit09-titre-dechire .encre-text { stroke:var(--brand-text); }
+    #kit09-titre-dechire .encre-accent { stroke:var(--brand-accent); }
+    #kit09-titre-dechire .titre { position:absolute; left:150px; top:214px; display:flex; flex-direction:column; align-items:flex-start; gap:30px; }
+    #kit09-titre-dechire .titre-machine { display:flex; font-family:var(--brand-font-accent); font-weight:700; letter-spacing:.40em;
+      color:var(--brand-text); line-height:1; filter:url(#kit09-titre-dechire-craie); }
+    #kit09-titre-dechire .titre-l1 { font-size:62px; margin-left:46px; }
+    #kit09-titre-dechire .titre-l3 { font-size:58px; align-self:flex-end; margin-right:-26px; }
+    #kit09-titre-dechire .titre-machine i, #kit09-titre-dechire .titre-cle i { font-style:normal; display:inline-block; position:relative; }
+    #kit09-titre-dechire .titre-cle { position:relative; display:flex; align-items:center; height:172px; padding:0 32px;
+      font-family:var(--brand-font-display); font-size:132px; letter-spacing:.02em; color:var(--brand-text); line-height:1; }
+    #kit09-titre-dechire .titre-bandeau { position:absolute; inset:0; background:var(--brand-accent); transform-origin:0 50%; }
+    #kit09-titre-dechire .titre-bandeau::after { content:""; position:absolute; inset:0; opacity:.35;
+      background-image: radial-gradient(color-mix(in srgb, var(--brand-text) 40%, transparent) 1px, transparent 1.6px); background-size:7px 7px; }
+    #kit09-titre-dechire .feuille { position:absolute; left:0; top:0; width:1080px; height:2004px; }
+    #kit09-titre-dechire .feuille-fibre { position:absolute; inset:0; top:7px; background:color-mix(in srgb, var(--brand-text) 16%, var(--brand-bg)); clip-path:polygon(0.0px 0.0px,1080.0px 0.0px,1080.0px 1950.9px,1058.0px 1958.2px,1035.9px 1944.1px,1013.9px 1942.9px,991.8px 1949.4px,969.8px 1951.7px,947.8px 1958.2px,925.7px 1953.3px,903.7px 1939.1px,881.6px 1957.7px,859.6px 1929.2px,837.6px 1948.1px,815.5px 1952.6px,793.5px 1946.5px,771.4px 1957.8px,749.4px 1952.3px,727.3px 1947.7px,705.3px 1922.3px,683.3px 1946.7px,661.2px 1960.5px,639.2px 1944.9px,617.1px 1943.2px,595.1px 1938.6px,573.1px 1951.7px,551.0px 1933.9px,529.0px 1941.4px,506.9px 1951.9px,484.9px 1949.1px,462.9px 1947.1px,440.8px 1944.3px,418.8px 1961.8px,396.7px 1928.5px,374.7px 1951.6px,352.7px 1960.6px,330.6px 1945.7px,308.6px 1951.1px,286.5px 1940.9px,264.5px 1946.3px,242.4px 1941.3px,220.4px 1941.1px,198.4px 1950.0px,176.3px 1955.1px,154.3px 1940.5px,132.2px 1960.6px,110.2px 1955.5px,88.2px 1932.0px,66.1px 1961.4px,44.1px 1954.3px,22.0px 1939.4px,0.0px 1963.2px); }
+    #kit09-titre-dechire .feuille-papier { position:absolute; left:0; top:0; width:1080px; height:1990px; clip-path:polygon(0.0px 0.0px,1080.0px 0.0px,1080.0px 1950.9px,1058.0px 1958.2px,1035.9px 1944.1px,1013.9px 1942.9px,991.8px 1949.4px,969.8px 1951.7px,947.8px 1958.2px,925.7px 1953.3px,903.7px 1939.1px,881.6px 1957.7px,859.6px 1929.2px,837.6px 1948.1px,815.5px 1952.6px,793.5px 1946.5px,771.4px 1957.8px,749.4px 1952.3px,727.3px 1947.7px,705.3px 1922.3px,683.3px 1946.7px,661.2px 1960.5px,639.2px 1944.9px,617.1px 1943.2px,595.1px 1938.6px,573.1px 1951.7px,551.0px 1933.9px,529.0px 1941.4px,506.9px 1951.9px,484.9px 1949.1px,462.9px 1947.1px,440.8px 1944.3px,418.8px 1961.8px,396.7px 1928.5px,374.7px 1951.6px,352.7px 1960.6px,330.6px 1945.7px,308.6px 1951.1px,286.5px 1940.9px,264.5px 1946.3px,242.4px 1941.3px,220.4px 1941.1px,198.4px 1950.0px,176.3px 1955.1px,154.3px 1940.5px,132.2px 1960.6px,110.2px 1955.5px,88.2px 1932.0px,66.1px 1961.4px,44.1px 1954.3px,22.0px 1939.4px,0.0px 1963.2px); overflow:hidden; }
+    #kit09-titre-dechire .feuille-papier .papier, #kit09-titre-dechire .feuille-papier .grain { height:1990px; }
+  </style>
+</head>
+<body>
+  <div id="kit09-titre-dechire" data-composition-id="kit09-titre-dechire" data-start="0" data-duration="3.0" data-fps="30" data-width="1080" data-height="1920">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <filter id="kit09-titre-dechire-craie" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/></filter>
+      <filter id="kit09-titre-dechire-grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="4"/><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  11 0 0 0 -8.1"/><feComposite in="SourceGraphic" operator="in"/></filter>
+      <filter id="kit09-titre-dechire-taches" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.0045" numOctaves="4" seed="9"/><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3.4 0 0 0 -1.5"/><feComposite in="SourceGraphic" operator="in"/></filter>
+    </svg>
+    <div id="kit09-titre-dechire-calque" class="clip calque" data-start="0" data-duration="3.0" data-track-index="0">
+      <div class="feuille"><div class="feuille-fibre"></div><div class="feuille-papier">
+      <div class="papier pp-titre" style="--p:var(--brand-bg);opacity:1.0"><div class="trame"></div><div class="pli-v"></div><div class="pli-h"></div></div>
+      <svg class="grain" viewBox="0 0 1080 1920" preserveAspectRatio="none" aria-hidden="true"><rect class="taches" width="1080" height="1920" filter="url(#kit09-titre-dechire-taches)"/><rect class="poussiere" width="1080" height="1920" filter="url(#kit09-titre-dechire-grain)"/></svg><div class="vignette"></div>
+      </div></div>
+      <!-- À REMPLACER : les trois lignes du titre (2 à 3 mots en haut, LE mot-clé sur le bandeau, 2 à 4 mots en bas). Le bandeau prend la largeur du mot-clé ; la ligne du bas se cale à sa droite. -->
+      <div class="titre"><div class="titre-machine titre-l1"><i class="t1-0">L</i><i class="t1-1">A</i><i class="t1-2">&nbsp;</i><i class="t1-3">M</i><i class="t1-4">É</i><i class="t1-5">T</i><i class="t1-6">H</i><i class="t1-7">O</i><i class="t1-8">D</i><i class="t1-9">E</i></div><div class="titre-cle"><span class="titre-bandeau"></span><i class="t2-0">S</i><i class="t2-1">I</i><i class="t2-2">M</i><i class="t2-3">P</i><i class="t2-4">L</i><i class="t2-5">E</i></div><div class="titre-machine titre-l3"><i class="t3-0">E</i><i class="t3-1">X</i><i class="t3-2">P</i><i class="t3-3">L</i><i class="t3-4">I</i><i class="t3-5">Q</i><i class="t3-6">U</i><i class="t3-7">É</i><i class="t3-8">E</i></div></div>
+      <!-- À REMPLACER : le trait de craie qui commente la tête (forme, place : centré sur la tête, posé juste au-dessus du bord déchiré). Formes dans kit09-traits-craie.html. -->
+      <svg class="craie cr1 encre-text" viewBox="0 0 260 120" style="left:410px;top:620px;width:260px;height:120px;rotate:0.0deg" stroke-width="9.0" aria-hidden="true"><path class="p0" d="M30 110 L6 70" pathLength="1"/><path class="p1" d="M78 64 L66 16" pathLength="1"/><path class="p2" d="M130 52 L130 4" pathLength="1"/><path class="p3" d="M182 64 L194 16" pathLength="1"/><path class="p4" d="M230 110 L254 70" pathLength="1"/></svg>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'kit09-titre-dechire';
+      var S = '#' + ID + ' ';
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      tl.fromTo(S+'.feuille', {y:-2030}, {y:-1220, duration:.32, ease:'power3.out'}, 0.02);
+      tl.to(S+'.feuille', {y:0, duration:.30, ease:'power2.in'}, 2.68);
+      tl.fromTo(S+'.t1-0', {x:47, y:68, rotation:23, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.080);
+      tl.fromTo(S+'.t1-1', {x:10, y:18, rotation:122, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.110);
+      tl.fromTo(S+'.t1-3', {x:-31, y:-12, rotation:-53, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.170);
+      tl.fromTo(S+'.t1-4', {x:6, y:-54, rotation:-52, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.200);
+      tl.fromTo(S+'.t1-5', {x:257, y:61, rotation:5, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.230);
+      tl.fromTo(S+'.t1-6', {x:23, y:70, rotation:11, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.260);
+      tl.fromTo(S+'.t1-7', {x:-195, y:73, rotation:3, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.290);
+      tl.fromTo(S+'.t1-8', {x:-80, y:3, rotation:78, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.320);
+      tl.fromTo(S+'.t1-9', {x:-50, y:-10, rotation:68, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.350);
+      tl.fromTo(S+'.t3-0', {x:-111, y:-74, rotation:79, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.080);
+      tl.fromTo(S+'.t3-1', {x:-197, y:-115, rotation:-34, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.110);
+      tl.fromTo(S+'.t3-2', {x:155, y:67, rotation:-51, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.140);
+      tl.fromTo(S+'.t3-3', {x:-173, y:154, rotation:112, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.170);
+      tl.fromTo(S+'.t3-4', {x:-279, y:148, rotation:-114, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.200);
+      tl.fromTo(S+'.t3-5', {x:45, y:119, rotation:-46, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.230);
+      tl.fromTo(S+'.t3-6', {x:-215, y:-129, rotation:96, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.260);
+      tl.fromTo(S+'.t3-7', {x:-238, y:-202, rotation:141, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.290);
+      tl.fromTo(S+'.t3-8', {x:230, y:54, rotation:81, opacity:0}, {x:0, y:0, rotation:0, opacity:1, duration:.5, ease:'power3.out'}, 0.320);
+      tl.fromTo(S+'.titre-bandeau', {scaleX:0}, {scaleX:1, duration:.3, ease:'power3.out'}, 0.24);
+      tl.fromTo(S+'.t2-0', {opacity:0, scale:1.6}, {opacity:1, scale:1, duration:.16, ease:'power2.out'}, 0.340);
+      tl.fromTo(S+'.t2-1', {opacity:0, scale:1.6}, {opacity:1, scale:1, duration:.16, ease:'power2.out'}, 0.375);
+      tl.fromTo(S+'.t2-2', {opacity:0, scale:1.6}, {opacity:1, scale:1, duration:.16, ease:'power2.out'}, 0.410);
+      tl.fromTo(S+'.t2-3', {opacity:0, scale:1.6}, {opacity:1, scale:1, duration:.16, ease:'power2.out'}, 0.445);
+      tl.fromTo(S+'.t2-4', {opacity:0, scale:1.6}, {opacity:1, scale:1, duration:.16, ease:'power2.out'}, 0.480);
+      tl.fromTo(S+'.t2-5', {opacity:0, scale:1.6}, {opacity:1, scale:1, duration:.16, ease:'power2.out'}, 0.515);
+      tl.fromTo(S+'.cr1 .p0', {strokeDashoffset:1}, {strokeDashoffset:0, duration:0.060, ease:'power1.inOut'}, 0.620);
+      tl.fromTo(S+'.cr1 .p1', {strokeDashoffset:1}, {strokeDashoffset:0, duration:0.060, ease:'power1.inOut'}, 0.680);
+      tl.fromTo(S+'.cr1 .p2', {strokeDashoffset:1}, {strokeDashoffset:0, duration:0.060, ease:'power1.inOut'}, 0.740);
+      tl.fromTo(S+'.cr1 .p3', {strokeDashoffset:1}, {strokeDashoffset:0, duration:0.060, ease:'power1.inOut'}, 0.800);
+      tl.fromTo(S+'.cr1 .p4', {strokeDashoffset:1}, {strokeDashoffset:0, duration:0.060, ease:'power1.inOut'}, 0.860);
+      tl.set({}, {}, 3.0);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

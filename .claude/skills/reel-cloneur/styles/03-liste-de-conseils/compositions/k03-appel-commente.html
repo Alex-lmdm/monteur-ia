@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°03 « LISTE DE CONSEILS » · PIÈCE : L'APPEL À L'ACTION « COMMENTE »    ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ Ce que c'est : un large bandeau arrondi couleur --brand-muted (terre cuite du ║
+    ║ style) qui porte, petit et centré, le logo ou le nom de ce qu'on reçoit ;     ║
+    ║ dessous, « COMMENTE » en capitales serif italiques noires, puis le mot-clé    ║
+    ║ entre guillemets, en dégradé doré vers l'accent. Tête détourée juste dessous.  ║
+    ║ Taille : 1080×1920, fond TRANSPARENT (section « decor » {"detoure": True}).   ║
+    ║ Bandeau : x 90 → 990, y 360 → 660. Textes : centres à y 760 et y 860.         ║
+    ║ Quand : la phrase d'appel à l'action, à la fin. Pas de sous-titres (son id va ║
+    ║ dans --sans). Jamais le mot « lien » à l'écran (emoji 🔗 si besoin).          ║
+    ║                                                                                ║
+    ║ À REMPLACER :                                                                  ║
+    ║  1. l'id « k03-appel-commente » PARTOUT par l'id de la section ;               ║
+    ║  2. data-duration (racine + .habillage) = durée de la section ;                ║
+    ║  3. le contenu du bandeau (emplacement commenté) : vrai logo (skill thesvg)    ║
+    ║     ou nom de ce que la personne reçoit ;                                      ║
+    ║  4. DONNEES : le verbe (« COMMENTE »), le mot-clé du client et les instants où ║
+    ║     la voix les dit (s, depuis le début de la section).                        ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #k03-appel-commente { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      --k03-titre: var(--brand-font-accent), var(--brand-font-display), serif;
+      --k03-clair: oklch(from var(--brand-accent) calc(l + 0.12) c calc(h + 30)); }
+    #k03-appel-commente * { box-sizing:border-box; }
+    #k03-appel-commente .habillage { position:absolute; inset:0; }
+    #k03-appel-commente .palmes { position:absolute; left:0; top:0; width:1080px; height:1920px;
+      fill: var(--brand-text); color: var(--brand-text); opacity: 0.07; filter: blur(5px); }
+    #k03-appel-commente .bandeau { position:absolute; left:90px; top:360px; width:900px; height:300px;
+      border-radius:44px; background: var(--brand-muted); display:flex; align-items:center; justify-content:center; gap:18px;
+      box-shadow: 0 26px 48px -20px color-mix(in srgb, var(--brand-text) 55%, transparent); }
+    #k03-appel-commente .bandeau img { height:64px; width:auto; display:block; }
+    #k03-appel-commente .bandeau .nom { font-family: var(--brand-font-body); font-weight:700; font-size:46px;
+      color: var(--brand-text); letter-spacing:-0.5px; }
+    #k03-appel-commente .verbe, #k03-appel-commente .cle { position:absolute; left:100px; right:100px; height:104px; margin:0;
+      text-align:center; white-space:nowrap; font-family: var(--brand-font-accent); font-style: italic; font-weight: 850;
+      font-size: 104px; line-height: 104px; letter-spacing: -1px; text-transform: uppercase; }
+    #k03-appel-commente .verbe { top:705px; color: var(--brand-text); }
+    #k03-appel-commente .cle { top:815px; }
+    #k03-appel-commente .cle span { background: linear-gradient(180deg, var(--k03-clair) 10%, var(--brand-accent) 85%);
+      -webkit-background-clip: text; background-clip: text; color: transparent; padding: 0 0.08em; }
+  </style>
+</head>
+<body>
+  <div id="k03-appel-commente" data-composition-id="k03-appel-commente" data-start="0" data-duration="4"
+       data-fps="30" data-width="1080" data-height="1920">
+    <div id="k03-appel-commente-calque" class="habillage clip" data-start="0" data-duration="4" data-track-index="0">
+      <svg class="palmes" viewBox="0 0 1080 1920" aria-hidden="true"></svg>
+      <div class="bandeau">
+        <!-- EMPLACEMENT : le vrai logo de ce que la personne reçoit (skill thesvg),
+             <img src="assets/logos/<marque>.svg" alt=""> , et/ou son nom en texte. -->
+        <span class="nom">Ton guide</span>
+      </div>
+      <p class="verbe"></p>
+      <p class="cle"><span></span></p>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'k03-appel-commente';
+      var scope = '#' + ID + ' ';
+      // >>> À REMPLACER : le verbe, le mot-clé du client, et les instants (s) où la voix les dit.
+      var DONNEES = { verbe: ['COMMENTE', 0.05], cle: ['GUIDE', 0.6], bandeau: 0 };
+      var root = document.getElementById(ID);
+      function palme(x, y, angle, L) {
+        var g = '<g transform="translate(' + x + ' ' + y + ') rotate(' + angle + ')">';
+        g += '<path d="M0 0 Q' + (L * 0.5) + ' ' + (-L * 0.08) + ' ' + L + ' 0" fill="none" stroke-width="7" stroke="currentColor"/>';
+        for (var i = 0; i < 17; i++) {
+          var t = 0.1 + i * 0.053, px = L * t, py = -L * 0.08 * 4 * t * (1 - t) * 0.5;
+          var len = L * (0.46 - 0.3 * t), w = len * 0.11, a = 52 - 22 * t;
+          [-1, 1].forEach(function (c) {
+            g += '<path transform="translate(' + px.toFixed(1) + ' ' + py.toFixed(1) + ') rotate(' + (c * a).toFixed(1) + ')" d="M0 0 Q' +
+              (len * 0.5).toFixed(1) + ' ' + (-w).toFixed(1) + ' ' + len.toFixed(1) + ' 0 Q' + (len * 0.5).toFixed(1) + ' ' + w.toFixed(1) + ' 0 0"/>';
+          });
+        }
+        return g + '</g>';
+      }
+      root.querySelector('.palmes').innerHTML = palme(1130, -40, 128, 760) + palme(1120, 420, 160, 520) + palme(-60, 120, 38, 420);
+      root.querySelector('.verbe').textContent = DONNEES.verbe[0];
+      root.querySelector('.cle span').textContent = '\u00AB\u202F' + DONNEES.cle[0] + '\u202F\u00BB';   // « MOT »
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      if (DONNEES.bandeau <= 0.001) tl.fromTo(scope + '.bandeau', { opacity: 1 }, { opacity: 1, duration: 0.01 }, 0);
+      else tl.fromTo(scope + '.bandeau', { opacity: 0, scale: 0.96, filter: 'blur(10px)' },
+        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.3, ease: 'power2.out' }, DONNEES.bandeau);
+      tl.fromTo(scope + '.bandeau .nom', { opacity: 0 }, { opacity: 1, duration: 0.25, ease: 'power2.out' }, 0.5);
+      tl.fromTo(scope + '.verbe', { opacity: 0, scale: 1.08, filter: 'blur(12px)' },
+        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.24, ease: 'power2.out' }, DONNEES.verbe[1]);
+      tl.fromTo(scope + '.cle', { opacity: 0, scale: 1.08, filter: 'blur(12px)' },
+        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.24, ease: 'power2.out' }, DONNEES.cle[1]);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

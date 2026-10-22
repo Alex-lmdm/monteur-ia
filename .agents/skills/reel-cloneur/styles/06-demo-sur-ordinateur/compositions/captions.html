@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <!--
+      ╔══════════════════════════════════════════════════════════════════════════════╗
+      ║ STYLE 06 · DÉMO SUR ORDINATEUR · pièce « sous-titres karaoké »                ║
+      ╚══════════════════════════════════════════════════════════════════════════════╝
+      CE QUE C'EST : les sous-titres du style. 1 à 3 mots, une ligne, ponctuation gardée, casse
+        telle qu'écrite ; italique très gras (visual.fontCaptions = OpenSans 800 italique), blanc
+        (var(--brand-text)) avec ombre portée nette en bas à droite (var(--brand-stroke)) ; le mot
+        prononcé passe dans une pastille arrondie d'accent (var(--brand-accent)).
+      TAILLE : 1080 x 1920, piste sous-titres du master (compositions/captions.html).
+      POSITION : y = 1500 dans TOUTES les sections (visage et écran) : Y_FACE = Y_FULL = 1500
+        dans tools/sections.py.
+      À REMPLACER : les div.cap d'exemple. Les écrire avec `python3 tools/montage_captions.py
+        --write` (découpage MANUAL : 1 à 3 mots, coupe aux virgules et aux fins de phrase), puis
+        remettre ici ce <style> et ce <script> à la place de ceux du fichier généré, et ajouter
+        à chaque div.cap `data-mots="début-fin début-fin…"` : un couple par mot, en secondes du
+        Reel, lus dans derush/<vidéo>_words.json (un signe seul comme « » : reste collé à son mot).
+        Sans data-mots, les mots se partagent la durée du sous-titre à parts égales.
+        Le mot « lien » s'écrit 🔗.
+    -->
+    <script src="assets/vendor/gsap.min.js"></script>
+    <link rel="stylesheet" href="brand/fonts.css">
+    <link rel="stylesheet" href="brand/tokens.css">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+      #captions { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden; }
+      /* Style 06 : italique très gras (police du style : visual.fontCaptions), blanc, ombre portée
+         nette en bas à droite ; le mot prononcé passe dans une pastille d'accent. */
+      #captions .cap { font-style: italic; color: var(--brand-text); background: none; padding: 0;
+        text-shadow: 0.05em 0.075em 0.035em color-mix(in srgb, var(--brand-stroke) 88%, transparent); }
+      #captions .mot { position: relative; display: inline-block; }
+      #captions .pastille { position: absolute; left: -0.12em; right: -0.1em; top: 0.02em; bottom: -0.04em; z-index: -1;
+        border-radius: 0.18em; background: var(--brand-accent); opacity: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="captions" data-composition-id="captions" data-start="0" data-duration="5" data-fps="30" data-width="1080" data-height="1920">
+      <div class="cap clip" data-mots="0.02-0.20 0.20-0.45 0.45-0.88" id="cap-0" style="top:1500px" data-start="0" data-duration="0.90000" data-track-index="0">Tu peux maintenant</div>
+      <div class="cap clip" data-mots="0.92-1.25 1.25-1.68" id="cap-1" style="top:1500px" data-start="0.89967" data-duration="0.80000" data-track-index="1">ouvrir l'outil,</div>
+      <div class="cap clip" data-mots="1.72-2.05 2.05-2.20 2.20-2.58" id="cap-2" style="top:1500px" data-start="1.69967" data-duration="0.90000" data-track-index="2">cliquer à gauche</div>
+      <div class="cap clip" id="cap-3" style="top:1500px" data-start="2.59967" data-duration="0.70000" data-track-index="3">et écrire</div>
+      <div class="cap clip" id="cap-4" style="top:1500px" data-start="3.29967" data-duration="0.90000" data-track-index="0">« ta demande. »</div>
+      <div class="cap clip" id="cap-5" style="top:1500px" data-start="4.19967" data-duration="0.80000" data-track-index="1">Voilà le résultat.</div>
+    </div>
+    <script>
+      // Karaoké : chaque mot d'un sous-titre devient un <span class="mot"> avec sa pastille.
+      // data-mots="début-fin début-fin…" (secondes du Reel, un couple par mot) cale la pastille sur
+      // la voix ; sans lui, les mots se partagent la durée du sous-titre à parts égales.
+      (function () {
+        var ID = 'captions';
+        var root = document.getElementById(ID);
+        window.__timelines = window.__timelines || {};
+        var tl = gsap.timeline({ paused: true });
+        var caps = root.querySelectorAll('.cap');
+        for (var i = 0; i < caps.length; i++) {
+          var cap = caps[i];
+          var t0 = parseFloat(cap.getAttribute('data-start')) || 0;
+          var d = parseFloat(cap.getAttribute('data-duration')) || 0.5;
+          var bruts = cap.textContent.split(' ');
+          var toks = [], avant = '';
+          for (var j = 0; j < bruts.length; j++) {
+            var m = bruts[j];
+            if (!m) { continue; }
+            if (!/[0-9A-Za-zÀ-ÿ]/.test(m) && m.indexOf('\uD83D') < 0) {
+              if (m === '«') { avant += m + '\u00a0'; } else if (toks.length) { toks[toks.length - 1] += '\u00a0' + m; }
+              continue;
+            }
+            toks.push(avant + m); avant = '';
+          }
+          var temps = (cap.getAttribute('data-mots') || '').split(' ').filter(Boolean).map(function (p) {
+            var ab = p.split('-'); return [parseFloat(ab[0]), parseFloat(ab[1])];
+          });
+          if (temps.length !== toks.length) {
+            temps = toks.map(function (_, k) { return [t0 + d * k / toks.length, t0 + d * (k + 1) / toks.length]; });
+          }
+          cap.textContent = '';
+          for (var k = 0; k < toks.length; k++) {
+            if (k) { cap.appendChild(document.createTextNode(' ')); }
+            var span = document.createElement('span'); span.className = 'mot';
+            var pastille = document.createElement('span'); pastille.className = 'pastille';
+            span.appendChild(pastille); span.appendChild(document.createTextNode(toks[k]));
+            cap.appendChild(span);
+            var a = Math.max(0.02, temps[k][0]), b = Math.max(a + 0.05, temps[k][1]);
+            tl.fromTo(pastille, { opacity: 1, scaleX: 0.8 }, { scaleX: 1, duration: 0.08, ease: 'power2.out', immediateRender: false }, a);
+            tl.set(pastille, { opacity: 0 }, b);
+          }
+        }
+        window.__timelines[ID] = tl;
+      })();
+    </script>
+  </body>
+</html>

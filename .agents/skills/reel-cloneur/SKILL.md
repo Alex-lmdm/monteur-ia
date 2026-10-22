@@ -7,7 +7,9 @@ description: >-
   couleurs, sons : une fiche appliquée à ses prochaines vidéos), ou les deux. Use when the user pastes
   a Reel / TikTok / Short link or drops a video and says « clone ce Reel », « clone son style de
   montage », « clone mon style », « monte comme cette vidéo », « analyse ce Reel », « pourquoi ça a
-  marché », « fais-moi la même chose », « garde le style cloné », « clona este Reel ». Sortie :
+  marché », « fais-moi la même chose », « garde le style cloné », « clona este Reel ». Aussi les
+  styles prêts du catalogue : « monte ma vidéo dans le style 4 », « le style Top outils », « quels
+  styles de montage ? » (styles/README.md). Sortie :
   clones/<date>-<slug>/ ; script : analyse.md puis script.md (3 accroches, corps calqué, appel à
   l'action, choix de montage) ; style : style.md, enregistré dans ses réglages s'il le garde. On
   reprend la mécanique, les faits et la manière de monter, jamais les phrases, le vécu ni la
@@ -25,6 +27,8 @@ et **le style de montage** (comment la vidéo est montée). Tu commences par lui
 - **Script** : la suite de ce fichier, §1 à §6.
 - **Style de montage** : **`references/mode-style.md`**, qui s'appuie sur le §1 pour préparer.
 - **Les deux** : `references/mode-style.md`, §5.
+- **Un style du catalogue** (« dans le style 4 », « le style Top outils », « quels styles tu as ? ») :
+  **`styles/README.md`**, sans rien télécharger ni cloner : le style est déjà prêt.
 
 Le mode script, dans cet ordre, sans autre question préalable :
 

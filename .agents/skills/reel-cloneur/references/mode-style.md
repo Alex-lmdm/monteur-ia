@@ -108,8 +108,9 @@ clones/<dossier>/kit/
   apercu/                     les paires référence / montage du contrôle (outil « cote-a-cote »)
 ```
 
-Un style du catalogue de Monteur IA est un kit déjà construit et contrôlé, livré avec le produit :
-on l'applique comme un style cloné, sans refaire ce travail.
+Un style du catalogue de Monteur IA est un kit déjà construit et contrôlé, livré avec le produit
+(`styles/<NN-nom>/`, index et mode d'emploi dans `styles/README.md`) : on l'applique comme un style
+cloné, sans refaire ce travail.
 
 ---
 
