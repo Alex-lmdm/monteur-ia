@@ -68,7 +68,8 @@ def reel() -> pathlib.Path:
 
 REGLAGES_REEL = "reel.config.json"
 CLES_REEL = {"montage": ("splitTransform", "faceCrop", "fullFaceTransform", "fullFaceOrigin", "fullFaceCrop",
-                         "decorTransform", "decorOrigin", "decorCrop")}
+                         "decorTransform", "decorOrigin", "decorCrop",
+                         "detoureTransform", "detoureOrigin", "detoureCrop")}
 # `visual` : tout le style de CE Reel (couleurs, polices, sous-titres), les mêmes clés que le `visual`
 # de brand.config.example.json, validées comme dans scripts/sync.mjs (visualDuReel) : une valeur que
 # la synchro ignore est ignorée ici aussi, pour que les outils et le rendu voient le même style.
@@ -146,6 +147,8 @@ def avec_reglages_reel(cfg: dict, dossier=None) -> dict:
         montage.pop("fullFaceCrop", None)
     if ("decorTransform" in r or "decorOrigin" in r) and "decorCrop" not in r:
         montage.pop("decorCrop", None)
+    if ("detoureTransform" in r or "detoureOrigin" in r) and "detoureCrop" not in r:
+        montage.pop("detoureCrop", None)
     return {**cfg, "montage": {**montage, **r}, "visual": {**(cfg.get("visual") or {}), **propres.get("visual", {})}}
 
 

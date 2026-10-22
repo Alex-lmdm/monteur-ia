@@ -119,6 +119,17 @@ def crop_decor(montage: dict):
     return crop_from_transform(transform, 0, montage.get("decorOrigin") or "center top")
 
 
+def crop_detoure(montage: dict):
+    """Zone du rush à détourer (sections « detoure »), en pixels de base.mp4 ; None = la vidéo entière.
+    Mêmes règles que crop_decor, avec montage.detoureTransform / detoureOrigin / detoureCrop."""
+    if montage.get("detoureCrop"):
+        return montage["detoureCrop"]
+    transform = montage.get("detoureTransform")
+    if not transform or transform.strip() == "none":
+        return None
+    return crop_from_transform(transform, 0, montage.get("detoureOrigin") or "center top")
+
+
 def probe(path):
     """(largeur, hauteur, color_transfer, durée) du flux vidéo."""
     out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",

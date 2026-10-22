@@ -56,6 +56,10 @@ DURATION = round(image(CUTS["duration"]), 5)   # duree du montage : un nombre en
 #               le format des Reels « cartes au-dessus de la tete » : jamais un ecran partage.
 #               Cadrage = montage.decorTransform / decorOrigin (sans reglage : la video telle que
 #               filmee ; visage trop haut -> scale(1.5) autour de « center top » le fait descendre).
+#     detoure -> la PERSONNE DETOUREE (sans son decor) posee DEVANT la sous-composition : la
+#               section peint le fond (page web, aplat, objets), la personne passe par-dessus.
+#               tools/build_faces.py prepare visage-detoure.webm (detourage local, la premiere fois :
+#               modele de 170 Mo a telecharger). Cadrage = montage.detoureTransform / detoureOrigin.
 #
 #   {"media": "fichier.mp4"} -> la section n'est PAS une sous-composition : c'est une <video>
 #   posee directement dans le master (couche video NATIVE, compositee ensuite par ffmpeg).
@@ -89,6 +93,7 @@ Y_FULL = 1500    # sous la fenetre plein ecran (motion / images)
 Y_MEDIA = 1100   # b-roll plein ecran : juste SOUS le milieu. A 1500 le sous-titre tombe sur le
                  # bas de l'image (souvent la partie inutile : bureau, clavier, decor).
 Y_DECOR = 760    # cartes sur le decor : juste SOUS les cartes du haut, au-dessus de la tete.
+Y_DETOURE = 1250  # personne detouree devant les visuels : sur le buste, sous le visage.
 
 
 def sections():
@@ -105,6 +110,8 @@ def sections():
             y = Y_FACE
         elif fmt == "decor":
             y = Y_DECOR
+        elif fmt == "detoure":
+            y = Y_DETOURE
         else:
             y = Y_MEDIA if media else Y_FULL
         out.append({"id": sid, "fmt": fmt, "takes": idx, "media": media,
@@ -149,6 +156,11 @@ def decor_windows():
     return _merge_windows("decor")
 
 
+def detoure_windows():
+    """Fenetres personne detouree DEVANT les visuels (sections 'detoure'), contigues fusionnees."""
+    return _merge_windows("detoure")
+
+
 if __name__ == "__main__":
     for s in sections():
         print(f'{s["id"]:<16} {s["fmt"]:<5} {s["start"]:6.3f} -> {s["end"]:6.3f}  '
@@ -160,6 +172,11 @@ if __name__ == "__main__":
     if ff:
         print("fenetres visage (plein ecran) :")
         for st, d in ff:
+            print(f"  {st:6.3f}  +{d:.3f}")
+    tt = detoure_windows()
+    if tt:
+        print("fenetres personne detouree (devant les visuels) :")
+        for st, d in tt:
             print(f"  {st:6.3f}  +{d:.3f}")
     dd = decor_windows()
     if dd:

@@ -42,6 +42,8 @@ FACES = sections.face_windows()          # visage en split (moitie basse)
 FACEFULL = sections.facefull_windows()   # visage PLEIN ECRAN (sections "face")
 # Video filmee plein ecran SOUS les cartes (sections "decor") ; un sections.py d'avant n'en a pas.
 DECOR = getattr(sections, "decor_windows", lambda: [])()
+# Personne detouree DEVANT les visuels (sections "detoure").
+DETOURE = getattr(sections, "detoure_windows", lambda: [])()
 
 # Transform par defaut du visage en split (calibre par /setup -> montage.splitTransform).
 DEFAULT_SPLIT_TRANSFORM = "translate(-216px, 410px) scale(1.40)"  # = repli crop de build_final.py
@@ -53,6 +55,8 @@ DEFAULT_FULLFACE_ORIGIN = "center 34%"
 # laisser la place aux cartes -> montage.decorTransform « scale(1.5) » autour de « center top ».
 DEFAULT_DECOR_TRANSFORM = "none"
 DEFAULT_DECOR_ORIGIN = "center top"
+DEFAULT_DETOURE_TRANSFORM = "none"
+DEFAULT_DETOURE_ORIGIN = "center top"
 
 
 # brand.config.json (genere par /setup, sinon brand.config.example.json), et par-dessus le cadrage
@@ -63,6 +67,8 @@ FULLFACE_TRANSFORM = (CFG.get("montage") or {}).get("fullFaceTransform") or DEFA
 FULLFACE_ORIGIN = (CFG.get("montage") or {}).get("fullFaceOrigin") or DEFAULT_FULLFACE_ORIGIN
 DECOR_TRANSFORM = (CFG.get("montage") or {}).get("decorTransform") or DEFAULT_DECOR_TRANSFORM
 DECOR_ORIGIN = (CFG.get("montage") or {}).get("decorOrigin") or DEFAULT_DECOR_ORIGIN
+DETOURE_TRANSFORM = (CFG.get("montage") or {}).get("detoureTransform") or DEFAULT_DETOURE_TRANSFORM
+DETOURE_ORIGIN = (CFG.get("montage") or {}).get("detoureOrigin") or DEFAULT_DETOURE_ORIGIN
 # Le fond n'est JAMAIS ecrit en dur ici : le master charge brand/tokens.css, donc
 # `var(--brand-bg)` suffit et suit le style de chacun. C'est aussi le motif que
 # tools/build_overlay.py cherche pour fabriquer le calque alpha.
@@ -80,6 +86,11 @@ SRC_DECOR = "assets/video/visage-decor.mp4" if NATIF_DECOR else "assets/video/ba
 CSS_SPLIT = "transform: none;" if NATIF_SPLIT else f"transform-origin: 0 0; transform: {SPLIT_TRANSFORM};"
 CSS_PLEIN = "transform: none;" if NATIF_PLEIN else f"transform: {FULLFACE_TRANSFORM}; transform-origin: {FULLFACE_ORIGIN};"
 CSS_DECOR = "transform: none;" if NATIF_DECOR else f"transform: {DECOR_TRANSFORM}; transform-origin: {DECOR_ORIGIN};"
+# Personne detouree : la video transparente de tools/build_faces.py ; sans elle (pas encore detouree),
+# l'apercu montre la video filmee entiere a sa place.
+NATIF_DETOURE = (ROOT / "assets/video/visage-detoure.webm").exists()
+SRC_DETOURE = "assets/video/visage-detoure.webm" if NATIF_DETOURE else "assets/video/base.mp4"
+CSS_DETOURE = "transform: none;" if NATIF_DETOURE else f"transform: {DETOURE_TRANSFORM}; transform-origin: {DETOURE_ORIGIN};"
 
 # --- calage des videos et des sections sur les images du rendu ---------------------------------
 def fenetre(st: float, d: float, media: bool = True) -> tuple[str, str, str]:
@@ -113,12 +124,15 @@ faces_full = "\n".join(calque(f"facefull{i}", SRC_PLEIN, st, d, 11) for i, (st, 
 # --- calque video SOUS les cartes : une <video> par fenetre "decor" ----------------------------
 faces_decor = "\n".join(calque(f"decor{i}", SRC_DECOR, st, d, 12) for i, (st, d) in enumerate(DECOR))
 
+# --- calque personne detouree DEVANT les sections "detoure" -----------------------------------
+faces_detoure = "\n".join(calque(f"detoure{i}", SRC_DETOURE, st, d, 15) for i, (st, d) in enumerate(DETOURE))
+
 # --- sections : une sous-comp par ligne de LAYOUT --------------------------------------------
 # ⛔ Une section MEDIA (b-roll) est une <video> POSEE ICI, pas une sous-comp : dans une sous-comp
 # le `data-start="0"` de la video est relatif a la compo mais le runtime media le lit en ABSOLU
 # -> le b-roll s'affiche des 0 s et recouvre les autres sections. Comme le <video> visage, elle
 # n'a PAS class="clip" : sa fenetre vient de data-start/data-duration.
-rows, track = [], {"split": 2, "full": 3, "decor": 4}
+rows, track = [], {"split": 2, "full": 3, "decor": 4, "detoure": 5}
 for s in SEC:
     if s["fmt"] == "face":
         continue          # section "face" = juste le visage plein ecran, aucune sous-comp a monter
@@ -172,6 +186,10 @@ doc = f'''<!DOCTYPE html>
       .face-decor {{ position: absolute; inset: 0; overflow: hidden; background: transparent; }}
       .face-decor video {{ position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover;
         {CSS_DECOR} }}
+      /* Personne DETOUREE (sections "detoure") : video transparente posee DEVANT la section. */
+      .face-detoure {{ position: absolute; inset: 0; overflow: hidden; background: transparent; }}
+      .face-detoure video {{ position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover;
+        {CSS_DETOURE} }}
       /* B-roll : pre-cadre a la zone par ffmpeg (fond flou compris) -> aucun recadrage ici. */
       .media-full {{ position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; }}
       .media-split {{ position: absolute; left: 0; top: 0; width: 1080px; height: 920px; object-fit: cover; }}
@@ -213,6 +231,11 @@ doc = f'''<!DOCTYPE html>
       <!-- ===== SECTIONS ===== -->
 {chr(10).join(rows)}
 
+      <!-- PERSONNE DETOUREE (sections "detoure") : APRES les sections, elle passe devant leurs visuels. -->
+      <div class="face-detoure">
+{faces_detoure}
+      </div>
+
       <!-- VISAGE plein ecran : APRES les sections. L'ordre DOM fait le layering : place avant,
            une section pourrait peindre par-dessus le visage meme hors de sa fenetre. -->
       <div class="face-full">
@@ -245,5 +268,7 @@ else:
 
 out.write_text(doc, encoding="utf-8")
 print(f"{out.relative_to(ROOT)} : {len(SEC)} section(s), {len(FACES)} fenetre(s) visage, {DUR}s")
+if DETOURE and not NATIF_DETOURE:
+    print("  personne pas encore detouree : lance python3 tools/build_faces.py, puis relance ce script")
 if "--write" not in sys.argv:
     print("(brouillon ; compare-le a index.html, puis relance avec --write pour ecraser index.html)")

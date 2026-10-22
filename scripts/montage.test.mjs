@@ -558,3 +558,36 @@ test('Reel Cloneur : un changement de carte sans coupe compte dans le rythme ; c
   assert.equal(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', paire],
     { encoding: 'utf8' }).trim(), '1080,960');
 });
+
+// ---------------------------------------------------------------------------
+// 7. Personne détourée devant les visuels (styles « Avis produit », « Mon histoire »)
+// ---------------------------------------------------------------------------
+// Le vrai détourage (hyperframes remove-background, modèle de 170 Mo) est remplacé ici par un faux qui
+// rend une vidéo transparente de même taille : on vérifie la place des couches, pas le modèle.
+test('cadrage détouré : la personne passe devant la section, détourée une fois ; l’ancien export refuse', (t) => {
+  if (!outils(t, { pil: true, ffmpeg: true })) return;
+  const dir = maison(t);
+  const reel = nouveauReel(dir, 'Detoure');
+  plan(reel, PRISES_HORS_IMAGES, { layout: '    ("s0", "split", [0]),\n    ("s1", "detoure", [1, 2]),' });
+  const faux = path.join(dir, 'faux-hyperframes.sh');
+  write(dir, 'faux-hyperframes.sh', '#!/bin/sh\n# remove-background <entree> -o <sortie> ...\n'
+    + 'ffmpeg -v error -y -i "$2" -c:v libvpx-vp9 -deadline realtime -cpu-used 8 -pix_fmt yuva420p -an "$4"\n');
+  const env = { ...process.env, MONTEUR_HYPERFRAMES: `sh ${faux}` };
+  const faces = () => execFileSync('python3', ['tools/build_faces.py'], { cwd: reel, encoding: 'utf8', env });
+  assert.match(faces(), /visage-detoure\.webm : zone 1080:1920:0:0 du rush, personne détourée/);
+  assert.match(faces(), /déjà détourée \(même zone, même dérush\)/, 'pas trois minutes de calcul à chaque fois');
+  assert.ok(!fs.existsSync(path.join(reel, 'work/visage-detoure-source.mp4')), 'le fichier de travail part');
+
+  python(reel, 'tools/build_master.py', '--write');
+  const master = read(reel, 'index.html');
+  const ordre = ['<div class="face-decor">', '===== SECTIONS =====', '<div class="face-detoure">', '<div class="face-full">']
+    .map((m) => master.indexOf(m));
+  assert.deepEqual([...ordre].sort((a, b) => a - b), ordre, 'la personne passe après les sections, avant le visage plein écran');
+  assert.match(master, /<video id="detoure0" src="assets\/video\/visage-detoure\.webm"/);
+  assert.match(master, /id="section-s1"[^>]*data-track-index="5" data-width="1080" data-height="1920"/);
+  assert.deepEqual([...new Set(sousTitres(reel).caps.map((c) => c.y))], [920, 1250]);
+
+  const ancien = spawnSync('python3', ['tools/build_final.py'], { cwd: reel, encoding: 'utf8' });
+  assert.notEqual(ancien.status, 0);
+  assert.match(ancien.stderr, /ne sait pas poser une personne detouree/);
+});

@@ -55,6 +55,9 @@ DUR = sections.DURATION
 WINS = sections.face_windows()          # visage en split (moitie basse)
 WINSFULL = sections.facefull_windows()  # visage plein ecran (sections "face")
 WINSDECOR = getattr(sections, "decor_windows", lambda: [])()  # video sous les cartes (sections "decor")
+if getattr(sections, "detoure_windows", lambda: [])():
+    sys.exit("Cet ancien export ne sait pas poser une personne detouree devant les visuels (sections "
+             "\"detoure\") : exporte avec le bouton Export de l'app, ou npm run render.")
 MEDIAS = [s for s in SEC if s.get("media")]
 
 

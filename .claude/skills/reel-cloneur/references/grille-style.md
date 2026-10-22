@@ -46,7 +46,8 @@ Source : images une par une, planches.
 
 - **Visage plein écran**, **écran partagé** (visage en bas, image au-dessus, le décor filmé
   coupé), **cartes posées sur le décor** (la vidéo filmée reste entière, décor compris, et les
-  cartes ou titres se posent par-dessus, en haut), **visage en petit** dans un coin, **pas de
+  cartes ou titres se posent par-dessus, en haut), **personne détourée** (sans son décor, devant une
+  page, un aplat ou des objets, parfois un mot derrière la tête), **visage en petit** dans un coin, **pas de
   visage** (voix sur images). Et l'alternance : quand on passe de l'un à l'autre (accroche plein
   écran puis partagé, retour plein écran sur l'appel à l'action…).
 - **Écran partagé ou décor ?** Regarde ce qu'il y a derrière la carte : un aplat, un flou ou une

@@ -125,9 +125,19 @@ de style, ajustable au bloc F du setup). Trois valeurs :
   partagé sur fond uni. C'est aussi la façon de poser des visuels sur la vidéo plein écran : une
   section `face` n'a pas de sous-comp.
 
+Format de section en plus, choisi section par section (jamais un `defaultLayout`) :
+
+- **`detoure`** : la **personne détourée**, sans son décor, passe **devant** la section (sous-comp
+  **1080×1920** qui peint le fond : page web, aplat, objets, texte derrière la tête). `tools/build_faces.py`
+  détoure la vidéo sur l'ordinateur (`hyperframes remove-background`, modèle de 170 Mo téléchargé la
+  première fois, environ 3 minutes pour un Reel ; refait seulement si la zone ou le dérush changent)
+  et pose `visage-detoure.webm` (transparente). Cadrage = `montage.detoureTransform` / `detoureOrigin`.
+  Sous-titres sur le buste (`Y_DETOURE`). Export par le bouton Export ou `npm run render` : l'ancien
+  export ffmpeg ne sait pas poser la personne devant les visuels.
+
 **Dans les deux cas, le créateur dirige section par section** — il peut passer n'importe quelle
 section en : visage plein écran seul, visuel/motion plein écran seul (recouvre le visage), ou split.
-Formats techniques de section : `1080×920` (split) ou `1080×1920` (full, decor). On commence TOUT sur le
+Formats techniques de section : `1080×920` (split) ou `1080×1920` (full, decor, detoure). On commence TOUT sur le
 `defaultLayout` choisi, puis on ajuste au fil des retours.
 
 > Ancien nom : `montage.splitByDefault` (booléen) a été remplacé par `montage.defaultLayout`. Si tu
