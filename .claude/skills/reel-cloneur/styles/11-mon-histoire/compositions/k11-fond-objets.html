@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    PIÈCE : FOND UNI AVEC OBJETS (style n°11 « Mon histoire »)
+    Ce que c'est : le fond bleu ciel uni du style, 1 à 3 objets dessinés (casier qui s'ouvre, dossier,
+    valise, chrono, rosette…) ou écussons brodés, et la typo géante qui s'empile mot après mot.
+    Taille : 1080×1920 (section plein cadre).
+    Quand l'utiliser : section « detoure » (la personne détourée passe DEVANT : objets sur les côtés,
+    x ≈ 200 et 880, y 650 à 850 ; typo dans la bande 220 à 560 px) ou section « full » sans la personne
+    (objets au centre, comme ici) : environ une section sur deux.
+    À remplacer : les trois lignes de MOTS (texte d'exemple), le casier, le badge et les écussons
+    (ses objets à lui, sur ses mots à lui). SCENE.fond : "uni" (bleu), "blanc" ou "noir".
+
+    COMMENT T'EN SERVIR DANS UN REEL
+      1. Copie ce fichier en compositions/<id de la section>.html (l'id écrit dans tools/sections.py).
+      2. Remplace toutes les occurrences de « k11-fond-objets » par l'id de la section (style, racine, plan, constante ID).
+      3. Mets la durée de la section (python3 tools/sections.py) dans data-duration (racine et plan) et dans DUREE.
+      4. Remplis SCENE, MOTS et OBJETS dans le script. t = secondes depuis le début de la section :
+         début du mot dans derush/<vidéo>_words.json moins le début de la section (jamais négatif).
+      5. npm run check, puis npx hyperframes snapshot --at <temps> --describe false, et regarde les images.
+    Couleurs et polices : uniquement les var(--brand-*) du style (reel.config.json du kit). Aucun hex ici.
+
+    MOTS (la typo géante : chaque mot dit, au moment où il est dit, jusqu'à la coupe)
+      {t, txt, f, s, c, x, y, al, r, fin, devant}
+      f : "sans" (mots forts, Montserrat 800) ou "serif" (liaisons, Newsreader 300) ; s : taille en px
+      (sans 110 à 300, serif 55 à 100) ; c : "texte" (blanc), "fond" (bleu ciel, sur photo ou fond blanc),
+      "accent", "encre" (sur fond blanc) ; x, y : centre (x 540 par défaut) ; al : "g" ou "d" pour caler
+      à gauche ou à droite ; r : rotation en degrés ; fin : disparition avant la coupe ; devant : true pour
+      passer devant les objets. Minuscules ; le mot « lien » ne s'écrit jamais (🔗). Rien d'important à
+      moins de 100 px des côtés ni au-dessus de 220 px ; en section detoure, la bande 220 à 560 px passe
+      derrière la tête : le mot fort y va, lisible même à moitié caché.
+
+    OBJETS (1 à 3 par scène, chacun sur le mot qui le nomme)
+      {t, type, x, y, w, r, entree, fin, derriere, ...} ; entree : "pop" (défaut), "monte", "aucune".
+      Types : ecusson-bulle (txt, taille) · ecusson-etoile · ecusson-rond (txt) · dossier · casier (ouvre :
+      t d'ouverture) · valise · chrono (tours) · rosette · interdit · crayon · courbe · curseur (chemin :
+      [[dx, dy, t, durée]], clics : [t]) · tuile (src d'un logo ou txt d'un emoji) · logo (src) ·
+      autocollant (src : photo détourée, contour blanc) · photo (src, h, nb, arrondi, liseret, cadrage) ·
+      pixel (src, sautille, chemin) · carte (avatar, titre, texte, grande) · badge (txt, sous) · bulle-dm
+      (txt) · etiquette (txt, taille) · emoji (txt, taille) · cadre-noir (dezoom : {t, echelle, duree}).
+      Une image absente (src vide) s'affiche en emplacement pointillé : remplace-la par le fichier.
+      Images : celles du client (assets/images/ du Reel), logos via le skill thesvg (assets/logos/),
+      jamais d'image générée. Chiffres affichés : seulement ceux que la vidéo dit.
+
+  -->
+  <!-- GSAP est aussi chargé dans le head du master (au rendu par couches, les scripts externes d'une
+       sous-composition ne sont pas chargés). -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    /* Aucune règle sur html/body : au rendu, toutes les sous-compositions partagent UN document.
+       Tout est scopé sous #k11-fond-objets ; couleurs et polices uniquement en var(--brand-*). */
+    #k11-fond-objets { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      font-family:var(--brand-font-body); color:var(--brand-text); }
+    #k11-fond-objets * { box-sizing:border-box; }
+    #k11-fond-objets .scene { position:absolute; inset:0; overflow:hidden; }
+    #k11-fond-objets .fond-uni { background:var(--brand-bg); }
+    #k11-fond-objets .fond-blanc { background:var(--brand-surface); }
+    #k11-fond-objets .fond-noir { background:var(--brand-stroke); }
+    #k11-fond-objets .fond-photo { background:var(--brand-stroke); }
+    #k11-fond-objets .fond-transparent { background:transparent; }
+    #k11-fond-objets .photo-fond { position:absolute; left:-40px; top:-40px; width:1160px; height:2000px; object-fit:cover; }
+    #k11-fond-objets .calque { position:absolute; inset:0; }
+    /* Placement : le conteneur .pos porte la position (left/top + translate CSS) et la rotation ;
+       GSAP n'anime que l'élément intérieur (opacité, échelle, déplacement x/y). */
+    #k11-fond-objets .pos { position:absolute; translate:-50% -50%; }
+    #k11-fond-objets .pos.al-g { translate:0 -50%; }
+    #k11-fond-objets .pos.al-d { translate:-100% -50%; }
+    #k11-fond-objets .anim { opacity:0; }
+    /* Typo géante : la sans très grasse porte les mots forts, la serif fine relie. Minuscules. */
+    #k11-fond-objets .mot { display:block; white-space:nowrap; line-height:.86; }
+    #k11-fond-objets .mot.sans { font-family:var(--brand-font-captions); font-weight:800; letter-spacing:-0.025em; }
+    #k11-fond-objets .mot.serif { font-family:var(--brand-font-display); font-weight:300; letter-spacing:-0.01em; line-height:1; }
+    #k11-fond-objets .c-texte { color:var(--brand-text); }
+    #k11-fond-objets .c-fond { color:var(--brand-bg); }
+    #k11-fond-objets .c-accent { color:var(--brand-accent); }
+    #k11-fond-objets .c-encre { color:var(--brand-muted); }
+    /* Ombre posée des objets et contour blanc d'autocollant (die-cut). */
+    #k11-fond-objets .ombre { filter:drop-shadow(0 16px 22px color-mix(in srgb, var(--brand-stroke) 26%, transparent)); }
+    #k11-fond-objets .contour { filter:drop-shadow(8px 0 0 var(--brand-surface)) drop-shadow(-8px 0 0 var(--brand-surface))
+      drop-shadow(0 8px 0 var(--brand-surface)) drop-shadow(0 -8px 0 var(--brand-surface))
+      drop-shadow(0 18px 24px color-mix(in srgb, var(--brand-stroke) 28%, transparent)); }
+    #k11-fond-objets .contour-fin { filter:drop-shadow(5px 0 0 var(--brand-surface)) drop-shadow(-5px 0 0 var(--brand-surface))
+      drop-shadow(0 5px 0 var(--brand-surface)) drop-shadow(0 -5px 0 var(--brand-surface))
+      drop-shadow(0 12px 16px color-mix(in srgb, var(--brand-stroke) 26%, transparent)); }
+    #k11-fond-objets img { display:block; }
+    /* Écusson brodé (bulle, étoile, rond) : aplat d'accent, bord relevé, points de couture. */
+    #k11-fond-objets .e-fond { fill:var(--brand-accent); stroke:color-mix(in srgb, var(--brand-accent) 62%, var(--brand-stroke)); stroke-width:7; stroke-linejoin:round; }
+    #k11-fond-objets .e-point { fill:none; stroke:color-mix(in srgb, var(--brand-text) 72%, var(--brand-accent)); stroke-width:3.2; stroke-dasharray:9 7; stroke-linejoin:round; }
+    #k11-fond-objets .e-trame { stroke:color-mix(in srgb, var(--brand-accent) 70%, var(--brand-text)); stroke-width:1.6; opacity:.45; }
+    #k11-fond-objets .e-txt { fill:var(--brand-text); font-family:var(--brand-font-body); font-weight:700; }
+    /* Objets dessinés : teintes tirées du style (surface, fond, encre), jamais de hex. */
+    #k11-fond-objets .d-dos { fill:color-mix(in srgb, var(--brand-surface) 80%, var(--brand-muted)); }
+    #k11-fond-objets .d-face { fill:color-mix(in srgb, var(--brand-surface) 92%, var(--brand-muted)); }
+    #k11-fond-objets .d-pli { fill:none; stroke:color-mix(in srgb, var(--brand-surface) 70%, var(--brand-muted)); stroke-width:3; }
+    #k11-fond-objets .k-corps { fill:var(--brand-surface); stroke:color-mix(in srgb, var(--brand-surface) 75%, var(--brand-muted)); stroke-width:3; }
+    #k11-fond-objets .k-dedans { fill:color-mix(in srgb, var(--brand-surface) 62%, var(--brand-muted)); }
+    #k11-fond-objets .k-porte { fill:color-mix(in srgb, var(--brand-surface) 95%, var(--brand-muted)); stroke:color-mix(in srgb, var(--brand-surface) 72%, var(--brand-muted)); stroke-width:3; }
+    #k11-fond-objets .k-trait { stroke:color-mix(in srgb, var(--brand-surface) 68%, var(--brand-muted)); stroke-width:5; stroke-linecap:round; }
+    #k11-fond-objets .k-poignee { fill:var(--brand-muted); }
+    #k11-fond-objets .v-corps { fill:color-mix(in srgb, var(--brand-bg) 45%, var(--brand-surface)); stroke:color-mix(in srgb, var(--brand-bg) 70%, var(--brand-muted)); stroke-width:4; }
+    #k11-fond-objets .v-cote { fill:none; stroke:color-mix(in srgb, var(--brand-bg) 75%, var(--brand-muted)); stroke-width:5; stroke-linecap:round; }
+    #k11-fond-objets .v-sombre { fill:color-mix(in srgb, var(--brand-bg) 40%, var(--brand-muted)); }
+    #k11-fond-objets .h-corps { fill:var(--brand-surface); stroke:var(--brand-muted); stroke-width:6; }
+    #k11-fond-objets .h-anneau { fill:none; stroke:var(--brand-accent); stroke-width:16; }
+    #k11-fond-objets .h-repere { stroke:var(--brand-muted); stroke-width:5; stroke-linecap:round; }
+    #k11-fond-objets .h-aiguille { stroke:var(--brand-accent); stroke-width:9; stroke-linecap:round; }
+    #k11-fond-objets .h-plein { fill:var(--brand-muted); }
+    #k11-fond-objets .r-ruban { fill:var(--brand-accent); }
+    #k11-fond-objets .r-ruban2 { fill:color-mix(in srgb, var(--brand-accent) 70%, var(--brand-stroke)); }
+    #k11-fond-objets .r-disque { fill:var(--brand-accent); stroke:var(--brand-surface); stroke-width:10; }
+    #k11-fond-objets .r-centre { fill:var(--brand-surface); }
+    #k11-fond-objets .r-etoile { fill:var(--brand-accent); }
+    #k11-fond-objets .i-cercle { fill:none; stroke:var(--brand-accent); stroke-width:22; }
+    #k11-fond-objets .i-barre { stroke:var(--brand-accent); stroke-width:22; stroke-linecap:round; }
+    #k11-fond-objets .cr-bois { fill:color-mix(in srgb, var(--brand-bg) 30%, var(--brand-surface)); stroke:var(--brand-muted); stroke-width:4; }
+    #k11-fond-objets .cr-mine { fill:var(--brand-muted); }
+    #k11-fond-objets .cr-gomme { fill:var(--brand-accent); stroke:var(--brand-muted); stroke-width:4; }
+    #k11-fond-objets .co-ligne { fill:none; stroke:var(--brand-accent); stroke-width:9; stroke-linecap:round; }
+    #k11-fond-objets .co-point { fill:var(--brand-surface); stroke:var(--brand-accent); stroke-width:6; }
+    #k11-fond-objets .co-axe { stroke:color-mix(in srgb, var(--brand-surface) 70%, var(--brand-muted)); stroke-width:4; stroke-linecap:round; }
+    #k11-fond-objets .cu-fleche { fill:var(--brand-accent); stroke:var(--brand-surface); stroke-width:5; stroke-linejoin:round; }
+    /* Cartes d'interface (notification, badge, bulle de message, tuile d'appli). */
+    #k11-fond-objets .tuile { background:var(--brand-surface); border-radius:22%; display:flex; align-items:center; justify-content:center; }
+    #k11-fond-objets .tuile img { width:62%; height:62%; object-fit:contain; }
+    #k11-fond-objets .tuile .tuile-emoji { line-height:1; color:var(--brand-muted); }
+    #k11-fond-objets .carte { background:var(--brand-surface); border-radius:28px; padding:24px 28px; display:flex; gap:22px; align-items:center; color:var(--brand-muted); }
+    #k11-fond-objets .carte .avatar { flex:none; width:84px; height:84px; border-radius:50%; background:var(--brand-accent); overflow:hidden; }
+    #k11-fond-objets .carte .avatar img { width:100%; height:100%; object-fit:cover; object-position:50% 12%; }
+    #k11-fond-objets .carte .titre { font-weight:700; font-size:32px; line-height:1.15; }
+    #k11-fond-objets .carte .ligne2 { font-weight:400; font-size:28px; line-height:1.2; opacity:.8; }
+    #k11-fond-objets .badge { background:var(--brand-surface); border-radius:30px; padding:22px 30px; text-align:center; color:var(--brand-muted); }
+    #k11-fond-objets .badge .grand { font-family:var(--brand-font-captions); font-weight:800; font-size:64px; line-height:1.2; }
+    #k11-fond-objets .badge .petit { font-weight:600; font-size:30px; line-height:1.2; margin-top:2px; }
+    #k11-fond-objets .bulle-dm { background:color-mix(in srgb, var(--brand-surface) 86%, var(--brand-muted)); color:var(--brand-muted);
+      border-radius:34px; padding:20px 28px; font-size:30px; line-height:1.25; max-width:640px; }
+    #k11-fond-objets .etiquette { background:var(--brand-accent); color:var(--brand-contrast); font-family:var(--brand-font-captions);
+      font-weight:800; padding:10px 26px 14px; line-height:1; white-space:nowrap; }
+    #k11-fond-objets .emoji { line-height:1; }
+    #k11-fond-objets .pixel { image-rendering:pixelated; }
+    #k11-fond-objets .cadre-photo { overflow:hidden; background:var(--brand-stroke); }
+    #k11-fond-objets .cadre-photo img { width:100%; height:100%; object-fit:cover; }
+    #k11-fond-objets .cadre-noir { box-shadow:0 0 0 1600px var(--brand-stroke); }
+    #k11-fond-objets .carte.grande .titre { font-size:46px; }
+    #k11-fond-objets .carte.grande .avatar { width:112px; height:112px; }
+    #k11-fond-objets .arrondi { border-radius:36px; }
+    #k11-fond-objets .liseret { outline:10px solid var(--brand-surface); }
+    #k11-fond-objets .emplacement { border:6px dashed var(--brand-surface); border-radius:28px; display:flex; align-items:center;
+      justify-content:center; background:color-mix(in srgb, var(--brand-surface) 18%, transparent); }
+    #k11-fond-objets .emplacement span { font-family:var(--brand-font-body); font-weight:700; font-size:34px; color:var(--brand-surface); }
+    #k11-fond-objets .sil { fill:color-mix(in srgb, var(--brand-surface) 78%, var(--brand-muted)); }
+    #k11-fond-objets .sil-txt { fill:var(--brand-muted); font-family:var(--brand-font-body); font-weight:700; }
+  </style>
+</head>
+<body>
+  <div id="k11-fond-objets" data-composition-id="k11-fond-objets" data-start="0" data-duration="3"
+       data-fps="30" data-width="1080" data-height="1920">
+    <div id="k11-fond-objets-plan" class="scene clip" data-start="0" data-duration="3" data-track-index="0"></div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'k11-fond-objets';
+      var DUREE = 3;
+      // >>> À REMPLIR : la scène, les mots (calés sur derush/<vidéo>_words.json) et les objets.
+      var SCENE = {"fond": "uni"};
+      var MOTS = [
+        {"t": 0.1, "txt": "c'est là", "s": 150, "y": 290},
+        {"t": 0.55, "txt": "que tout", "s": 150, "y": 430},
+        {"t": 1.0, "txt": "a commencé", "f": "serif", "s": 88, "y": 560}
+      ];
+      var OBJETS = [
+        {"t": 0.8, "type": "ecusson-bulle", "txt": "et si ?", "w": 330, "x": 250, "y": 760, "r": -8, "taille": 88},
+        {"t": 1.2, "type": "casier", "w": 330, "x": 560, "y": 1110, "ouvre": 1.7},
+        {"t": 1.9, "type": "badge", "txt": "1er", "sous": "client", "x": 560, "y": 1060, "r": -6},
+        {"t": 2.3, "type": "ecusson-etoile", "w": 150, "x": 850, "y": 880, "r": 12}
+      ];
+      // ================= MOTEUR (identique dans toutes les pièces du style n°11) =================
+      // Construit la scène depuis SCENE, MOTS et OBJETS, puis une timeline GSAP déterministe.
+      var racine = document.getElementById(ID);
+      var scene = racine.querySelector('.scene');
+      scene.classList.add('fond-' + (SCENE.fond || 'uni'));
+      if (SCENE.fond === 'photo' && SCENE.photo) {
+        var pf = document.createElement('img');
+        pf.className = 'photo-fond'; pf.src = SCENE.photo; pf.alt = '';
+        var filtres = [];
+        if (SCENE.flou) filtres.push('blur(' + SCENE.flou + 'px)');
+        if (SCENE.nb) filtres.push('grayscale(1)');
+        if (SCENE.sombre) filtres.push('brightness(' + (1 - SCENE.sombre) + ')');
+        if (filtres.length) pf.style.filter = filtres.join(' ');
+        scene.appendChild(pf);
+      }
+      var calqueObjets = document.createElement('div'); calqueObjets.className = 'calque calque-objets';
+      var calqueMots = document.createElement('div'); calqueMots.className = 'calque calque-mots';
+      // Lignes serrées qui se chevauchent un peu, mots derrière la tête : voulu (signature du style).
+      calqueMots.setAttribute('data-layout-allow-overlap', ''); calqueMots.setAttribute('data-layout-allow-occlusion', '');
+      // Les mots passent DERRIÈRE les objets marqués devant:false (par défaut les objets sont devant).
+      scene.appendChild(calqueMots); scene.appendChild(calqueObjets);
+      var calqueDevant = document.createElement('div'); calqueDevant.className = 'calque calque-devant';
+      scene.appendChild(calqueDevant);
+
+      function etoile(cx, cy, r1, r2) {
+        var p = [];
+        for (var i = 0; i < 10; i++) {
+          var r = i % 2 ? r2 : r1, a = -Math.PI / 2 + i * Math.PI / 5;
+          p.push((cx + r * Math.cos(a)).toFixed(1) + ' ' + (cy + r * Math.sin(a)).toFixed(1));
+        }
+        return 'M' + p.join(' L') + ' Z';
+      }
+      function trame(n) {
+        return '<defs><pattern id="trame-' + ID + '-' + n + '" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(38)">' +
+          '<line x1="0" y1="0" x2="0" y2="9" class="e-trame"/></pattern></defs>';
+      }
+      function texteSvg(t, x, y, taille) {
+        return '<text class="e-txt" x="' + x + '" y="' + y + '" font-size="' + taille + '" text-anchor="middle" dominant-baseline="central">' + t + '</text>';
+      }
+      // Emplacement visible tant que l'image n'est pas fournie (le contrôle et l'aperçu restent propres).
+      function emplacement(label, w, h) {
+        return '<div class="emplacement" style="width:' + w + 'px;height:' + h + 'px"><span>' + label + '</span></div>';
+      }
+      function silhouette(w) {
+        return '<svg class="contour" viewBox="0 0 300 420" width="' + w + '"><circle class="sil" cx="150" cy="110" r="78"/>' +
+          '<path class="sil" d="M20 420 Q20 230 150 222 Q280 230 280 420 Z"/>' +
+          '<text class="sil-txt" x="150" y="330" text-anchor="middle" font-size="24">ta photo détourée</text></svg>';
+      }
+      var DESSINS = {
+        'ecusson-bulle': function (o, n) {
+          var d = 'M130 18 H390 A112 112 0 0 1 390 242 H372 L418 290 L318 242 H130 A112 112 0 0 1 130 18 Z';
+          return '<svg viewBox="-10 0 540 300" width="' + (o.w || 420) + '">' + trame(n) +
+            '<path class="e-fond" d="' + d + '"/><path d="' + d + '" fill="url(#trame-' + ID + '-' + n + ')"/>' +
+            '<path class="e-point" d="' + d + '" transform="translate(260 140) scale(.88) translate(-260 -140)"/>' +
+            texteSvg(o.txt || '', 260, 128, o.taille || 110) + '</svg>';
+        },
+        'ecusson-etoile': function (o, n) {
+          var d = etoile(130, 136, 120, 56);
+          return '<svg viewBox="0 0 260 260" width="' + (o.w || 200) + '">' + trame(n) +
+            '<path class="e-fond" d="' + d + '"/><path d="' + d + '" fill="url(#trame-' + ID + '-' + n + ')"/>' +
+            '<path class="e-point" d="' + d + '" transform="translate(130 136) scale(.8) translate(-130 -136)"/></svg>';
+        },
+        'ecusson-rond': function (o, n) {
+          return '<svg viewBox="0 0 240 240" width="' + (o.w || 180) + '">' + trame(n) +
+            '<circle class="e-fond" cx="120" cy="120" r="108"/><circle cx="120" cy="120" r="108" fill="url(#trame-' + ID + '-' + n + ')"/>' +
+            '<circle class="e-point" cx="120" cy="120" r="90"/>' + texteSvg(o.txt || '', 120, 116, o.taille || 120) + '</svg>';
+        },
+        'dossier': function (o) {
+          return '<svg class="ombre" viewBox="0 0 300 230" width="' + (o.w || 300) + '">' +
+            '<path class="d-dos" d="M12 38 Q12 24 26 24 H108 L128 44 H274 Q288 44 288 58 V210 Q288 222 276 222 H24 Q12 222 12 210 Z"/>' +
+            '<rect class="d-face" x="12" y="72" width="276" height="150" rx="10"/>' +
+            '<line class="d-pli" x1="30" y1="92" x2="270" y2="92"/></svg>';
+        },
+        'casier': function (o) {
+          var v = '';
+          for (var i = 0; i < 4; i++) {
+            v += '<line class="k-trait" x1="82" y1="' + (62 + i * 18) + '" x2="138" y2="' + (62 + i * 18) + '"/>' +
+                 '<line class="k-trait" x1="162" y1="' + (62 + i * 18) + '" x2="218" y2="' + (62 + i * 18) + '"/>' +
+                 '<line class="k-trait" x1="82" y1="' + (318 + i * 18) + '" x2="138" y2="' + (318 + i * 18) + '"/>' +
+                 '<line class="k-trait" x1="162" y1="' + (318 + i * 18) + '" x2="218" y2="' + (318 + i * 18) + '"/>';
+          }
+          return '<svg class="ombre" viewBox="0 0 300 420" width="' + (o.w || 320) + '">' +
+            '<rect class="k-corps" x="2" y="2" width="296" height="416" rx="8"/>' +
+            '<rect class="k-dedans" x="26" y="26" width="248" height="368" rx="4"/>' +
+            '<g class="porte"><rect class="k-porte" x="26" y="26" width="248" height="368" rx="4"/>' + v +
+            '<rect class="k-poignee" x="58" y="182" width="18" height="70" rx="6"/></g></svg>';
+        },
+        'valise': function (o) {
+          return '<svg class="ombre" viewBox="0 0 360 300" width="' + (o.w || 360) + '">' +
+            '<path class="v-cote" d="M140 56 V30 Q140 18 152 18 H208 Q220 18 220 30 V56"/>' +
+            '<rect class="v-corps" x="10" y="56" width="340" height="214" rx="26"/>' +
+            '<line class="v-cote" x1="90" y1="66" x2="90" y2="260"/><line class="v-cote" x1="180" y1="66" x2="180" y2="260"/>' +
+            '<line class="v-cote" x1="270" y1="66" x2="270" y2="260"/>' +
+            '<rect class="v-sombre" x="40" y="270" width="34" height="22" rx="8"/><rect class="v-sombre" x="286" y="270" width="34" height="22" rx="8"/></svg>';
+        },
+        'chrono': function (o) {
+          var r = '';
+          for (var i = 0; i < 12; i++) {
+            var a = i * Math.PI / 6, x1 = 130 + 84 * Math.sin(a), y1 = 176 - 84 * Math.cos(a),
+                x2 = 130 + 98 * Math.sin(a), y2 = 176 - 98 * Math.cos(a);
+            r += '<line class="h-repere" x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>';
+          }
+          return '<svg class="ombre" viewBox="0 0 260 300" width="' + (o.w || 220) + '">' +
+            '<rect class="h-plein" x="110" y="16" width="40" height="34" rx="8"/>' +
+            '<circle class="h-corps" cx="130" cy="176" r="116"/><circle class="h-anneau" cx="130" cy="176" r="104"/>' + r +
+            '<line class="h-aiguille aiguille" x1="130" y1="176" x2="130" y2="96"/>' +
+            '<circle class="h-plein" cx="130" cy="176" r="12"/></svg>';
+        },
+        'rosette': function (o) {
+          return '<svg class="ombre" viewBox="0 0 260 360" width="' + (o.w || 240) + '">' +
+            '<path class="r-ruban2" d="M70 180 L30 340 L80 312 L110 352 L130 200 Z"/>' +
+            '<path class="r-ruban" d="M190 180 L230 340 L180 312 L150 352 L130 200 Z"/>' +
+            '<circle class="r-disque" cx="130" cy="130" r="112"/><circle class="r-centre" cx="130" cy="130" r="72"/>' +
+            '<path class="r-etoile" d="' + etoile(130, 134, 52, 24) + '"/></svg>';
+        },
+        'interdit': function (o) {
+          return '<svg viewBox="0 0 240 240" width="' + (o.w || 240) + '">' +
+            '<circle class="i-cercle" cx="120" cy="120" r="96"/><line class="i-barre" x1="52" y1="188" x2="188" y2="52"/></svg>';
+        },
+        'crayon': function (o) {
+          return '<svg class="ombre" viewBox="0 0 420 90" width="' + (o.w || 420) + '">' +
+            '<rect class="cr-gomme" x="6" y="16" width="70" height="58" rx="12"/>' +
+            '<path class="cr-bois" d="M76 16 H330 L408 45 L330 74 H76 Z"/>' +
+            '<path class="cr-mine" d="M378 34 L408 45 L378 56 Z"/></svg>';
+        },
+        'courbe': function (o) {
+          return '<div class="carte" style="padding:22px"><svg viewBox="0 0 300 200" width="' + ((o.w || 320) - 44) + '">' +
+            '<line class="co-axe" x1="20" y1="180" x2="290" y2="180"/><line class="co-axe" x1="20" y1="180" x2="20" y2="14"/>' +
+            '<path class="co-ligne trace" d="M24 176 C 120 176, 150 24, 280 24" pathLength="1"/>' +
+            '<circle class="co-point" cx="24" cy="176" r="13"/><circle class="co-point" cx="280" cy="24" r="13"/></svg></div>';
+        },
+        'curseur': function (o) {
+          return '<svg viewBox="0 0 80 110" width="' + (o.w || 90) + '">' +
+            '<path class="cu-fleche" d="M8 6 L8 88 L28 70 L42 102 L58 95 L44 64 L72 62 Z"/></svg>';
+        },
+        'tuile': function (o) {
+          var dedans = o.src ? '<img src="' + o.src + '" alt="">' :
+            '<span class="tuile-emoji" style="font-size:' + Math.round((o.w || 200) * .55) + 'px">' + (o.txt || '') + '</span>';
+          return '<div class="tuile ombre" style="width:' + (o.w || 200) + 'px;height:' + (o.w || 200) + 'px">' + dedans + '</div>';
+        },
+        'logo': function (o) {
+          if (!o.src) return emplacement('logo', o.w || 200, o.w || 200);
+          return '<img class="contour-fin" src="' + o.src + '" alt="" style="width:' + (o.w || 200) + 'px">';
+        },
+        'autocollant': function (o) {
+          if (!o.src) return silhouette(o.w || 600);
+          return '<img class="contour" src="' + o.src + '" alt="" style="width:' + (o.w || 600) + 'px">';
+        },
+        'cadre-noir': function (o) {
+          // Le cadre se referme sur la vidéo filmée (section decor) : le pourtour devient noir.
+          return '<div class="cadre-noir" style="width:' + (o.w || 1080) + 'px;height:' + (o.h || 1920) + 'px"></div>';
+        },
+        'photo': function (o) {
+          var f = o.nb ? 'filter:grayscale(1);' : '';
+          if (!o.src) return emplacement('ta photo', o.w || 1080, o.h || 600);
+          return '<div class="cadre-photo ombre' + (o.arrondi ? ' arrondi' : '') + (o.liseret ? ' liseret' : '') + '" style="width:' + (o.w || 1080) + 'px;height:' + (o.h || 600) + 'px">' +
+            '<img src="' + o.src + '" alt="" style="' + f + 'object-position:' + (o.cadrage || '50% 50%') + '"></div>';
+        },
+        'pixel': function (o) {
+          if (!o.src) return emplacement('mini-toi', o.w || 200, Math.round((o.w || 200) * 1.4));
+          return '<img class="pixel" src="' + o.src + '" alt="" style="width:' + (o.w || 200) + 'px">';
+        },
+        'carte': function (o) {
+          var av = o.avatar ? '<div class="avatar"><img src="' + o.avatar + '" alt=""></div>' : '<div class="avatar"></div>';
+          return '<div class="carte ombre' + (o.grande ? ' grande' : '') + '" style="width:' + (o.w || 640) + 'px">' + av + '<div><div class="titre" data-layout-allow-overlap>' + (o.titre || '') +
+            '</div>' + (o.texte ? '<div class="ligne2">' + o.texte + '</div>' : '') + '</div></div>';
+        },
+        'badge': function (o) {
+          return '<div class="badge ombre"><div class="grand" data-layout-allow-overlap>' + (o.txt || '') + '</div><div class="petit" data-layout-allow-overlap>' + (o.sous || '') + '</div></div>';
+        },
+        'bulle-dm': function (o) { return '<div class="bulle-dm ombre">' + (o.txt || '') + '</div>'; },
+        'etiquette': function (o) { return '<div class="etiquette ombre" style="font-size:' + (o.taille || 80) + 'px">' + (o.txt || '') + '</div>'; },
+        'emoji': function (o) { return '<div class="emoji" style="font-size:' + (o.taille || 120) + 'px">' + (o.txt || '') + '</div>'; }
+      };
+
+      function poser(calque, html, x, y, al, rot) {
+        var pos = document.createElement('div');
+        pos.className = 'pos' + (al === 'g' ? ' al-g' : al === 'd' ? ' al-d' : '');
+        pos.style.left = x + 'px'; pos.style.top = y + 'px';
+        if (rot) pos.style.rotate = rot + 'deg';
+        pos.innerHTML = html;
+        calque.appendChild(pos);
+        return pos;
+      }
+      MOTS.forEach(function (m, i) {
+        var pos = poser(calqueMots, '<span data-layout-allow-overlap data-layout-allow-occlusion class="mot anim ' + (m.f || 'sans') + ' c-' + (m.c || 'texte') + ' m' + i +
+          '" style="font-size:' + (m.s || 140) + 'px">' + m.txt + '</span>', m.x == null ? 540 : m.x, m.y, m.al, m.r);
+        if (m.devant) calqueDevant.appendChild(pos);
+      });
+      OBJETS.forEach(function (o, i) {
+        var dessin = DESSINS[o.type];
+        if (!dessin) return;
+        var pos = poser(o.derriere ? calqueMots : calqueObjets, '<div class="anim o' + i + '">' + dessin(o, i) + '</div>',
+          o.x == null ? 540 : o.x, o.y, o.al, o.r);
+        if (o.derriere) calqueMots.insertBefore(pos, calqueMots.firstChild);
+      });
+
+      // ================= TIMELINE =================
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      var s = '#' + ID + ' ';
+      // Les mots arrivent D'UN COUP sur le mot prononcé (visibles dès la première image, comme dans
+      // l'original : c'est ce saut qui fait le rythme), se posent en 0,14 s, et restent jusqu'à la coupe.
+      MOTS.forEach(function (m, i) {
+        var tm = Math.max(0, m.t);
+        tl.set(s + '.m' + i, { opacity: 1 }, tm);
+        tl.fromTo(s + '.m' + i, { scale: 1.07 }, { scale: 1, duration: .14, ease: 'power2.out', immediateRender: false }, tm);
+        if (m.fin != null) tl.to(s + '.m' + i, { opacity: 0, duration: .08 }, m.fin);
+      });
+      OBJETS.forEach(function (o, i) {
+        var sel = s + '.o' + i, t = Math.max(0, o.t || 0);
+        // Les objets aussi arrivent d'un coup (visibles dès la première image), puis se posent.
+        tl.set(sel, { opacity: 1 }, t);
+        if (o.entree === 'monte') tl.fromTo(sel, { y: 140 }, { y: 0, duration: .32, ease: 'power3.out', immediateRender: false }, t);
+        else if (o.entree !== 'aucune') tl.fromTo(sel, { scale: .82 }, { scale: 1, duration: .24, ease: 'back.out(2)', immediateRender: false }, t);
+        if (o.type === 'casier' && o.ouvre != null) tl.to(sel + ' .porte', { scaleX: .1, transformOrigin: '0% 50%', duration: .35, ease: 'power2.out' }, o.ouvre);
+        if (o.type === 'chrono') tl.fromTo(sel + ' .aiguille', { rotation: 0 }, { rotation: 360 * (o.tours || 2), svgOrigin: '130 176', duration: Math.max(.3, DUREE - t), ease: 'none' }, t);
+        if (o.type === 'courbe') tl.fromTo(sel + ' .trace', { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: .5, ease: 'power2.out' }, t + .15);
+        // dezoom : un palier {t, echelle, duree} ou une liste de paliers (le cadre se referme en deux temps).
+        var echelle = 1;
+        [].concat(o.dezoom || []).forEach(function (d) {
+          tl.fromTo(sel, { scale: echelle }, { scale: d.echelle, duration: d.duree || .5, ease: 'power3.inOut', immediateRender: false }, d.t);
+          echelle = d.echelle;
+        });
+        (o.chemin || []).forEach(function (p) {
+          tl.to(sel, { x: p[0], y: p[1], duration: p[3] || .5, ease: p[3] ? 'none' : 'power2.inOut' }, p[2]);
+        });
+        (o.clics || []).forEach(function (c) {
+          tl.to(sel, { scale: .82, duration: .07, ease: 'power1.out' }, c);
+          tl.to(sel, { scale: 1, duration: .1, ease: 'power1.out' }, c + .07);
+        });
+        if (o.sautille) tl.fromTo(sel + ' img', { y: 0 }, { y: -14, duration: .13, ease: 'steps(1)', repeat: Math.floor((DUREE - t) / .13), yoyo: true }, t);
+        if (o.fin != null) tl.to(sel, { opacity: 0, duration: .08 }, o.fin);
+      });
+      tl.set({}, {}, DUREE);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

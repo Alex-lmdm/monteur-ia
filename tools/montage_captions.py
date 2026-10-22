@@ -55,6 +55,28 @@ if STYLE.captions_font_file is None:
     )
 # = --brand-cap-size, a la graisse affichee ; le texte mesure est celui qui s'affiche (casse comprise).
 FONT = ImageFont.truetype(str(STYLE.captions_font_file), STYLE.captions_size)
+
+
+def a_la_graisse(font, graisse, taille):
+    """Une police variable (un seul .ttf pour toutes les graisses) se mesure comme le navigateur
+    l'affiche : PIL la lit sinon a sa graisse par defaut (Thin pour Montserrat, 10 % plus etroite
+    qu'a 800, le sous-titre deborderait). Taille optique = la taille en px, comme le navigateur."""
+    try:
+        axes = font.get_variation_axes()
+    except (OSError, AttributeError):   # police fixe (ou PIL sans les polices variables)
+        return font
+    cibles = {"weight": graisse, "optical size": taille}
+    valeurs = []
+    for a in axes:
+        nom = a.get("name")
+        nom = (nom.decode("utf-8", "replace") if isinstance(nom, bytes) else str(nom or "")).lower()
+        v = cibles.get(nom, a["default"])
+        valeurs.append(min(max(v, a["minimum"]), a["maximum"]))
+    font.set_variation_by_axes(valeurs)
+    return font
+
+
+FONT = a_la_graisse(FONT, STYLE.captions_weight, STYLE.captions_size)
 MAXW_HARD = 900
 
 # Bornes de phrase = les VRAIES coupes (une prise = une phrase). Surtout PAS les timestamps

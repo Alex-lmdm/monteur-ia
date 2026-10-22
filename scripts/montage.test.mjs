@@ -619,7 +619,7 @@ test('cadrage détouré : la personne passe devant la section, détourée une fo
 test('catalogue de styles : chaque kit a sa fiche, ses pièces, des réglages acceptés et des polices livrées', (t) => {
   const dossier = path.join(root, '.claude/skills/reel-cloneur/styles');
   const kits = fs.readdirSync(dossier).filter((d) => /^\d\d-/.test(d)).sort();
-  assert.ok(kits.length >= 10, `${kits.length} kits`);
+  assert.ok(kits.length >= 11, `${kits.length} kits`);
   const index = read(dossier, 'README.md');
   const polices = JSON.parse(read(root, 'templates/style-presets.json')).fonts;
   const connues = new Set([...Object.keys(config().visual), 'muted']);

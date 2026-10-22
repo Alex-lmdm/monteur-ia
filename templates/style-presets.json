@@ -209,6 +209,14 @@
         { "weight": 400, "style": "normal", "file": "CourierPrime-Regular.ttf", "format": "truetype" },
         { "weight": 700, "style": "normal", "file": "CourierPrime-Bold.ttf", "format": "truetype" }
       ]
+    },
+    "Montserrat": {
+      "measureFile": "Montserrat-VF.ttf",
+      "faces": [{ "weight": "100 900", "style": "normal", "file": "Montserrat-VF.ttf", "format": "truetype" }]
+    },
+    "Newsreader": {
+      "measureFile": "Newsreader-VF.ttf",
+      "faces": [{ "weight": "200 800", "style": "normal", "file": "Newsreader-VF.ttf", "format": "truetype" }]
     }
   }
 }

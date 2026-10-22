@@ -23,6 +23,8 @@ de licence `OFL-<police>.txt` dans ce dossier (SIL OFL 1.1, dépôt github.com/g
 | Fraunces (ttf variable) | 08 Réponse à un abonné | © The Fraunces Project Authors | `OFL-Fraunces.txt` |
 | Abril Fatface (ttf) | 09 Collage illustré | © TypeTogether | `OFL-AbrilFatface.txt` |
 | Courier Prime (ttf) | 09 Collage illustré | © The Courier Prime Project Authors | `OFL-CourierPrime.txt` |
+| Montserrat (ttf variable) | 11 Mon histoire | © The Montserrat.Git Project Authors | `OFL-Montserrat.txt` |
+| Newsreader (ttf variable) | 11 Mon histoire | © The Newsreader Project Authors | `OFL-Newsreader.txt` |
 
 Texte intégral de la licence : https://openfontlicense.org/open-font-license-official-text/
 
