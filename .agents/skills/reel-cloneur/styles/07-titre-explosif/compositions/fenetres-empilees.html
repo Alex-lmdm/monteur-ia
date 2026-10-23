@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°07 « TITRE EXPLOSIF » · PIÈCE 4 : LES DEUX FENÊTRES EMPILÉES           ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ Ce que c'est : deux fenêtres d'appli dessinées, l'une sous l'autre, qui        ║
+    ║ arrivent l'une après l'autre (fondu) : une courte en haut (un verdict, un      ║
+    ║ symbole, une phrase), une plus haute en bas (des lignes qui s'écrivent).       ║
+    ║ Pour deux idées qui se répondent : avant / après, interdit / permis, l'outil   ║
+    ║ A qui passe la main à l'outil B. Les tuiles restent épinglées en haut.         ║
+    ║ Taille : section plein cadre 1080×1920, fond TRANSPARENT, format « decor ».    ║
+    ║ Fenêtre du haut 700×230 (x=190, y=1165), du bas 700×290 (x=190, y=1415).       ║
+    ║ Quand l'utiliser : une fois par vidéo, vers les deux tiers, sur 4 à 6 s.       ║
+    ║                                                                                ║
+    ║ À REMPLACER :                                                                  ║
+    ║  1. L'id « fenetres-empilees » (id et data-composition-id de la racine,        ║
+    ║     constante ID du script) ; data-duration (racine, panneau).                 ║
+    ║  2. Les tuiles (comme tuiles-outils ; data-apparait="-1" si déjà nommé).       ║
+    ║  3. Chaque fenêtre : data-apparait (s, depuis le début de la section : le mot  ║
+    ║     qui l'annonce), titre, état (.etat ; .etat.non = couleur d'alerte, pour un ║
+    ║     « non » explicite de la voix), message (.message, mots de la voix).        ║
+    ║  4. Le symbole du haut : .symbole.non (croix) ou .symbole.oui (coche).         ║
+    ║  5. Les lignes du bas (.code) : décor, sans texte ; data-mot = l'instant où    ║
+    ║     la ligne s'écrit.                                                          ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #fenetres-empilees { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      background:transparent; --k07-tuile-top:300px; }
+    #fenetres-empilees * { box-sizing:border-box; }
+    #fenetres-empilees .panneau { position:absolute; inset:0; background:transparent; }
+    #fenetres-empilees .tuile { position:absolute; top:var(--k07-tuile-top); width:210px; height:210px;
+      border-radius:30px; background:var(--brand-text); display:flex; align-items:center; justify-content:center;
+      box-shadow: 7px 8px 0 color-mix(in srgb, var(--brand-bg) 82%, transparent),
+                  0 14px 30px color-mix(in srgb, var(--brand-bg) 35%, transparent); }
+    #fenetres-empilees .tuile.gauche { left:190px; }
+    #fenetres-empilees .tuile.droite { left:675px; }
+    #fenetres-empilees .tuile img { width:146px; height:146px; object-fit:contain; display:block; }
+    #fenetres-empilees .tuile .nom { font-family:var(--brand-font-body); font-weight:900; font-size:56px;
+      letter-spacing:-1.5px; color:var(--brand-bg); line-height:1; }
+    #fenetres-empilees .fenetre { position:absolute; left:190px; width:700px; border-radius:24px; overflow:hidden; opacity:0;
+      font-family:var(--brand-font-body); color:var(--brand-bg);
+      background:color-mix(in srgb, var(--brand-text) 96%, var(--brand-bg));
+      box-shadow:0 22px 60px color-mix(in srgb, var(--brand-bg) 45%, transparent); }
+    #fenetres-empilees .fenetre.haut { top:1165px; height:230px; }
+    #fenetres-empilees .fenetre.bas { top:1415px; height:290px; }
+    #fenetres-empilees .barre { position:relative; height:52px; display:flex; align-items:center; padding:0 22px;
+      background:var(--brand-text); border-bottom:2px solid color-mix(in srgb, var(--brand-text) 90%, var(--brand-bg)); }
+    #fenetres-empilees .barre i { width:15px; height:15px; border-radius:50%; margin-right:9px;
+      background:color-mix(in srgb, var(--brand-muted) 70%, var(--brand-text)); }
+    #fenetres-empilees .titre { position:absolute; left:0; right:0; text-align:center; font-size:24px; font-weight:700; }
+    #fenetres-empilees .etat { position:absolute; right:22px; font-size:19px; font-weight:700; font-style:normal;
+      color:color-mix(in srgb, var(--brand-accent) 78%, var(--brand-bg)); }
+    #fenetres-empilees .etat.non { color:var(--brand-negative); }
+    #fenetres-empilees .corps { display:flex; flex-direction:column; align-items:center; justify-content:center; height:178px; gap:16px; }
+    #fenetres-empilees .symbole { width:86px; height:86px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
+    #fenetres-empilees .symbole svg { width:44px; height:44px; }
+    #fenetres-empilees .symbole.oui { background:radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--brand-accent) 50%, var(--brand-text)), var(--brand-accent) 70%);
+      box-shadow:0 8px 24px color-mix(in srgb, var(--brand-accent) 45%, transparent); }
+    #fenetres-empilees .symbole.non { background:radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--brand-negative) 50%, var(--brand-text)), var(--brand-negative) 70%);
+      box-shadow:0 8px 24px color-mix(in srgb, var(--brand-negative) 40%, transparent); }
+    #fenetres-empilees .symbole path { stroke:var(--brand-text); stroke-width:6; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+    #fenetres-empilees .message { font-size:25px; }
+    #fenetres-empilees .code { position:relative; display:flex; height:238px; }
+    #fenetres-empilees .code .marge { width:180px; background:color-mix(in srgb, var(--brand-text) 92%, var(--brand-bg));
+      border-right:2px solid color-mix(in srgb, var(--brand-text) 88%, var(--brand-bg)); padding:22px 18px; }
+    #fenetres-empilees .code .marge .msg { font-size:20px; font-weight:700; line-height:1.3; }
+    #fenetres-empilees .code .marge .msg small { display:block; font-weight:400; font-size:17px; color:color-mix(in srgb, var(--brand-muted) 62%, var(--brand-bg)); margin-top:6px; }
+    #fenetres-empilees .code .zone { flex:1; padding:26px 26px; }
+    #fenetres-empilees .code .zone div { height:12px; border-radius:6px; margin-bottom:16px; transform-origin:0 50%;
+      background:color-mix(in srgb, var(--brand-muted) 45%, var(--brand-text)); }
+    #fenetres-empilees .code .zone div.acc { background:var(--brand-accent); }
+  </style>
+</head>
+<body>
+  <div id="fenetres-empilees" data-composition-id="fenetres-empilees" data-start="0"
+       data-duration="5" data-fps="30" data-width="1080" data-height="1920">
+    <div id="fenetres-empilees-panneau" class="panneau clip" data-start="0" data-duration="5" data-track-index="0">
+
+      <!-- Tuiles déjà nommées. EMPLACEMENT DU LOGO : <img src="assets/logos/<outil>.svg" alt="<Outil>">. -->
+      <div class="tuile gauche" data-apparait="-1"><span class="nom">Outil</span></div>
+      <div class="tuile droite" data-apparait="-1"><span class="nom">Appli</span></div>
+
+      <!-- FENÊTRE DU HAUT (exemple) : le verdict. -->
+      <div class="fenetre haut" data-apparait="0.1">
+        <div class="barre"><i></i><i></i><i></i><b class="titre">Méthode A</b><em class="etat non">Non</em></div>
+        <div class="corps">
+          <div class="symbole non"><svg viewBox="0 0 44 44"><path d="M12 12l20 20M32 12L12 32"/></svg></div>
+          <div class="message">Ce qu'il vaut mieux éviter</div>
+        </div>
+      </div>
+
+      <!-- FENÊTRE DU BAS (exemple) : la bonne voie, des lignes qui s'écrivent. -->
+      <div class="fenetre bas" data-apparait="1.8">
+        <div class="barre"><i></i><i></i><i></i><b class="titre">Méthode B</b><em class="etat">Oui</em></div>
+        <div class="code">
+          <div class="marge"><div class="msg">Ce qui marche<small>en cours…</small></div></div>
+          <div class="zone">
+            <div data-mot="2.2" style="width:62%"></div>
+            <div data-mot="2.5" style="width:84%" class="acc"></div>
+            <div data-mot="2.8" style="width:48%"></div>
+            <div data-mot="3.1" style="width:76%"></div>
+            <div data-mot="3.4" style="width:58%" class="acc"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'fenetres-empilees'; // = id de la section (tools/sections.py)
+      var scope = '#' + ID + ' ';
+      var root = document.getElementById(ID);
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      function num(el, attr, def) { var v = parseFloat(el.getAttribute(attr)); return isNaN(v) ? def : v; }
+      root.querySelectorAll('.tuile').forEach(function (el, i) {
+        var cls = 't' + i; el.classList.add(cls);
+        var t = num(el, 'data-apparait', -1);
+        if (t < 0) { tl.set(scope + '.' + cls, { opacity: 1, scale: 1 }, 0); return; }
+        tl.set(scope + '.' + cls, { opacity: 0 }, 0);
+        tl.fromTo(scope + '.' + cls, { opacity: 0, scale: 0.55 }, { opacity: 1, scale: 1, duration: 0.32, ease: 'back.out(2.2)' }, t);
+      });
+      // Les fenêtres arrivent en fondu (0,5 s), l'une après l'autre, et restent jusqu'à la fin de la section.
+      root.querySelectorAll('.fenetre').forEach(function (el, i) {
+        var cls = 'f' + i; el.classList.add(cls);
+        tl.fromTo(scope + '.' + cls, { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.5, ease: 'power2.out' }, num(el, 'data-apparait', 0));
+      });
+      // Les lignes de code s'écrivent de gauche à droite (scaleX, jamais width).
+      root.querySelectorAll('.code [data-mot]').forEach(function (el, i) {
+        var cls = 'c' + i; el.classList.add(cls);
+        tl.fromTo(scope + '.' + cls, { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: 'power2.out' }, num(el, 'data-mot', 0));
+      });
+      root.querySelectorAll('.symbole').forEach(function (el, i) {
+        var cls = 'y' + i; el.classList.add(cls);
+        var t = num(el.closest('.fenetre'), 'data-apparait', 0) + 0.15;
+        tl.fromTo(scope + '.' + cls, { scale: 0.4 }, { scale: 1, duration: 0.35, ease: 'back.out(2.4)' }, t);
+      });
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

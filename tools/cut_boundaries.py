@@ -102,9 +102,13 @@ dur = float(subprocess.run(
     capture_output=True, encoding="utf-8", errors="replace").stdout.strip())
 
 bounds, drifts = [0.0], []
+# Un raccord se place depuis la derniere coupe reelle (l'ancre), a l'image pres : arrondi depuis la
+# borne d'avant, l'ecart d'arrondi s'ajoutait de raccord en raccord (une image d'avance apres
+# quelques raccords sur une video d'un seul tenant).
+ancre_k, ancre_t = 0, 0.0
 for k, m in enumerate(theo[1:-1], start=1):
     if raccord[k]:
-        bounds.append(round(round((bounds[-1] + theo[k] - theo[k - 1]) / IMAGE) * IMAGE, 3))
+        bounds.append(round(round((ancre_t + theo[k] - theo[ancre_k]) / IMAGE) * IMAGE, 3))
         continue
     near = [d for d in detected if abs(d - m) < TOL]
     if not near:
@@ -112,6 +116,7 @@ for k, m in enumerate(theo[1:-1], start=1):
     d = min(near, key=lambda x: abs(x - m))
     bounds.append(round(d, 3))
     drifts.append(d - m)
+    ancre_k, ancre_t = k, d
 bounds.append(round(dur, 3))
 
 assert len(bounds) == len(ISLANDS) + 1, "nb de bornes != nb de prises + 1"

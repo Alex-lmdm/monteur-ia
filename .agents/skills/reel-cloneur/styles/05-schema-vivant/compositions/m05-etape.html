@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    STYLE N°05 « SCHÉMA VIVANT » · PIÈCE 2/3 : L'ÉTAPE (TITRE GÉANT + RAPPEL + FRISE)
+    ─────────────────────────────────────────────────────────────────────────
+    CE QUE C'EST : pendant le détail d'une étape, trois éléments ensemble :
+      - le RAPPEL, tout en haut : la ligne de l'étape en cours, telle que dans le schéma (son nom
+        et ses barres de couleur), ou la boucle seule, centrée, pour une étape qui se répète ;
+      - le TITRE géant au-dessus de la tête (capitales, Black serré, blanc), qui arrive mot par
+        mot dans un fondu avec flou ; plusieurs titres peuvent se succéder dans la section (le
+        précédent disparaît d'un coup, le suivant arrive en fondu) ;
+      - la FRISE de progression sous les sous-titres : un trait fin qui se remplit avec le temps
+        et une pastille nommée par étape déjà commencée (un anneau pour une boucle).
+    TAILLE : section « decor » plein cadre 1080×1920, fond TRANSPARENT, posée sur la vidéo entière.
+    QUAND L'UTILISER : à chaque étape détaillée. Le 1er titre = le nom de l'étape, posé sur le
+    mot qui la nomme (sinon au début de la section) ; les suivants reprennent un mot fort dit à
+    ce moment-là (jamais un mot que la voix ne dit pas). Un titre reste au moins 2 s ; compter un
+    changement en haut de l'image toutes les ~4 s sur toute la vidéo (le rythme de l'original).
+    COMMENT LA POSER DANS UN REEL : copie ce fichier en compositions/<id de la section>.html, puis
+    remplace « m05-etape » PARTOUT par l'id de la section, et les deux data-duration par sa durée.
+    À REMPLACER (bloc « RÉGLAGES » du script) :
+      - ETAPES : la méthode complète, la MÊME liste que dans le schéma (pièce 1) ;
+      - ACTUELLE : l'index (depuis 0) de l'étape détaillée ici ;
+      - NOUVELLE : true si l'étape commence dans cette section (son rappel se trace et sa
+        pastille apparaît), false si elle continue celle d'avant (tout est déjà là) ;
+      - TITRES : [{ texte, a }] : texte en minuscules ou capitales (affiché en capitales),
+        « | » = retour à la ligne, *mot* = ce mot dans l'accent (un seul par titre, au plus) ;
+        a = l'instant d'arrivée en secondes depuis le début de la section. 2 lignes de
+        10 caractères au plus ;
+      - FRISE : { de, a, apparition } : remplissage du trait (0 à 1) au début et à la fin de la
+        section ; apparition: true pour la première section qui montre la frise (elle se fond) ;
+      - DUREE : la durée de la section (la même que data-duration).
+    PLACE (bloc « PLACE », le même dans toutes les sections du Reel) : haut (rappel), titreY
+    (centre du titre : au-dessus de la tête), friseY (≈ 100 px sous la ligne des sous-titres),
+    voile (0 à 0,6).
+    COULEURS : uniquement les tokens de marque (voir la pièce 1). IMAGES : aucune. Emplacement
+    facultatif d'un logo d'outil cité, laissé vide (l'original n'en montre pas) : voir .logo-titre.
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #m05-etape { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      color:var(--brand-text); font-family:var(--brand-font-body);
+      --m05-haut:210px; --m05-titre-y:470px; --m05-frise-y:1395px; --m05-col:330px; --m05-voile:0.45;
+      --m05-ombre:0 0 3px color-mix(in srgb, var(--brand-stroke) 60%, transparent), 0 2px 14px color-mix(in srgb, var(--brand-stroke) 60%, transparent);
+      --m05-c1:var(--brand-negative); --m05-c2:var(--brand-text); --m05-c3:var(--brand-accent);
+      --m05-c4:var(--brand-accent); --m05-c5:var(--brand-accent); --m05-cfin:var(--brand-accent);
+      --m05-fleche:var(--brand-accent); }
+    @supports (color: hsl(from red h s l)) {
+      #m05-etape {
+        --m05-c1:hsl(from var(--brand-accent) calc(h + 157) s l);
+        --m05-c2:hsl(from var(--brand-accent) calc(h - 156) s l);
+        --m05-c4:hsl(from var(--brand-accent) calc(h + 11) s calc(l - 4));
+        --m05-c5:hsl(from var(--brand-accent) calc(h + 30) s calc(l - 4));
+        --m05-cfin:hsl(from var(--brand-accent) calc(h - 79) s calc(l - 6));
+        --m05-fleche:hsl(from var(--brand-accent) calc(h + 40) s calc(l - 4)); }
+    }
+    #m05-etape * { box-sizing:border-box; }
+    #m05-etape .voile { position:absolute; left:0; right:0; top:0; height:1000px; opacity:var(--m05-voile);
+      background:linear-gradient(to bottom, var(--brand-stroke) 0%, color-mix(in srgb, var(--brand-stroke) 55%, transparent) 45%, transparent 100%); }
+    /* Rappel : la ligne de l'étape, comme dans le schéma. */
+    #m05-etape .rappel { position:absolute; left:var(--brand-safe-x); right:var(--brand-safe-x); top:var(--m05-haut); }
+    #m05-etape .ligne { position:relative; display:flex; align-items:flex-start; }
+    #m05-etape .ligne-b1 { height:30px; } #m05-etape .ligne-b2 { height:74px; }
+    #m05-etape .libelle { flex:none; width:var(--m05-col); padding-right:20px; text-align:right; white-space:nowrap;
+      font-weight:900; font-size:54px; line-height:1; letter-spacing:-0.045em; margin-top:-12px;
+      text-shadow:var(--m05-ombre); transform-origin:right center; }
+    #m05-etape .barres { flex:1; display:flex; flex-direction:column; gap:14px; }
+    #m05-etape .barre { display:block; height:30px; background:var(--c); transform-origin:left center; }
+    #m05-etape .rappel-boucle { display:flex; justify-content:center; }
+    #m05-etape .boucle { width:112px; height:112px; overflow:visible; }
+    #m05-etape .boucle .arc { fill:none; stroke:var(--brand-text); stroke-width:11; stroke-linecap:round; }
+    #m05-etape .boucle .pointe { fill:none; stroke:var(--m05-fleche); stroke-width:10; stroke-linecap:square; }
+    /* Titre géant : centré au-dessus de la tête, mot par mot. */
+    #m05-etape .titres { position:absolute; left:var(--brand-safe-x); right:var(--brand-safe-x); top:var(--m05-titre-y); }
+    #m05-etape .titre { position:absolute; left:0; right:0; top:0; transform:translateY(-50%); text-align:center;
+      font-weight:900; font-size:112px; line-height:0.92; letter-spacing:-0.045em; text-transform:uppercase;
+      text-shadow:var(--m05-ombre); }
+    #m05-etape .mot { display:inline-block; }
+    #m05-etape .mot-accent { color:var(--brand-accent); }
+    /* Emplacement facultatif (vide par défaut) : <img class="logo-titre" src="assets/logos/<outil>.svg">
+       posé dans .titres, au-dessus du titre ; logo vendu en local via le skill thesvg. */
+    #m05-etape .logo-titre { position:absolute; left:50%; top:-190px; width:96px; height:96px; transform:translateX(-50%); }
+    /* Frise de progression. */
+    #m05-etape .frise { position:absolute; left:var(--brand-safe-x); right:var(--brand-safe-x); top:var(--m05-frise-y); }
+    #m05-etape .piste, #m05-etape .rempli { position:absolute; left:0; right:0; top:0; height:6px; border-radius:3px; }
+    #m05-etape .piste { background:color-mix(in srgb, var(--brand-text) 35%, transparent); }
+    #m05-etape .rempli { background:var(--brand-text); transform-origin:left center; }
+    #m05-etape .pastilles { position:absolute; left:0; right:0; top:30px; display:flex; gap:16px; align-items:flex-start; }
+    #m05-etape .pastille { flex:1; display:flex; flex-direction:column; align-items:center; gap:10px; }
+    #m05-etape .pastille i { display:block; width:100%; height:14px; border-radius:7px; background:var(--brand-text); box-shadow:var(--m05-ombre); }
+    #m05-etape .pastille span { font-weight:700; font-size:30px; line-height:1; letter-spacing:-0.02em; white-space:nowrap; text-shadow:var(--m05-ombre); }
+    #m05-etape .anneau { flex:none; width:24px; height:24px; margin-top:-6px; border-radius:50%; border:5px solid var(--brand-text); }
+  </style>
+</head>
+<body>
+  <div id="m05-etape" data-composition-id="m05-etape" data-start="0" data-duration="6"
+       data-fps="30" data-width="1080" data-height="1920">
+    <div id="m05-etape-calque" class="clip" data-start="0" data-duration="6" data-track-index="0">
+      <div class="voile"></div>
+      <div class="rappel"></div>
+      <div class="titres"></div>
+      <div class="frise"></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'm05-etape';
+      var S = '#' + ID + ' ';
+      // >>> RÉGLAGES DE LA SECTION (à remplacer) -------------------------------------------
+      var ETAPES = [
+        { libelle: 'Idée',     forme: 'barres', barres: 2 },
+        { libelle: 'Script',   forme: 'barres', barres: 2 },
+        { libelle: 'Tournage', forme: 'boucle' },
+        { libelle: 'Montage',  forme: 'barres', barres: 2 },
+        { libelle: 'Commente', forme: 'barres', barres: 1, appel: true }
+      ];
+      var ACTUELLE = 1;
+      var NOUVELLE = true;
+      var TITRES = [
+        { texte: 'Script', a: 0.2 },
+        { texte: 'Une idée|par *phrase*', a: 3.0 }
+      ];
+      var FRISE = { de: 0.15, a: 0.35, apparition: true };
+      var DUREE = 6;
+      // <<< FIN DES RÉGLAGES ------------------------------------------------------------------
+      // >>> PLACE (la même dans toutes les sections du Reel : à caler une fois sur la vidéo) -----
+      var PLACE = { haut: 210, titreY: 470, friseY: 1395, voile: 0.45 };
+      // <<< FIN DE LA PLACE ----------------------------------------------------------------------
+      var root = document.getElementById(ID);
+      root.style.setProperty('--m05-haut', PLACE.haut + 'px');
+      root.style.setProperty('--m05-titre-y', PLACE.titreY + 'px');
+      root.style.setProperty('--m05-frise-y', PLACE.friseY + 'px');
+      root.style.setProperty('--m05-voile', String(PLACE.voile));
+      var NBSP = ' ';
+      function couleurs(etapes) {
+        var milieu = ['var(--m05-c3)', 'var(--m05-c4)', 'var(--m05-c5)'], m = 0, n = 0;
+        return etapes.map(function (e) {
+          if (e.forme !== 'barres') return null;
+          n++;
+          if (e.appel) return 'var(--m05-cfin)';
+          if (n === 1) return 'var(--m05-c1)';
+          if (n === 2) return 'var(--m05-c2)';
+          return milieu[Math.min(m++, milieu.length - 1)];
+        });
+      }
+      var BOUCLE = '<svg class="boucle" viewBox="0 0 112 112" aria-hidden="true">' +
+        '<path class="arc" pathLength="1" d="M56 10 A46 46 0 1 0 88.5 88.5"/>' +
+        '<path class="pointe" d="M80 78 L98 78 L98 96"/></svg>';
+      function frise(conteneur, etapes, actuelle) {
+        conteneur.innerHTML = '<div class="piste"></div><div class="rempli"></div><div class="pastilles"></div>';
+        var p = conteneur.querySelector('.pastilles');
+        etapes.forEach(function (e, i) {
+          var cache = i > actuelle ? ' style="visibility:hidden"' : '';
+          if (e.forme === 'boucle') { p.insertAdjacentHTML('beforeend', '<div class="anneau frise-' + i + '"' + cache + '></div>'); return; }
+          p.insertAdjacentHTML('beforeend', '<div class="pastille frise-' + i + '"' + cache + '><i></i><span></span></div>');
+          p.querySelector('.frise-' + i + ' span').textContent = e.libelle;
+        });
+      }
+      // Rappel de l'étape en cours.
+      var e = ETAPES[ACTUELLE], rappel = root.querySelector('.rappel');
+      if (e.forme === 'boucle') {
+        rappel.className = 'rappel rappel-boucle'; rappel.innerHTML = BOUCLE;
+      } else {
+        var l = document.createElement('div');
+        l.className = 'ligne ' + (e.barres === 1 ? 'ligne-b1' : 'ligne-b2');
+        l.style.setProperty('--c', couleurs(ETAPES)[ACTUELLE]);
+        var lib = document.createElement('div'); lib.className = 'libelle'; lib.textContent = e.libelle + NBSP + ':';
+        var b = document.createElement('div'); b.className = 'barres';
+        for (var k = 0; k < (e.barres === 1 ? 1 : 2); k++) { var r = document.createElement('i'); r.className = 'barre'; b.appendChild(r); }
+        l.appendChild(lib); l.appendChild(b); rappel.appendChild(l);
+      }
+      // Titres : un bloc par titre, un <span class="mot"> par mot.
+      var zoneTitres = root.querySelector('.titres');
+      TITRES.forEach(function (T, i) {
+        var d = document.createElement('div'); d.className = 'titre titre-' + i;
+        // Interligne serré voulu (celui de l'original) : les lignes se touchent, c'est le style
+        // (data-layout-allow-overlap sur chaque mot, pour npm run check).
+        d.setAttribute('data-layout-allow-overlap', '');
+        T.texte.split('|').forEach(function (ligneTxt, j) {
+          if (j) d.appendChild(document.createElement('br'));
+          ligneTxt.trim().split(/\s+/).forEach(function (m, k) {
+            if (k) d.appendChild(document.createTextNode(' '));
+            var s = document.createElement('span');
+            var acc = /^\*.*\*$/.test(m);
+            s.className = 'mot' + (acc ? ' mot-accent' : '');
+            s.setAttribute('data-layout-allow-overlap', '');
+            s.textContent = acc ? m.slice(1, -1) : m;
+            d.appendChild(s);
+          });
+        });
+        zoneTitres.appendChild(d);
+      });
+      frise(root.querySelector('.frise'), ETAPES, ACTUELLE);
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      // Voile et frise : déjà là si l'étape continue (aucun clignement d'une section à l'autre).
+      if (FRISE.apparition) {
+        tl.fromTo(S + '.voile', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0);
+        tl.fromTo(S + '.frise', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.05);
+      }
+      tl.fromTo(S + '.rempli', { scaleX: FRISE.de }, { scaleX: FRISE.a, duration: DUREE, ease: 'none' }, 0);
+      if (NOUVELLE) {
+        var P = S + '.frise-' + ACTUELLE;
+        tl.fromTo(P, { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2)' }, 0.1);
+        if (e.forme === 'boucle') {
+          tl.fromTo(S + '.rappel .arc', { strokeDasharray: 1, strokeDashoffset: 1 },
+            { strokeDashoffset: 0, duration: 0.55, ease: 'power3.out' }, 0.05);
+          tl.fromTo(S + '.rappel .boucle', { rotation: -140 }, { rotation: 0, duration: 0.55, ease: 'power3.out' }, 0.05);
+          tl.fromTo(S + '.rappel .pointe', { opacity: 0, scale: 0.4, transformOrigin: '100% 0%' },
+            { opacity: 1, scale: 1, duration: 0.2, ease: 'back.out(2)' }, 0.45);
+        } else {
+          tl.fromTo(S + '.rappel .libelle', { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'expo.out' }, 0.05);
+          tl.fromTo(S + '.rappel .barre', { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: 'power3.out', stagger: 0.12 }, 0.1);
+        }
+      }
+      TITRES.forEach(function (T, i) {
+        var Ti = S + '.titre-' + i;
+        tl.fromTo(Ti + ' .mot', { opacity: 0, scale: 1.08, filter: 'blur(14px)' },
+          { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.35, ease: 'power2.out', stagger: 0.14 }, T.a);
+        // Le titre d'avant disparaît d'un coup (coupe sèche), ~0,13 s avant que le suivant
+        // n'arrive en fondu : c'est ce saut net qui fait le rythme du haut de l'image.
+        if (i + 1 < TITRES.length) tl.set(Ti, { opacity: 0 }, Math.max(T.a + 0.5, TITRES[i + 1].a - 0.13));
+      });
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

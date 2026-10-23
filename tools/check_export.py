@@ -59,6 +59,7 @@ from PIL import Image
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import sections
+from cadrage import _zoom_de, copie_zoom, fenetres_zoom, niveau, niveaux_zoom, parse_origin
 from sons import CIBLE_LUFS, CRETE_MAX_DBTP, niveau_sonore
 
 # Windows : une sortie lue par l'agent (redirigée) est en cp1252, et un « ✅ » y fait planter l'outil.
@@ -79,6 +80,32 @@ VISAGES = {"split": ROOT / "assets/video/visage-split.mp4", "face": ROOT / "asse
 ZONES = {"split": [(0, 1100, 1080, 1920)], "face": [(0, 0, 1080, 1050)],
          "decor": [(0, 700, 1080, 1300), (0, 1100, 1080, 1920)]}
 TOLERANCE_LUFS = 1.0
+# Zoom par section ({"zoom": ...} dans LAYOUT) : la section montre la video pre-cadree de son niveau de
+# zoom, pas celle du Reel ; comparee a la video du Reel, une section resserree passait pour un visage
+# absent (« KO ») et la video n'etait pas livree.
+ENTREES = {e[0]: e for e in sections.LAYOUT}
+NIVEAUX = {fmt: niveaux_zoom(fenetres_zoom(sections, fmt)) for fmt in VISAGES}
+
+
+def visage_de(s):
+    """(video pre-cadree montree par la section, (zoom, origine) de la section)."""
+    z = _zoom_de(ENTREES[s["id"]], s["fmt"]) if s["id"] in ENTREES else (1.0, "center 30%")
+    n = niveau(z)
+    if n[0] == 1:
+        return VISAGES[s["fmt"]], z
+    return ROOT / copie_zoom(s["fmt"], NIVEAUX[s["fmt"]].index(n)), z
+
+
+def agrandie(image, echelle, origine):
+    """L'image telle que le navigateur l'affiche agrandie `echelle` fois autour de `origine` (zoom
+    progressif fini, pose par la timeline du master)."""
+    if abs(echelle - 1) < 1e-3:
+        return image
+    fx, fy = parse_origin(origine)
+    w, h = image.size
+    cw, ch = w / echelle, h / echelle
+    x, y = fx * w * (1 - 1 / echelle), fy * h * (1 - 1 / echelle)
+    return image.crop((round(x), round(y), round(x + cw), round(y + ch))).resize((w, h))
 
 
 _MATRICES = {}
@@ -141,12 +168,21 @@ def verifier_final(mp4, finalise=False):
         if s["fmt"] not in VISAGES or s.get("media"):
             continue
         t = round(s["start"] + s["dur"] * 0.5, 2)
-        if not VISAGES[s["fmt"]].exists():
+        source, (zoom, origine) = visage_de(s)
+        echelle = 1.0
+        if isinstance(zoom, tuple):          # zoom progressif : compare une fois le mouvement fini
+            fin = s["start"] + zoom[2] + 0.05
+            if fin > s["start"] + s["dur"] - 0.05:
+                print(f"   {s['id']:<16} zoom progressif sur toute la section : visage non compare")
+                continue
+            t = round(max(t, fin), 2)
+            echelle = zoom[1] / niveau((zoom, origine))[0]
+        if not source.exists():
             print(f"   {s['id']:<16} visage lu dans base.mp4 agrandie (moins net) : lance python3 tools/build_faces.py "
                   "puis python3 tools/build_master.py --write")
             continue
         image = grab(mp4, t, "RGB")
-        reference = {k: grab(VISAGES[s["fmt"]], round(t + k / 30, 4), "RGB") for k in (-1, 0, 1)}
+        reference = {k: agrandie(grab(source, round(t + k / 30, 4), "RGB"), echelle, origine) for k in (-1, 0, 1)}
         # A une image pres : la ressemblance juge la presence et la nettete, l'ecart la synchro.
         scores = {k: max(ssim(image.crop(z), ref.crop(z)) for z in ZONES[s["fmt"]]) for k, ref in reference.items()}
         score = max(scores.values())

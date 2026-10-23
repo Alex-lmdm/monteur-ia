@@ -540,6 +540,32 @@ test('sous-titres mot à mot (--mots) : la voix telle que transcrite, ponctuatio
   const refus = spawnSync('python3', ['tools/montage_captions.py', '--mots', '4'], { cwd: reel, encoding: 'utf8' });
   assert.notEqual(refus.status, 0);
   assert.match(refus.stderr, /--mots attend 1, 2 ou 3/);
+  // Des raccords posés après la transcription renumérotent les prises : un fichier de mots plus ancien
+  // que les coupes n'est plus rangé par ses numéros de prise, mais par le temps (et c'est signalé).
+  const perimes = JSON.parse(read(reel, 'derush/exemple_words.json')).map((w) => ({ ...w, take: 0 }));
+  write(reel, 'derush/exemple_words.json', perimes);
+  const coupes = path.join(reel, 'derush/exemple_cuts.json');
+  const plusTard = new Date(Date.now() + 60_000);
+  fs.utimesSync(coupes, plusTard, plusTard);
+  const parTemps = spawnSync('python3', ['tools/montage_captions.py', '--mots', '1'], { cwd: reel, encoding: 'utf8' });
+  assert.match(parTemps.stdout, /plus ancien que les coupes/);
+  assert.ok(sousTitres(reel, '--mots', '1').caps.some((c) => c.texte === 'QUELQU’UN' && c.start >= 2.6),
+    'chaque mot reste dans sa phrase malgré des numéros de prise périmés');
+  const avantDerush = new Date(Date.now() - 60_000);
+  fs.utimesSync(coupes, avantDerush, avantDerush);
+  write(reel, 'derush/exemple_words.json', avance);
+  // Un nombre reste avec son voisin : après un nom il s'y accroche (« GPT 6 »), sinon il part avec
+  // le mot qui suit (« 72 GRAPHISTES ») ; jamais « GPT » puis « 6 ».
+  const nombres = (avant, chiffre) => {
+    const mots = JSON.parse(read(reel, 'derush/exemple_words.json'));
+    mots.find((w) => w.w === 'pour').w = avant;
+    mots.find((w) => w.w === 'les').w = chiffre;
+    write(reel, 'derush/exemple_words.json', mots);
+    return sousTitres(reel, '--mots', '1').caps.map((c) => c.texte);
+  };
+  assert.ok(nombres('GPT', '6').includes('GPT 6'));
+  write(reel, 'derush/exemple_words.json', avance);
+  assert.ok(nombres('il', '72').includes('72 GRAPHISTES,'));
 });
 
 // ---------------------------------------------------------------------------
@@ -573,7 +599,7 @@ test('Reel Cloneur : un changement de carte sans coupe compte dans le rythme ; c
 });
 
 // ---------------------------------------------------------------------------
-// 7. Personne détourée devant les visuels (styles « Avis produit », « Mon histoire »)
+// 7. Personne détourée devant les visuels (styles « Incrustation », « Autocollant »)
 // ---------------------------------------------------------------------------
 // Le vrai détourage (hyperframes remove-background, modèle de 170 Mo) est remplacé ici par un faux qui
 // rend une vidéo transparente de même taille : on vérifie la place des couches, pas le modèle.
@@ -656,6 +682,26 @@ test('zoom par section : une vidéo nette par niveau de zoom, la section serrée
   assert.match(master, /<video id="decor1" src="assets\/video\/visage-decor-zoom-0\.mp4"[^>]*data-start="5\.3\d+" data-media-start="5\.3\d+"/);
   assert.match(master, /<video id="facefull0" src="assets\/video\/visage-plein-zoom-0\.mp4"/);
   assert.match(master, /\.face-decor video \{[^}]*transform: none;/);
+
+  // Le contrôle final compare chaque section à la vidéo qu'elle montre : une section resserrée à sa
+  // vidéo resserrée (comparée à celle du Reel, elle passait pour un visage absent et rien n'était livré).
+  const bornes = JSON.parse(python(reel, '-c', 'import json, sys; sys.path.insert(0, "tools"); import sections; '
+    + 'print(json.dumps([[s["start"], s["end"]] for s in sections.sections()]))'));
+  const exporte = (sources) => {
+    const morceaux = sources.map((src, i) => `[${i}:v]trim=${bornes[i][0]}:${bornes[i][1]},setpts=PTS-STARTPTS,fps=30[v${i}]`);
+    execFileSync('ffmpeg', ['-y', '-v', 'error', ...sources.flatMap((src) => ['-i', path.join(reel, 'assets/video', src)]),
+      '-i', path.join(reel, 'assets/video/base.mp4'), '-filter_complex',
+      `${morceaux.join(';')};${sources.map((_, i) => `[v${i}]`).join('')}concat=n=${sources.length}:v=1:a=0[v]`,
+      '-map', '[v]', '-map', `${sources.length}:a:0`, '-shortest', '-c:v', 'libx264', '-crf', '18', '-pix_fmt', 'yuv420p',
+      path.join(reel, 'exports/FINAL.mp4')]);
+    return spawnSync('python3', ['tools/check_export.py', 'exports/FINAL.mp4'], { cwd: reel, encoding: 'utf8' });
+  };
+  fs.mkdirSync(path.join(reel, 'exports'), { recursive: true });
+  const bon = exporte(['visage-plein-zoom-0.mp4', 'visage-decor.mp4', 'visage-decor-zoom-0.mp4']);
+  assert.match(bon.stdout, /s2 +ressemblance 0\.9\d+ +OK/, bon.stdout);
+  assert.match(bon.stdout, /s0 +ressemblance 0\.9\d+ +OK/);
+  const faux = exporte(['visage-plein-zoom-0.mp4', 'visage-decor.mp4', 'visage-decor.mp4']);
+  assert.match(faux.stdout, /s2 +ressemblance [\d.]+ +!! KO/, 'une section qui aurait dû être resserrée est signalée');
 
   // Zoom progressif : la vidéo de la section part resserrée et s'élargit en 0,8 s (timeline du master),
   // sur la vidéo du Reel, sans nouvelle copie.

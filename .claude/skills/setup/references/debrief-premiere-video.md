@@ -34,7 +34,7 @@ Adapter les exemples à ce qui a réellement été monté, garder la structure :
 > Je corrige cette vidéo avec tes retours, puis je retiens tout pour les prochaines. »
 
 **Montée dans un style qu'il a choisi** (un style du catalogue, ou le style d'un Reel qu'il a
-collé) : « C'est une version de base… » devient « Je l'ai montée dans le style n°4 « Le classement »,
+collé) : « C'est une version de base… » devient « Je l'ai montée dans le style n°4 « Karaoké couleur »,
 sans rien savoir de tes goûts » (ou « comme le Reel que tu m'as donné ») ; la ligne des couleurs
 devient « garder les couleurs de ce style, ou mettre les tiennes ». Le reste du message ne change pas.
 

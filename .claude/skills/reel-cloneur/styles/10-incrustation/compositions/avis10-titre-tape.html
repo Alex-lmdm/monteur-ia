@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°10 « INCRUSTATION » · PIÈCE « TITRE TAPÉ »                            ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+    Ce que c'est : le titre de l'accroche, en capitales grasses, tapé lettre à lettre avec un
+    curseur en haut de l'image ; une ligne fine arrive dessous quand il est fini.
+    Taille : section « decor » 1080×1920, fond TRANSPARENT, posée sur la vidéo filmée (cadrage
+    montage.decorTransform). Aucun sous-titre sur cette section : --sans <id de la section>.
+    Quand : l'accroche (0 à 4 s environ), une seule fois par vidéo.
+    À remplacer :
+      1. l'id « avis10-titre-tape » PARTOUT (style, div racine, data-composition-id, ID du script)
+         par l'id de la section dans tools/sections.py ;
+      2. data-duration (racine et panneau) et DUREE du script = durée de la section ;
+      3. data-texte : le titre, 1 à 3 mots en capitales, ce que montre la vidéo (un avis : « J'AI TESTÉ »,
+         le nom du produit ; une histoire : « MON DÉBUT » ; une actu : « NOUVEAU ») ; 14 caractères au
+         plus pour tenir sur une ligne ;
+      4. .a10-ligne : 2 à 5 mots (le nom de ce dont tu parles, sa catégorie), jamais une phrase de la voix ;
+      5. top de .a10-titre-bloc (250 px) : le titre et la ligne doivent finir au-dessus de la tête.
+    Couleurs : blanc des cartes (--brand-surface) et ombre douce tirée de --brand-text.
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #avis10-titre-tape { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden; }
+    #avis10-titre-tape .a10-titre-bloc { position:absolute; left:var(--brand-safe-x); right:var(--brand-safe-x); top:250px;
+      text-align:center; color:var(--brand-surface); font-family:var(--brand-font-body);
+      text-shadow:0 2px 16px color-mix(in srgb, var(--brand-text) 60%, transparent), 0 0 3px color-mix(in srgb, var(--brand-text) 35%, transparent); }
+    #avis10-titre-tape .a10-titre { font-size:84px; line-height:1; font-weight:900; letter-spacing:-1px; white-space:nowrap; }
+    #avis10-titre-tape .a10-lettre { position:relative; visibility:hidden; }
+    #avis10-titre-tape .a10-curseur { position:absolute; right:-6px; top:2px; width:5px; height:78px;
+      background:var(--brand-surface); opacity:0; }
+    #avis10-titre-tape .a10-ligne { margin-top:26px; font-size:52px; line-height:1.1; font-weight:400; letter-spacing:-2px; opacity:0; }
+  </style>
+</head>
+<body>
+  <div id="avis10-titre-tape" data-composition-id="avis10-titre-tape" data-start="0" data-duration="3.6" data-fps="30" data-width="1080" data-height="1920">
+    <div id="avis10-titre-tape-panneau" class="clip" data-start="0" data-duration="3.6" data-track-index="0">
+      <div class="a10-titre-bloc">
+        <div class="a10-titre" data-texte="AVIS PRODUIT"></div>
+        <div class="a10-ligne">le nom du produit</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'avis10-titre-tape';
+      var DUREE = 3.6;
+      var scope = '#' + ID + ' ';
+      var root = document.getElementById(ID);
+      var titre = root.querySelector('.a10-titre');
+      var texte = titre.getAttribute('data-texte');
+      for (var i = 0; i < texte.length; i++) {
+        var s = document.createElement('span');
+        s.className = 'a10-lettre a10-l' + i;
+        s.textContent = texte[i] === ' ' ? ' ' : texte[i];
+        var c = document.createElement('span');
+        c.className = 'a10-curseur a10-c' + i;
+        s.appendChild(c);
+        titre.appendChild(s);
+      }
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      var t0 = 0.12, pas = 0.1;               // une lettre toutes les 0,1 s
+      for (var k = 0; k < texte.length; k++) {
+        tl.set(scope + '.a10-l' + k, { visibility: 'visible' }, t0 + k * pas);
+        tl.set(scope + '.a10-c' + k, { opacity: 1 }, t0 + k * pas);
+        if (k < texte.length - 1) tl.set(scope + '.a10-c' + k, { opacity: 0 }, t0 + (k + 1) * pas);
+      }
+      var fin = t0 + texte.length * pas;
+      tl.set(scope + '.a10-c' + (texte.length - 1), { opacity: 0 }, fin + 0.35);
+      tl.fromTo(scope + '.a10-ligne', { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.25, ease: 'expo.out' }, fin + 0.45);
+      tl.set(scope + '.a10-ligne', { opacity: 1 }, DUREE - 0.01);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

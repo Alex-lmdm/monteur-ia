@@ -73,6 +73,21 @@ coupes sèches seulement. »). Langue : celle du client.
 - {la signature de l'auteur : logo, pseudo, filigrane, visuels maison, musique ; un effet qu'il ne
   veut pas} : {pourquoi, en quelques mots}
 
+## Sur un autre sujet
+
+Ce style est un look : il se monte sur n'importe quelle vidéo (une histoire, un avis, une actu, un
+tuto, une liste). On ne le déconseille jamais à cause du sujet ; on adapte ce qui suivait le sujet
+de l'original.
+
+- **Toujours, quel que soit le sujet :** {le look : sous-titres, cadrage, couleurs, rythme,
+  transitions, type d'animations}
+- **Ce qui suivait le sujet de l'original, et ce que ça devient chez toi :**
+  - {élément lié au sujet (un rang, une question, une page produit, des logos d'outils)} → {ce qu'il
+    devient pour une histoire, un avis, une liste ; rien d'inventé : un chiffre, un avis, un nom ne
+    s'affiche que s'il est dit ou fourni}
+- **Dans le bloc technique ci-dessous :** {« entrée » se lit « partie de ta vidéo »… ; « rien à
+  relire » si rien ne suivait le sujet}
+
 ---
 
 ## Pour Monteur IA

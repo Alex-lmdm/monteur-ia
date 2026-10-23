@@ -154,6 +154,11 @@ question.
 style de base) que s'il dit oui. Une vidéo dans un tout autre style ne change donc jamais les
 suivantes.
 
+**Un style se monte sur n'importe quel sujet.** Sa vidéo ne ressemble pas à celle qu'il a clonée
+(une histoire dans un style né d'un classement) : la section « Sur un autre sujet » de la fiche dit
+ce que deviennent les pièces liées au sujet ; le reste du look ne bouge pas. Ne lui déconseille
+jamais un style pour une question de sujet.
+
 **Sur une vidéo, sans toucher à ses réglages.** Dès qu'il a sa vidéo brute :
 1. `python3 tools/nouveau_reel.py "<sujet en 2 à 4 mots>" --video "<sa vidéo>" --brief "Style de
    montage de cette vidéo : ../../clones/<dossier>/style.md (Reel Cloneur), pour elle seulement.

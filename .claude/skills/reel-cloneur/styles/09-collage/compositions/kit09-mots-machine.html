@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    KIT N°09 « COLLAGE » · PIÈCE : MOTS MACHINE À ÉCRIRE (calque 1080x1920, fond transparent,
+    3,5 s d'exemple ; se pose dans un collage ou par-dessus une section decor)
+    Ce que c'est : deux façons d'écrire un mot dit à voix haute :
+      - .bande : tapé à la machine, lettre par lettre (0,045 s), chaque lettre apporte son bout de bande
+        de papier blanc (la bande s'allonge), encre sombre, petite rotation ;
+      - .rancon : lettres découpées (une lettre = un bout de papier, rotation et hauteur irrégulières),
+        posées en tampon une à une (0,05 à 0,06 s).
+    Quand : bande = 1 à 3 mots forts de la voix, au moment où ils sont dits (2 à 4 par scène) ; lettres
+    découpées = UN mot qui compte (un nom, un chiffre dit), une ou deux fois par vidéo.
+    À remplacer : textes, places, temps.
+    Couleurs : var(--brand-*) seulement (fond = --brand-bg, 2e papier = --brand-surface, papier
+    chaud = mélange fond + accent, blanc des bandes et des étiquettes = --brand-text, encre = --brand-bg,
+    bandeau et traits forts = --brand-accent, impression passée = --brand-muted) : le reel.config.json du
+    kit les règle. Polices : Inter (réglages), « Courier Prime » (machine à écrire, --brand-font-accent) et « Abril
+    Fatface » (mot-clé, --brand-font-display), livrées avec Monteur IA (licences OFL
+    jointes) ; sans elles, repli sur var(--brand-font-mono) / var(--brand-font-display).
+    Temps : en secondes depuis le début de la section, à caler sur les mots
+    (derush/<vidéo>_words.json) ; data-duration du calque et de la racine = durée de la section.
+    Tout est déterministe : formes déchirées précalculées, aucun hasard au rendu.
+    Renommer la pièce = renommer l'id PARTOUT (racine, data-composition-id, calque, filtres
+    #<id>-craie/-grain/-taches, constante ID du script), et garder un id différent de toute classe.
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #kit09-mots-machine { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden; background:transparent;
+      --kit-machine: var(--brand-font-accent), var(--brand-font-mono); --kit-titre: var(--brand-font-display), var(--brand-font-display);
+      --kit-blanc: var(--brand-text); --kit-encre: var(--brand-bg);
+      --kit-ombre: color-mix(in srgb, var(--brand-stroke) 55%, transparent); }
+    #kit09-mots-machine * { box-sizing:border-box; margin:0; padding:0; }
+    #kit09-mots-machine .calque { position:absolute; inset:0; }
+    /* Papier : teinte (--p) + trame de points + plis ; le grain et les taches viennent de .grain. */
+    #kit09-mots-machine .papier { position:absolute; inset:0; background:var(--p); }
+    #kit09-mots-machine .trame { position:absolute; inset:0; opacity:.55;
+      background-image: radial-gradient(color-mix(in srgb, var(--brand-text) 11%, transparent) 1.4px, transparent 2px);
+      background-size: 9px 9px;
+      -webkit-mask-image: radial-gradient(ellipse 60% 40% at 18% 22%, var(--brand-text) 0%, transparent 70%), radial-gradient(ellipse 55% 35% at 85% 78%, var(--brand-text) 0%, transparent 70%);
+      mask-image: radial-gradient(ellipse 60% 40% at 18% 22%, var(--brand-text) 0%, transparent 70%), radial-gradient(ellipse 55% 35% at 85% 78%, var(--brand-text) 0%, transparent 70%); }
+    #kit09-mots-machine .pli-v { position:absolute; top:0; bottom:0; left:102px; width:7px;
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-text) 22%, transparent) 40%, color-mix(in srgb, var(--brand-stroke) 45%, transparent) 60%, transparent); }
+    #kit09-mots-machine .pli-h { position:absolute; left:0; right:0; top:1300px; height:6px; rotate:-.35deg;
+      background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand-text) 18%, transparent) 45%, color-mix(in srgb, var(--brand-stroke) 40%, transparent) 60%, transparent); }
+    #kit09-mots-machine .impression { position:absolute; inset:0; overflow:hidden; opacity:.075; }
+    #kit09-mots-machine .imp-l { position:absolute; white-space:nowrap; font-family:var(--brand-font-accent); font-size:34px; letter-spacing:.08em; color:var(--brand-muted); }
+    #kit09-mots-machine .imp-m { scale:-1 1; }
+    #kit09-mots-machine .grain { position:absolute; inset:0; width:1080px; height:1920px; pointer-events:none; }
+    #kit09-mots-machine .grain .taches { fill:var(--brand-text); opacity:.045; }
+    #kit09-mots-machine .grain .poussiere { fill:var(--brand-text); opacity:.55; }
+    #kit09-mots-machine .vignette { position:absolute; inset:0; background: radial-gradient(ellipse 75% 65% at 50% 45%, transparent 55%, color-mix(in srgb, var(--brand-stroke) 50%, transparent) 100%); }
+    #kit09-mots-machine .scene { position:absolute; inset:0; }
+    /* Découpes : photo détourée, ombre portée de papier collé. */
+    #kit09-mots-machine .decoupe { position:absolute; }
+    #kit09-mots-machine .dc-ombre { filter: drop-shadow(0 20px 22px var(--kit-ombre)); }
+    #kit09-mots-machine .dc-boite { overflow:hidden; }
+    #kit09-mots-machine .decoupe img { display:block; width:100%; height:auto; }
+    /* Étiquettes : logo sur un carré de papier blanc déchiré. */
+    #kit09-mots-machine .etiquette { position:absolute; }
+    #kit09-mots-machine .et-ombre { position:absolute; inset:0; filter: drop-shadow(0 14px 16px var(--kit-ombre)); }
+    #kit09-mots-machine .et-papier { position:absolute; inset:0; background:var(--kit-blanc); display:flex; align-items:center; justify-content:center; }
+    #kit09-mots-machine .et-papier img { width:64%; height:64%; object-fit:contain; }
+    /* Mot machine à écrire : chaque lettre porte son bout de bande blanche (la bande s'allonge). */
+    #kit09-mots-machine .bande { position:absolute; display:flex; white-space:nowrap; font-family:var(--brand-font-accent); font-weight:400;
+      color:var(--kit-encre); line-height:1; filter: drop-shadow(0 8px 10px var(--kit-ombre)); }
+    #kit09-mots-machine .bande i { font-style:normal; background:var(--kit-blanc); padding:.16em 0 .12em; }
+    #kit09-mots-machine .bande i:first-child { padding-left:.32em; }
+    #kit09-mots-machine .bande i:last-child { padding-right:.32em; }
+    /* Lettres découpées (lettre de rançon) : une lettre = un bout de papier. */
+    #kit09-mots-machine .rancon { position:absolute; display:flex; align-items:center; gap:.08em; font-family:var(--brand-font-accent);
+      color:var(--kit-encre); line-height:1; filter: drop-shadow(0 8px 10px var(--kit-ombre)); }
+    #kit09-mots-machine .rancon b { display:block; font-weight:400; background:var(--kit-blanc); padding:.1em .14em .08em; }
+    #kit09-mots-machine .rancon b.gras { font-weight:700; }
+    #kit09-mots-machine .rancon b.esp { width:.4em; background:none; padding:0; }
+    /* Craie : trait tracé à la main, grain de craie par le filtre. */
+    #kit09-mots-machine .craie { position:absolute; overflow:visible; fill:none; stroke-linecap:round; stroke-linejoin:round; filter:url(#kit09-mots-machine-craie); }
+    #kit09-mots-machine .craie path { stroke-dasharray:1; stroke-dashoffset:1; }
+    #kit09-mots-machine .encre-text { stroke:var(--brand-text); }
+    #kit09-mots-machine .encre-accent { stroke:var(--brand-accent); }
+
+  </style>
+</head>
+<body>
+  <div id="kit09-mots-machine" data-composition-id="kit09-mots-machine" data-start="0" data-duration="3.5" data-fps="30" data-width="1080" data-height="1920">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <filter id="kit09-mots-machine-craie" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/></filter>
+      <filter id="kit09-mots-machine-grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="4"/><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  11 0 0 0 -8.1"/><feComposite in="SourceGraphic" operator="in"/></filter>
+      <filter id="kit09-mots-machine-taches" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.0045" numOctaves="4" seed="9"/><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3.4 0 0 0 -1.5"/><feComposite in="SourceGraphic" operator="in"/></filter>
+    </svg>
+    <div id="kit09-mots-machine-calque" class="clip calque" data-start="0" data-duration="3.5" data-track-index="0">
+      <!-- À REMPLACER : chaque mot (texte, place, rotation de -4 à 4°, moment où il est dit). -->
+      <div class="bande bd1" style="left:200px;top:420px;rotate:-3deg;font-size:44px"><i data-layout-allow-occlusion class="l0">u</i><i data-layout-allow-occlusion class="l1">n</i><i data-layout-allow-occlusion class="l2">&nbsp;</i><i data-layout-allow-occlusion class="l3">m</i><i data-layout-allow-occlusion class="l4">o</i><i data-layout-allow-occlusion class="l5">t</i><i data-layout-allow-occlusion class="l6">&nbsp;</i><i data-layout-allow-occlusion class="l7">t</i><i data-layout-allow-occlusion class="l8">a</i><i data-layout-allow-occlusion class="l9">p</i><i data-layout-allow-occlusion class="l10">é</i></div>
+      <div class="bande bd2" style="left:520px;top:540px;rotate:2deg;font-size:44px"><i data-layout-allow-occlusion class="l0">d</i><i data-layout-allow-occlusion class="l1">e</i><i data-layout-allow-occlusion class="l2">u</i><i data-layout-allow-occlusion class="l3">x</i><i data-layout-allow-occlusion class="l4">&nbsp;</i><i data-layout-allow-occlusion class="l5">m</i><i data-layout-allow-occlusion class="l6">o</i><i data-layout-allow-occlusion class="l7">t</i><i data-layout-allow-occlusion class="l8">s</i></div>
+      <div class="bande bd3" style="left:180px;top:660px;rotate:-2deg;font-size:44px"><i data-layout-allow-occlusion class="l0">t</i><i data-layout-allow-occlusion class="l1">r</i><i data-layout-allow-occlusion class="l2">o</i><i data-layout-allow-occlusion class="l3">i</i><i data-layout-allow-occlusion class="l4">s</i><i data-layout-allow-occlusion class="l5">&nbsp;</i><i data-layout-allow-occlusion class="l6">p</i><i data-layout-allow-occlusion class="l7">e</i><i data-layout-allow-occlusion class="l8">t</i><i data-layout-allow-occlusion class="l9">i</i><i data-layout-allow-occlusion class="l10">t</i><i data-layout-allow-occlusion class="l11">s</i><i data-layout-allow-occlusion class="l12">&nbsp;</i><i data-layout-allow-occlusion class="l13">m</i><i data-layout-allow-occlusion class="l14">o</i><i data-layout-allow-occlusion class="l15">t</i><i data-layout-allow-occlusion class="l16">s</i></div>
+      <div class="rancon rc4" style="left:220px;top:860px;rotate:-2deg;font-size:72px"><b class="l0" style="rotate:0.6deg;translate:0 -3px">L</b><b class="l1 gras" style="rotate:4.9deg;translate:0 3px">E</b><b class="l2" style="rotate:-4.6deg;translate:0 4px">T</b><b class="l3" style="rotate:2.7deg;translate:0 2px">T</b><b class="l4 gras" style="rotate:-5.3deg;translate:0 7px">R</b><b class="l5" style="rotate:8.2deg;translate:0 3px">E</b><b class="l6" style="rotate:2.6deg;translate:0 4px">S</b></div>
+      <div class="rancon rc5" style="left:300px;top:980px;rotate:3deg;font-size:64px"><b class="l0" style="rotate:7.5deg;translate:0 6px">d</b><b class="l1 gras" style="rotate:-5.7deg;translate:0 -0px">é</b><b class="l2" style="rotate:-4.2deg;translate:0 2px">c</b><b class="l3" style="rotate:-6.7deg;translate:0 1px">o</b><b class="l4 gras" style="rotate:5.8deg;translate:0 2px">u</b><b class="l5" style="rotate:-7.3deg;translate:0 -6px">p</b><b class="l6" style="rotate:2.1deg;translate:0 6px">é</b><b class="l7 gras" style="rotate:-2.1deg;translate:0 7px">e</b><b class="l8" style="rotate:7.5deg;translate:0 3px">s</b></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'kit09-mots-machine';
+      var S = '#' + ID + ' ';
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      tl.fromTo(S+'.bd1 .l0', {opacity:0}, {opacity:1, duration:.01}, 0.200);
+      tl.fromTo(S+'.bd1 .l1', {opacity:0}, {opacity:1, duration:.01}, 0.245);
+      tl.fromTo(S+'.bd1 .l2', {opacity:0}, {opacity:1, duration:.01}, 0.290);
+      tl.fromTo(S+'.bd1 .l3', {opacity:0}, {opacity:1, duration:.01}, 0.335);
+      tl.fromTo(S+'.bd1 .l4', {opacity:0}, {opacity:1, duration:.01}, 0.380);
+      tl.fromTo(S+'.bd1 .l5', {opacity:0}, {opacity:1, duration:.01}, 0.425);
+      tl.fromTo(S+'.bd1 .l6', {opacity:0}, {opacity:1, duration:.01}, 0.470);
+      tl.fromTo(S+'.bd1 .l7', {opacity:0}, {opacity:1, duration:.01}, 0.515);
+      tl.fromTo(S+'.bd1 .l8', {opacity:0}, {opacity:1, duration:.01}, 0.560);
+      tl.fromTo(S+'.bd1 .l9', {opacity:0}, {opacity:1, duration:.01}, 0.605);
+      tl.fromTo(S+'.bd1 .l10', {opacity:0}, {opacity:1, duration:.01}, 0.650);
+      tl.fromTo(S+'.bd2 .l0', {opacity:0}, {opacity:1, duration:.01}, 0.800);
+      tl.fromTo(S+'.bd2 .l1', {opacity:0}, {opacity:1, duration:.01}, 0.845);
+      tl.fromTo(S+'.bd2 .l2', {opacity:0}, {opacity:1, duration:.01}, 0.890);
+      tl.fromTo(S+'.bd2 .l3', {opacity:0}, {opacity:1, duration:.01}, 0.935);
+      tl.fromTo(S+'.bd2 .l4', {opacity:0}, {opacity:1, duration:.01}, 0.980);
+      tl.fromTo(S+'.bd2 .l5', {opacity:0}, {opacity:1, duration:.01}, 1.025);
+      tl.fromTo(S+'.bd2 .l6', {opacity:0}, {opacity:1, duration:.01}, 1.070);
+      tl.fromTo(S+'.bd2 .l7', {opacity:0}, {opacity:1, duration:.01}, 1.115);
+      tl.fromTo(S+'.bd2 .l8', {opacity:0}, {opacity:1, duration:.01}, 1.160);
+      tl.fromTo(S+'.bd3 .l0', {opacity:0}, {opacity:1, duration:.01}, 1.300);
+      tl.fromTo(S+'.bd3 .l1', {opacity:0}, {opacity:1, duration:.01}, 1.345);
+      tl.fromTo(S+'.bd3 .l2', {opacity:0}, {opacity:1, duration:.01}, 1.390);
+      tl.fromTo(S+'.bd3 .l3', {opacity:0}, {opacity:1, duration:.01}, 1.435);
+      tl.fromTo(S+'.bd3 .l4', {opacity:0}, {opacity:1, duration:.01}, 1.480);
+      tl.fromTo(S+'.bd3 .l5', {opacity:0}, {opacity:1, duration:.01}, 1.525);
+      tl.fromTo(S+'.bd3 .l6', {opacity:0}, {opacity:1, duration:.01}, 1.570);
+      tl.fromTo(S+'.bd3 .l7', {opacity:0}, {opacity:1, duration:.01}, 1.615);
+      tl.fromTo(S+'.bd3 .l8', {opacity:0}, {opacity:1, duration:.01}, 1.660);
+      tl.fromTo(S+'.bd3 .l9', {opacity:0}, {opacity:1, duration:.01}, 1.705);
+      tl.fromTo(S+'.bd3 .l10', {opacity:0}, {opacity:1, duration:.01}, 1.750);
+      tl.fromTo(S+'.bd3 .l11', {opacity:0}, {opacity:1, duration:.01}, 1.795);
+      tl.fromTo(S+'.bd3 .l12', {opacity:0}, {opacity:1, duration:.01}, 1.840);
+      tl.fromTo(S+'.bd3 .l13', {opacity:0}, {opacity:1, duration:.01}, 1.885);
+      tl.fromTo(S+'.bd3 .l14', {opacity:0}, {opacity:1, duration:.01}, 1.930);
+      tl.fromTo(S+'.bd3 .l15', {opacity:0}, {opacity:1, duration:.01}, 1.975);
+      tl.fromTo(S+'.bd3 .l16', {opacity:0}, {opacity:1, duration:.01}, 2.020);
+      tl.fromTo(S+'.rc4 .l0', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.000);
+      tl.fromTo(S+'.rc4 .l1', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.050);
+      tl.fromTo(S+'.rc4 .l2', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.100);
+      tl.fromTo(S+'.rc4 .l3', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.150);
+      tl.fromTo(S+'.rc4 .l4', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.200);
+      tl.fromTo(S+'.rc4 .l5', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.250);
+      tl.fromTo(S+'.rc4 .l6', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.300);
+      tl.fromTo(S+'.rc5 .l0', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.400);
+      tl.fromTo(S+'.rc5 .l1', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.450);
+      tl.fromTo(S+'.rc5 .l2', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.500);
+      tl.fromTo(S+'.rc5 .l3', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.550);
+      tl.fromTo(S+'.rc5 .l4', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.600);
+      tl.fromTo(S+'.rc5 .l5', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.650);
+      tl.fromTo(S+'.rc5 .l6', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.700);
+      tl.fromTo(S+'.rc5 .l7', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.750);
+      tl.fromTo(S+'.rc5 .l8', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 2.800);
+      tl.set({}, {}, 3.5);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

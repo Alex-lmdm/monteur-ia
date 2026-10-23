@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    STYLE N°05 « SCHÉMA VIVANT » · PIÈCE 3/3 : LE TEXTE TAPÉ (+ FRISE)
+    ─────────────────────────────────────────────────────────────────────────
+    CE QUE C'EST : une phrase à taper ou à dire mot pour mot (une demande à une IA, un nom à
+    chercher, une formule d'exemple) s'écrit lettre par lettre en haut, alignée à gauche, au
+    rythme de la voix ; les deux dernières lettres tapées sont dans l'accent. Plusieurs lignes
+    peuvent s'empiler. À la fin, un cadre blanc arrondi se pose autour. La frise de progression
+    reste affichée sous les sous-titres (même réglage que la pièce 2).
+    TAILLE : section « decor » plein cadre 1080×1920, fond TRANSPARENT, posée sur la vidéo entière.
+    QUAND L'UTILISER : chaque fois que la voix cite une phrase exacte (entre guillemets à
+    l'oral : « tu lui dis : … »). Le texte est celui que dit la voix, jamais un texte inventé ;
+    3 lignes de 30 caractères au plus (sinon, garder le début et finir par « … »).
+    COMMENT LA POSER DANS UN REEL : copie ce fichier en compositions/<id de la section>.html, puis
+    remplace « m05-tape » PARTOUT par l'id de la section, et les deux data-duration par sa durée.
+    À REMPLACER (bloc « RÉGLAGES » du script) :
+      - LIGNES : [{ texte, de, a }] : la phrase, et les instants (s depuis le début de la
+        section) où la frappe commence et finit : le premier et le dernier mot dits
+        (derush/<vidéo>_words.json) ;
+      - CADRE : l'instant où le cadre se pose (≈ 0,3 s après la dernière lettre), ou null ;
+      - ETAPES, ACTUELLE, FRISE : comme la pièce 2 (ETAPES = la même liste partout ;
+        FRISE = null pour une section sans frise) ;
+      - DUREE : la durée de la section (la même que data-duration).
+    PLACE (bloc « PLACE », le même dans toutes les sections du Reel) : haut, friseY, voile.
+    COULEURS : uniquement les tokens de marque. IMAGES : aucune.
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #m05-tape { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      color:var(--brand-text); font-family:var(--brand-font-body);
+      --m05-haut:210px; --m05-frise-y:1395px; --m05-voile:0.45;
+      --m05-ombre:0 0 3px color-mix(in srgb, var(--brand-stroke) 60%, transparent), 0 2px 14px color-mix(in srgb, var(--brand-stroke) 60%, transparent); }
+    #m05-tape * { box-sizing:border-box; }
+    #m05-tape .voile { position:absolute; left:0; right:0; top:0; height:1000px; opacity:var(--m05-voile);
+      background:linear-gradient(to bottom, var(--brand-stroke) 0%, color-mix(in srgb, var(--brand-stroke) 55%, transparent) 45%, transparent 100%); }
+    /* Le bloc épouse le texte (largeur au plus juste, 880 px au plus) : le cadre l'entoure de près. */
+    #m05-tape .tape { position:absolute; left:var(--brand-safe-x); top:var(--m05-haut); max-width:880px;
+      padding:30px 40px 8px; }
+    #m05-tape .cadre { position:absolute; inset:0; border:3px solid var(--brand-text); border-radius:22px;
+      box-shadow:var(--m05-ombre); }
+    #m05-tape .ligne-tape { position:relative; margin:0 0 22px; font-weight:600; font-size:52px; line-height:1.12;
+      letter-spacing:-0.035em; text-shadow:var(--m05-ombre); }
+    #m05-tape .mot-tape { display:inline-block; white-space:nowrap; }
+    #m05-tape .car { opacity:0; }
+    #m05-tape .car[data-frais="1"] { color:var(--brand-accent); }
+    #m05-tape .frise { position:absolute; left:var(--brand-safe-x); right:var(--brand-safe-x); top:var(--m05-frise-y); }
+    #m05-tape .piste, #m05-tape .rempli { position:absolute; left:0; right:0; top:0; height:6px; border-radius:3px; }
+    #m05-tape .piste { background:color-mix(in srgb, var(--brand-text) 35%, transparent); }
+    #m05-tape .rempli { background:var(--brand-text); transform-origin:left center; }
+    #m05-tape .pastilles { position:absolute; left:0; right:0; top:30px; display:flex; gap:16px; align-items:flex-start; }
+    #m05-tape .pastille { flex:1; display:flex; flex-direction:column; align-items:center; gap:10px; }
+    #m05-tape .pastille i { display:block; width:100%; height:14px; border-radius:7px; background:var(--brand-text); box-shadow:var(--m05-ombre); }
+    #m05-tape .pastille span { font-weight:700; font-size:30px; line-height:1; letter-spacing:-0.02em; white-space:nowrap; text-shadow:var(--m05-ombre); }
+    #m05-tape .anneau { flex:none; width:24px; height:24px; margin-top:-6px; border-radius:50%; border:5px solid var(--brand-text); }
+  </style>
+</head>
+<body>
+  <div id="m05-tape" data-composition-id="m05-tape" data-start="0" data-duration="5"
+       data-fps="30" data-width="1080" data-height="1920">
+    <div id="m05-tape-calque" class="clip" data-start="0" data-duration="5" data-track-index="0">
+      <div class="voile"></div>
+      <div class="tape"><div class="cadre"></div></div>
+      <div class="frise"></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'm05-tape';
+      var S = '#' + ID + ' ';
+      // >>> RÉGLAGES DE LA SECTION (à remplacer) -------------------------------------------
+      var LIGNES = [
+        { texte: 'Écris-moi trois accroches sur ce sujet', de: 0.3, a: 2.4 }
+      ];
+      var CADRE = 2.8;
+      var ETAPES = [
+        { libelle: 'Idée',     forme: 'barres', barres: 2 },
+        { libelle: 'Script',   forme: 'barres', barres: 2 },
+        { libelle: 'Tournage', forme: 'boucle' },
+        { libelle: 'Montage',  forme: 'barres', barres: 2 },
+        { libelle: 'Commente', forme: 'barres', barres: 1, appel: true }
+      ];
+      var ACTUELLE = 1;
+      var FRISE = { de: 0.35, a: 0.5, apparition: false };
+      var DUREE = 5;
+      // <<< FIN DES RÉGLAGES ------------------------------------------------------------------
+      // >>> PLACE (la même dans toutes les sections du Reel : à caler une fois sur la vidéo) -----
+      var PLACE = { haut: 210, friseY: 1395, voile: 0.45 };
+      // <<< FIN DE LA PLACE ----------------------------------------------------------------------
+      var root = document.getElementById(ID);
+      root.style.setProperty('--m05-haut', PLACE.haut + 'px');
+      root.style.setProperty('--m05-frise-y', PLACE.friseY + 'px');
+      root.style.setProperty('--m05-voile', String(PLACE.voile));
+      // Lignes : un <span class="car"> par lettre, groupées par mot (le retour à la ligne tombe
+      // entre deux mots, à la place finale : rien ne bouge pendant la frappe).
+      var tape = root.querySelector('.tape'), temps = [];
+      LIGNES.forEach(function (L, i) {
+        var p = document.createElement('p'); p.className = 'ligne-tape';
+        var lettres = Array.from(L.texte.replace(/\s+/g, ' ').trim()), n = lettres.filter(function (c) { return c !== ' '; }).length;
+        var k = 0, mot = null;
+        lettres.forEach(function (c) {
+          if (c === ' ') { p.appendChild(document.createTextNode(' ')); mot = null; return; }
+          if (!mot) { mot = document.createElement('span'); mot.className = 'mot-tape'; p.appendChild(mot); }
+          var s = document.createElement('span'); s.className = 'car car-' + i + '-' + k; s.textContent = c; mot.appendChild(s);
+          temps.push({ sel: S + '.car-' + i + '-' + k, t: L.de + (n > 1 ? (L.a - L.de) * k / (n - 1) : 0), ligne: i, k: k, n: n });
+          k++;
+        });
+        tape.appendChild(p);
+      });
+      if (FRISE) {
+        var p2 = root.querySelector('.frise');
+        p2.innerHTML = '<div class="piste"></div><div class="rempli"></div><div class="pastilles"></div>';
+        var ps = p2.querySelector('.pastilles');
+        ETAPES.forEach(function (e, i) {
+          var cache = i > ACTUELLE ? ' style="visibility:hidden"' : '';
+          if (e.forme === 'boucle') { ps.insertAdjacentHTML('beforeend', '<div class="anneau"' + cache + '></div>'); return; }
+          ps.insertAdjacentHTML('beforeend', '<div class="pastille frise-' + i + '"' + cache + '><i></i><span></span></div>');
+          ps.querySelector('.frise-' + i + ' span').textContent = e.libelle;
+        });
+      }
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      if (FRISE && FRISE.apparition) tl.fromTo(S + '.frise', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0);
+      if (FRISE) tl.fromTo(S + '.rempli', { scaleX: FRISE.de }, { scaleX: FRISE.a, duration: DUREE, ease: 'none' }, 0);
+      tl.set(S + '.cadre', { opacity: 0 }, 0);
+      // Frappe : chaque lettre apparaît dans l'accent, puis repasse en blanc deux lettres plus loin.
+      temps.forEach(function (c, j) {
+        tl.set(c.sel, { opacity: 1, attr: { 'data-frais': '1' } }, c.t);
+        var suite = temps[j + 2] && temps[j + 2].ligne === c.ligne ? temps[j + 2].t : LIGNES[c.ligne].a + 0.25;
+        tl.set(c.sel, { attr: { 'data-frais': '0' } }, suite);
+      });
+      if (CADRE !== null) tl.fromTo(S + '.cadre', { opacity: 0, scale: 1.03 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'power2.out' }, CADRE);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

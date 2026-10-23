@@ -82,6 +82,14 @@ if not MODEL.exists():
     print("approximatif (proportionnel au texte), moins bien cale sur la voix.")
     raise SystemExit(1)
 
+def prise_du_mot(groupe, start, end):
+    """La prise d'un mot : celle ou tombe son milieu (0,15 s apres son debut au plus). Whisper avance
+    les debuts de mot d'environ 0,1 s ; or un raccord se pose juste avant un mot : rangé par son
+    debut, le 1er mot de chaque prise partait dans la prise d'avant (et ses sous-titres avec)."""
+    pivot = start + min(0.15, max(0.0, (end - start) / 2))
+    return next((t for t in reversed(groupe) if pivot >= t["start"] - 1e-6), groupe[0])
+
+
 words = []
 with tempfile.TemporaryDirectory() as tmp:
     tmp = pathlib.Path(tmp)
@@ -112,12 +120,12 @@ with tempfile.TemporaryDirectory() as tmp:
             if not text:
                 continue
             start = round(debut + secs(*m.group(1, 2, 3)), 3)
-            take = next((t for t in reversed(groupe) if start >= t["start"] - 1e-6), groupe[0])
+            end = round(debut + secs(*m.group(4, 5, 6)), 3)
             words.append({
                 "w": text,
                 "start": start,
-                "end": round(debut + secs(*m.group(4, 5, 6)), 3),
-                "take": take["i"],
+                "end": end,
+                "take": prise_du_mot(groupe, start, end)["i"],
             })
 
 OUT.write_text(json.dumps(words, ensure_ascii=False, indent=1), encoding="utf-8")

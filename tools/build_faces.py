@@ -61,7 +61,7 @@ def effacer_detoures() -> None:
         f.unlink()
     DETOURE_ETAT.unlink(missing_ok=True)
 # Fichier de travail quasi sans perte : il est ré-encodé une seule fois, au rendu final.
-ENCODE = ["-c:v", "libx264", "-crf", "12", "-preset", "medium", "-pix_fmt", "yuv420p",
+ENCODE = ["-c:v", "libx264", "-crf", "12", "-preset", "medium", "-g", "30", "-pix_fmt", "yuv420p",
           "-an", "-movflags", "+faststart"]
 
 

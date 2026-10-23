@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°10 « INCRUSTATION » · PIÈCE « CARTE D'AVIS QUI FLOTTE »               ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+    Ce que c'est : une carte blanche façon message reçu (avatar rond, nom, détail, texte de
+    l'avis) qui apparaît d'un coup en haut de l'image, au-dessus de la tête, et y reste.
+    Taille : section « decor » 1080×1920, fond TRANSPARENT ; carte de 780 px de large (72 %),
+    en haut à 178 px. Aucun sous-titre sur cette section si la carte dit ce que dit la voix
+    (--sans <id>) ; sinon on garde les sous-titres.
+    Quand : le moment de la preuve (« j'ai testé », « voilà ce qu'un client m'a écrit »), une fois
+    par vidéo (deux au plus s'il a plusieurs vrais avis), 2 à 4 s.
+    ⛔ JAMAIS d'avis inventé. Trois cas :
+       - le client a un vrai avis (capture, e-mail, commentaire) : son texte exact, le prénom
+         seulement s'il a l'accord de la personne (sinon « Un client ») ;
+       - le client a une capture de l'avis : remplace .a10-carte par <img> de la capture
+         (assets/images/…), même place, même taille ;
+       - aucun avis : la carte cite seulement ce que le créateur dit dans sa vidéo, au nom de
+         « Mon test » (ou son prénom), jamais au nom d'un client.
+    À remplacer :
+      1. l'id « avis10-carte-avis » PARTOUT par l'id de la section ;
+      2. data-duration (racine et panneau) et DUREE = durée de la section ;
+      3. .a10-nom, .a10-detail, .a10-texte (texte de l'avis : 2 lignes, 3 au plus) ;
+      4. .a10-avatar : la silhouette, ou une photo fournie par le client (<img>, même taille) ;
+      5. top de .a10-carte (178 px) : la carte finit au-dessus de la tête.
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #avis10-carte-avis { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden; }
+    #avis10-carte-avis .a10-carte { position:absolute; left:150px; top:178px; width:780px; padding:30px 34px 34px;
+      background:var(--brand-surface); color:var(--brand-text); font-family:var(--brand-font-body);
+      border-radius:6px; box-shadow:0 14px 40px color-mix(in srgb, var(--brand-text) 22%, transparent); }
+    #avis10-carte-avis .a10-entete { display:flex; align-items:center; gap:22px; }
+    #avis10-carte-avis .a10-avatar { width:88px; height:88px; border-radius:50%; flex:none; overflow:hidden;
+      background:var(--brand-accent); display:flex; align-items:center; justify-content:center; }
+    #avis10-carte-avis .a10-avatar svg { width:88px; height:88px; display:block; }
+    #avis10-carte-avis .a10-qui { flex:1; min-width:0; }
+    #avis10-carte-avis .a10-nom { font-size:32px; line-height:1.15; font-weight:700; }
+    #avis10-carte-avis .a10-detail { font-size:26px; line-height:1.3; color:var(--brand-muted); }
+    #avis10-carte-avis .a10-texte { margin-top:22px; font-size:38px; line-height:1.3; font-weight:400; }
+  </style>
+</head>
+<body>
+  <div id="avis10-carte-avis" data-composition-id="avis10-carte-avis" data-start="0" data-duration="2.5" data-fps="30" data-width="1080" data-height="1920">
+    <div id="avis10-carte-avis-panneau" class="clip" data-start="0" data-duration="2.5" data-track-index="0">
+      <div class="a10-carte">
+        <div class="a10-entete">
+          <div class="a10-avatar"><svg viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="34" r="15" style="fill:var(--brand-text)"/><path d="M16 78c3-17 15-26 28-26s25 9 28 26" style="fill:var(--brand-text)"/></svg></div>
+          <div class="a10-qui">
+            <div class="a10-nom">Mon test</div>
+            <div class="a10-detail">le nom du produit</div>
+          </div>
+        </div>
+        <div class="a10-texte">La phrase de l'avis, mot pour mot, sans la retoucher.</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'avis10-carte-avis';
+      var DUREE = 2.5;
+      var scope = '#' + ID + ' ';
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      tl.fromTo(scope + '.a10-carte', { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.22, ease: 'expo.out' }, 0.08);
+      tl.set(scope + '.a10-carte', { opacity: 1 }, DUREE - 0.01);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

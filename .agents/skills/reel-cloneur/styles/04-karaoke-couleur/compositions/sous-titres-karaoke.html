@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°04 « KARAOKÉ COULEUR » · PIÈCE : LES SOUS-TITRES KARAOKÉ (RÉFÉRENCE)   ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ CE QUE C'EST : l'allure de référence des sous-titres du style, sur 3 exemples : ║
+    ║   capitales très grasses, texte blanc cerclé de noir (skin outline), 2 lignes   ║
+    ║   dès 3 mots (sauf bloc court), le mot prononcé allumé dans UNE couleur par     ║
+    ║   sous-titre, à tour de rôle : accent (jaune), muted (vert), negative (rouge) ; ║
+    ║   un petit emoji surgit sous le bloc toutes les ~10 s au plus.                  ║
+    ║ TAILLE : 1080×1920, calque transparent par-dessus tout.                        ║
+    ║ QUAND : ce fichier n'est PAS monté tel quel. Le vrai calque se fabrique dans le ║
+    ║   Reel : `python3 tools/montage_captions.py --write` (découpage MANUAL, 2-3     ║
+    ║   mots, sans ponctuation), puis `python3 tools/karaoke.py` (outil du kit,       ║
+    ║   outils/karaoke.py, copié dans tools/ du Reel) qui produit exactement cette     ║
+    ║   structure dans compositions/captions.html, calée sur derush/<video>_words.json.║
+    ║ À REMPLACER (si tu l'écris à la main) : le texte de chaque .cap, ses data-start /  ║
+    ║   data-duration (bornes de compositions/captions.html), les temps des tl.set     ║
+    ║   (début de chaque mot), top = Y_SPLIT (1000) + 32 px quand il y a 2 lignes.     ║
+    ║   Les emojis : sur un mot concret (outil, objet, action), jamais décoratifs.    ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #sous-titres-karaoke { position:absolute; left:0; top:0; width:1080px; height:1920px; overflow:hidden; }
+    /* .cap (police, taille, contour, capitales, interligne) vient ENTIÈREMENT de brand/tokens.css. */
+    #sous-titres-karaoke .cap .w { position:relative; display:inline-block; }
+    #sous-titres-karaoke .cap .w .h { position:absolute; left:0; top:0; opacity:0; }
+    #sous-titres-karaoke .cap.hl-a .w .h { color:var(--brand-accent); }
+    #sous-titres-karaoke .cap.hl-b .w .h { color:var(--brand-muted); }
+    #sous-titres-karaoke .cap.hl-c .w .h { color:var(--brand-negative); }
+    #sous-titres-karaoke .emoji { position:absolute; left:50%; width:0; height:0; }
+    #sous-titres-karaoke .emoji .emo-in { position:absolute; left:-60px; top:-60px; width:120px; height:120px;
+      display:flex; align-items:center; justify-content:center; font-size:84px; line-height:1;
+      -webkit-text-stroke:0; }
+  </style>
+</head>
+<body>
+  <div id="sous-titres-karaoke" data-composition-id="sous-titres-karaoke" data-start="0" data-duration="3"
+       data-fps="30" data-width="1080" data-height="1920">
+    <!-- 3 mots, bloc long : 2 lignes (2 + 1), la 1re ligne reste à Y_SPLIT (top = 1000 + 32). -->
+    <div class="cap clip hl-a" id="cap-0" style="top:1032px" data-start="0" data-duration="0.8" data-track-index="0"><span class="w w0"><span class="b">VOICI</span><span class="h" data-layout-allow-overlap>VOICI</span></span> <span class="w w1"><span class="b">MON</span><span class="h" data-layout-allow-overlap>MON</span></span><br><span class="w w2"><span class="b">CLASSEMENT</span><span class="h" data-layout-allow-overlap>CLASSEMENT</span></span></div>
+    <!-- 2 mots : une ligne. -->
+    <div class="cap clip hl-b" id="cap-1" style="top:1000px" data-start="0.79967" data-duration="0.7" data-track-index="1"><span class="w w0"><span class="b">DES</span><span class="h" data-layout-allow-overlap>DES</span></span> <span class="w w1"><span class="b">OUTILS</span><span class="h" data-layout-allow-overlap>OUTILS</span></span></div>
+    <div class="cap clip hl-c" id="cap-2" style="top:1032px" data-start="1.49967" data-duration="1.5" data-track-index="2"><span class="w w0"><span class="b">QUE</span><span class="h" data-layout-allow-overlap>QUE</span></span> <span class="w w1"><span class="b">J'UTILISE</span><span class="h" data-layout-allow-overlap>J'UTILISE</span></span><br><span class="w w2"><span class="b">VRAIMENT</span><span class="h" data-layout-allow-overlap>VRAIMENT</span></span></div>
+    <!-- Emoji : sous le bloc, sur le mot concret (ici « OUTILS »). -->
+    <div class="emoji clip" id="emo-0" style="top:1090px" data-start="1.09967" data-duration="0.7" data-track-index="4"><span class="emo-in">🛠️</span></div>
+  </div>
+  <script>
+    (function () {
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      var s = '#sous-titres-karaoke ';
+      // Mot prononcé allumé (début de chaque mot), éteint quand le suivant s'allume.
+      tl.set(s + '#cap-0 .w0 .h', {opacity: 1}, 0);    tl.set(s + '#cap-0 .w0 .h', {opacity: 0}, 0.3);
+      tl.set(s + '#cap-0 .w1 .h', {opacity: 1}, 0.3);  tl.set(s + '#cap-0 .w1 .h', {opacity: 0}, 0.48);
+      tl.set(s + '#cap-0 .w2 .h', {opacity: 1}, 0.48);
+      tl.set(s + '#cap-1 .w0 .h', {opacity: 1}, 0.8);  tl.set(s + '#cap-1 .w0 .h', {opacity: 0}, 1.1);
+      tl.set(s + '#cap-1 .w1 .h', {opacity: 1}, 1.1);
+      tl.set(s + '#cap-2 .w0 .h', {opacity: 1}, 1.5);  tl.set(s + '#cap-2 .w0 .h', {opacity: 0}, 1.7);
+      tl.set(s + '#cap-2 .w1 .h', {opacity: 1}, 1.7);  tl.set(s + '#cap-2 .w1 .h', {opacity: 0}, 2.1);
+      tl.set(s + '#cap-2 .w2 .h', {opacity: 1}, 2.1);
+      tl.fromTo(s + '#emo-0 .emo-in', {scale: 0.3, opacity: 0}, {scale: 1, opacity: 1, duration: 0.18, ease: 'back.out(2.2)'}, 1.1);
+      window.__timelines["sous-titres-karaoke"] = tl;
+    })();
+  </script>
+</body>
+</html>

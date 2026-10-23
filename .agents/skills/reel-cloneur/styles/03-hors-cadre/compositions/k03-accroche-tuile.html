@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°03 « HORS CADRE » · PIÈCE : L'ACCROCHE (TUILE + TITRE)                 ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ Ce que c'est : la phrase d'accroche écrite en capitales serif italiques       ║
+    ║ noires, mot par mot sur la voix, autour d'une TUILE carrée blanche (coins     ║
+    ║ arrondis, ombre douce) qui porte le vrai logo du sujet. Une ligne au-dessus   ║
+    ║ de la tuile, une ligne en dessous, la tête détourée juste après.              ║
+    ║ Taille : 1080×1920, fond TRANSPARENT (section « decor » {"detoure": True}).   ║
+    ║ Tuile : x 320 → 760, y 340 → 780. Titre : centres à y 285 et y 845.           ║
+    ║ Quand : les 2 à 3 premières secondes, une fois par vidéo. Pas de sous-titres  ║
+    ║ (son id va dans --sans) : le titre porte déjà la phrase.                       ║
+    ║                                                                                ║
+    ║ À REMPLACER :                                                                  ║
+    ║  1. l'id « k03-accroche-tuile » PARTOUT par l'id de la section ;               ║
+    ║  2. data-duration (racine + .habillage) = durée de la section ;                ║
+    ║  3. le logo de la tuile (emplacement commenté) : le vrai logo de la marque     ║
+    ║     citée (skill thesvg, assets/logos/), sinon son nom en texte ;             ║
+    ║  4. DONNEES : instant d'arrivée de la tuile, et les mots des deux lignes avec  ║
+    ║     l'instant où la voix les dit (s, depuis le début de la section). Phrase    ║
+    ║     trop longue pour deux lignes de 20 caractères : DONNEES.haut2, une 2e     ║
+    ║     ligne au-dessus de la tuile (la tuile passe à 400 px) ; rien sous y 870.  ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #k03-accroche-tuile { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      --k03-titre: var(--brand-font-accent), var(--brand-font-display), serif; }
+    #k03-accroche-tuile * { box-sizing:border-box; }
+    #k03-accroche-tuile .habillage { position:absolute; inset:0; }
+    #k03-accroche-tuile .palmes { position:absolute; left:0; top:0; width:1080px; height:1920px;
+      fill: var(--brand-text); color: var(--brand-text); opacity: 0.07; filter: blur(5px); }
+    #k03-accroche-tuile .tuile { position:absolute; left:320px; top:340px; width:440px; height:440px;
+      border-radius:56px; background: var(--brand-surface); display:flex; align-items:center; justify-content:center;
+      box-shadow: 0 30px 50px -20px color-mix(in srgb, var(--brand-text) 55%, transparent),
+                  0 2px 8px color-mix(in srgb, var(--brand-text) 15%, transparent); }
+    #k03-accroche-tuile .logo { width:250px; height:250px; object-fit:contain; display:block; }
+    #k03-accroche-tuile .nom-texte { font-family: var(--brand-font-body); font-weight:900; font-size:64px;
+      color: var(--brand-text); text-align:center; }
+    #k03-accroche-tuile .ligne { position:absolute; left:100px; right:100px; height:80px; margin:0;
+      text-align:center; white-space:nowrap; font-family: var(--brand-font-accent); font-style: italic; font-weight: 800;
+      font-size: 70px; line-height: 80px; letter-spacing: -0.5px; text-transform: uppercase; color: var(--brand-text); }
+    #k03-accroche-tuile .l-haut { top:245px; }
+    #k03-accroche-tuile .l-bas { top:805px; }
+    /* Accroche longue (DONNEES.haut2) : deux lignes au-dessus d'une tuile plus petite. */
+    #k03-accroche-tuile.trois-lignes .l-haut { top:182px; }
+    #k03-accroche-tuile.trois-lignes .l-haut2 { top:266px; }
+    #k03-accroche-tuile.trois-lignes .tuile { left:340px; top:362px; width:400px; height:400px; }
+    #k03-accroche-tuile.trois-lignes .l-bas { top:786px; }
+    #k03-accroche-tuile .mot { display:inline-block; margin:0 0.13em; }
+  </style>
+</head>
+<body>
+  <div id="k03-accroche-tuile" data-composition-id="k03-accroche-tuile" data-start="0" data-duration="3"
+       data-fps="30" data-width="1080" data-height="1920">
+    <div id="k03-accroche-tuile-calque" class="habillage clip" data-start="0" data-duration="3" data-track-index="0">
+      <svg class="palmes" viewBox="0 0 1080 1920" aria-hidden="true"></svg>
+      <p class="ligne l-haut"></p>
+      <p class="ligne l-haut2"></p>
+      <div class="tuile">
+        <!-- EMPLACEMENT LOGO : le vrai logo de la marque citée (skill thesvg),
+             <img class="logo" src="assets/logos/<marque>.svg" alt="">
+             Sans logo trouvé : son nom en texte, comme ci-dessous. -->
+        <span class="nom-texte">Ta marque</span>
+      </div>
+      <p class="ligne l-bas"></p>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'k03-accroche-tuile';
+      var scope = '#' + ID + ' ';
+      // >>> À REMPLACER : arrivée de la tuile, puis les mots de la ligne du haut et du bas.
+      var DONNEES = {
+        tuile: 0.35,
+        haut: [['VOICI', 0.05], ['TROIS', 0.25], ['CONSEILS', 0.5]],
+        haut2: [],   // accroche longue : la suite de la phrase, au-dessus de la tuile
+        bas: [['POUR', 1.2], ['MIEUX', 1.4], ['VENDRE', 1.65]]
+      };
+      var root = document.getElementById(ID);
+      function palme(x, y, angle, L) {
+        var g = '<g transform="translate(' + x + ' ' + y + ') rotate(' + angle + ')">';
+        g += '<path d="M0 0 Q' + (L * 0.5) + ' ' + (-L * 0.08) + ' ' + L + ' 0" fill="none" stroke-width="7" stroke="currentColor"/>';
+        for (var i = 0; i < 17; i++) {
+          var t = 0.1 + i * 0.053, px = L * t, py = -L * 0.08 * 4 * t * (1 - t) * 0.5;
+          var len = L * (0.46 - 0.3 * t), w = len * 0.11, a = 52 - 22 * t;
+          [-1, 1].forEach(function (c) {
+            g += '<path transform="translate(' + px.toFixed(1) + ' ' + py.toFixed(1) + ') rotate(' + (c * a).toFixed(1) + ')" d="M0 0 Q' +
+              (len * 0.5).toFixed(1) + ' ' + (-w).toFixed(1) + ' ' + len.toFixed(1) + ' 0 Q' + (len * 0.5).toFixed(1) + ' ' + w.toFixed(1) + ' 0 0"/>';
+          });
+        }
+        return g + '</g>';
+      }
+      root.querySelector('.palmes').innerHTML = palme(1130, -40, 128, 760) + palme(1120, 420, 160, 520) + palme(-60, 120, 38, 420);
+      var n = 0, mots = [];
+      if (DONNEES.haut2 && DONNEES.haut2.length) root.classList.add('trois-lignes');
+      [['.l-haut', DONNEES.haut], ['.l-haut2', DONNEES.haut2 || []], ['.l-bas', DONNEES.bas]].forEach(function (L) {
+        var p = root.querySelector(L[0]);
+        L[1].forEach(function (m) {
+          var s = document.createElement('span'); s.className = 'mot m' + n; s.textContent = m[0];
+          p.appendChild(s); mots.push(['.m' + n, m[1]]); n++;
+        });
+      });
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      tl.fromTo(scope + '.tuile', { opacity: 0, scale: 0.9, filter: 'blur(14px)' },
+        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.32, ease: 'power2.out' }, DONNEES.tuile);
+      mots.forEach(function (m) {
+        tl.fromTo(scope + m[0], { opacity: 0, scale: 1.08, filter: 'blur(10px)' },
+          { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.22, ease: 'power2.out' }, Math.max(0, m[1]));
+      });
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

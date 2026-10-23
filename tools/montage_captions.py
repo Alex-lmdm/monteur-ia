@@ -25,6 +25,7 @@ import sys
 
 import difflib
 import json
+import re
 
 from PIL import ImageFont
 
@@ -155,13 +156,54 @@ if WORDS is None:
     print(f"  ⚠ {WORDS_PATH.name} absent -> timing APPROXIMATIF (proportionnel au texte).")
     print("    Lance `python3 tools/build_words.py` pour caler les sous-titres sur la voix.")
 
+# Les numeros de prise du fichier de mots valent pour les coupes de son epoque : des raccords poses
+# ensuite (tools/cut_boundaries.py) renumerotent les prises, et les mots partaient dans la mauvaise
+# phrase sans un mot. Fichier de mots plus ancien que les coupes : rangement par le temps, signale.
+PRISES_A_JOUR = WORDS is not None and WORDS_PATH.stat().st_mtime >= sections.CUTS_PATH.stat().st_mtime - 1
+if WORDS is not None and not PRISES_A_JOUR and any("take" in w for w in WORDS):
+    print(f"  ⚠ {WORDS_PATH.name} est plus ancien que les coupes ({sections.CUTS_PATH.name}) : ses numeros de prise ne")
+    print("    valent plus, les mots sont ranges par le temps. Verifie le 1er mot de chaque phrase.")
+
+
+def _pivot(w):
+    """L'instant qui range un mot : son milieu, 0,15 s apres son debut au plus (Whisper avance les
+    debuts de mot ; meme regle que tools/build_words.py)."""
+    return w['start'] + min(0.15, max(0.0, (w.get('end', w['start']) - w['start']) / 2))
+
+
 def mots_de(pi, ph):
     """Les mots de la phrase `pi` : ceux de sa prise (champ `take` de tools/build_words.py) quand une
-    phrase = une prise, sinon ceux qui commencent dans sa fenetre. Par la prise, un mot horodate un
-    peu avant la coupe (Whisper avance, ou un fichier de mots recale a la main) reste dans sa phrase."""
-    if len(PHRASES) == len(TAKES) and all("take" in w for w in WORDS):
+    phrase = une prise et que les numeros de prise sont a jour, sinon ceux qui tombent dans sa fenetre.
+    Par la prise, un mot horodate un peu avant la coupe (Whisper avance, ou un fichier de mots recale a
+    la main) reste dans sa phrase."""
+    if len(PHRASES) == len(TAKES) and all("take" in w for w in WORDS) and PRISES_A_JOUR:
         return [w for w in WORDS if w["take"] == TAKES[pi].get("i", pi)]
-    return [w for w in WORDS if ph['start'] - 1e-6 <= w['start'] < ph['end']]
+    return [w for w in WORDS if ph['start'] - 1e-6 <= _pivot(w) < ph['end']]
+
+
+def _nombre(m):
+    """« 72 », « 5.5 », « 6, », « 100% » : un nombre, ponctuation autour mise a part."""
+    return bool(re.fullmatch(r"[«(“‘]*\d+(?:[.,]\d+)?\s?%?[.,;:!?»)”’]*", m))
+
+
+def unites_de(dits):
+    """Les mots dits, regroupes en unites : un nombre reste avec son voisin, pour ne jamais afficher
+    « GPT » puis « 6 », ou « 72 » puis « heures ». Apres un nom (« Opus 5.5 », « GPT 6 ») il s'y
+    accroche ; sinon il part avec le mot qui suit (« il y a 72 heures », « en 3 etapes »)."""
+    unites = []
+    for i, m in enumerate(dits):
+        if _nombre(m) and unites:
+            prec = unites[-1][-1]
+            nom = prec[:1].isupper() or any(c.isdigit() for c in prec)
+            if nom and prec[-1:].isalnum() and not _nombre(prec):
+                unites[-1].append(m)
+                continue
+        if unites and _nombre(unites[-1][-1]) and len(unites[-1]) == 1 \
+                and (unites[-1][-1][-1:].isalnum() or unites[-1][-1].endswith("%")) and not _nombre(m):
+            unites[-1].append(m)          # « 72 » attendait son mot : « 72 heures »
+            continue
+        unites.append([m])
+    return unites
 
 
 if MOTS:
@@ -182,7 +224,8 @@ if MOTS:
             elif dits:                                          # un signe seul : avec son mot
                 dits[-1] += (" " if m in ("?", "!", ":", ";", "»") else "") + m
             # un signe qui ferme en tête de phrase (la fin de la phrase d'avant) : on le laisse
-        MANUAL.append([" ".join(dits[i:i + MOTS]) for i in range(0, len(dits), MOTS)])
+        unites = unites_de(dits)
+        MANUAL.append([" ".join(" ".join(u) for u in unites[i:i + MOTS]) for i in range(0, len(unites), MOTS)])
 assert len(MANUAL) == len(PHRASES), f"MANUAL={len(MANUAL)} != phrases={len(PHRASES)}"
 
 

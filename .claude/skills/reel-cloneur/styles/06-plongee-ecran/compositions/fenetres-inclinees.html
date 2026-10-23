@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE 06 · PLONGÉE ÉCRAN · pièce « fenêtres inclinées »                       ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+    CE QUE C'EST : sur un fond de nuit (var(--brand-muted), halo de var(--brand-bg)), de
+      grandes fenêtres d'application penchées en perspective entrent d'un coup de fouet avec une
+      traînée d'échos, dérivent lentement, puis sortent de l'autre côté. Une fenêtre par outil,
+      site ou résultat cité, ~0,7 à 1,3 s chacune.
+    TAILLE : 1080 x 1920, section `full`.
+    QUAND : l'accroche (juste après 1 à 2 s de visage plein écran), quand plusieurs outils ou
+      résultats sont nommés à la suite. Une fois par vidéo, rarement deux.
+    À REMPLACER :
+      1. L'id `fenetres-inclinees` PARTOUT par l'id de la section ; data-duration.
+      2. Le contenu de chaque .vue (1500 x 960 px) : capture <img src="assets/images/…" alt="">,
+         interface dessinée (.appli…), ou grille d'images. Les emplacements .vide sont à remplacer.
+      3. FENETRES dans le script : t0 / t1 (entrée, sortie), de 'gauche' | 'droite', incl (degrés,
+         alterner + et -), sortie:false pour la dernière (elle reste jusqu'à la coupe).
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+
+    #fenetres-inclinees { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden; font-family:var(--brand-font-body); }
+    #fenetres-inclinees * { box-sizing:border-box; }
+    #fenetres-inclinees .scene { position:absolute; inset:0; overflow:hidden;
+      background:radial-gradient(ellipse 900px 520px at 46% 47%, color-mix(in srgb, var(--brand-bg) 42%, var(--brand-muted)) 0%,
+        color-mix(in srgb, var(--brand-bg) 14%, var(--brand-muted)) 45%, var(--brand-muted) 72%, var(--brand-stroke) 100%); }
+    #fenetres-inclinees .halo-bas { position:absolute; left:-200px; top:1180px; width:1500px; height:520px; border-radius:50%;
+      background:color-mix(in srgb, var(--brand-bg) 30%, transparent); filter:blur(110px); }
+    #fenetres-inclinees .trainee { position:absolute; left:-200px; width:1500px; height:26px; border-radius:20px; filter:blur(14px);
+      background:color-mix(in srgb, var(--brand-bg) 55%, transparent); }
+    #fenetres-inclinees .scene-3d { position:absolute; inset:0; perspective:2200px; }
+    #fenetres-inclinees .fenetre { position:absolute; left:-210px; top:300px; width:1500px; height:1000px; border-radius:16px; overflow:hidden; opacity:0;
+      background:var(--brand-text); box-shadow:0 40px 90px var(--brand-stroke); transform-origin:50% 50%; }
+    #fenetres-inclinees .fenetre .barre { position:absolute; left:0; right:0; top:0; height:40px;
+      background:color-mix(in srgb, var(--brand-text) 88%, var(--brand-surface)); }
+    #fenetres-inclinees .fenetre .vue { position:absolute; left:0; right:0; top:40px; bottom:0; overflow:hidden; }
+    #fenetres-inclinees .fenetre .vue > img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    #fenetres-inclinees .fenetre .vue .appli { transform:scale(0.86); transform-origin:0 0; width:116.3%; height:116.3%; }
+    #fenetres-inclinees .fenetre.echo { box-shadow:none; }
+
+    #fenetres-inclinees .appli { position:absolute; inset:0; display:flex; background:var(--brand-text);
+      color:var(--brand-surface); font-family:var(--brand-font-body); }
+    #fenetres-inclinees .laterale { width:330px; height:100%; padding:34px 22px; display:flex; flex-direction:column; gap:10px;
+      background:color-mix(in srgb, var(--brand-text) 93%, var(--brand-surface)); }
+    #fenetres-inclinees .laterale .logo-appli { width:52px; height:52px; margin:0 0 26px 14px; }
+    #fenetres-inclinees .laterale .item { font-size:30px; font-weight:600; padding:16px 18px; border-radius:16px; }
+    #fenetres-inclinees .laterale .item.actif { background:color-mix(in srgb, var(--brand-text) 80%, var(--brand-surface)); }
+    #fenetres-inclinees .principal { position:relative; flex:1; height:100%; }
+    #fenetres-inclinees .entete { position:absolute; left:44px; top:34px; font-size:34px; font-weight:700; }
+    #fenetres-inclinees .accroche-appli { position:absolute; left:0; right:0; top:330px; text-align:center; font-size:56px; font-weight:600;
+      letter-spacing:-0.5px; }
+    #fenetres-inclinees .champ { position:absolute; left:110px; right:110px; top:450px; height:118px; border-radius:60px;
+      border:3px solid color-mix(in srgb, var(--brand-text) 80%, var(--brand-surface));
+      box-shadow:0 10px 30px color-mix(in srgb, var(--brand-surface) 14%, transparent);
+      display:flex; align-items:center; padding:0 40px; font-size:38px; font-weight:400; background:var(--brand-text); }
+    #fenetres-inclinees .champ.bas { top:auto; bottom:44px; }
+    #fenetres-inclinees .champ .plus { font-size:52px; font-weight:400; margin-right:26px; opacity:.7; }
+    #fenetres-inclinees .zone { position:relative; flex:1; min-width:0; align-self:stretch; display:flex; align-items:center;
+      white-space:nowrap; overflow:hidden; }
+    #fenetres-inclinees .champ.multi { height:auto; min-height:118px; padding:30px 40px; align-items:flex-start; }
+    #fenetres-inclinees .champ.multi .zone { white-space:normal; line-height:1.3; min-height:50px; display:block; }
+    #fenetres-inclinees .champ.multi .placeholder { top:0; transform:none; }
+    #fenetres-inclinees .champ.multi .saisie { white-space:normal; }
+    #fenetres-inclinees .points { font-size:44px; letter-spacing:6px; color:color-mix(in srgb, var(--brand-surface) 55%, var(--brand-text)); }
+    #fenetres-inclinees .placeholder { position:absolute; left:0; top:50%; transform:translateY(-50%); white-space:nowrap;
+      color:color-mix(in srgb, var(--brand-surface) 50%, var(--brand-text)); }
+    #fenetres-inclinees .saisie { white-space:nowrap; }
+    #fenetres-inclinees .champ .envoyer { margin-left:auto; width:66px; height:66px; border-radius:50%; flex:none;
+      background:var(--brand-surface); }
+    #fenetres-inclinees .fil { position:absolute; left:70px; right:240px; top:120px; bottom:190px; display:flex; flex-direction:column; gap:30px; }
+    #fenetres-inclinees .bulle-moi { align-self:flex-end; max-width:960px; padding:24px 34px; border-radius:36px; font-size:32px; line-height:1.3;
+      background:color-mix(in srgb, var(--brand-text) 90%, var(--brand-surface)); }
+    #fenetres-inclinees .reponse { display:flex; gap:22px; align-items:flex-start; }
+    #fenetres-inclinees .reponse .logo-appli { width:50px; height:50px; flex:none; margin-top:4px; }
+    #fenetres-inclinees .reponse .texte { font-size:32px; line-height:1.35; }
+    #fenetres-inclinees .grille { display:grid; gap:16px; margin-top:20px; }
+    #fenetres-inclinees .grille img { width:100%; height:100%; object-fit:cover; border-radius:16px; display:block; }
+    #fenetres-inclinees .grille .case { position:relative; border-radius:18px; }
+    #fenetres-inclinees .grille .case .anneau { position:absolute; inset:-9px; border-radius:24px; border:7px solid var(--brand-accent); opacity:0; }
+    #fenetres-inclinees .voile { position:absolute; inset:0; background:color-mix(in srgb, var(--brand-surface) 45%, transparent); }
+    #fenetres-inclinees .panneau { position:absolute; left:185px; top:120px; width:900px; height:760px; border-radius:30px; padding:44px;
+      background:var(--brand-text); box-shadow:0 30px 80px color-mix(in srgb, var(--brand-surface) 40%, transparent); }
+    #fenetres-inclinees .panneau .titre { font-size:44px; font-weight:700; margin-bottom:30px; }
+    #fenetres-inclinees .recherche { height:96px; border-radius:24px; display:flex; align-items:center; padding:0 30px; font-size:36px;
+      background:color-mix(in srgb, var(--brand-text) 93%, var(--brand-surface)); }
+    #fenetres-inclinees .recherche .loupe { width:40px; height:40px; margin-right:22px; border:5px solid var(--brand-surface); border-radius:50%; opacity:.6; flex:none; }
+    #fenetres-inclinees .resultat-ligne { margin-top:44px; display:flex; align-items:center; gap:28px; padding:26px; border-radius:24px;
+      border:3px solid color-mix(in srgb, var(--brand-text) 85%, var(--brand-surface)); }
+    #fenetres-inclinees .resultat-ligne .vignette { width:110px; height:110px; border-radius:26px; flex:none; object-fit:cover; }
+    #fenetres-inclinees .resultat-ligne .nom { font-size:38px; font-weight:700; }
+    #fenetres-inclinees .resultat-ligne .desc { font-size:28px; margin-top:6px; color:color-mix(in srgb, var(--brand-surface) 70%, var(--brand-text)); }
+    #fenetres-inclinees .bouton { position:relative; margin-left:auto; height:76px; padding:0 34px; border-radius:40px; display:flex; align-items:center;
+      font-size:30px; font-weight:700; color:var(--brand-text); background:var(--brand-surface); white-space:nowrap; }
+    #fenetres-inclinees .bouton .apres { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; border-radius:40px;
+      background:var(--brand-accent); color:var(--brand-text); opacity:0; }
+
+
+    /* Emplacements vides : à remplacer par tes images (voir l'en-tête). */
+    #fenetres-inclinees .vide { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center;
+      font-family:var(--brand-font-body); font-weight:700; font-size:40px; line-height:1.3; padding:40px;
+      color:var(--brand-text); background:color-mix(in srgb, var(--brand-surface) 85%, var(--brand-bg));
+      border:4px dashed color-mix(in srgb, var(--brand-text) 55%, transparent); }
+    #fenetres-inclinees .tuile { position:relative; aspect-ratio:1 / 1; border-radius:18px; overflow:hidden; }
+    #fenetres-inclinees .tuile .vide { font-size:34px; }
+    #fenetres-inclinees .logo-vide { width:52px; height:52px; border-radius:14px; margin:0 0 26px 14px; background:var(--brand-surface); }
+    #fenetres-inclinees .marque .logo-vide { width:150px; height:150px; border-radius:34px; margin:0; background:var(--brand-text);
+      border:6px dashed var(--brand-surface); }
+  </style>
+</head>
+<body>
+  <div id="fenetres-inclinees" data-composition-id="fenetres-inclinees" data-start="0" data-duration="3.0" data-fps="30" data-width="1080" data-height="1920">
+    <div id="fenetres-inclinees-scene" class="scene clip" data-start="0" data-duration="3.0" data-track-index="0">
+      <div class="halo-bas" data-layout-allow-overflow></div>
+      <div class="trainee" data-layout-allow-overflow style="top:520px; opacity:0.5"></div>
+      <div class="trainee" data-layout-allow-overflow style="top:980px; opacity:0.35"></div>
+      <div class="trainee" data-layout-allow-overflow style="top:1380px; opacity:0.45"></div>
+      <div class="scene-3d">
+        <div class="fenetre fenetre-0" data-layout-allow-overflow data-layout-allow-overlap style="top:300px"><div class="barre"></div><div class="vue"><div class="appli"><div class="laterale"><div class="logo-vide"></div><div class="item item-0">Accueil</div><div class="item item-1">Recherche</div><div class="item item-2">Modules</div><div class="item item-3">Projets</div></div><div class="principal"><div class="entete">Ton outil</div><div class="accroche-appli">Par quoi on commence ?</div><div class="champ"><span class="plus">+</span><span class="zone"><span class="placeholder ph-saisie-a">Pose ta question</span><span class="saisie saisie-a" data-texte=""></span></span><span class="envoyer"></span></div></div></div></div></div>
+        <div class="fenetre fenetre-1" data-layout-allow-overflow data-layout-allow-overlap style="top:300px"><div class="barre"></div><div class="vue"><div class="vide">Capture d&#x27;un site ou d&#x27;une appli</div></div></div>
+        <div class="fenetre fenetre-2" data-layout-allow-overflow data-layout-allow-overlap style="top:300px"><div class="barre"></div><div class="vue"><div style="position:absolute; inset:0; padding:40px; display:grid; grid-template-columns:repeat(4, 1fr); gap:20px; background:var(--brand-muted)"><div class="tuile"><div class="vide">Image 1</div></div><div class="tuile"><div class="vide">Image 2</div></div><div class="tuile"><div class="vide">Image 3</div></div><div class="tuile"><div class="vide">Image 4</div></div><div class="tuile"><div class="vide">Image 5</div></div><div class="tuile"><div class="vide">Image 6</div></div><div class="tuile"><div class="vide">Image 7</div></div><div class="tuile"><div class="vide">Image 8</div></div></div></div></div>
+      </div>
+    </div>
+  </div>
+  <script>
+
+  (function () {
+    var ID = 'fenetres-inclinees';
+    var S = '#' + ID + ' ';
+    var root = document.getElementById(ID);
+    // ===== RÉGLAGES DE LA SECTION (à remplacer) =====
+    var DUREE = 3.0;
+    var FENETRES = [{"t0": 0.0, "t1": 1.0, "de": "gauche", "incl": 4}, {"t0": 1.0, "t1": 2.0, "de": "droite", "incl": -4}, {"t0": 2.0, "t1": 3.3, "de": "gauche", "incl": 3, "sortie": false}];
+    var SAISIES = [];
+    // ===== FIN DES RÉGLAGES =====
+    window.__timelines = window.__timelines || {};
+    var tl = gsap.timeline({ paused: true });
+    // Saisies : chaque lettre devient un <span class="c">, révélé lettre à lettre (sans callback,
+    // donc juste dans l'aperçu comme au rendu).
+    SAISIES.forEach(function (s) {
+      var el = root.querySelector(s.sel);
+      if (!el) { return; }
+      var txt = el.getAttribute('data-texte') || '';
+      el.textContent = '';
+      for (var i = 0; i < txt.length; i++) {
+        var c = document.createElement('span'); c.className = 'c'; c.textContent = txt[i]; el.appendChild(c);
+      }
+      gsap.set(S + s.sel + ' .c', { opacity: 0 });
+      if (s.placeholder) { tl.set(S + s.placeholder, { opacity: 0 }, s.t0); }
+      tl.to(S + s.sel + ' .c', { opacity: 1, duration: 0.01, stagger: (s.t1 - s.t0) / Math.max(1, txt.length) }, s.t0);
+    });
+
+    // Chaque fenêtre : entre d'un coup de fouet (côté `de`), dérive lentement, sort de l'autre côté.
+    // Les échos (copies qui suivent avec un léger retard) font la traînée ; hors mouvement ils sont
+    // cachés (autoAlpha : opacité ET visibilité), pour ne jamais doubler un texte à l'écran.
+    var ECHOS = [0.42, 0.24, 0.12];
+    FENETRES.forEach(function (f, i) {
+      var sel = S + '.fenetre-' + i;
+      var base = root.querySelector('.fenetre-' + i);
+      var sens = f.de === 'droite' ? 1 : -1;
+      var rz = f.incl, ry = -sens * 12;
+      for (var k = 0; k < ECHOS.length; k++) {
+        var e = base.cloneNode(true); e.classList.add('echo'); e.classList.add('echo-' + i + '-' + k);
+        e.classList.remove('fenetre-' + i);
+        // L'écho garde les formes et les images, pas le texte (une traînée, pas un second texte).
+        var it = document.createTreeWalker(e, NodeFilter.SHOW_TEXT), n, vides = [];
+        while ((n = it.nextNode())) { vides.push(n); }
+        vides.forEach(function (t) { t.nodeValue = ''; });
+        base.parentNode.insertBefore(e, base);
+      }
+      var cibles = [sel].concat(ECHOS.map(function (o, k) { return S + '.echo-' + i + '-' + k; }));
+      cibles.forEach(function (c, k) {
+        var retard = k * 0.03, op = k === 0 ? 1 : ECHOS[k - 1];
+        tl.fromTo(c, { x: sens * 1500, rotationZ: rz, rotationY: ry, autoAlpha: op },
+          { x: sens * 40, duration: 0.2, ease: 'power3.out' }, f.t0 + retard);
+        if (k > 0) { tl.to(c, { autoAlpha: 0, duration: 0.06 }, f.t0 + 0.14 + retard); }
+      });
+      tl.to(sel, { x: -sens * 40, rotationY: ry * 0.6, duration: Math.max(0.1, f.t1 - f.t0 - 0.32), ease: 'none' }, f.t0 + 0.2);
+      if (f.sortie !== false) {
+        cibles.forEach(function (c, k) {
+          var retard = k * 0.03, op = k === 0 ? 1 : ECHOS[k - 1];
+          if (k > 0) { tl.set(c, { autoAlpha: op, x: -sens * 40 }, f.t1 - 0.12 + retard); }
+          tl.to(c, { x: -sens * 1600, duration: 0.14, ease: 'power3.in' }, f.t1 - 0.12 + retard);
+          tl.set(c, { autoAlpha: 0 }, f.t1 + 0.04 + retard);
+        });
+      }
+    });
+
+    window.__timelines[ID] = tl;
+  })();
+
+  </script>
+</body>
+</html>

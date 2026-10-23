@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°03 « HORS CADRE » · PIÈCE : LA CARTE AU-DESSUS DE LA TÊTE              ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ Ce que c'est : l'habillage des plans DÉTOURÉS (fond uni du style, vidéo dans  ║
+    ║ une fenêtre arrondie en bas, tête qui dépasse : tools/fond_detoure.py). Ici : ║
+    ║ ombres de palmes très légères en haut, une CARTE arrondie à ombre douce       ║
+    ║ (capture d'écran qui défile lentement, logo, schéma dessiné), qui peut être   ║
+    ║ remplacée par une 2e carte en cours de section, et, en option, des mots       ║
+    ║ d'ÉNUMÉRATION en capitales serif italiques (couleur --brand-muted) à la place ║
+    ║ des sous-titres, juste au-dessus de la tête.                                   ║
+    ║ Taille : 1080×1920, fond TRANSPARENT (section « decor » marquée              ║
+    ║ {"detoure": True} dans tools/sections.py). Carte : x 90 → 990, y 250 → 790.   ║
+    ║ Quand : la suite de chaque entrée, après sa carte numérotée ; une carte par    ║
+    ║ chose montrée (outil, site, schéma). Sous-titres mot à mot au-dessus de la     ║
+    ║ tête (réglages du style) ; avec des mots d'énumération, son id va dans --sans. ║
+    ║                                                                                ║
+    ║ À REMPLACER :                                                                  ║
+    ║  1. l'id « k03-carte-detouree » PARTOUT par l'id de la section ;               ║
+    ║  2. data-duration (racine + .habillage) = durée de la section ;                ║
+    ║  3. le CONTENU de chaque .carte (emplacements commentés plus bas) : une        ║
+    ║     capture que tu as faite d'un site public (assets/images/ du Reel), un vrai ║
+    ║     logo (skill thesvg, assets/logos/), ou un schéma en HTML/CSS ;             ║
+    ║  4. DONNEES : l'instant d'arrivée de chaque carte (s depuis le début de la     ║
+    ║     section ; 0 = déjà là à la coupe), le défilement de la capture (part de    ║
+    ║     sa hauteur), et les mots d'énumération (ou une liste vide).               ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #k03-carte-detouree { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      --k03-titre: var(--brand-font-accent), var(--brand-font-display), serif; }
+    #k03-carte-detouree * { box-sizing:border-box; }
+    #k03-carte-detouree .habillage { position:absolute; inset:0; }
+    /* Ombres de palmes : décor du fond, très légères, loin de la tête. */
+    #k03-carte-detouree .palmes { position:absolute; left:0; top:0; width:1080px; height:1920px;
+      fill: var(--brand-text); color: var(--brand-text); opacity: 0.07; filter: blur(5px); }
+    /* La carte : arrondie, ombre douce, au-dessus de la tête. */
+    #k03-carte-detouree .carte { position:absolute; left:90px; top:250px; width:900px; height:540px;
+      border-radius:30px; overflow:hidden; background: var(--brand-surface);
+      box-shadow: 0 26px 48px -18px color-mix(in srgb, var(--brand-text) 55%, transparent),
+                  0 2px 6px color-mix(in srgb, var(--brand-text) 18%, transparent); }
+    #k03-carte-detouree .capture { position:absolute; left:0; top:0; width:100%; height:auto; display:block; }
+    /* Exemple de carte dessinée (à remplacer) : une fenêtre neutre. */
+    #k03-carte-detouree .exemple { position:absolute; inset:0; padding:56px 60px; font-family: var(--brand-font-body);
+      color: var(--brand-text); }
+    #k03-carte-detouree .exemple .titre { font-size:46px; font-weight:900; margin:0 0 34px; }
+    #k03-carte-detouree .exemple .barre { height:26px; border-radius:13px; margin:0 0 22px;
+      background: color-mix(in srgb, var(--brand-text) 12%, transparent); }
+    #k03-carte-detouree .exemple .barre.courte { width:58%; }
+    #k03-carte-detouree .exemple .barre.accent { width:40%; background: var(--brand-accent); }
+    /* Mots d'énumération : à la place des sous-titres, juste au-dessus de la tête. */
+    #k03-carte-detouree .enum { position:absolute; left:100px; right:100px; top:850px; height:90px; margin:0;
+      text-align:center; white-space:nowrap;
+      font-family: var(--brand-font-accent); font-style: italic; font-weight: 800; font-size: 84px; line-height: 1;
+      letter-spacing: -0.5px; text-transform: uppercase; color: var(--brand-muted); }
+  </style>
+</head>
+<body>
+  <div id="k03-carte-detouree" data-composition-id="k03-carte-detouree" data-start="0" data-duration="4"
+       data-fps="30" data-width="1080" data-height="1920">
+    <div id="k03-carte-detouree-calque" class="habillage clip" data-start="0" data-duration="4" data-track-index="0">
+      <svg class="palmes" viewBox="0 0 1080 1920" aria-hidden="true"></svg>
+      <div class="carte c0">
+        <!-- EMPLACEMENT CARTE 1 : une capture d'un site public que tu as faite toi-même,
+             <img class="capture" src="assets/images/<ta-capture>.png" alt="" data-layout-allow-overflow>
+             (elle défile vers le haut si DONNEES.cartes[0].defile > 0), ou un vrai logo, ou un
+             schéma en HTML/CSS. Exemple neutre ci-dessous, à supprimer. -->
+        <div class="exemple"><p class="titre">Ta capture ici</p><div class="barre"></div>
+          <div class="barre courte"></div><div class="barre accent"></div><div class="barre"></div></div>
+      </div>
+      <div class="carte c1">
+        <!-- EMPLACEMENT CARTE 2 (facultative : supprime ce bloc et son entrée dans DONNEES). -->
+        <div class="exemple"><p class="titre">Deuxième carte</p><div class="barre accent"></div>
+          <div class="barre"></div><div class="barre courte"></div></div>
+      </div>
+      <!-- Mots d'énumération (facultatifs) : créés par le script depuis DONNEES.enumeration. -->
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'k03-carte-detouree';
+      var scope = '#' + ID + ' ';
+      // >>> À REMPLACER : arrivée de chaque carte (s), défilement de sa capture (0 = fixe,
+      //     0.3 = remonte de 30 % de sa hauteur sur sa durée), mots d'énumération [mot, instant],
+      //     et éléments d'une carte qui apparaissent sur la voix [sélecteur dans la section, instant].
+      var DONNEES = {
+        cartes: [ { debut: 0, defile: 0 }, { debut: 2.0, defile: 0 } ],
+        enumeration: [ ['PREMIER', 0.6], ['DEUXIÈME', 2.4] ],
+        apparitions: [ ['.c1 .accent', 2.5] ]
+      };
+      var root = document.getElementById(ID);
+      var DUREE = parseFloat(root.getAttribute('data-duration'));
+
+      // Palmes : feuilles dessinées (déterministe), en haut à droite et en haut à gauche.
+      function palme(x, y, angle, L) {
+        var g = '<g transform="translate(' + x + ' ' + y + ') rotate(' + angle + ')">';
+        g += '<path d="M0 0 Q' + (L * 0.5) + ' ' + (-L * 0.08) + ' ' + L + ' 0" fill="none" stroke-width="7" stroke="currentColor"/>';
+        for (var i = 0; i < 17; i++) {
+          var t = 0.1 + i * 0.053, px = L * t, py = -L * 0.08 * 4 * t * (1 - t) * 0.5;
+          var len = L * (0.46 - 0.3 * t), w = len * 0.11, a = 52 - 22 * t;
+          [-1, 1].forEach(function (c) {
+            g += '<path transform="translate(' + px.toFixed(1) + ' ' + py.toFixed(1) + ') rotate(' + (c * a).toFixed(1) + ')" d="M0 0 Q' +
+              (len * 0.5).toFixed(1) + ' ' + (-w).toFixed(1) + ' ' + len.toFixed(1) + ' 0 Q' + (len * 0.5).toFixed(1) + ' ' + w.toFixed(1) + ' 0 0"/>';
+          });
+        }
+        return g + '</g>';
+      }
+      var svg = root.querySelector('.palmes');
+      svg.innerHTML = palme(1130, -40, 128, 760) + palme(1120, 420, 160, 520) + palme(-60, 120, 38, 420);
+
+      // Mots d'énumération.
+      var hab = root.querySelector('.habillage');
+      DONNEES.enumeration.forEach(function (e, i) {
+        var p = document.createElement('p'); p.className = 'enum e' + i; p.textContent = e[0]; hab.appendChild(p);
+      });
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      DONNEES.cartes.forEach(function (c, i) {
+        var sel = scope + '.c' + i;
+        var fin = i + 1 < DONNEES.cartes.length ? DONNEES.cartes[i + 1].debut : DUREE;
+        if (c.debut <= 0.001) {
+          tl.fromTo(sel, { opacity: 1 }, { opacity: 1, duration: 0.01 }, 0);   // déjà là à la coupe
+        } else {
+          tl.fromTo(sel, { opacity: 0, scale: 0.96, filter: 'blur(10px)' },
+            { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.3, ease: 'power2.out' }, c.debut);
+        }
+        if (i + 1 < DONNEES.cartes.length) {   // l'ancienne carte pâlit puis s'efface (geste de l'original)
+          tl.to(sel, { opacity: 0.45, filter: 'grayscale(1) blur(1px)', duration: 0.18, ease: 'none' }, Math.max(c.debut, fin - 0.2));
+          tl.to(sel, { opacity: 0, duration: 0.08, ease: 'none' }, fin - 0.02);
+        }
+        if (c.defile > 0) {
+          var img = root.querySelector('.c' + i + ' .capture');
+          if (img) tl.fromTo(scope + '.c' + i + ' .capture', { yPercent: 0 },
+            { yPercent: -100 * c.defile, duration: Math.max(0.1, fin - c.debut), ease: 'none' }, c.debut);
+        }
+      });
+      DONNEES.enumeration.forEach(function (e, i) {
+        var sel = scope + '.e' + i;
+        tl.fromTo(sel, { opacity: 0, scale: 1.06, filter: 'blur(12px)' },
+          { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.24, ease: 'power2.out' }, e[1]);
+        if (i + 1 < DONNEES.enumeration.length)
+          tl.to(sel, { opacity: 0, duration: 0.06, ease: 'none' }, DONNEES.enumeration[i + 1][1] - 0.02);
+      });
+      (DONNEES.apparitions || []).forEach(function (a) {
+        tl.fromTo(scope + a[0], { opacity: 0, scale: 0.92, filter: 'blur(8px)' },
+          { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.22, ease: 'power2.out' }, a[1]);
+      });
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

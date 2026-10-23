@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°10 « INCRUSTATION » · PIÈCE « ÉCRAN PRODUIT » (haut d'écran partagé)  ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+    Ce que c'est : un morceau de la page publique du produit (ou de sa fiche dans une boutique
+    d'applis), qui s'arrête sur ce que la voix décrit : un mot surligné, une flèche rouge vers
+    le bouton ou le champ dont on parle, un saut sec vers la suite. C'est l'équivalent de
+    l'écran filmé de l'original.
+    Taille : section « split » 1080×920 (le visage est en bas, calque du master) ; contenu utile
+    entre 150 et 900 px, à 100 px des bords.
+    Quand : à chaque geste ou écran décrit (aller sur le site, cliquer, coller un lien, ce que la
+    page promet), 1,5 à 4 s, en alternance avec le visage plein écran (sections « face »).
+    Plafond : une flèche par écran au plus, jamais de zoom sur le visage.
+    À remplacer :
+      1. l'id « avis10-ecran-produit » PARTOUT par l'id de la section ;
+      2. data-duration (racine et panneau) et DUREE = durée de la section ;
+      3. EMPLACEMENT .a10-page-exemple → la capture (1080 px de large) :
+           <img class="a10-capture" src="assets/images/page-produit.jpg" alt="">
+         surlignages en pixels de la capture (div .a10-surligne .a10-sN dans .a10-vue) ;
+      4. ARRETS [instant, y de la capture en haut de l'écran] : le passage utile vers 150 px
+         (y = position du passage - 150) ; un 2e arrêt seulement si la voix passe à autre chose ;
+      5. FLECHE et son tracé (d du <path>, pixels de l'écran) vers l'élément nommé par la voix.
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #avis10-ecran-produit { position:absolute; inset:0; width:1080px; height:920px; overflow:hidden; }
+    #avis10-ecran-produit .a10-ecran { position:absolute; inset:0; overflow:hidden; background:var(--brand-surface); }
+    #avis10-ecran-produit .a10-cadre { position:absolute; inset:0; }
+    #avis10-ecran-produit .a10-vue { position:absolute; left:0; top:0; width:1080px; }
+    #avis10-ecran-produit .a10-capture { display:block; width:1080px; height:auto; }
+    #avis10-ecran-produit .a10-surligne { position:absolute; background:var(--brand-accent); mix-blend-mode:multiply;
+      transform-origin:0 50%; border-radius:4px; }
+    #avis10-ecran-produit .a10-fleche { position:absolute; left:0; top:0; width:1080px; height:920px; opacity:0; overflow:visible; }
+    #avis10-ecran-produit .a10-fleche path { fill:none; stroke:var(--brand-negative); stroke-width:10; stroke-linecap:round;
+      stroke-linejoin:round; stroke-dasharray:1; }
+    /* EMPLACEMENT : page dessinée, neutre, à remplacer par la capture de la vraie page. */
+    #avis10-ecran-produit .a10-page-exemple { position:relative; width:1080px; height:1700px; font-family:var(--brand-font-body);
+      color:var(--brand-text); background:var(--brand-surface); }
+    #avis10-ecran-produit .a10-pe-titre { position:absolute; left:48px; right:48px; font-size:62px; line-height:1.08; font-weight:900; letter-spacing:-1.5px; }
+    #avis10-ecran-produit .a10-pe-texte { position:absolute; left:48px; right:48px; font-size:38px; line-height:1.35; color:var(--brand-muted); }
+    #avis10-ecran-produit .a10-pe-bouton { position:absolute; left:48px; top:560px; padding:22px 44px; border-radius:999px;
+      background:var(--brand-text); color:var(--brand-surface); font-size:36px; font-weight:700; }
+    #avis10-ecran-produit .a10-pe-image { position:absolute; left:48px; right:48px; border-radius:28px;
+      background:color-mix(in srgb, var(--brand-text) 8%, var(--brand-surface)); display:flex; align-items:center; justify-content:center;
+      font-size:34px; color:var(--brand-muted); }
+  </style>
+</head>
+<body>
+  <div id="avis10-ecran-produit" data-composition-id="avis10-ecran-produit" data-start="0" data-duration="2.5" data-fps="30" data-width="1080" data-height="920">
+    <div id="avis10-ecran-produit-panneau" class="clip" data-start="0" data-duration="2.5" data-track-index="0">
+      <div class="a10-ecran">
+        <div class="a10-cadre">
+          <div class="a10-vue" data-layout-allow-overflow data-layout-allow-occlusion>
+            <!-- EMPLACEMENT : remplacer tout ce bloc par <img class="a10-capture" …> (voir l'en-tête). -->
+            <div class="a10-page-exemple">
+              <div class="a10-pe-titre" style="top:200px;">Le passage de la page dont parle la voix</div>
+              <div class="a10-pe-texte" data-layout-allow-occlusion style="top:380px;">Une phrase de la page, recopiée telle quelle, avec un mot surligné.</div>
+              <div class="a10-pe-bouton">Le bouton nommé</div>
+              <div class="a10-pe-image" style="top:760px; height:640px;">la suite de la page</div>
+            </div>
+            <div class="a10-surligne a10-s0" style="left:44px; top:378px; width:560px; height:50px;"></div>
+          </div>
+        </div>
+        <svg class="a10-fleche a10-f0" viewBox="0 0 1080 920" aria-hidden="true"><path d="M660,820 Q593,674 440,625 M485,616 L440,625 L472,658" pathLength="1"/></svg>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'avis10-ecran-produit';
+      var DUREE = 2.5;
+      var ARRETS = [[0, 0], [1.6, 600]];   // [instant, y de la capture en haut de l'écran]
+      var SURLIGNES = [0.45];              // instant de chaque .a10-sN
+      var FLECHE = [0.85, 1.6];            // arrivée, départ (ou null)
+      var scope = '#' + ID + ' ';
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      for (var i = 0; i < ARRETS.length; i++) tl.set(scope + '.a10-vue', { y: -ARRETS[i][1] }, ARRETS[i][0]);
+      for (var j = 0; j < SURLIGNES.length; j++) {
+        tl.fromTo(scope + '.a10-s' + j, { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: 'power2.out' }, SURLIGNES[j]);
+      }
+      if (FLECHE) {
+        tl.fromTo(scope + '.a10-f0', { opacity: 0 }, { opacity: 1, duration: 0.01 }, FLECHE[0]);
+        tl.fromTo(scope + '.a10-f0 path', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.22, ease: 'power1.out' }, FLECHE[0]);
+        tl.set(scope + '.a10-f0', { opacity: 0 }, FLECHE[1]);
+      }
+      tl.set(scope + '.a10-vue', { opacity: 1 }, DUREE - 0.01);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

@@ -15,6 +15,10 @@ estimée à l'œil porte « environ ».
 - **Le geste unique** (un effet vu une seule fois) reste unique : il se note « une fois par vidéo,
   au plus », il ne devient pas une habitude.
 - **Les 3 à 5 gestes signature** : ce qu'on reconnaît en une seconde. Ils ouvrent la fiche.
+- **Le look d'un côté, le sujet de l'autre** : un style se remonte sur n'importe quel sujet. Ce qui
+  ne vient que du sujet de l'original (un rang de classement, la question d'un abonné, une page
+  produit, des logos d'outils) se note à part, avec ce qu'il devient sur une histoire, un avis ou
+  une liste (fiche, section « Sur un autre sujet »).
 
 ---
 
