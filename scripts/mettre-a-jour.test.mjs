@@ -166,6 +166,8 @@ test('un client de Monteur IA 1 passe à « un Reel = un projet » sans rien per
   if (!outilsOuSkip(t)) return;
   const dir = clientV1(t);
   personnaliser(dir);
+  // Ses propres réglages de Claude Code dans le dossier : gardés, le garde-fou s'y ajoute.
+  write(dir, '.claude/settings.json', '{\n  "permissions": { "allow": ["Bash(ffmpeg:*)"] }\n}\n');
   reelEnCours(dir);
   const avant = arbre(dir);
   const intouchables = ['brand.config.json', 'assets/logos/logo.png', 'assets/music/fond.mp3', 'tools/double_ia.py',
@@ -189,6 +191,10 @@ test('un client de Monteur IA 1 passe à « un Reel = un projet » sans rien per
   assert.match(read(dir, '.agents/skills/reel-script/SKILL.md'), /VOIX DU CLIENT/, 'copie Codex refaite avec le profil');
   assert.match(read(dir, 'design-system/manychat-dm.md'), /CTA LUMIERE/);
   assert.ok(JSON.parse(read(dir, 'templates/style-presets.json')).fonts.MaPolice, 'sa police reste déclarée');
+  const reglage = JSON.parse(read(dir, '.claude/settings.json'));
+  assert.deepEqual(reglage.permissions.allow, ['Bash(ffmpeg:*)'], 'ses réglages de Claude Code restent');
+  assert.match(reglage.hooks.PreToolUse[0].hooks[0].command, /garde-identite\.mjs/, 'le garde-fou s’y ajoute');
+  assert.ok(fs.existsSync(path.join(dir, '.claude/hooks/garde-identite.mjs')));
   for (const f of ['CLAUDE.md', 'AGENTS.md', 'templates/AGENT.md.tpl']) {
     assert.equal(read(dir, f).match(/BEGIN EXTENSION: double-ia/g)?.length, 1, `${f} : consignes de l'extension une fois`);
   }

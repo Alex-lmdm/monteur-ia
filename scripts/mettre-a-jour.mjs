@@ -65,6 +65,9 @@ const A_PART = new Set(["templates/AGENT.md.tpl", ".gitignore"]);
 // Entièrement écrits par le client (le setup les remplit) : jamais remplacés une fois modifiés.
 const AU_CLIENT = new Set([".claude/skills/reel-script/references/scripts-exemples.md"]);
 const PRESETS = "templates/style-presets.json";
+// Réglage de Claude Code du dossier (le garde-fou .claude/hooks/garde-identite.mjs) : fusionné avec
+// celui que le client aurait déjà, ses permissions restent.
+const REGLAGE_CLAUDE = ".claude/settings.json";
 // Plan de travail de Monteur IA 1, à la racine : il devient un Reel, ou rejoint la sauvegarde.
 const PLAN = ["index.html", "compositions", "derush", "assets/video", "renders", "work", "snapshots", "probe",
   "overlay.html", "transcript.json"];
@@ -408,7 +411,7 @@ function actionRetouche(rel, client, manifeste) {
   if (AU_CLIENT.has(rel)) return (manifeste[rel] ?? []).includes(neuf) ? null : "garde";
   // Les zones personnalisables vivent dans les skills, le design system et le style, jamais dans le code.
   const zonable = !/^(scripts|tools)\//.test(rel);
-  const candidates = rel === PRESETS ? ["fusion-json"]
+  const candidates = rel === PRESETS || rel === REGLAGE_CLAUDE ? ["fusion-json"]
     : zonable && zones(lireTexte(path.join(client, rel))).size && zones(lireTexte(path.join(NEUF, rel))).size ? ["fusion-zones"] : [];
   for (const action of candidates) {
     try {
