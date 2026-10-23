@@ -69,6 +69,13 @@ DURATION = round(image(CUTS["duration"]), 5)   # duree du montage : un nombre en
 #   figee au debut du reel, et mes autres sections sont noires ». En prime, passer un b-roll par
 #   le render HyperFrames le rasterise (perte de nettete) alors que ffmpeg le garde intact.
 #   Exemple :  ("s3-demo", "full", [3], {"media": "demo-broll-v1.mp4"}),
+#
+#   {"zoom": 1.25} -> (sections "decor", "face" et "split") la section se montre PLUS SERREE que le cadrage du
+#   Reel, d'un coup a la coupe (1.25 = un quart plus serre). {"zoomOrigin": "center 30%"} = le point
+#   qui reste fixe (les yeux, par defaut vers 30 % du haut). tools/build_faces.py prepare une video
+#   nette par niveau de zoom. Exemple :  ("s4-point-fort", "decor", [4], {"zoom": 1.25}),
+#   {"zoom": [1.25, 1], "zoomDuree": 0.8} -> zoom PROGRESSIF : de 1.25 au debut de la section a 1 en
+#   0,8 s (1,3 fois d'ecart au plus ; sections "decor" et "face" seulement).
 #   Les index pointent dans TAKES (0-based) et doivent couvrir TOUTES les prises, dans l'ordre,
 #   sans trou ni chevauchement (les asserts plus bas le verifient).
 #

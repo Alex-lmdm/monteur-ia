@@ -41,7 +41,8 @@ commenter.
 - **Derrière le visage :** l'auteur filme devant un fond virtuel sombre (décor de l'auteur, non repris).
 - **Zooms :** aucun zoom animé ; à certaines coupes le visage change un peu de taille.
 - **Chez toi :** accroche en vidéo entière (ton décor) avec le gros titre au-dessus de ta tête, puis
-  écran partagé jusqu'à la fin. Ta vidéo est recadrée pour que ta tête arrive au même endroit.
+  écran partagé jusqu'à la fin. Ta vidéo est recadrée pour que ta tête arrive au même endroit, et ton
+  visage se resserre un peu à l'entrée de 2 ou 3 éléments du classement, comme dans l'original.
 
 ## 3. Les sous-titres
 - **Police :** bâton géométrique très gras, proche de Montserrat ExtraBold.
@@ -142,6 +143,9 @@ commenter.
   Une section par phrase ou par entrée : les frontières de section restent celles de
   `<cut>_cuts.json` (une phrase par prise ; rush déjà serré : prises en raccord sur les coupes
   existantes, skill derush §5).
+- **Zooms :** à l'entrée de 2 ou 3 éléments du classement (pas deux de suite), la section `split` qui
+  l'ouvre porte `{"zoom": 1.1}` : le visage change un peu de taille à la coupe, comme dans l'original
+  (zoom sec seulement, `tools/build_faces.py` prépare la vidéo nette).
 - **Règle de recadrage** (sur une image de la vidéo du client en 1080×1920 : y_tête = haut du
   crâne, y_menton, x_visage = milieu du visage, en px) :
   - split : visée haut de la tête à **54 %** (1 040 px) et menton à 83 % (1 590 px) :

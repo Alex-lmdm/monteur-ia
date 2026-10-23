@@ -29,6 +29,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import sections
+from cadrage import copie_zoom, fenetres_zoom, niveau, niveaux_zoom
 from lieux import config  # réglages du client, et ceux du Reel (reel.config.json)
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -119,13 +120,55 @@ def calque(ident: str, src: str, st: float, d: float, piste: int) -> str:
             f'data-start="{depart}" data-media-start="{entree}" data-duration="{duree}" data-track-index="{piste}"></video>')
 
 
-faces = "\n".join(calque(f"face{chr(65 + i)}", SRC_SPLIT, st, d, 10) for i, (st, d) in enumerate(FACES))
 
 # --- calque visage PLEIN ECRAN : une <video> par section "face" ------------------------------
-faces_full = "\n".join(calque(f"facefull{i}", SRC_PLEIN, st, d, 11) for i, (st, d) in enumerate(FACEFULL))
+# Zoom par section ({"zoom": 1.25} dans LAYOUT) : chaque niveau a sa video pre-cadree, posee elle aussi
+# a l'echelle 1 (tools/build_faces.py). Sans elle (build_faces pas relance), le cadrage du Reel.
+ZOOM_MANQUANT = []
+
+
+ZOOMS_PROGRESSIFS = []   # (id de la <video>, depart, de, a, duree, origine) : animes par la timeline du master
+
+
+def source_zoomee(fmt: str, src: str, natif: bool, z, niveaux, ident: str = "", st: float = 0.0) -> str:
+    n = niveau(z)
+    if isinstance(z[0], tuple) and natif:
+        de, a, duree = z[0]
+        ZOOMS_PROGRESSIFS.append((ident, st, de / n[0], a / n[0], duree, z[1]))
+    if n[0] == 1:
+        if not natif and isinstance(z[0], tuple):
+            ZOOM_MANQUANT.append(fmt)
+        return src
+    if not natif:
+        ZOOM_MANQUANT.append(fmt)
+        return src
+    chemin = copie_zoom(fmt, niveaux.index(n))
+    if (ROOT / chemin).exists():
+        return chemin
+    ZOOM_MANQUANT.append(fmt)
+    return src
+
+
+FACES_Z = fenetres_zoom(sections, "split")
+NIVEAUX_SPLIT = niveaux_zoom(FACES_Z)
+faces = "\n".join(calque(f"face{chr(65 + i)}", source_zoomee("split", SRC_SPLIT, NATIF_SPLIT, z, NIVEAUX_SPLIT), st, d, 10)
+                  for i, (st, d, z) in enumerate(FACES_Z))
+
+FACEFULL_Z = fenetres_zoom(sections, "face")
+NIVEAUX_PLEIN = niveaux_zoom(FACEFULL_Z)
+faces_full = "\n".join(calque(f"facefull{i}", source_zoomee("face", SRC_PLEIN, NATIF_PLEIN, z, NIVEAUX_PLEIN, f"facefull{i}", st),
+                              st, d, 11) for i, (st, d, z) in enumerate(FACEFULL_Z))
 
 # --- calque video SOUS les cartes : une <video> par fenetre "decor" ----------------------------
-faces_decor = "\n".join(calque(f"decor{i}", SRC_DECOR, st, d, 12) for i, (st, d) in enumerate(DECOR))
+DECOR_Z = fenetres_zoom(sections, "decor")
+NIVEAUX_DECOR = niveaux_zoom(DECOR_Z)
+faces_decor = "\n".join(calque(f"decor{i}", source_zoomee("decor", SRC_DECOR, NATIF_DECOR, z, NIVEAUX_DECOR, f"decor{i}", st),
+                               st, d, 12) for i, (st, d, z) in enumerate(DECOR_Z))
+# Zoom progressif : la timeline du master agrandit la video de sa section (seek-safe, comme le reste).
+zooms_js = "".join(
+    f'\n      window.__timelines["main"].fromTo("#{ident}", {{ scale: {de:g}, transformOrigin: "{origine}" }}, '
+    f'{{ scale: {a:g}, duration: {duree:g}, ease: "power2.out" }}, {fenetre(st, duree)[0]});'
+    for ident, st, de, a, duree, origine in ZOOMS_PROGRESSIFS)
 
 # --- calque personne detouree DEVANT les sections "detoure" -----------------------------------
 def calque_detoure(i: int, st: float, d: float) -> str:
@@ -260,7 +303,7 @@ doc = f'''<!DOCTYPE html>
 
     <script>
       window.__timelines = window.__timelines || {{}};
-      window.__timelines["main"] = gsap.timeline({{ paused: true }});
+      window.__timelines["main"] = gsap.timeline({{ paused: true }});{zooms_js}
     </script>
   </body>
 </html>
@@ -282,5 +325,8 @@ out.write_text(doc, encoding="utf-8")
 print(f"{out.relative_to(ROOT)} : {len(SEC)} section(s), {len(FACES)} fenetre(s) visage, {DUR}s")
 if DETOURE and not NATIF_DETOURE:
     print("  personne pas encore detouree : lance python3 tools/build_faces.py, puis relance ce script")
+if ZOOM_MANQUANT:
+    print("  zoom par section pas encore prepare (le cadrage du Reel s'affiche a sa place) : lance "
+          "python3 tools/build_faces.py, puis relance ce script")
 if "--write" not in sys.argv:
     print("(brouillon ; compare-le a index.html, puis relance avec --write pour ecraser index.html)")

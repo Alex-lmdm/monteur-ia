@@ -24,7 +24,7 @@
 ## 2. Le cadrage
 - **Visage :** vidéo entière, décor compris, cartes posées par-dessus en haut (jamais un écran partagé sur fond uni). Haut de la tête à 36-37 % de la hauteur, menton vers 47 %.
 - **Zooms :** deux par vidéo dans l'original : un zoom sec (×1,25 environ) quand le schéma de l'accroche s'efface, un dézoom progressif (~0,8 s) quand il revient à la fin.
-- **Chez toi :** ta vidéo entière sous les cartes, recadrée depuis le haut si ta tête est plus haute que 36 % ; pas de zoom (voir « Ce qui ne se fera pas à l'identique »).
+- **Chez toi :** ta vidéo entière sous les cartes, recadrée depuis le haut si ta tête est plus haute que 36 % ; les deux mêmes zooms : sec (×1,25) quand le schéma de l'accroche s'efface, et un dézoom progressif (0,8 s) quand il revient à la fin.
 
 ## 3. Les sous-titres
 - **Police :** grotesque sans empattement, graisse moyenne, approche serrée : Inter SemiBold.
@@ -68,7 +68,6 @@
 
 ## Ce qui ne se fera pas à l'identique
 - La police exacte (grotesque serrée) → Inter, livrée ; les sous-titres gardent l'approche normale d'Inter (pas de réglage d'approche pour eux).
-- Le zoom sec et le dézoom → pas de zoom : un Reel n'a qu'un cadrage « decor », et une vidéo tournée de près serait trop agrandie.
 - Le décor sombre → ta vidéo garde ses couleurs ; un voile sombre en haut de l'image (réglable, 0 sur un décor déjà sombre) remplace la nuit de l'original.
 - La frise au ras des bords → elle s'arrête à 100 px des bords (Instagram recadre les côtés).
 
@@ -90,6 +89,7 @@
   - `face` : jamais (l'original n'a pas un instant sans habillage) ;
   - `full` : jamais (aucune carte plein écran ni image) ;
   - `detoure` : jamais (la vidéo garde son décor).
+- **Zooms :** toutes les sections entre l'accroche et le récapitulatif portent `{"zoom": Z}` (zoom sec, à la coupe qui suit l'accroche) ; le récapitulatif porte `{"zoom": [Z, 1], "zoomDuree": 0.8}` (dézoom progressif). Z = 1,25, ramené à 1,8 ÷ S si le recadrage S ci-dessous dépasse 1,44 (netteté) ; sous 1,1, aucun zoom. `zoomOrigin` = « center <hauteur des yeux en %> » mesurée sur un snapshot (vers 40 %). Puis `tools/build_faces.py` ; `Y_DECOR` se mesure sur une section zoomée (le menton y descend d'environ 30 px).
 - **Règle de recadrage :** haut de la tête visé à 36 % de la hauteur de l'image. Mesure le haut de la tête du client (en %, sur 2 ou 3 images) : `montage.decorTransform` = « scale(S) » avec S = 36 ÷ cette valeur, entre 1,2 et 1,8, `decorOrigin` « center top » ; à 33 % ou plus : aucun recadrage. Au-delà de 1,8 : garde 1,8 et baisse `PLACE.bas` des pièces. Puis `tools/build_faces.py` et `tools/build_master.py --write`, et un snapshot (tête entière, cartes au-dessus).
 - **Sous-titres :** `python3 tools/montage_captions.py --mots 2 --write` ; skin soft, 46 px (réglages) ; position : `Y_DECOR` de `tools/sections.py` = le menton du client après recadrage + ~85 px (mesuré sur un snapshot ; vers 1 000 px pour une tête à 36 % filmée large, vers 1 300 px pour un client filmé de près) ; `--sans` : aucune section (les sous-titres restent sous les titres et les textes tapés). Le mot « lien » s'écrit 🔗 (à corriger dans `derush/<vidéo>_words.json`, que `--mots` lit tel quel).
 - **Pièces signature** (copie, puis « m05-… » remplacé PARTOUT par l'id de la section ; réglages dans le bloc « RÉGLAGES » ; le bloc « PLACE » est le même dans toutes les sections du Reel) :

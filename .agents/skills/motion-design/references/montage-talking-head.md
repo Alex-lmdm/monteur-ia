@@ -133,6 +133,16 @@ de style, ajustable au bloc F du setup). Trois valeurs :
   partagé sur fond uni. C'est aussi la façon de poser des visuels sur la vidéo plein écran : une
   section `face` n'a pas de sous-comp.
 
+**Zoom par section** (sections `decor`, `face` et `split`) : une section se montre plus serrée que le
+cadrage du Reel, d'un coup à la coupe : `("s4", "decor", [4], {"zoom": 1.25})` dans `LAYOUT`
+(1.25 = un quart plus serré ; `{"zoomOrigin": "center 30%"}` = le point qui reste fixe, les yeux par
+défaut). Zoom progressif : `{"zoom": [1.25, 1], "zoomDuree": 0.8}` part de 1,25 au début de la
+section et revient à 1 en 0,8 s (1,3 fois d'écart au plus ; `decor` et `face` seulement, l'écran partagé
+zoome sec). `tools/build_faces.py` prépare une vidéo nette par niveau (`visage-decor-zoom-<n>.mp4`,
+`visage-plein-zoom-<n>.mp4`, `visage-split-zoom-<n>.mp4`), le master les pose à
+l'échelle 1 et anime le zoom progressif dans sa timeline. Relancer `build_faces.py` après tout
+changement de zoom. Export par le bouton Export ou `npm run render` (l'ancien export refuse).
+
 Format de section en plus, choisi section par section (jamais un `defaultLayout`) :
 
 - **`detoure`** : la **personne détourée**, sans son décor, passe **devant** la section (sous-comp

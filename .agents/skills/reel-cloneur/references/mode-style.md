@@ -84,7 +84,7 @@ Ce que Monteur IA reproduit, et ce qu'il approche seulement :
 | Mot surligné quand il est prononcé, en escalier… | se fabrique pour la vidéo, sur le minutage de chaque mot |
 | Cadrage : visage plein écran, écran partagé, cartes posées sur le décor filmé, alternance | les trois cadrages (sections `face`, `split`, `decor`) et leur alternance ; tête du client trop haute pour les cartes : sa vidéo recadrée (§4) |
 | Personne détourée, sans son décor, devant une page, un aplat ou des objets ; texte derrière la tête | sections `detoure` : détourage des seuls passages montrés sur l'ordinateur du client (environ 8 s de calcul par seconde détourée, modèle de 170 Mo la première fois : dis-le-lui avant de lancer) ; personne plus petite ou déplacée : `montage.detourePlace` |
-| Zooms sur le visage | zooms animés (préférence) |
+| Zooms sur le visage | zoom sec à la coupe ou progressif, section par section (`{"zoom": 1.25}` ou `{"zoom": [1.25, 1]}` dans `tools/sections.py`, montage-talking-head.md) ; préférence pour toutes ses vidéos |
 | Rythme des coupes, silences retirés | coupes plus ou moins serrées (marges du dérush) et préférence de rythme |
 | Animations, schémas, logos, textes à l'écran, images d'illustration | motion design de Monteur IA (préférences : densité, type, place) |
 | Gros titres plein écran | se font : le réglage de base les évite, une demande ou un style cloné le remplace |
@@ -177,7 +177,9 @@ suivantes.
    l'original ÷ dans sa vidéo (en % de la hauteur, sur une image de chaque). S sous 1,1 : pas de
    recadrage (sous 1, sa tête est plus basse que dans l'original : remonte un peu les cartes) ;
    de 1,1 à 1,8 : `scale(S)` ; au-delà de 1,8 l'image perd en netteté : garde 1,8 et réduis un peu
-   les cartes. Vérifie sur un snapshot (tête entière, cartes au-dessus).
+   les cartes. Vérifie sur un snapshot (tête entière, cartes au-dessus). Les zooms de l'original
+   se refont section par section, par-dessus ce recadrage : sec à la coupe `{"zoom": 1.25}`,
+   progressif `{"zoom": [1.25, 1], "zoomDuree": 0.8}` (`tools/sections.py`) ; S × zoom au plus 1,8.
 4. **La fiche passe avant les règles de base.** Ce Reel suit `style.md` même là où le montage de
    base dit autre chose (motion-design §0 « pas de gros titre », `sous-titres.md` « 2 à 3 mots sans
    ponctuation », une police unique imposée par un skill de marque, une préférence du client sur le

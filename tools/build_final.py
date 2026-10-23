@@ -58,6 +58,10 @@ WINSDECOR = getattr(sections, "decor_windows", lambda: [])()  # video sous les c
 if getattr(sections, "detoure_windows", lambda: [])():
     sys.exit("Cet ancien export ne sait pas poser une personne detouree devant les visuels (sections "
              "\"detoure\") : exporte avec le bouton Export de l'app, ou npm run render.")
+from cadrage import fenetres_zoom  # noqa: E402
+if any(z[0] != 1 for fmt in ("decor", "face", "split") for _, _, z in fenetres_zoom(sections, fmt)):
+    sys.exit("Cet ancien export ne sait pas zoomer une section (option \"zoom\" de tools/sections.py) : "
+             "exporte avec le bouton Export de l'app, ou npm run render.")
 MEDIAS = [s for s in SEC if s.get("media")]
 
 

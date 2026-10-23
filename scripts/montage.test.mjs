@@ -613,6 +613,71 @@ test('cadrage détouré : la personne passe devant la section, détourée une fo
   assert.match(ancien.stderr, /ne sait pas poser une personne detouree/);
 });
 
+test('zoom par section : une vidéo nette par niveau de zoom, la section serrée sur sa fenêtre ; sans zoom, rien ne change', (t) => {
+  if (!outils(t, { pil: true, ffmpeg: true })) return;
+  const reel = nouveauReel(maison(t), 'Zoom');
+  plan(reel, PRISES_HORS_IMAGES, { layout: '    ("s0", "face", [0]),\n    ("s1", "decor", [1]),\n    ("s2", "decor", [2]),' });
+  const sansZoom = (python(reel, 'tools/build_faces.py'), python(reel, 'tools/build_master.py', '--write'), read(reel, 'index.html'));
+  assert.doesNotMatch(sansZoom, /-zoom-/);
+  assert.match(sansZoom, /<video id="decor0" src="assets\/video\/visage-decor\.mp4"/);
+  assert.doesNotMatch(sansZoom, /id="decor1"/, 'deux sections décor contiguës sans zoom : une seule fenêtre');
+
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
+    .replace('("s2", "decor", [2]),', '("s2", "decor", [2], {"zoom": 1.25}),')
+    .replace('("s0", "face", [0]),', '("s0", "face", [0], {"zoom": 1.2, "zoomOrigin": "center 40%"}),'));
+  const lu = (code) => JSON.parse(python(reel, '-c', `import json, sys; sys.path.insert(0, "tools"); ${code}`));
+  // Les yeux (30 % du haut) restent à leur place : la zone se resserre autour d'eux.
+  assert.deepEqual(lu('from cadrage import zoom_crop; print(json.dumps(zoom_crop(None, 1.25)))'), ['864:1536:108:115', false]);
+  assert.deepEqual(lu('from cadrage import zoom_crop; print(json.dumps(zoom_crop(None, 0.8)))'), ['1080:1920:0:0', true],
+    'jamais plus que la vidéo filmée');
+  const sortie = python(reel, 'tools/build_faces.py');
+  assert.match(sortie, /visage-decor-zoom-0\.mp4 : zoom 1\.25 autour de « center 30% », zone 864:1536:108:115/);
+  assert.match(sortie, /visage-plein-zoom-0\.mp4 : zoom 1\.2 autour de « center 40% »/);
+  assert.equal(execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height',
+    '-of', 'csv=p=0', path.join(reel, 'assets/video/visage-decor-zoom-0.mp4')], { encoding: 'utf8' }).trim(), '1080,1920');
+
+  python(reel, 'tools/build_master.py', '--write');
+  const master = read(reel, 'index.html');
+  // La section zoomée a sa propre fenêtre, posée sans agrandissement ; celle d'avant garde le cadrage du Reel.
+  assert.match(master, /<video id="decor0" src="assets\/video\/visage-decor\.mp4"[^>]*data-start="2\.6\d+"[^>]*data-duration="2\.6\d+"/);
+  assert.match(master, /<video id="decor1" src="assets\/video\/visage-decor-zoom-0\.mp4"[^>]*data-start="5\.3\d+" data-media-start="5\.3\d+"/);
+  assert.match(master, /<video id="facefull0" src="assets\/video\/visage-plein-zoom-0\.mp4"/);
+  assert.match(master, /\.face-decor video \{[^}]*transform: none;/);
+
+  // Zoom progressif : la vidéo de la section part resserrée et s'élargit en 0,8 s (timeline du master),
+  // sur la vidéo du Reel, sans nouvelle copie.
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('("s1", "decor", [1]),', '("s1", "decor", [1], {"zoom": [1.25, 1]}),'));
+  python(reel, 'tools/build_master.py', '--write');
+  assert.match(read(reel, 'index.html'),
+    /fromTo\("#decor0", \{ scale: 1\.25, transformOrigin: "center 30%" \}, \{ scale: 1, duration: 0\.8, ease: "power2\.out" \}, 2\.6\d+\);/);
+  assert.match(read(reel, 'index.html'), /<video id="decor0" src="assets\/video\/visage-decor\.mp4"/);
+  assert.match(read(reel, 'index.html'), /<video id="decor1" src="assets\/video\/visage-decor-zoom-0\.mp4"/);
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('{"zoom": [1.25, 1]}', '{"zoom": [2, 1]}'));
+  assert.match(spawnSync('python3', ['tools/build_master.py'], { cwd: reel, encoding: 'utf8' }).stderr, /1,3 fois d'écart au plus/);
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('("s1", "decor", [1], {"zoom": [2, 1]}),', '("s1", "decor", [1]),'));
+
+  // Zoom retiré : sa vidéo part au prochain passage.
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('("s2", "decor", [2], {"zoom": 1.25})', '("s2", "decor", [2])'));
+  python(reel, 'tools/build_faces.py');
+  assert.ok(!fs.existsSync(path.join(reel, 'assets/video/visage-decor-zoom-0.mp4')));
+
+  const ancien = spawnSync('python3', ['tools/build_final.py'], { cwd: reel, encoding: 'utf8' });
+  assert.notEqual(ancien.status, 0);
+  assert.match(ancien.stderr, /ne sait pas zoomer une section/);
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('{"zoom": 1.2, "zoomOrigin": "center 40%"}', '{"zoom": "fort"}'));
+  const invalide = spawnSync('python3', ['tools/build_master.py'], { cwd: reel, encoding: 'utf8' });
+  assert.match(invalide.stderr, /section s0 : zoom 'fort' invalide/);
+
+  // En écran partagé, le zoom est sec : le visage resserré garde sa place sous la jointure.
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('("s0", "face", [0], {"zoom": "fort"})', '("s0", "split", [0], {"zoom": 1.15})'));
+  assert.match(python(reel, 'tools/build_faces.py'), /visage-split-zoom-0\.mp4 : zoom 1\.15/);
+  python(reel, 'tools/build_master.py', '--write');
+  assert.match(read(reel, 'index.html'), /<video id="faceA" src="assets\/video\/visage-split-zoom-0\.mp4"/);
+  assert.ok(!fs.existsSync(path.join(reel, 'assets/video/visage-plein-zoom-0.mp4')), 'plus de section face zoomée');
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('{"zoom": 1.15}', '{"zoom": [1.15, 1]}'));
+  assert.match(spawnSync('python3', ['tools/build_master.py'], { cwd: reel, encoding: 'utf8' }).stderr, /zoom progressif en écran partagé impossible/);
+});
+
 // ---------------------------------------------------------------------------
 // 8. Le catalogue de styles (skill reel-cloneur, styles/) : chaque kit tient debout tout seul
 // ---------------------------------------------------------------------------

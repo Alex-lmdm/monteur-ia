@@ -130,6 +130,103 @@ def crop_detoure(montage: dict):
     return crop_from_transform(transform, 0, montage.get("detoureOrigin") or "center top")
 
 
+# --- zoom par section ---------------------------------------------------------------------------
+# Une section « decor », « face » ou « split » peut se montrer plus serrée que le cadrage du Reel :
+# ("s3", "decor", [3], {"zoom": 1.25}) dans la table LAYOUT de tools/sections.py, et en option
+# {"zoomOrigin": "center 30%"} (le point qui reste fixe, en général les yeux). Chaque niveau de zoom
+# a sa propre vidéo pré-cadrée en pleine résolution (tools/build_faces.py) : le visage reste net.
+# Zoom PROGRESSIF : {"zoom": [1.25, 1], "zoomDuree": 0.8} part de 1.25 au début de la section et
+# arrive à 1 en 0,8 s. La vidéo est pré-cadrée au plus large des deux, le navigateur l'agrandit
+# pendant le mouvement (un léger flou de bougé, invisible ; 1,3 au plus d'écart). Sections « decor » et
+# « face » seulement : en écran partagé, le zoom est sec.
+ZOOM_ORIGIN = "center 30%"
+ZOOM_FORMATS = ("decor", "face", "split")
+COPIE = {"decor": "decor", "face": "plein", "split": "split"}
+
+
+def zoom_crop(crop, zoom: float, origin=None, base=(1080, 1920)):
+    """La zone `crop` (w:h:x:y, ou None = l'image entière) resserrée `zoom` fois autour de `origin`
+    (fractions de la zone, « center 30% » par défaut). Renvoie (zone, ramenée_dans_l_image)."""
+    w, h, x, y = (float(v) for v in crop.split(":")) if crop else (*base, 0.0, 0.0)
+    fx, fy = parse_origin(origin or ZOOM_ORIGIN)
+    ox, oy = x + fx * w, y + fy * h
+    nw, nh = w / zoom, h / zoom
+    nx, ny = ox - fx * nw, oy - fy * nh
+    bw, bh = base
+    ajuste = nw > bw + 0.5 or nh > bh + 0.5 or nx < -0.5 or ny < -0.5 or nx + nw > bw + 0.5 or ny + nh > bh + 0.5
+    nw, nh = min(nw, bw), min(nh, bh)
+    nx, ny = min(max(nx, 0), bw - nw), min(max(ny, 0), bh - nh)
+    return f"{round(nw)}:{round(nh)}:{round(nx)}:{round(ny)}", ajuste
+
+
+def _nombre(v, mini, maxi):
+    try:
+        v = float(v)
+    except (TypeError, ValueError):
+        return None
+    return round(v, 3) if mini <= v <= maxi else None
+
+
+def _zoom_de(entree, fmt: str = "decor"):
+    """(zoom, origine) d'une ligne de LAYOUT ; zoom = un nombre, ou (départ, arrivée, durée)."""
+    opts = (entree[3] if len(entree) > 3 else None) or {}
+    brut = opts.get("zoom") or 1
+    if isinstance(brut, (list, tuple)) and fmt == "split":
+        raise SystemExit(f"ERREUR : section {entree[0]} : zoom progressif en écran partagé impossible "
+                         "(sections decor et face seulement) : un zoom sec, {\"zoom\": 1.15}.")
+    if isinstance(brut, (list, tuple)):
+        ab = [_nombre(v, 0.5, 3) for v in brut]
+        duree = _nombre(opts.get("zoomDuree", 0.8), 0.1, 5)
+        if len(ab) != 2 or None in ab or duree is None or max(ab) / min(ab) > 1.3 + 1e-9:
+            raise SystemExit(f"ERREUR : section {entree[0]} : zoom progressif {brut!r} invalide ([départ, arrivée] entre "
+                             "0.5 et 3, 1,3 fois d'écart au plus ; zoomDuree entre 0.1 et 5 s).")
+        z = (ab[0], ab[1], duree) if ab[0] != ab[1] else ab[0]
+    else:
+        z = _nombre(brut, 0.5, 3)
+        if z is None:
+            raise SystemExit(f"ERREUR : section {entree[0]} : zoom {brut!r} invalide (un nombre entre 0.5 et 3, "
+                             "1.25 = un quart plus serré).")
+    return z, str(opts.get("zoomOrigin") or ZOOM_ORIGIN)
+
+
+def niveau(z) -> tuple[float, str]:
+    """(zoom de la vidéo pré-cadrée, origine) : le plus large des deux pour un zoom progressif."""
+    spec, origine = z
+    return (min(spec[0], spec[1]) if isinstance(spec, tuple) else spec), origine
+
+
+def fenetres_zoom(sec, fmt: str):
+    """Fenêtres d'un format, avec le zoom de chaque section : [(début, durée, (zoom, origine))].
+    Deux sections contiguës ne se fusionnent qu'à zoom fixe égal (un zoom progressif part du début
+    de SA section). Lit la table LAYOUT, donc marche aussi avec le tools/sections.py d'un Reel plus
+    ancien (l'option y est simplement ignorée jusqu'ici)."""
+    wins = []
+    for s, entree in zip(sec.sections(), sec.LAYOUT):
+        if s["fmt"] != fmt:
+            continue
+        z = _zoom_de(entree, fmt) if fmt in ZOOM_FORMATS else (1.0, ZOOM_ORIGIN)
+        if wins and abs(wins[-1][1] - s["start"]) < 1e-6 and wins[-1][2] == z and not isinstance(z[0], tuple):
+            wins[-1] = (wins[-1][0], s["end"], z)
+        else:
+            wins.append((s["start"], s["end"], z))
+    return [(round(a, 3), round(b - a, 3), z) for a, b, z in wins]
+
+
+def niveaux_zoom(fenetres) -> list:
+    """Les niveaux de vidéo pré-cadrée différents de 1, dans un ordre stable : le n-ième a sa vidéo `-zoom-<n>`."""
+    vus = []
+    for _, _, z in fenetres:
+        n = niveau(z)
+        if n[0] != 1 and n not in vus:
+            vus.append(n)
+    return vus
+
+
+def copie_zoom(fmt: str, n: int) -> str:
+    """Chemin (depuis le Reel) de la vidéo pré-cadrée du n-ième zoom d'un format."""
+    return f"assets/video/visage-{COPIE[fmt]}-zoom-{n}.mp4"
+
+
 def probe(path):
     """(largeur, hauteur, color_transfer, durée) du flux vidéo."""
     out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",

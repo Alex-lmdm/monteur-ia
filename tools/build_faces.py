@@ -13,6 +13,8 @@ Produit dans assets/video/ :
   - visage-plein.mp4 : 1080x1920, le visage plein écran (sections « face ») ;
   - visage-decor.mp4 : 1080x1920, la vidéo filmée posée sous les cartes (sections « decor »), entière
     ou cadrée par montage.decorTransform ;
+  - visage-decor-zoom-<n>.mp4, visage-plein-zoom-<n>.mp4, visage-split-zoom-<n>.mp4 : la même,
+    resserrée pour les sections qui ont un zoom ({"zoom": 1.25} dans la table LAYOUT de tools/sections.py), une vidéo par niveau ;
   - visage-detoure-<n>.webm : 1080x1920 transparent, la personne sans son décor, une vidéo par
     passage détouré (sections « detoure »), détourée sur cet ordinateur par `hyperframes
     remove-background` (la première fois, le modèle de 170 Mo se télécharge ; ensuite environ 8 s de
@@ -35,7 +37,8 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import sections  # noqa: E402
-from cadrage import crop_decor, crop_detoure, crops, face_source, scale_crop  # noqa: E402
+from cadrage import (COPIE, copie_zoom, crop_decor, crop_detoure, crops, face_source, fenetres_zoom,  # noqa: E402
+                     niveaux_zoom, scale_crop, zoom_crop)
 from lieux import config  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -113,6 +116,24 @@ def detourer(src: pathlib.Path, zone: str, fenetres) -> None:
     DETOURE_SOURCE.unlink(missing_ok=True)
 
 
+def zooms(fmt: str, base_crop, fenetres, src, k, w, h) -> None:
+    """Une vidéo pré-cadrée par niveau de zoom du format (sections {"zoom": …}) ; les anciennes s'effacent."""
+    niveaux = niveaux_zoom(fenetres)
+    for vieux in (ROOT / "assets/video").glob(f"visage-{COPIE[fmt]}-zoom-*.mp4"):
+        if vieux.name not in {pathlib.Path(copie_zoom(fmt, n)).name for n in range(len(niveaux))}:
+            vieux.unlink()
+    for n, (z, origine) in enumerate(niveaux):
+        zone, ajuste = zoom_crop(base_crop, z, origine)
+        out = ROOT / copie_zoom(fmt, n)
+        cadre = ("scale=1080:1000:flags=lanczos,setsar=1,pad=1080:1920:0:920:black" if fmt == "split"
+                 else "scale=1080:1920:flags=lanczos,setsar=1")
+        encode(src, f"crop={scale_crop(zone, k, w, h)},{cadre}", out)
+        print(f"• {out.relative_to(ROOT)} : zoom {z:g} autour de « {origine} », zone {zone} de base.mp4")
+        if ajuste:
+            print(f"  ⚠️ zoom {z:g} : la zone sortait de l'image filmée, elle est ramenée dedans "
+                  "(un zoom sous 1 ne montre jamais plus que la vidéo filmée)")
+
+
 def main() -> None:
     if not BASE.exists():
         sys.exit("ERREUR : assets/video/base.mp4 introuvable (fais d'abord le dérush).")
@@ -135,18 +156,21 @@ def main() -> None:
         print(f"• {SPLIT_OUT.relative_to(ROOT)} : zone {zone} du rush, visage sous la jointure")
     else:
         SPLIT_OUT.unlink(missing_ok=True)
+    zooms("split", face_crop, fenetres_zoom(sections, "split"), src, k, w, h)
     if plein_wins:
         zone = scale_crop(full_crop, k, w, h)
         encode(src, f"crop={zone},scale=1080:1920:flags=lanczos,setsar=1", PLEIN_OUT)
         print(f"• {PLEIN_OUT.relative_to(ROOT)} : zone {zone} du rush, visage plein écran")
     else:
         PLEIN_OUT.unlink(missing_ok=True)
+    zooms("face", full_crop, fenetres_zoom(sections, "face"), src, k, w, h)
     if decor_wins:
         zone = scale_crop(decor_crop, k, w, h) if decor_crop else f"{w}:{h}:0:0"
         encode(src, f"crop={zone},scale=1080:1920:flags=lanczos,setsar=1", DECOR_OUT)
         print(f"• {DECOR_OUT.relative_to(ROOT)} : zone {zone} du rush, sous les cartes")
     else:
         DECOR_OUT.unlink(missing_ok=True)
+    zooms("decor", decor_crop, fenetres_zoom(sections, "decor"), src, k, w, h)
     if detoure_wins:
         detourer(src, scale_crop(detoure_crop, k, w, h) if detoure_crop else f"{w}:{h}:0:0", detoure_wins)
     else:

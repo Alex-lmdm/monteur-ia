@@ -45,7 +45,8 @@ noir et orange, très sobre.
   autre pour la fin, toujours sur une coupe franche.
 - **Chez toi :** cartes posées sur ta vidéo entière. Si ta tête est plus haute que la sienne, ta
   vidéo est recadrée depuis le haut pour que les cartes passent au-dessus (jusqu'à 1,8 fois : au-delà
-  l'image perdrait en netteté). Fin sur ton visage seul, plus serré.
+  l'image perdrait en netteté), et l'accroche garde alors un plan un cran plus large. Fin sur ton
+  visage seul, plus serré.
 
 ## 3. Les sous-titres
 - **Police :** sans serif grasse, proche d'Inter Bold.
@@ -113,8 +114,6 @@ noir et orange, très sobre.
   noire que l'original.
 - Les schémas très détaillés de l'original (petites captures, listes, calendriers) → des schémas
   plus simples : tuiles, icônes au trait ou vrais logos, légendes courtes, flèches.
-- Le plan un peu plus large de l'accroche → même cadrage que les cartes qui suivent (un seul
-  recadrage pour toutes les parties à cartes).
 
 ## Ce qu'on laisse de côté
 - Le contenu de ses cartes (visuels maison), le petit logo de ses étiquettes, son pseudo, ses images,
@@ -147,6 +146,8 @@ noir et orange, très sobre.
   - sinon `decorTransform` = « scale(S) », S = 44 ÷ h, arrondi au dixième et ramené entre 1,2 et
     1,8 ; `decorOrigin` = « center top ». h < 24,5 (S plafonné à 1,8) : garde 1,8 et réduis un peu
     les cartes (plaque de 540 à ~470 px de haut dans les trois pièces, `Y_DECOR` remonté d'autant).
+  - accroche un cran plus large que les cartes : si S ≥ 1,15, la section `s0-accroche` porte
+    `{"zoom": 0.87}` (sa vidéo s'élargit autour des yeux) ; sinon même cadrage que les cartes.
   - fin (`face`) : `fullFaceTransform` = « scale(Z) », Z = S × 1,15 plafonné à 1,8 (sans recadrage
     décor : Z = 1,2) ; `fullFaceOrigin` = « center X% », X = (26 − h × Z) ÷ (1 − Z) ramené entre 0
     et 100, pour amener le haut de la tête vers 26 %.
