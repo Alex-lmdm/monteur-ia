@@ -154,8 +154,12 @@ Format de section en plus, choisi section par section (jamais un `defaultLayout`
   `montage.detourePlace` (CSS, ex. `"translate(220px, 300px) scale(0.6)"`) pour rapetisser ou déplacer
   la personne dans l'image, sans perte de netteté. Un texte posé exprès derrière la personne porte
   `data-layout-allow-occlusion` (sur le texte lui-même) : sinon `npm run check` le signale caché.
-  Sous-titres sur le buste (`Y_DETOURE`). Export par le bouton Export ou `npm run render` : l'ancien
-  export ffmpeg ne sait pas poser la personne devant les visuels.
+  Sous-titres sur le buste (`Y_DETOURE`). Options d'un passage, dans `LAYOUT` :
+  `{"entree": "monte"}` (la personne monte du bas en 0,4 s, floue au départ) et
+  `{"visageRevient": 0.9}` (à 0,9 s, la vidéo filmée plein écran revient par-dessus en fondu de 0,4 s ;
+  `detoureTransform` / `detoureOrigin` = ceux du plein écran pour un raccord sans saut). Export par
+  le bouton Export ou `npm run render` : l'ancien export ffmpeg ne sait pas poser la personne devant
+  les visuels.
 
 **Dans les deux cas, le créateur dirige section par section** — il peut passer n'importe quelle
 section en : visage plein écran seul, visuel/motion plein écran seul (recouvre le visage), ou split.

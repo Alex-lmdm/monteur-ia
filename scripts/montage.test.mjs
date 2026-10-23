@@ -608,6 +608,19 @@ test('cadrage détouré : la personne passe devant la section, détourée une fo
   assert.match(master, /id="section-s1"[^>]*data-track-index="5" data-width="1080" data-height="1920"/);
   assert.deepEqual([...new Set(sousTitres(reel).caps.map((c) => c.y))], [920, 1250]);
 
+  // Options du passage : la personne monte du bas, puis la vidéo filmée revient en fondu (style 9).
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
+    .replace('("s1", "detoure", [1, 2]),', '("s1", "detoure", [1, 2], {"entree": "monte", "visageRevient": 2}),'));
+  assert.match(faces(), /visage-plein\.mp4 : zone [\d:]+ du rush, visage plein écran/, 'le visage qui revient est préparé');
+  python(reel, 'tools/build_master.py', '--write');
+  const anime = read(reel, 'index.html');
+  assert.match(anime, /fromTo\("#detoure0", \{ y: 1920, filter: "blur\(18px\)" \}, \{ y: 0, filter: "blur\(0px\)", duration: 0\.4, ease: "power2\.out" \}, 2\.6\d+\);/);
+  assert.match(anime, /<video id="faceretour0" src="assets\/video\/visage-plein\.mp4"[^>]*data-start="4\.6\d+" data-media-start="4\.6\d+" data-duration="3\.3\d+"/);
+  assert.match(anime, /fromTo\("#faceretour0", \{ opacity: 0 \}, \{ opacity: 1, duration: 0\.4, ease: "none" \}, 4\.6\d+\);/);
+  assert.ok(anime.indexOf('id="faceretour0"') > anime.indexOf('<div class="face-full">'), 'le visage revient par-dessus la personne');
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('"visageRevient": 2', '"visageRevient": 9'));
+  assert.match(spawnSync('python3', ['tools/build_master.py'], { cwd: reel, encoding: 'utf8' }).stderr, /visageRevient \(9\.0 s\) après la fin/);
+
   const ancien = spawnSync('python3', ['tools/build_final.py'], { cwd: reel, encoding: 'utf8' });
   assert.notEqual(ancien.status, 0);
   assert.match(ancien.stderr, /ne sait pas poser une personne detouree/);

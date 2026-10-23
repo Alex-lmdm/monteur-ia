@@ -78,7 +78,12 @@ def matte() -> None:
         return
     print("• découpe de la personne (npx hyperframes remove-background, en local)…")
     MATTE.parent.mkdir(exist_ok=True)
-    run(["npx", "hyperframes", "remove-background", str(BASE), "-o", str(MATTE)], "la découpe a échoué")
+    # Même commande que le détourage du moteur (tools/build_faces.py) ; MONTEUR_HYPERFRAMES : une autre
+    # installation de hyperframes (tests).
+    import os
+    import shlex
+    hf = shlex.split(os.environ.get("MONTEUR_HYPERFRAMES") or "npx --no-install hyperframes")
+    run([*hf, "remove-background", str(BASE), "-o", str(MATTE)], "la découpe a échoué")
 
 
 def haut_de_tete() -> float:

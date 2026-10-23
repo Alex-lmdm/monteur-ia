@@ -37,8 +37,8 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import sections  # noqa: E402
-from cadrage import (COPIE, copie_zoom, crop_decor, crop_detoure, crops, face_source, fenetres_zoom,  # noqa: E402
-                     niveaux_zoom, scale_crop, zoom_crop)
+from cadrage import (COPIE, copie_zoom, crop_decor, crop_detoure, crops, face_source, fenetres_detoure,  # noqa: E402
+                     fenetres_zoom, niveaux_zoom, scale_crop, zoom_crop)
 from lieux import config  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -139,7 +139,10 @@ def main() -> None:
         sys.exit("ERREUR : assets/video/base.mp4 introuvable (fais d'abord le dérush).")
     split_wins, plein_wins = sections.face_windows(), sections.facefull_windows()
     decor_wins = getattr(sections, "decor_windows", lambda: [])()   # un sections.py d'avant n'en a pas
-    detoure_wins = getattr(sections, "detoure_windows", lambda: [])()
+    detoure_opts = fenetres_detoure(sections)
+    detoure_wins = [(st, d) for st, d, _ in detoure_opts]
+    # Le visage plein écran sert aussi au retour du visage après un passage détouré ({"visageRevient": …}).
+    plein_wins = plein_wins or [(st, d) for st, d, o in detoure_opts if "visageRevient" in o]
     montage = config().get("montage") or {}
     face_crop, full_crop = crops(montage)
     decor_crop = crop_decor(montage)

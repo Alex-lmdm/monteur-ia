@@ -60,6 +60,8 @@ DURATION = round(image(CUTS["duration"]), 5)   # duree du montage : un nombre en
 #               section peint le fond (page web, aplat, objets), la personne passe par-dessus.
 #               tools/build_faces.py prepare visage-detoure.webm (detourage local, la premiere fois :
 #               modele de 170 Mo a telecharger). Cadrage = montage.detoureTransform / detoureOrigin.
+#               Options : {"entree": "monte"} (la personne monte du bas), {"visageRevient": 0.9}
+#               (la video filmee plein ecran revient en fondu a 0,9 s).
 #
 #   {"media": "fichier.mp4"} -> la section n'est PAS une sous-composition : c'est une <video>
 #   posee directement dans le master (couche video NATIVE, compositee ensuite par ffmpeg).

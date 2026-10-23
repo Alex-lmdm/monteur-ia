@@ -22,8 +22,8 @@ construit et contrôlé sur une vraie vidéo. Le client les voit en vidéo dans 
 | 10 | Avis produit | @ugc.rachelll | présenter un produit testé, devant sa page | le lien de la page, ses vrais avis s'il en a |
 | 11 | Mon histoire | @anyway.julia | raconter son parcours façon carnet visuel | 5 à 10 de ses photos (sinon tirées de sa vidéo) |
 
-Les styles 10 et 11 détourent la personne sur l'ordinateur du client (quelques minutes, modèle de
-170 Mo téléchargé la première fois) : dis-le-lui avant de lancer.
+Les styles 3, 9, 10 et 11 détourent la personne sur l'ordinateur du client, gratuitement (quelques
+minutes, modèle de 170 Mo téléchargé la première fois) : dis-le-lui avant de lancer.
 
 ## Appliquer un style du catalogue
 

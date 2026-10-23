@@ -29,7 +29,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import sections
-from cadrage import copie_zoom, fenetres_zoom, niveau, niveaux_zoom
+from cadrage import copie_zoom, fenetres_detoure, fenetres_zoom, niveau, niveaux_zoom
 from lieux import config  # réglages du client, et ceux du Reel (reel.config.json)
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -43,8 +43,10 @@ FACES = sections.face_windows()          # visage en split (moitie basse)
 FACEFULL = sections.facefull_windows()   # visage PLEIN ECRAN (sections "face")
 # Video filmee plein ecran SOUS les cartes (sections "decor") ; un sections.py d'avant n'en a pas.
 DECOR = getattr(sections, "decor_windows", lambda: [])()
-# Personne detouree DEVANT les visuels (sections "detoure").
-DETOURE = getattr(sections, "detoure_windows", lambda: [])()
+# Personne detouree DEVANT les visuels (sections "detoure"), avec les options de chaque passage
+# (entree par le bas, retour du visage filme) : meme decoupage que tools/build_faces.py.
+DETOURE_OPTS = fenetres_detoure(sections)
+DETOURE = [(st, d) for st, d, _ in DETOURE_OPTS]
 
 # Transform par defaut du visage en split (calibre par /setup -> montage.splitTransform).
 DEFAULT_SPLIT_TRANSFORM = "translate(-216px, 410px) scale(1.40)"  # = repli crop de build_final.py
@@ -181,6 +183,24 @@ def calque_detoure(i: int, st: float, d: float) -> str:
 
 faces_detoure = "\n".join(calque_detoure(i, st, d) for i, (st, d) in enumerate(DETOURE))
 
+# Options des passages detoures, animees par la timeline du master (seek-safe) :
+#  - entree "monte" : la personne monte du bas en 0,4 s, floue au depart ;
+#  - visageRevient t : la video filmee plein ecran revient par-dessus, en fondu de 0,4 s, a t s.
+ANIMS_DETOURE, retours = [], []
+for i, (st, d, o) in enumerate(DETOURE_OPTS):
+    if o.get("entree") == "monte" and NATIF_DETOURE:
+        ANIMS_DETOURE.append(
+            f'\n      window.__timelines["main"].fromTo("#detoure{i}", {{ y: 1920, filter: "blur(18px)" }}, '
+            f'{{ y: 0, filter: "blur(0px)", duration: 0.4, ease: "power2.out" }}, {fenetre(st, 0.4)[0]});')
+    if "visageRevient" in o:
+        debut = st + o["visageRevient"]
+        retours.append(calque(f"faceretour{i}", SRC_PLEIN, debut, st + d - debut, 11))
+        ANIMS_DETOURE.append(
+            f'\n      window.__timelines["main"].fromTo("#faceretour{i}", {{ opacity: 0 }}, '
+            f'{{ opacity: 1, duration: 0.4, ease: "none" }}, {fenetre(debut, 0.4)[0]});')
+if retours:
+    faces_full = "\n".join([faces_full, *retours]) if faces_full else "\n".join(retours)
+
 # --- sections : une sous-comp par ligne de LAYOUT --------------------------------------------
 # ⛔ Une section MEDIA (b-roll) est une <video> POSEE ICI, pas une sous-comp : dans une sous-comp
 # le `data-start="0"` de la video est relatif a la compo mais le runtime media le lit en ABSOLU
@@ -303,7 +323,7 @@ doc = f'''<!DOCTYPE html>
 
     <script>
       window.__timelines = window.__timelines || {{}};
-      window.__timelines["main"] = gsap.timeline({{ paused: true }});{zooms_js}
+      window.__timelines["main"] = gsap.timeline({{ paused: true }});{zooms_js}{"".join(ANIMS_DETOURE)}
     </script>
   </body>
 </html>

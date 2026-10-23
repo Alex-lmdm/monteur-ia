@@ -227,6 +227,49 @@ def copie_zoom(fmt: str, n: int) -> str:
     return f"assets/video/visage-{COPIE[fmt]}-zoom-{n}.mp4"
 
 
+# --- personne détourée : options d'une section « detoure » --------------------------------------
+# {"entree": "monte"} : la personne monte du bas de l'image en 0,4 s, avec un flou de mouvement.
+# {"visageRevient": 0.9} : à 0,9 s dans la section, la vidéo filmée en plein écran (cadrage
+# `face`) revient par-dessus en fondu de 0,4 s. Pour un raccord sans saut, detoureTransform /
+# detoureOrigin = fullFaceTransform / fullFaceOrigin.
+def _options_detoure(entree) -> dict:
+    opts = (entree[3] if len(entree) > 3 else None) or {}
+    out = {}
+    if opts.get("entree") not in (None, "monte"):
+        raise SystemExit(f"ERREUR : section {entree[0]} : entree {opts.get('entree')!r} inconnue (\"monte\").")
+    if opts.get("entree"):
+        out["entree"] = "monte"
+    if opts.get("visageRevient") is not None:
+        v = _nombre(opts.get("visageRevient"), 0.1, 60)
+        if v is None:
+            raise SystemExit(f"ERREUR : section {entree[0]} : visageRevient {opts.get('visageRevient')!r} invalide "
+                             "(secondes depuis le début de la section).")
+        out["visageRevient"] = v
+    return out
+
+
+def fenetres_detoure(sec):
+    """Passages détourés [(début, durée, options)] : contigus fusionnés, sauf une section qui a ses
+    propres options (entrée, retour du visage), qui garde sa fenêtre. Même découpage pour
+    tools/build_faces.py (une vidéo détourée par passage) et tools/build_master.py."""
+    wins = []
+    for s, entree in zip(sec.sections(), sec.LAYOUT):
+        if s["fmt"] != "detoure":
+            continue
+        o = _options_detoure(entree)
+        if wins and abs(wins[-1][1] - s["start"]) < 1e-6 and not o and not wins[-1][2]:
+            wins[-1] = (wins[-1][0], s["end"], o)
+        else:
+            wins.append((s["start"], s["end"], o))
+    out = []
+    for a, b, o in wins:
+        if o.get("visageRevient", 0) >= b - a:
+            raise SystemExit(f"ERREUR : passage détouré à {a:.2f} s : visageRevient ({o['visageRevient']} s) après la "
+                             f"fin de la section ({b - a:.2f} s).")
+        out.append((round(a, 3), round(b - a, 3), o))
+    return out
+
+
 def probe(path):
     """(largeur, hauteur, color_transfer, durée) du flux vidéo."""
     out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries",
