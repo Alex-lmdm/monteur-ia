@@ -14,7 +14,8 @@ fait donc en ffmpeg, en recomposant les couches natives :
 
     fond de marque
       + le VISAGE croppe dans le DERUSH EN PLEINE RESOLUTION (moitie basse sur les sections
-        "split", plein cadre sur les sections "face")
+        "split", plein cadre sur les sections "face", cadre entier sous les cartes des sections
+        "decor")
       + les B-ROLLS (sections {"media": ...}), eux aussi natifs
       + work/overlay.mov : tout le motion design + les sous-titres (alpha)
       + l'audio de base.mp4
@@ -53,6 +54,14 @@ SEC = sections.sections()
 DUR = sections.DURATION
 WINS = sections.face_windows()          # visage en split (moitie basse)
 WINSFULL = sections.facefull_windows()  # visage plein ecran (sections "face")
+WINSDECOR = getattr(sections, "decor_windows", lambda: [])()  # video sous les cartes (sections "decor")
+if getattr(sections, "detoure_windows", lambda: [])():
+    sys.exit("Cet ancien export ne sait pas poser une personne detouree devant les visuels (sections "
+             "\"detoure\") : exporte avec le bouton Export de l'app, ou npm run render.")
+from cadrage import fenetres_zoom  # noqa: E402
+if any(z[0] != 1 for fmt in ("decor", "face", "split") for _, _, z in fenetres_zoom(sections, fmt)):
+    sys.exit("Cet ancien export ne sait pas zoomer une section (option \"zoom\" de tools/sections.py) : "
+             "exporte avec le bouton Export de l'app, ou npm run render.")
 MEDIAS = [s for s in SEC if s.get("media")]
 
 
@@ -60,7 +69,7 @@ CFG = (config().get("montage") or {})
 
 
 # Le calcul du cadrage est partagé avec tools/build_faces.py (export natif) : même zone du rush.
-from cadrage import crops, face_source as _face_source, scale_crop  # noqa: E402
+from cadrage import crop_decor, crops, face_source as _face_source, scale_crop  # noqa: E402
 
 FACE_CROP, FULLFACE_CROP = crops(CFG)
 
@@ -85,6 +94,8 @@ FACE_SRC, K, REPLI = face_source()
 FW, FH = round(1080 * K), round(1920 * K)
 FACE_CROP_SRC = scale_crop(FACE_CROP, K, FW, FH)
 FULLFACE_CROP_SRC = scale_crop(FULLFACE_CROP, K, FW, FH)
+# Video sous les cartes : la zone de montage.decorTransform, sinon le cadre entier tel que filme.
+DECOR_CROP_SRC = scale_crop(crop_decor(CFG) or "1080:1920:0:0", K, FW, FH)
 
 # Fond de l'export : resolu par brand_style (preset + brand.config.json), jamais en dur.
 BG = brand_style.style().bg_hex
@@ -92,24 +103,23 @@ parts = [f"color=c=0x{BG}:s=1080x1920:r=30000/1001:d={DUR}[bg];"]
 
 # --- le visage, croppe dans le derush pleine resolution (sinon base.mp4) --------------------
 # L'entree du visage est la DERNIERE (apres les b-rolls) ; base.mp4 (entree 0) fournit le son.
+# Une couche par cadrage utilise : visage en split, visage plein ecran, video sous les cartes (decor).
 fin = f"[{2 + len(MEDIAS)}:v]"
-if WINS and WINSFULL:
-    parts += [
-        f"{fin}split=2[b0][b1];",
-        f"[b0]crop={FACE_CROP_SRC},scale=1080:1000:flags=lanczos[face];",
-        f"[b1]crop={FULLFACE_CROP_SRC},scale=1080:1920:flags=lanczos[facefull];",
-        f"[bg][face]overlay=0:920:enable='{enable(WINS)}'[v1];",
-        f"[v1][facefull]overlay=0:0:enable='{enable(WINSFULL)}'[v2];",
-    ]
-    last = "[v2]"
-elif WINSFULL:
-    parts += [f"{fin}crop={FULLFACE_CROP_SRC},scale=1080:1920:flags=lanczos[facefull];",
-              f"[bg][facefull]overlay=0:0:enable='{enable(WINSFULL)}'[v1];"]
-    last = "[v1]"
+COUCHES = [(nom, crop, taille, pos, wins) for nom, crop, taille, pos, wins in (
+    ("face", FACE_CROP_SRC, "1080:1000", "0:920", WINS),
+    ("facefull", FULLFACE_CROP_SRC, "1080:1920", "0:0", WINSFULL),
+    ("decor", DECOR_CROP_SRC, "1080:1920", "0:0", WINSDECOR),
+) if wins] or [("face", FACE_CROP_SRC, "1080:1000", "0:920", WINS)]
+if len(COUCHES) > 1:
+    parts.append(f"{fin}split={len(COUCHES)}" + "".join(f"[b{i}]" for i in range(len(COUCHES))) + ";")
+    entrees = [f"[b{i}]" for i in range(len(COUCHES))]
 else:
-    parts += [f"{fin}crop={FACE_CROP_SRC},scale=1080:1000:flags=lanczos[face];",
-              f"[bg][face]overlay=0:920:enable='{enable(WINS)}'[v1];"]
-    last = "[v1]"
+    entrees = [fin]
+last = "[bg]"
+for i, (nom, crop, taille, pos, wins) in enumerate(COUCHES):
+    parts += [f"{entrees[i]}crop={crop},scale={taille}:flags=lanczos[{nom}];",
+              f"{last}[{nom}]overlay={pos}:enable='{enable(wins)}'[v{i + 1}];"]
+    last = f"[v{i + 1}]"
 
 # --- les b-rolls : couche video NATIVE, sous le calque (pour que les sous-titres passent dessus)
 inputs_media = []
@@ -135,6 +145,8 @@ if REPLI:
 print(f"crop visage split       : {FACE_CROP}  -> {FACE_CROP_SRC} dans la source")
 if WINSFULL:
     print(f"crop visage plein ecran : {FULLFACE_CROP}  -> {FULLFACE_CROP_SRC} dans la source")
+if WINSDECOR:
+    print(f"video sous les cartes   : {DECOR_CROP_SRC} dans la source")
 if MEDIAS:
     print(f"b-rolls natifs          : {', '.join(s['media'] for s in MEDIAS)}")
 print("composite ...")

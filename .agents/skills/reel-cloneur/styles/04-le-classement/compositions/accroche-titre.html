@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°04 « LE CLASSEMENT » · PIÈCE : LE TITRE D'ACCROCHE                     ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ CE QUE C'EST : le gros titre deux couleurs posé au-dessus de la tête, sur la    ║
+    ║   vidéo filmée entière (décor compris) : 1re ligne en texte (blanc), les       ║
+    ║   suivantes en accent (jaune), contour épais, sans fond. Fixe, présent dès la  ║
+    ║   1re image (l'original ne l'anime pas).                                       ║
+    ║ TAILLE : 1080×1920, section « decor » (fond TRANSPARENT : la vidéo est dessous). ║
+    ║ QUAND : la 1re phrase seulement (l'accroche), jusqu'à la 1re coupe (~2 s).      ║
+    ║ À REMPLACER :                                                                  ║
+    ║   1. L'id « accroche-titre » PARTOUT par l'id de la section (ex. s0-accroche).  ║
+    ║   2. data-duration de la racine et du .titre = durée de la 1re section.         ║
+    ║   3. Les 3 lignes : le sujet du classement en 2 à 6 mots (ligne blanche courte,  ║
+    ║      puis 2 lignes jaunes). Largeur max 880 px : à 140 px une ligne tient ~9    ║
+    ║      caractères, à 90 px ~14 ; mesure-la sur assets/fonts/ArchivoBlack-400.ttf. ║
+    ║      Aucun chiffre que la vidéo ne dit pas (l'original met l'année qu'il dit).  ║
+    ║   4. top du .titre (360 px ici) : le bas du titre doit rester ~150 px au-dessus ║
+    ║      du haut de la tête (montage.decorTransform la fait descendre, fiche §      ║
+    ║      « Règle de recadrage »), les sous-titres se posant entre les deux          ║
+    ║      (tools/sections.py → Y_DECOR = bas du titre + ~50 px).                    ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    /* Racine plein cadre SANS fond : la vidéo filmée est dessous (section decor). */
+    #accroche-titre { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      color:var(--brand-text); font-family:var(--brand-font-captions); }
+    #accroche-titre * { box-sizing:border-box; margin:0; padding:0; }
+    #accroche-titre .titre { position:absolute; left:60px; right:60px; top:360px; display:flex;
+      flex-direction:column; align-items:center; text-align:center; text-transform:uppercase;
+      line-height:0.98; white-space:nowrap;
+      -webkit-text-stroke:12px var(--brand-stroke); paint-order:stroke fill; }
+    #accroche-titre .blanc { color:var(--brand-text); font-size:140px; }
+    #accroche-titre .jaune { color:var(--brand-accent); font-size:90px; }
+  </style>
+</head>
+<body>
+  <div id="accroche-titre" data-composition-id="accroche-titre" data-start="0" data-duration="2"
+       data-fps="30" data-width="1080" data-height="1920">
+    <!-- LE TITRE : à remplacer par le sujet du classement (3 lignes, la 1re en blanc). -->
+    <div id="accroche-titre-texte" class="titre clip" data-start="0" data-duration="2" data-track-index="1">
+      <span class="blanc">MON TOP</span>
+      <span class="jaune">DES OUTILS</span>
+      <span class="jaune">À ESSAYER</span>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'accroche-titre';
+      window.__timelines = window.__timelines || {};
+      // Titre fixe dès la 1re image, comme l'original : la timeline reste vide.
+      window.__timelines[ID] = gsap.timeline({ paused: true });
+    })();
+  </script>
+</body>
+</html>

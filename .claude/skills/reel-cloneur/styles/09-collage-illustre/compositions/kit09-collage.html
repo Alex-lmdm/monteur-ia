@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    KIT N°09 « COLLAGE ILLUSTRÉ » · PIÈCE : COLLAGE PLEIN ÉCRAN (section FULL, 1080x1920, 6 s d'exemple)
+    Ce que c'est : le cœur du style. Une feuille de papier (kit09-fond-papier) et, posés dessus, une
+    illustration DÉCOUPÉE qui monte du bas avec un flou de mouvement (0,42 s), des mots tapés à la
+    machine sur des bandes de papier blanc (lettre par lettre, 0,045 s par lettre), un trait de craie ;
+    puis une deuxième scène poussée de droite à gauche (0,45 s, flou) avec changement de teinte du
+    papier : étiquettes de logos en papier déchiré posées en tampon, croix ocre, lettres découpées.
+    Quand : chaque fois que la voix explique (55 à 60 % de la vidéo) ; un élément nouveau toutes les
+    1 à 1,5 s, jamais deux à la fois ; une nouvelle scène (poussée) à chaque nouvelle idée.
+    Zone utile : x 100 à 980, y 260 à 1420 (sous-titres à y 1550, ne rien poser entre 1480 et 1620).
+    Garde « timelines » de tools/check_export.py : rien de visible dans la bande x 200-900, y 900-1200
+    pendant les 0,2 premières secondes de la section (la découpe entre à 0,24 s).
+    À remplacer : l'emplacement de la découpe ; les mots tapés ; les logos ; le mot en lettres
+    découpées ; les temps (sur les mots dits) ; le moment de la poussée (changement d'idée).
+    Couleurs : var(--brand-*) seulement (fond = --brand-bg, 2e papier = --brand-surface, papier
+    chaud = mélange fond + accent, blanc des bandes et des étiquettes = --brand-text, encre = --brand-bg,
+    bandeau et traits forts = --brand-accent, impression passée = --brand-muted) : le reel.config.json du
+    kit les règle. Polices : Inter (réglages), « Courier Prime » (machine à écrire, --brand-font-accent) et « Abril
+    Fatface » (mot-clé, --brand-font-display), livrées avec Monteur IA (licences OFL
+    jointes) ; sans elles, repli sur var(--brand-font-mono) / var(--brand-font-display).
+    Temps : en secondes depuis le début de la section, à caler sur les mots
+    (derush/<vidéo>_words.json) ; data-duration du calque et de la racine = durée de la section.
+    Tout est déterministe : formes déchirées précalculées, aucun hasard au rendu.
+    Renommer la pièce = renommer l'id PARTOUT (racine, data-composition-id, calque, filtres
+    #<id>-craie/-grain/-taches, constante ID du script), et garder un id différent de toute classe.
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #kit09-collage { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden; background:transparent;
+      --kit-machine: var(--brand-font-accent), var(--brand-font-mono); --kit-titre: var(--brand-font-display), var(--brand-font-display);
+      --kit-blanc: var(--brand-text); --kit-encre: var(--brand-bg);
+      --kit-ombre: color-mix(in srgb, var(--brand-stroke) 55%, transparent); }
+    #kit09-collage * { box-sizing:border-box; margin:0; padding:0; }
+    #kit09-collage .calque { position:absolute; inset:0; }
+    /* Papier : teinte (--p) + trame de points + plis ; le grain et les taches viennent de .grain. */
+    #kit09-collage .papier { position:absolute; inset:0; background:var(--p); }
+    #kit09-collage .trame { position:absolute; inset:0; opacity:.55;
+      background-image: radial-gradient(color-mix(in srgb, var(--brand-text) 11%, transparent) 1.4px, transparent 2px);
+      background-size: 9px 9px;
+      -webkit-mask-image: radial-gradient(ellipse 60% 40% at 18% 22%, var(--brand-text) 0%, transparent 70%), radial-gradient(ellipse 55% 35% at 85% 78%, var(--brand-text) 0%, transparent 70%);
+      mask-image: radial-gradient(ellipse 60% 40% at 18% 22%, var(--brand-text) 0%, transparent 70%), radial-gradient(ellipse 55% 35% at 85% 78%, var(--brand-text) 0%, transparent 70%); }
+    #kit09-collage .pli-v { position:absolute; top:0; bottom:0; left:102px; width:7px;
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-text) 22%, transparent) 40%, color-mix(in srgb, var(--brand-stroke) 45%, transparent) 60%, transparent); }
+    #kit09-collage .pli-h { position:absolute; left:0; right:0; top:1300px; height:6px; rotate:-.35deg;
+      background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--brand-text) 18%, transparent) 45%, color-mix(in srgb, var(--brand-stroke) 40%, transparent) 60%, transparent); }
+    #kit09-collage .impression { position:absolute; inset:0; overflow:hidden; opacity:.075; }
+    #kit09-collage .imp-l { position:absolute; white-space:nowrap; font-family:var(--brand-font-accent); font-size:34px; letter-spacing:.08em; color:var(--brand-muted); }
+    #kit09-collage .imp-m { scale:-1 1; }
+    #kit09-collage .grain { position:absolute; inset:0; width:1080px; height:1920px; pointer-events:none; }
+    #kit09-collage .grain .taches { fill:var(--brand-text); opacity:.045; }
+    #kit09-collage .grain .poussiere { fill:var(--brand-text); opacity:.55; }
+    #kit09-collage .vignette { position:absolute; inset:0; background: radial-gradient(ellipse 75% 65% at 50% 45%, transparent 55%, color-mix(in srgb, var(--brand-stroke) 50%, transparent) 100%); }
+    #kit09-collage .scene { position:absolute; inset:0; }
+    /* Découpes : photo détourée, ombre portée de papier collé. */
+    #kit09-collage .decoupe { position:absolute; }
+    #kit09-collage .dc-ombre { filter: drop-shadow(0 20px 22px var(--kit-ombre)); }
+    #kit09-collage .dc-boite { overflow:hidden; }
+    #kit09-collage .decoupe img { display:block; width:100%; height:auto; }
+    /* Étiquettes : logo sur un carré de papier blanc déchiré. */
+    #kit09-collage .etiquette { position:absolute; }
+    #kit09-collage .et-ombre { position:absolute; inset:0; filter: drop-shadow(0 14px 16px var(--kit-ombre)); }
+    #kit09-collage .et-papier { position:absolute; inset:0; background:var(--kit-blanc); display:flex; align-items:center; justify-content:center; }
+    #kit09-collage .et-papier img { width:64%; height:64%; object-fit:contain; }
+    /* Mot machine à écrire : chaque lettre porte son bout de bande blanche (la bande s'allonge). */
+    #kit09-collage .bande { position:absolute; display:flex; white-space:nowrap; font-family:var(--brand-font-accent); font-weight:400;
+      color:var(--kit-encre); line-height:1; filter: drop-shadow(0 8px 10px var(--kit-ombre)); }
+    #kit09-collage .bande i { font-style:normal; background:var(--kit-blanc); padding:.16em 0 .12em; }
+    #kit09-collage .bande i:first-child { padding-left:.32em; }
+    #kit09-collage .bande i:last-child { padding-right:.32em; }
+    /* Lettres découpées (lettre de rançon) : une lettre = un bout de papier. */
+    #kit09-collage .rancon { position:absolute; display:flex; align-items:center; gap:.08em; font-family:var(--brand-font-accent);
+      color:var(--kit-encre); line-height:1; filter: drop-shadow(0 8px 10px var(--kit-ombre)); }
+    #kit09-collage .rancon b { display:block; font-weight:400; background:var(--kit-blanc); padding:.1em .14em .08em; }
+    #kit09-collage .rancon b.gras { font-weight:700; }
+    #kit09-collage .rancon b.esp { width:.4em; background:none; padding:0; }
+    /* Craie : trait tracé à la main, grain de craie par le filtre. */
+    #kit09-collage .craie { position:absolute; overflow:visible; fill:none; stroke-linecap:round; stroke-linejoin:round; filter:url(#kit09-collage-craie); }
+    #kit09-collage .craie path { stroke-dasharray:1; stroke-dashoffset:1; }
+    #kit09-collage .encre-text { stroke:var(--brand-text); }
+    #kit09-collage .encre-accent { stroke:var(--brand-accent); }
+    #kit09-collage .emplacement { height:100%; display:flex; align-items:center; justify-content:center;
+      border:6px dashed color-mix(in srgb, var(--brand-text) 45%, transparent);
+      background:color-mix(in srgb, var(--brand-text) 6%, transparent);
+      font-family:var(--brand-font-accent); font-size:40px; letter-spacing:.12em; color:var(--brand-muted); }
+    #kit09-collage .et-logo { font-family:var(--brand-font-accent); font-weight:700; font-size:44px; letter-spacing:.1em; color:var(--brand-bg); }
+  </style>
+</head>
+<body>
+  <div id="kit09-collage" data-composition-id="kit09-collage" data-start="0" data-duration="6.0" data-fps="30" data-width="1080" data-height="1920">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <filter id="kit09-collage-craie" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/></filter>
+      <filter id="kit09-collage-grain" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="4"/><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  11 0 0 0 -8.1"/><feComposite in="SourceGraphic" operator="in"/></filter>
+      <filter id="kit09-collage-taches" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.0045" numOctaves="4" seed="9"/><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3.4 0 0 0 -1.5"/><feComposite in="SourceGraphic" operator="in"/></filter>
+    </svg>
+    <div id="kit09-collage-calque" class="clip calque" data-start="0" data-duration="6.0" data-track-index="0">
+      <div class="papier pp-a" style="--p:var(--brand-bg);opacity:1.0"><div class="trame"></div><div class="pli-v"></div><div class="pli-h"></div></div>
+      <div class="papier pp-b" style="--p:var(--brand-surface);opacity:0"><div class="trame"></div><div class="impression" data-layout-ignore><div class="imp-l" style="top:70px;left:-156px">ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE · ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE ·</div><div class="imp-l imp-m" style="top:142px;left:-11px">LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE · LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE ·</div><div class="imp-l" style="top:214px;left:-6px">COURRIER DES LECTEURS · PETITES ANNONCES · COURRIER DES LECTEURS · PETITES ANNONCES ·</div><div class="imp-l" style="top:286px;left:14px">ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE · ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE ·</div><div class="imp-l" style="top:358px;left:-79px">LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE · LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE ·</div><div class="imp-l imp-m" style="top:430px;left:-134px">COURRIER DES LECTEURS · PETITES ANNONCES · COURRIER DES LECTEURS · PETITES ANNONCES ·</div><div class="imp-l" style="top:502px;left:-73px">ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE · ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE ·</div><div class="imp-l" style="top:574px;left:-153px">LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE · LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE ·</div><div class="imp-l" style="top:646px;left:-144px">COURRIER DES LECTEURS · PETITES ANNONCES · COURRIER DES LECTEURS · PETITES ANNONCES ·</div><div class="imp-l imp-m" style="top:718px;left:-138px">ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE · ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE ·</div><div class="imp-l" style="top:790px;left:-110px">LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE · LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE ·</div><div class="imp-l" style="top:862px;left:-125px">COURRIER DES LECTEURS · PETITES ANNONCES · COURRIER DES LECTEURS · PETITES ANNONCES ·</div><div class="imp-l" style="top:934px;left:-52px">ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE · ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE ·</div><div class="imp-l imp-m" style="top:1006px;left:-12px">LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE · LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE ·</div><div class="imp-l" style="top:1078px;left:-44px">COURRIER DES LECTEURS · PETITES ANNONCES · COURRIER DES LECTEURS · PETITES ANNONCES ·</div><div class="imp-l" style="top:1150px;left:-121px">ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE · ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE ·</div><div class="imp-l" style="top:1222px;left:-79px">LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE · LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE ·</div><div class="imp-l imp-m" style="top:1294px;left:-30px">COURRIER DES LECTEURS · PETITES ANNONCES · COURRIER DES LECTEURS · PETITES ANNONCES ·</div><div class="imp-l" style="top:1366px;left:33px">ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE · ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE ·</div><div class="imp-l" style="top:1438px;left:-85px">LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE · LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE ·</div><div class="imp-l" style="top:1510px;left:26px">COURRIER DES LECTEURS · PETITES ANNONCES · COURRIER DES LECTEURS · PETITES ANNONCES ·</div><div class="imp-l imp-m" style="top:1582px;left:-20px">ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE · ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE ·</div><div class="imp-l" style="top:1654px;left:20px">LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE · LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE ·</div><div class="imp-l" style="top:1726px;left:-145px">COURRIER DES LECTEURS · PETITES ANNONCES · COURRIER DES LECTEURS · PETITES ANNONCES ·</div><div class="imp-l" style="top:1798px;left:-15px">ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE · ÉDITION DU SOIR · LES NOUVELLES DU JOUR · CHRONIQUE ·</div><div class="imp-l imp-m" style="top:1870px;left:-68px">LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE · LE MARCHÉ OUVRE EN HAUSSE · DERNIÈRE HEURE ·</div></div><div class="pli-v"></div><div class="pli-h"></div></div>
+      <svg class="grain" viewBox="0 0 1080 1920" preserveAspectRatio="none" aria-hidden="true"><rect class="taches" width="1080" height="1920" filter="url(#kit09-collage-taches)"/><rect class="poussiere" width="1080" height="1920" filter="url(#kit09-collage-grain)"/></svg><div class="vignette"></div>
+      <!-- SCÈNE 1 : une découpe qui monte du bas (flou de mouvement), des mots tapés à la machine à côté, un trait de craie. -->
+      <div class="scene sc-a">
+      <!-- À REMPLACER : la découpe (PNG détouré : une image de la vidéo du client passée par npx hyperframes remove-background, ou une image CC0 / domaine public). Remplace le div .emplacement par <img src="assets/images/<ta-decoupe>.png" alt="">. -->
+      <div class="decoupe dc1" style="left:60px;top:520px;width:600px"><div class="dc-ombre"><div class="dc-boite" style="height:760px;clip-path:polygon(0.0px 0.0px,16.2px 0.0px,32.4px 0.0px,48.6px 0.0px,64.9px 0.0px,81.1px 0.0px,97.3px 0.0px,113.5px 0.0px,129.7px 0.0px,145.9px 0.0px,162.2px 0.0px,178.4px 0.0px,194.6px 0.0px,210.8px 0.0px,227.0px 0.0px,243.2px 0.0px,259.5px 0.0px,275.7px 0.0px,291.9px 0.0px,308.1px 0.0px,324.3px 0.0px,340.5px 0.0px,356.8px 0.0px,373.0px 0.0px,389.2px 0.0px,405.4px 0.0px,421.6px 0.0px,437.8px 0.0px,454.1px 0.0px,470.3px 0.0px,486.5px 0.0px,502.7px 0.0px,518.9px 0.0px,535.1px 0.0px,551.4px 0.0px,567.6px 0.0px,583.8px 0.0px,600.0px 0.0px,600.0px 16.2px,600.0px 32.3px,600.0px 48.5px,600.0px 64.7px,600.0px 80.9px,600.0px 97.0px,600.0px 113.2px,600.0px 129.4px,600.0px 145.5px,600.0px 161.7px,600.0px 177.9px,600.0px 194.0px,600.0px 210.2px,600.0px 226.4px,600.0px 242.6px,600.0px 258.7px,600.0px 274.9px,600.0px 291.1px,600.0px 307.2px,600.0px 323.4px,600.0px 339.6px,600.0px 355.7px,600.0px 371.9px,600.0px 388.1px,600.0px 404.3px,600.0px 420.4px,600.0px 436.6px,600.0px 452.8px,600.0px 468.9px,600.0px 485.1px,600.0px 501.3px,600.0px 517.4px,600.0px 533.6px,600.0px 549.8px,600.0px 566.0px,600.0px 582.1px,600.0px 598.3px,600.0px 614.5px,600.0px 630.6px,600.0px 646.8px,600.0px 663.0px,600.0px 679.1px,600.0px 695.3px,600.0px 711.5px,600.0px 727.7px,600.0px 743.8px,600.0px 759.5px,583.8px 762.8px,567.6px 759.8px,551.4px 761.5px,535.1px 754.0px,518.9px 758.2px,502.7px 762.4px,486.5px 763.5px,470.3px 763.4px,454.1px 759.7px,437.8px 756.8px,421.6px 758.3px,405.4px 764.9px,389.2px 765.3px,373.0px 763.1px,356.8px 760.0px,340.5px 755.1px,324.3px 760.9px,308.1px 764.2px,291.9px 757.8px,275.7px 757.4px,259.5px 763.9px,243.2px 763.9px,227.0px 764.9px,210.8px 758.4px,194.6px 761.3px,178.4px 765.2px,162.2px 758.1px,145.9px 755.8px,129.7px 764.5px,113.5px 761.4px,97.3px 754.7px,81.1px 762.7px,64.9px 761.0px,48.6px 765.1px,32.4px 764.0px,16.2px 761.0px,0.0px 760.0px,0.0px 743.8px,0.0px 727.7px,0.0px 711.5px,0.0px 695.3px,0.0px 679.1px,0.0px 663.0px,0.0px 646.8px,0.0px 630.6px,0.0px 614.5px,0.0px 598.3px,0.0px 582.1px,0.0px 566.0px,0.0px 549.8px,0.0px 533.6px,0.0px 517.4px,0.0px 501.3px,0.0px 485.1px,0.0px 468.9px,0.0px 452.8px,0.0px 436.6px,0.0px 420.4px,0.0px 404.3px,0.0px 388.1px,0.0px 371.9px,0.0px 355.7px,0.0px 339.6px,0.0px 323.4px,0.0px 307.2px,0.0px 291.1px,0.0px 274.9px,0.0px 258.7px,0.0px 242.6px,0.0px 226.4px,0.0px 210.2px,0.0px 194.0px,0.0px 177.9px,0.0px 161.7px,0.0px 145.5px,0.0px 129.4px,0.0px 113.2px,0.0px 97.0px,0.0px 80.9px,0.0px 64.7px,0.0px 48.5px,0.0px 32.3px,0.0px 16.2px)"><div class="emplacement">TA DÉCOUPE ICI</div></div></div></div>
+      <!-- À REMPLACER : les mots tapés (1 à 3 mots chacun, les mots forts de la voix, au moment où ils sont dits). -->
+      <div class="bande bd2" style="left:600px;top:560px;rotate:-3deg;font-size:44px"><i data-layout-allow-occlusion class="l0">p</i><i data-layout-allow-occlusion class="l1">r</i><i data-layout-allow-occlusion class="l2">e</i><i data-layout-allow-occlusion class="l3">m</i><i data-layout-allow-occlusion class="l4">i</i><i data-layout-allow-occlusion class="l5">e</i><i data-layout-allow-occlusion class="l6">r</i><i data-layout-allow-occlusion class="l7">&nbsp;</i><i data-layout-allow-occlusion class="l8">m</i><i data-layout-allow-occlusion class="l9">o</i><i data-layout-allow-occlusion class="l10">t</i></div>
+      <div class="bande bd3" style="left:640px;top:680px;rotate:2deg;font-size:44px"><i data-layout-allow-occlusion class="l0">d</i><i data-layout-allow-occlusion class="l1">e</i><i data-layout-allow-occlusion class="l2">u</i><i data-layout-allow-occlusion class="l3">x</i><i data-layout-allow-occlusion class="l4">i</i><i data-layout-allow-occlusion class="l5">è</i><i data-layout-allow-occlusion class="l6">m</i><i data-layout-allow-occlusion class="l7">e</i></div>
+      <div class="bande bd4" style="left:610px;top:800px;rotate:-2deg;font-size:44px"><i data-layout-allow-occlusion class="l0">t</i><i data-layout-allow-occlusion class="l1">r</i><i data-layout-allow-occlusion class="l2">o</i><i data-layout-allow-occlusion class="l3">i</i><i data-layout-allow-occlusion class="l4">s</i><i data-layout-allow-occlusion class="l5">i</i><i data-layout-allow-occlusion class="l6">è</i><i data-layout-allow-occlusion class="l7">m</i><i data-layout-allow-occlusion class="l8">e</i></div>
+      <svg class="craie cr5 encre-text" viewBox="0 0 300 300" style="left:560px;top:520px;width:420px;height:420px;rotate:0.0deg" stroke-width="6.4" aria-hidden="true"><path class="p0" d="M150 20 C 240 18 286 80 280 156 C 274 236 206 284 140 280 C 66 276 18 214 22 146 C 26 82 78 34 168 30" pathLength="1"/></svg>
+      </div>
+      <!-- SCÈNE 2 (poussée de droite à gauche, papier qui change de teinte) : étiquettes de logos posées en tampon, une croix ocre, des lettres découpées. -->
+      <div class="scene sc-b">
+      <!-- À REMPLACER : le logo de la marque citée (skill thesvg, couleurs d'origine, variante sombre sur papier blanc). Remplace le span par <img src="assets/logos/<marque>.svg" alt="">. -->
+      <div class="etiquette et6" style="left:170px;top:560px;width:260px;height:260px;rotate:-6deg"><div class="et-ombre"><div class="et-papier" style="clip-path:polygon(0.0px 1.6px,14.4px -3.1px,28.9px -2.6px,43.3px 2.7px,57.8px -1.0px,72.2px 0.5px,86.7px 2.2px,101.1px -4.2px,115.6px -0.8px,130.0px 3.2px,144.4px -3.0px,158.9px 1.7px,173.3px -2.2px,187.8px 1.8px,202.2px 4.9px,216.7px 0.2px,231.1px -4.9px,245.6px 1.0px,257.3px 0.0px,264.9px 14.4px,263.4px 28.9px,256.3px 43.3px,255.6px 57.8px,264.5px 72.2px,264.7px 86.7px,260.1px 101.1px,262.3px 115.6px,258.5px 130.0px,263.3px 144.4px,260.3px 158.9px,256.2px 173.3px,259.5px 187.8px,255.5px 202.2px,263.9px 216.7px,256.9px 231.1px,255.8px 245.6px,260.0px 261.4px,245.6px 255.3px,231.1px 261.2px,216.7px 256.5px,202.2px 256.6px,187.8px 255.2px,173.3px 258.5px,158.9px 258.5px,144.4px 262.1px,130.0px 260.7px,115.6px 264.9px,101.1px 260.2px,86.7px 255.2px,72.2px 262.3px,57.8px 261.0px,43.3px 258.7px,28.9px 258.5px,14.4px 260.3px,-4.8px 260.0px,2.3px 245.6px,-1.1px 231.1px,3.8px 216.7px,-3.6px 202.2px,-1.5px 187.8px,1.8px 173.3px,-0.8px 158.9px,3.6px 144.4px,-3.3px 130.0px,-3.3px 115.6px,3.4px 101.1px,-1.4px 86.7px,-2.8px 72.2px,-0.1px 57.8px,-4.6px 43.3px,0.7px 28.9px,-0.2px 14.4px)"><span class="et-logo">LOGO</span></div></div></div>
+      <!-- À REMPLACER : le logo de la marque citée (skill thesvg, couleurs d'origine, variante sombre sur papier blanc). Remplace le span par <img src="assets/logos/<marque>.svg" alt="">. -->
+      <div class="etiquette et7" style="left:610px;top:650px;width:260px;height:260px;rotate:5deg"><div class="et-ombre"><div class="et-papier" style="clip-path:polygon(0.0px 2.8px,14.4px -3.1px,28.9px 2.9px,43.3px -4.3px,57.8px -3.0px,72.2px 0.2px,86.7px -4.1px,101.1px 1.8px,115.6px -4.0px,130.0px -3.5px,144.4px -3.5px,158.9px -4.0px,173.3px -4.5px,187.8px 3.1px,202.2px -1.3px,216.7px 2.7px,231.1px 0.1px,245.6px 2.0px,257.8px 0.0px,263.6px 14.4px,261.9px 28.9px,260.5px 43.3px,260.8px 57.8px,258.3px 72.2px,258.1px 86.7px,259.9px 101.1px,257.2px 115.6px,261.5px 130.0px,264.1px 144.4px,258.3px 158.9px,262.7px 173.3px,259.1px 187.8px,261.0px 202.2px,262.0px 216.7px,264.9px 231.1px,262.4px 245.6px,260.0px 264.9px,245.6px 255.9px,231.1px 259.9px,216.7px 257.2px,202.2px 264.0px,187.8px 259.7px,173.3px 258.5px,158.9px 263.5px,144.4px 257.1px,130.0px 257.9px,115.6px 261.3px,101.1px 259.1px,86.7px 260.7px,72.2px 260.5px,57.8px 258.8px,43.3px 256.2px,28.9px 258.4px,14.4px 255.3px,3.4px 260.0px,5.0px 245.6px,1.0px 231.1px,0.7px 216.7px,-0.5px 202.2px,-4.2px 187.8px,1.7px 173.3px,0.7px 158.9px,-2.5px 144.4px,-0.6px 130.0px,1.1px 115.6px,-0.2px 101.1px,-3.2px 86.7px,1.1px 72.2px,4.0px 57.8px,-0.7px 43.3px,0.5px 28.9px,-4.6px 14.4px)"><span class="et-logo">LOGO</span></div></div></div>
+      <svg class="craie cr8 encre-accent" viewBox="0 0 300 300" style="left:550px;top:590px;width:370px;height:370px;rotate:0.0deg" stroke-width="12.2" aria-hidden="true"><path class="p0" d="M40 40 L260 262" pathLength="1"/><path class="p1" d="M262 38 L38 258" pathLength="1"/></svg>
+      <!-- À REMPLACER : le mot en lettres découpées (un nom, un chiffre DIT dans la vidéo). -->
+      <div class="rancon rc9" style="left:300px;top:1010px;rotate:-3deg;font-size:70px"><b class="l0" style="rotate:-1.4deg;translate:0 -6px">M</b><b class="l1 gras" style="rotate:-8.6deg;translate:0 1px">O</b><b class="l2" style="rotate:-0.5deg;translate:0 5px">T</b><b class="l3" style="rotate:-1.1deg;translate:0 -4px">-</b><b class="l4 gras" style="rotate:7.1deg;translate:0 -7px">C</b><b class="l5" style="rotate:8.2deg;translate:0 0px">L</b><b class="l6" style="rotate:0.3deg;translate:0 -4px">É</b></div>
+      <svg class="craie cr10 encre-accent" viewBox="0 0 130 130" style="left:180px;top:990px;width:110px;height:110px;rotate:0.0deg" stroke-width="10.6" aria-hidden="true"><path class="p0" d="M14 24 L80 40" pathLength="1"/><path class="p1" d="M4 66 L92 66" pathLength="1"/><path class="p2" d="M14 108 L80 92" pathLength="1"/></svg>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'kit09-collage';
+      var S = '#' + ID + ' ';
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      tl.fromTo(S+'.dc1', {y:950, opacity:0, filter:'blur(18px)'}, {y:0, opacity:1, filter:'blur(0px)', duration:.42, ease:'power3.out'}, 0.24);
+      tl.fromTo(S+'.bd2 .l0', {opacity:0}, {opacity:1, duration:.01}, 0.700);
+      tl.fromTo(S+'.bd2 .l1', {opacity:0}, {opacity:1, duration:.01}, 0.745);
+      tl.fromTo(S+'.bd2 .l2', {opacity:0}, {opacity:1, duration:.01}, 0.790);
+      tl.fromTo(S+'.bd2 .l3', {opacity:0}, {opacity:1, duration:.01}, 0.835);
+      tl.fromTo(S+'.bd2 .l4', {opacity:0}, {opacity:1, duration:.01}, 0.880);
+      tl.fromTo(S+'.bd2 .l5', {opacity:0}, {opacity:1, duration:.01}, 0.925);
+      tl.fromTo(S+'.bd2 .l6', {opacity:0}, {opacity:1, duration:.01}, 0.970);
+      tl.fromTo(S+'.bd2 .l7', {opacity:0}, {opacity:1, duration:.01}, 1.015);
+      tl.fromTo(S+'.bd2 .l8', {opacity:0}, {opacity:1, duration:.01}, 1.060);
+      tl.fromTo(S+'.bd2 .l9', {opacity:0}, {opacity:1, duration:.01}, 1.105);
+      tl.fromTo(S+'.bd2 .l10', {opacity:0}, {opacity:1, duration:.01}, 1.150);
+      tl.fromTo(S+'.bd3 .l0', {opacity:0}, {opacity:1, duration:.01}, 1.300);
+      tl.fromTo(S+'.bd3 .l1', {opacity:0}, {opacity:1, duration:.01}, 1.345);
+      tl.fromTo(S+'.bd3 .l2', {opacity:0}, {opacity:1, duration:.01}, 1.390);
+      tl.fromTo(S+'.bd3 .l3', {opacity:0}, {opacity:1, duration:.01}, 1.435);
+      tl.fromTo(S+'.bd3 .l4', {opacity:0}, {opacity:1, duration:.01}, 1.480);
+      tl.fromTo(S+'.bd3 .l5', {opacity:0}, {opacity:1, duration:.01}, 1.525);
+      tl.fromTo(S+'.bd3 .l6', {opacity:0}, {opacity:1, duration:.01}, 1.570);
+      tl.fromTo(S+'.bd3 .l7', {opacity:0}, {opacity:1, duration:.01}, 1.615);
+      tl.fromTo(S+'.bd4 .l0', {opacity:0}, {opacity:1, duration:.01}, 1.900);
+      tl.fromTo(S+'.bd4 .l1', {opacity:0}, {opacity:1, duration:.01}, 1.945);
+      tl.fromTo(S+'.bd4 .l2', {opacity:0}, {opacity:1, duration:.01}, 1.990);
+      tl.fromTo(S+'.bd4 .l3', {opacity:0}, {opacity:1, duration:.01}, 2.035);
+      tl.fromTo(S+'.bd4 .l4', {opacity:0}, {opacity:1, duration:.01}, 2.080);
+      tl.fromTo(S+'.bd4 .l5', {opacity:0}, {opacity:1, duration:.01}, 2.125);
+      tl.fromTo(S+'.bd4 .l6', {opacity:0}, {opacity:1, duration:.01}, 2.170);
+      tl.fromTo(S+'.bd4 .l7', {opacity:0}, {opacity:1, duration:.01}, 2.215);
+      tl.fromTo(S+'.bd4 .l8', {opacity:0}, {opacity:1, duration:.01}, 2.260);
+      tl.fromTo(S+'.cr5 .p0', {strokeDashoffset:1}, {strokeDashoffset:0, duration:0.350, ease:'power1.inOut'}, 2.450);
+      tl.set(S+'.sc-b', {x:1180}, 0);
+      tl.fromTo(S+'.et6', {scale:1.7, opacity:0}, {scale:1, opacity:1, duration:.22, ease:'back.out(2.2)'}, 3.40);
+      tl.fromTo(S+'.et7', {scale:1.7, opacity:0}, {scale:1, opacity:1, duration:.22, ease:'back.out(2.2)'}, 3.80);
+      tl.fromTo(S+'.cr8 .p0', {strokeDashoffset:1}, {strokeDashoffset:0, duration:0.110, ease:'power1.inOut'}, 4.400);
+      tl.fromTo(S+'.cr8 .p1', {strokeDashoffset:1}, {strokeDashoffset:0, duration:0.110, ease:'power1.inOut'}, 4.510);
+      tl.fromTo(S+'.rc9 .l0', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 4.900);
+      tl.fromTo(S+'.rc9 .l1', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 4.950);
+      tl.fromTo(S+'.rc9 .l2', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 5.000);
+      tl.fromTo(S+'.rc9 .l3', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 5.050);
+      tl.fromTo(S+'.rc9 .l4', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 5.100);
+      tl.fromTo(S+'.rc9 .l5', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 5.150);
+      tl.fromTo(S+'.rc9 .l6', {scale:1.9, opacity:0}, {scale:1, opacity:1, duration:.12, ease:'power2.out'}, 5.200);
+      tl.fromTo(S+'.cr10 .p0', {strokeDashoffset:1}, {strokeDashoffset:0, duration:0.050, ease:'power1.inOut'}, 5.050);
+      tl.fromTo(S+'.cr10 .p1', {strokeDashoffset:1}, {strokeDashoffset:0, duration:0.050, ease:'power1.inOut'}, 5.100);
+      tl.fromTo(S+'.cr10 .p2', {strokeDashoffset:1}, {strokeDashoffset:0, duration:0.050, ease:'power1.inOut'}, 5.150);
+      tl.to(S+'.cr10', {opacity:0, duration:.2}, 5.70);
+      tl.to(S+'.sc-a', {x:-1180, filter:'blur(14px)', duration:.45, ease:'power3.inOut'}, 3.00);
+      tl.fromTo(S+'.sc-b', {x:1180, filter:'blur(14px)'}, {x:0, filter:'blur(0px)', duration:.45, ease:'power3.inOut', immediateRender:false}, 3.00);
+      tl.fromTo(S+'.pp-b', {opacity:0}, {opacity:1, duration:.32, ease:'none', immediateRender:false}, 3.08);
+      tl.set({}, {}, 6.0);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

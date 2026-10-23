@@ -1,0 +1,19 @@
+{
+  "visual": {
+    "bg": "#15171c",
+    "accent": "#169dfa",
+    "surface": "#f7b548",
+    "text": "#ffffff",
+    "muted": "#8a8f99",
+    "fontDisplay": "ArchivoBlack",
+    "fontBody": "Inter",
+    "fontCaptions": "Inter",
+    "captionsSkin": "soft",
+    "captionsLines": 1,
+    "captionsSize": 48,
+    "captionsCase": "asis",
+    "captionsLineHeight": 1.2,
+    "captionsWeight": 600,
+    "fontAccent": "MrDafoe"
+  }
+}

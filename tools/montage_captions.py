@@ -55,6 +55,28 @@ if STYLE.captions_font_file is None:
     )
 # = --brand-cap-size, a la graisse affichee ; le texte mesure est celui qui s'affiche (casse comprise).
 FONT = ImageFont.truetype(str(STYLE.captions_font_file), STYLE.captions_size)
+
+
+def a_la_graisse(font, graisse, taille):
+    """Une police variable (un seul .ttf pour toutes les graisses) se mesure comme le navigateur
+    l'affiche : PIL la lit sinon a sa graisse par defaut (Thin pour Montserrat, 10 % plus etroite
+    qu'a 800, le sous-titre deborderait). Taille optique = la taille en px, comme le navigateur."""
+    try:
+        axes = font.get_variation_axes()
+    except (OSError, AttributeError):   # police fixe (ou PIL sans les polices variables)
+        return font
+    cibles = {"weight": graisse, "optical size": taille}
+    valeurs = []
+    for a in axes:
+        nom = a.get("name")
+        nom = (nom.decode("utf-8", "replace") if isinstance(nom, bytes) else str(nom or "")).lower()
+        v = cibles.get(nom, a["default"])
+        valeurs.append(min(max(v, a["minimum"]), a["maximum"]))
+    font.set_variation_by_axes(valeurs)
+    return font
+
+
+FONT = a_la_graisse(FONT, STYLE.captions_weight, STYLE.captions_size)
 MAXW_HARD = 900
 
 # Bornes de phrase = les VRAIES coupes (une prise = une phrase). Surtout PAS les timestamps
@@ -88,6 +110,26 @@ MANUAL = [
 # 4e, on compte depuis 0 comme dans <video>_words.json, signes seuls exclus). Utile quand la voix ne
 # dit pas le mot affiche (« commenter LE logo » sous-titre « LOGO », depart sur « le »).
 
+# --mots N (1 a 3) : le decoupage vient de la voix au lieu de MANUAL, N mots par sous-titre, tels
+# que la transcription les ecrit (ponctuation comprise). C'est le « mot a mot » des styles qui
+# l'imposent (style clone, style du catalogue) ; sans l'option, MANUAL reste la regle.
+MOTS = None
+if "--mots" in sys.argv:
+    try:
+        MOTS = int(sys.argv[sys.argv.index("--mots") + 1])
+    except (IndexError, ValueError):
+        MOTS = 0
+    if not 1 <= MOTS <= 3:
+        raise SystemExit("ERREUR : --mots attend 1, 2 ou 3 (le nombre de mots par sous-titre).")
+# --sans s0-hook,s5 : aucun sous-titre dans ces sections (une accroche ou une carte qui porte deja le
+# texte, quand le style le veut). Sans l'option, toutes les sections en ont.
+SANS = set()
+if "--sans" in sys.argv:
+    try:
+        SANS = {x.strip() for x in sys.argv[sys.argv.index("--sans") + 1].split(",") if x.strip()}
+    except IndexError:
+        raise SystemExit("ERREUR : --sans attend les sections sans sous-titres, ex. --sans s0-hook,s5-cta.")
+
 # Option (brand.config.json -> montage.sousTitresDepuisCoupe, defaut false) : le 1er sous-titre de
 # chaque phrase part sur la coupe, pas sur son 1er mot reconnu (il s'affiche des la 1re image du plan).
 DEPUIS_COUPE = (config().get("montage") or {}).get("sousTitresDepuisCoupe") is True
@@ -95,11 +137,12 @@ DEPUIS_COUPE = (config().get("montage") or {}).get("sousTitresDepuisCoupe") is T
 # Une phrase par prise (cas simple). Si plusieurs prises forment UNE phrase (ex. un CTA en
 # 3 bouts), fusionne-les ici : PHRASES.append({'start': TAKES[i]['start'], 'end': TAKES[j]['end']}).
 PHRASES = [{'start': t['start'], 'end': t['end']} for t in TAKES]
-assert len(MANUAL) == len(PHRASES), f"MANUAL={len(MANUAL)} != phrases={len(PHRASES)}"
 
 # SECTIONS = derivees de sections (meme source que le master) -> jamais desynchronisees
 SECTIONS = [(x['start'], x['y']) for x in SEC]
-BOUNDS = [s[0] for s in SECTIONS]   # 0 compris : la 1re image du Reel porte deja un sous-titre
+# 0 compris : la 1re image du Reel porte deja un sous-titre. Jamais le debut d'une section --sans : le
+# dernier mot de la section d'avant y serait accroche et resterait affiche sur toute la section.
+BOUNDS = [x['start'] for x in SEC if x['id'] not in SANS]
 
 # --- timing : sur les VRAIS MOTS si <video>_words.json existe, sinon approximation ---
 # Le prorata de caracteres DERIVE : les premiers chunks durent trop et tous les suivants
@@ -111,6 +154,36 @@ WORDS = json.loads(WORDS_PATH.read_text(encoding='utf-8')) if WORDS_PATH.exists(
 if WORDS is None:
     print(f"  ⚠ {WORDS_PATH.name} absent -> timing APPROXIMATIF (proportionnel au texte).")
     print("    Lance `python3 tools/build_words.py` pour caler les sous-titres sur la voix.")
+
+def mots_de(pi, ph):
+    """Les mots de la phrase `pi` : ceux de sa prise (champ `take` de tools/build_words.py) quand une
+    phrase = une prise, sinon ceux qui commencent dans sa fenetre. Par la prise, un mot horodate un
+    peu avant la coupe (Whisper avance, ou un fichier de mots recale a la main) reste dans sa phrase."""
+    if len(PHRASES) == len(TAKES) and all("take" in w for w in WORDS):
+        return [w for w in WORDS if w["take"] == TAKES[pi].get("i", pi)]
+    return [w for w in WORDS if ph['start'] - 1e-6 <= w['start'] < ph['end']]
+
+
+if MOTS:
+    if WORDS is None:
+        raise SystemExit(f"ERREUR : --mots decoupe la voix : lance d'abord `python3 tools/build_words.py` ({WORDS_PATH.name}).")
+    MANUAL = []
+    for pi, ph in enumerate(PHRASES):
+        dits, avant = [], ""
+        for w in mots_de(pi, ph):
+            m = w['w'].strip()
+            if not m:
+                continue
+            if any(c.isalnum() for c in m):
+                dits.append(avant + m)
+                avant = ""
+            elif m in ("«", "(", "[", "“", "‘"):                  # un signe qui ouvre : avec le mot suivant
+                avant += m + (" " if m == "«" else "")
+            elif dits:                                          # un signe seul : avec son mot
+                dits[-1] += (" " if m in ("?", "!", ":", ";", "»") else "") + m
+            # un signe qui ferme en tête de phrase (la fin de la phrase d'avant) : on le laisse
+        MANUAL.append([" ".join(dits[i:i + MOTS]) for i in range(0, len(dits), MOTS)])
+assert len(MANUAL) == len(PHRASES), f"MANUAL={len(MANUAL)} != phrases={len(PHRASES)}"
 
 
 def _align(words, chunks):
@@ -150,7 +223,7 @@ for pi, ph in enumerate(PHRASES):
 
     starts = None
     if WORDS:
-        wins = [w for w in WORDS if t0 - 1e-6 <= w['start'] < t1]
+        wins = mots_de(pi, ph)
         first = _align(wins, chunks)
         mots = [w for w in wins if normaliser(w['w'])]
         for k, rang in enumerate(imposes):
@@ -186,8 +259,13 @@ for pi, ph in enumerate(PHRASES):
             acc += L
 
     for c, t in zip(chunks, starts):
+        if SANS and any(x["id"] in SANS and x["start"] - 1e-6 <= image(t) < x["end"] for x in SEC):
+            continue
         # Casse : celle de visual.captionsCase (capitales par defaut, comme le CSS de .cap).
         caps.append({'start': image(t), 'text': c.upper() if STYLE.captions_case == "upper" else c})
+
+if not caps:
+    raise SystemExit("ERREUR : aucun sous-titre a ecrire (decoupage vide, ou toutes les sections dans --sans).")
 
 # 1) SNAP sur les frontieres de section : le sous-titre le plus proche demarre PILE dessus
 for B in BOUNDS:
@@ -195,6 +273,8 @@ for B in BOUNDS:
     if abs(caps[i]['start'] - B) < 0.6:
         caps[i]['start'] = B
 caps.sort(key=lambda c: c['start'])
+if SANS:
+    caps = [c for c in caps if not any(x["id"] in SANS and x["start"] - 1e-6 <= c["start"] < x["end"] for x in SEC)]
 
 # 2) fins recalculees (timing continu), BORNEES A LA FIN DE LA SECTION.
 #    Sans cette borne, le dernier sous-titre d'une section reste affiche sur la suivante :
@@ -248,8 +328,9 @@ doc = f'''<!DOCTYPE html>
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1080, height=1920">
-    <!-- SOUS-TITRES — genere par tools/montage_captions.py depuis derush/<video>_cuts.json.
-         Regles : 2-3 mots par sous-titre, AUCUNE ponctuation finale, jamais a cheval sur 2 phrases. -->
+    <!-- SOUS-TITRES : genere par tools/montage_captions.py depuis derush/<video>_cuts.json.
+         Decoupage : MANUAL (2-3 mots, sans ponctuation finale), ou --mots N (la voix telle que
+         transcrite) ; jamais a cheval sur 2 phrases. -->
     <script src="assets/vendor/gsap.min.js"></script>
     <!-- L'apparence de .cap (police, couleurs, skin « {STYLE.captions_skin} ») vient ENTIEREMENT
          de brand/tokens.css, genere depuis TON style. Ne rien redefinir ici : une regle en dur

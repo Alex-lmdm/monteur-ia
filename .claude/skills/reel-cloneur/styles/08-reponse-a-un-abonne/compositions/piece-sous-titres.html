@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°08 · PIÈCE « SOUS-TITRES QUI S'ALLUMENT AU MOT DIT »                  ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ CE QUE C'EST : la piste de sous-titres du style. Plaque claire arrondie,      ║
+    ║ police ronde très grasse, casse telle que dite, ponctuation gardée, 3 mots    ║
+    ║ environ ; les mots sont gris clair et passent à l'encre du style au moment    ║
+    ║ où ils sont prononcés. Une seule ligne, à y≈1377 (71 % de la hauteur), dans   ║
+    ║ tous les cadrages (plan proche comme phrase clé).                             ║
+    ║ TAILLE : 1080×1920, fond transparent : c'est compositions/captions.html.      ║
+    ║                                                                                ║
+    ║ MODE D'EMPLOI (dans le Reel) :                                                 ║
+    ║  1. python3 tools/montage_captions.py --mots 3 --sans <section carte> --write  ║
+    ║     (Y_FACE et Y_DECOR = 1377 dans tools/sections.py) ;                        ║
+    ║  2. corriger dans compositions/captions.html les mots mal transcrits (noms     ║
+    ║     propres) et remplacer « lien » par 🔗 ;                                    ║
+    ║  3. copier dans compositions/captions.html le bloc <style> « KARAOKE » (fin    ║
+    ║     du <head>) et le <script> « KARAOKE » (après la timeline) de ce fichier ;  ║
+    ║  4. coller dans MOTS le contenu de derush/<video>_words.json (tel quel) ;      ║
+    ║  5. à refaire après chaque nouveau tools/montage_captions.py --write.          ║
+    ║ Police : Poppins Bold (OFL, livrée), var(--brand-font-captions).               ║
+    ║                                                                                ║
+    ║ Couleurs : var(--brand-text) (mot dit), var(--brand-muted) (mot à venir),      ║
+    ║ var(--brand-bg) (plaque). Aucun hex ici.                                       ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+    #captions { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden; }
+  </style>
+  <!-- KARAOKE:DEBUT (style) -->
+  <style>
+    #captions { --brand-font-kit-sous-titres:var(--brand-font-captions), var(--brand-font-captions); }
+    /* Plaque presque opaque (le skin « plate » la laisse à 78 %) et angles plus doux. */
+    #captions .cap { font-family:var(--brand-font-captions); letter-spacing:-0.2px;
+      background:color-mix(in srgb, var(--brand-bg) 90%, transparent); border-radius:16px; }
+    /* --k : 0 = mot à venir (gris), 1 = mot dit (encre). Animé par la timeline, jamais seul. */
+    #captions .k-mot { --k:0; color:color-mix(in srgb, var(--brand-text) calc(var(--k) * 100%), var(--brand-muted)); }
+  </style>
+  <!-- KARAOKE:FIN (style) -->
+</head>
+<body>
+  <div id="captions" data-composition-id="captions" data-start="0" data-duration="4" data-fps="30" data-width="1080" data-height="1920">
+    <!-- Exemple : en vrai, ces lignes viennent de tools/montage_captions.py --mots 3 --write. -->
+    <div class="cap clip" id="cap-0" style="top:1377px" data-start="0" data-duration="1.2" data-track-index="0">Je te réponds</div>
+    <div class="cap clip" id="cap-1" style="top:1377px" data-start="1.2" data-duration="1.3" data-track-index="1">en trois points,</div>
+    <div class="cap clip" id="cap-2" style="top:1377px" data-start="2.5" data-duration="1.5" data-track-index="2">simplement.</div>
+  </div>
+  <script>
+    window.__timelines = window.__timelines || {};
+    window.__timelines["captions"] = gsap.timeline({ paused: true });
+  </script>
+  <!-- KARAOKE:DEBUT (script) -->
+  <script>
+    (function () {
+      // >>> Coller ici le contenu de derush/<video>_words.json, tel quel (un tableau de {w, start}).
+      var MOTS = [
+        {"w": "Je", "start": 0.05}, {"w": "te", "start": 0.22}, {"w": "réponds", "start": 0.36},
+        {"w": "en", "start": 1.25}, {"w": "trois", "start": 1.42}, {"w": "points,", "start": 1.70},
+        {"w": "simplement.", "start": 2.60}
+      ];
+      var ALLUMAGE = 0.12; // durée du passage du gris à l'encre
+      function norme(s) {
+        return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+      }
+      // Les mots de la voix, un par un (une entrée de deux mots, « Le Mans », compte pour deux).
+      var voix = [];
+      MOTS.forEach(function (m) {
+        String(m.w).trim().split(/\s+/).forEach(function (x) { if (norme(x)) voix.push({ n: norme(x), t: +m.start }); });
+      });
+      var tl = window.__timelines['captions'];
+      var caps = Array.prototype.slice.call(document.querySelectorAll('#captions .cap'));
+      caps.sort(function (a, b) { return parseFloat(a.getAttribute('data-start')) - parseFloat(b.getAttribute('data-start')); });
+      var j = 0;
+      caps.forEach(function (cap) {
+        var debut = parseFloat(cap.getAttribute('data-start'));
+        var fin = debut + parseFloat(cap.getAttribute('data-duration'));
+        var jetons = cap.textContent.trim().split(/\s+/);
+        cap.textContent = '';
+        var t = debut;
+        jetons.forEach(function (jeton, k) {
+          if (k) cap.appendChild(document.createTextNode(' '));
+          var span = document.createElement('span');
+          span.className = 'k-mot';
+          span.textContent = jeton;
+          cap.appendChild(span);
+          var n = norme(jeton);
+          if (n) {
+            var trouve = -1;
+            for (var i = j; i < Math.min(voix.length, j + 8); i++) {
+              if (voix[i].n === n && voix[i].t < fin + 0.3) { trouve = i; break; }
+            }
+            if (trouve >= 0) { t = voix[trouve].t; j = trouve + 1; }
+            else if (k) { t = t + 0.15; }        // mot absent de la voix (emoji, nom corrigé)
+          }
+          t = Math.min(Math.max(t, debut), fin - 0.05);
+          tl.fromTo(span, { '--k': 0 }, { '--k': 1, duration: ALLUMAGE, ease: 'none' }, t);
+        });
+      });
+    })();
+  </script>
+  <!-- KARAOKE:FIN (script) -->
+</body>
+</html>

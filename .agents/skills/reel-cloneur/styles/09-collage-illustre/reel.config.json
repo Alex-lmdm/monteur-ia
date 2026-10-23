@@ -1,0 +1,21 @@
+{
+  "visual": {
+    "bg": "#242425",
+    "surface": "#33474f",
+    "text": "#ffffff",
+    "muted": "#8e8a80",
+    "accent": "#bf8826",
+    "fontDisplay": "AbrilFatface",
+    "fontBody": "Inter",
+    "fontCaptions": "Inter",
+    "captionsSkin": "plate",
+    "captionsPosition": "centre-bas",
+    "captionsLines": 1,
+    "captionsSize": 52,
+    "captionsCase": "asis",
+    "captionsWeight": 800,
+    "captionsLineHeight": 1.35,
+    "captionsPadding": "18px 36px",
+    "fontAccent": "CourierPrime"
+  }
+}

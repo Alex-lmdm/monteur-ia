@@ -1,0 +1,19 @@
+{
+  "visual": {
+    "bg": "#0b1416",
+    "surface": "#16232a",
+    "text": "#ffffff",
+    "muted": "#3cf830",
+    "accent": "#f8fa10",
+    "fontDisplay": "ArchivoBlack",
+    "fontBody": "Inter",
+    "fontCaptions": "ArchivoBlack",
+    "captionsSkin": "outline",
+    "captionsPosition": "split-jointure",
+    "captionsLines": 2,
+    "captionsSize": 56,
+    "captionsCase": "upper",
+    "captionsLineHeight": 1.15,
+    "captionsWeight": "auto"
+  }
+}

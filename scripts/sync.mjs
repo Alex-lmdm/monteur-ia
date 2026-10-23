@@ -147,7 +147,7 @@ function resolveStyle(config, presetsFile, { avertir = warn } = {}) {
     && String(overrides[cle]).toLowerCase() !== String(preset.visual[cle]).toLowerCase());
   const label = !perso ? preset.label : preset.isUnset ? "Tes couleurs" : `${preset.label}, avec tes couleurs`;
   const capSize = Number(visual.captionsSize);
-  const captionsSize = Number.isFinite(capSize) && capSize >= 30 && capSize <= 100 ? Math.round(capSize) : 50;
+  const captionsSize = Number.isFinite(capSize) && capSize >= 30 && capSize <= 160 ? Math.round(capSize) : 50;
   const resolved = { ...visual, text, surface, captionsSize, ...derived };
   return { preset, label, perso, visual: resolved, chosen, captions: captionLook(resolved, presetsFile, avertir) };
 }
@@ -236,6 +236,15 @@ const CAPTION_SKINS = {
   padding: 0 0 12px;
   border-bottom: 8px solid var(--brand-accent);
   text-shadow: 0 2px 6px var(--brand-stroke);`,
+  soft: `  color: #ffffff;
+  background: none;
+  padding: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55), 0 0 3px rgba(0, 0, 0, 0.45);`,
+  card: `  color: #141414;
+  background: #ffffff;
+  padding: 8px 22px;
+  border-radius: var(--brand-cap-radius);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);`,
 };
 
 function buildCaptionCss(skinName, look = {}, avertir = warn) {
@@ -269,6 +278,8 @@ function renderTokensCss(style, avertir = warn) {
     VISUAL_CONTRAST: v.contrast,
     VISUAL_STROKE: v.stroke,
     FONT_DISPLAY: v.fontDisplay,
+    // Police d'accent (un mot manuscrit, une machine à écrire, une serif de titre) : celle des titres sans réglage.
+    FONT_ACCENT: v.fontAccent || v.fontDisplay,
     FONT_BODY: v.fontBody,
     FONT_CAPTIONS: v.fontCaptions,
     CAPTIONS_SKIN: v.captionsSkin,
@@ -362,7 +373,7 @@ function generateFontsCss(style, presetsFile) {
   // fonts.css est le même pour toute la maison, les copies des Reels en héritent.
   const desReels = reels().filter((d) => readMeta(d)?.monteurIa?.etat !== "publie")
     .flatMap((d) => POLICES.map((cle) => visualDuReel(d, presetsFile, () => {})?.[cle]));
-  const families = [...new Set([v.fontBody, v.fontDisplay, v.fontCaptions, ...desReels].filter(Boolean))];
+  const families = [...new Set([v.fontBody, v.fontDisplay, v.fontCaptions, v.fontAccent, ...desReels].filter(Boolean))];
 
   // Les polices utilisées sont copiées À CÔTÉ de fonts.css (brand/fonts/) : url("fonts/…") se
   // résout pareil dans le navigateur, l'aperçu et le rendu de HyperFrames 0.8, sans chemin en
@@ -542,8 +553,11 @@ function generateAgentFiles(config, style) {
       : lieu.bloc === "LIEU_ACCUEIL" ? ["PIPELINE_REEL", "ROUTAGE_YOUTUBE"]
       : lieu.bloc === "LIEU_MAISON" ? ["PIPELINE_REEL", "CHECKLIST_REEL", "ROUTAGE_YOUTUBE"]
       : ["PIPELINE_REEL", "CHECKLIST_REEL"];
+    // La marche à suivre de la première vidéo n'est écrite que tant qu'elle reste à faire : ensuite,
+    // une ligne suffit, et la place revient aux préférences apprises et aux extensions.
+    const premiere = config?.setup?.firstVideoDone === true ? "PREMIERE_FAITE" : "PREMIERE_A_FAIRE";
     for (const { file, keep } of targets) {
-      const contenu = resolveConditionals(substituted, [keep, lieu.bloc, ...pipeline]);
+      const contenu = resolveConditionals(substituted, [keep, lieu.bloc, ...pipeline, premiere]);
       tropLong = Math.max(tropLong, Buffer.byteLength(contenu));
       ecrireSiDifferent(path.join(lieu.dir, file), contenu);
     }
@@ -664,7 +678,7 @@ const isPerReelTool = (name) =>
 // une vidéo dans un tout autre style l'a sans toucher à son style de base. Jamais touché par la
 // synchro ni par la mise à jour (reels/).
 const REGLAGES_REEL = "reel.config.json";
-const POLICES = ["fontBody", "fontDisplay", "fontCaptions"];
+const POLICES = ["fontBody", "fontDisplay", "fontCaptions", "fontAccent"];
 const COULEURS = ["bg", "accent", "surface", "text", "muted"];
 function visualDuReel(dir, presetsFile = loadStylePresets(), avertir = warn) {
   const fichier = path.join(dir, REGLAGES_REEL);
@@ -677,12 +691,13 @@ function visualDuReel(dir, presetsFile = loadStylePresets(), avertir = warn) {
     return null;
   }
   const propre = {};
-  const connues = Object.keys(readJSON(path.join(ROOT, "brand.config.example.json")).visual ?? {});
+  // Les couleurs du style, `muted` compris, même quand le fichier d'exemple ne les liste pas toutes.
+  const connues = [...Object.keys(readJSON(path.join(ROOT, "brand.config.example.json")).visual ?? {}), ...COULEURS];
   for (const [cle, val] of Object.entries(reglages?.visual ?? {})) {
     if (val === undefined || val === null || val === "") continue;
     const ignore = (attendu) => avertir(`${rel(fichier)} : visual.${cle} « ${val} » ignoré (${attendu}).`);
     if (!connues.includes(cle)) ignore("réglage inconnu");
-    else if (cle === "captionsSize" && !(Number(val) >= 30 && Number(val) <= 100)) ignore("30 à 100 px");
+    else if (cle === "captionsSize" && !(Number(val) >= 30 && Number(val) <= 160)) ignore("30 à 160 px");
     else if (COULEURS.includes(cle) && !hexToRgb(val)) ignore("une couleur en hex, ex. #202022");
     else if (POLICES.includes(cle) && !presetsFile.fonts?.[val]) ignore("police absente de templates/style-presets.json");
     else if (cle === "captionsSkin" && !CAPTION_SKINS[val]) ignore(Object.keys(CAPTION_SKINS).join(", "));

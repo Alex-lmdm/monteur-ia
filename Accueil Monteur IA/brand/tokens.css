@@ -37,6 +37,7 @@
   --brand-font-display: Anton, Impact, Haettenschweiler, "Arial Narrow", sans-serif;
   --brand-font-body: Inter, "Avenir Next", Arial, system-ui, sans-serif;
   --brand-font-captions: Inter, "Arial Black", Impact, sans-serif;
+  --brand-font-accent: Anton, Georgia, serif;
   --brand-font-mono: "Courier New", ui-monospace, monospace;
 
   /* --- Sous-titres : réglages du skin « block » ---------------- */
@@ -149,7 +150,7 @@
 /* ==========================================================================
    SOUS-TITRES — base commune + skin actif
 
-   `.cap` porte le skin CHOISI (block). Les 5 skins restent disponibles
+   `.cap` porte le skin CHOISI (block). Les 7 skins restent disponibles
    en classes `.cap-skin-<nom>` : pour en essayer un autre sur une compo, ajoute la
    classe. Pour changer le défaut de toutes tes vidéos : `/setup visuel`.
    ========================================================================== */
@@ -175,7 +176,7 @@
   padding: 8px 20px;
 }
 
-/* Les 5 skins, nommés — pour override ponctuel sur une compo */
+/* Les 7 skins, nommés — pour override ponctuel sur une compo */
 .cap.cap-skin-block {
   color: var(--brand-contrast);
   background: var(--brand-accent);
@@ -211,6 +212,21 @@
   padding: 0 0 12px;
   border-bottom: 8px solid var(--brand-accent);
   text-shadow: 0 2px 6px var(--brand-stroke);
+}
+
+.cap.cap-skin-soft {
+  color: #ffffff;
+  background: none;
+  padding: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55), 0 0 3px rgba(0, 0, 0, 0.45);
+}
+
+.cap.cap-skin-card {
+  color: #141414;
+  background: #ffffff;
+  padding: 8px 22px;
+  border-radius: var(--brand-cap-radius);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
 }
 
 /* ==========================================================================

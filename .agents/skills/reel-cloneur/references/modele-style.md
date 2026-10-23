@@ -16,13 +16,13 @@ coupes sèches seulement. »). Langue : celle du client.
 > maison, musique, images). {Sa propre vidéo : « C'est ta vidéo : tout est à toi. »}
 
 ## 1. Le rythme
-- **Changements d'image :** {un toutes les ~x s ; x coupes sur les 5 premières secondes, puis…}
+- **Changements d'image :** {un toutes les ~x s (shots.json → changementMedian), y par minute ; x coupes sur les 5 premières secondes, puis…}
 - **Silences et respirations :** {tout est serré, aucune pause / quelques pauses gardées sur…}
 - **Ce qui fait le rythme entre deux coupes :** {zooms, animations, textes qui arrivent…}
 - **Chez toi :** {coupes serrées comme ça ; un changement d'image toutes les ~x s}
 
 ## 2. Le cadrage
-- **Visage :** {plein écran / en bas, une image au-dessus / alternance : quand}
+- **Visage :** {plein écran / en bas, une image au-dessus sur fond uni (écran partagé) / vidéo entière, cartes posées sur le décor / alternance : quand} · haut de la tête à {x} % de la hauteur
 - **Zooms :** {sur quoi, à quel moment (mot fort, chute), serré ou léger, sec ou progressif}
 - **Chez toi :** {cadrage principal ; alternance ; zooms}
 
@@ -30,7 +30,7 @@ coupes sèches seulement. »). Langue : celle du client.
 - **Police :** {famille reconnue ou description : bâton très gras, condensée, arrondie… ; « à confirmer » si doute}
 - **Allure :** {bandeau plein / contour / plaque / ombre / souligné / texte seul} · couleur du texte {hex} · fond {hex}
 - **Casse et taille :** {majuscules ou non ; grande, moyenne, discrète}
-- **Mots par sous-titre :** {2 à 3 ; une ou deux lignes}
+- **Mots par sous-titre :** {1, 2 ou 3 ; ponctuation gardée ou non ; une ou deux lignes}
 - **Place :** {centre, jointure entre les deux images, bas…}
 - **Comment ils apparaissent :** {d'un bloc, mot par mot, mot prononcé surligné en {couleur}, petit saut…} (rafale « sous-titres »)
 - **Mots mis en valeur :** {lesquels (chiffres, noms), comment : autre couleur, plus gros, emoji}
@@ -59,7 +59,7 @@ coupes sèches seulement. »). Langue : celle du client.
 - **Chez toi :** {couleurs reprises ou les tiennes}
 
 ## 8. Le son (d'après le client)
-- **Musique de fond :** {ce qu'il a dit, ou « non précisé »} · son déclaré par la plateforme : {…}
+- **Musique de fond :** {ce qu'il a dit, ou « non précisé : aucune »} · son déclaré par la plateforme : {…}
 - **Bruitages :** {ce qu'il a dit}
 
 ## 9. L'ouverture et la fin
@@ -80,9 +80,13 @@ coupes sèches seulement. »). Langue : celle du client.
 *(Bloc technique pour le montage : le client n'a pas besoin de le lire.)*
 
 - `visual` : {stylePreset si l'un colle, sinon bg / accent / text en hex} · fontCaptions {…} ·
-  captionsSkin {block | outline | plate | shadow | underline} · captionsCase {upper | asis} ·
+  captionsSkin {block | outline | plate | shadow | underline | soft | card} · captionsCase {upper | asis} ·
   captionsLines {1 | 2} · captionsPosition {…} · captionsSize {px, si différent de 50}
-- `montage.defaultLayout` : {split | faceplein} · alternance : {…}
+- `montage.defaultLayout` : {split | faceplein | decor} · alternance : {…} · `montage.decorTransform` :
+  {aucun | « scale(S) », tête du client plus haute que dans l'original}
+- Sous-titres : {--mots 1 | 2 | 3 | découpage écrit (2 à 3 mots)}
+- Pièces signature (le kit, `clones/{dossier}/kit/compositions/`) : {carte titre, carte schéma, accroche…}
+- Données à demander au client : {ce que les cartes affichent sans que la vidéo le dise, ou « aucune »}
 - Dérush : coupes {serrées : padStart / padEnd proches de 0 | aérées}
 - Préférences (4 à 6, une ligne chacune, telles qu'à écrire) :
   - « … »
@@ -90,8 +94,10 @@ coupes sèches seulement. »). Langue : celle du client.
 - Plafonds : jamais plus de zooms, d'animations ni de bruitages que l'original ; les règles
   s'appliquent aux moments de la vidéo du client, pas au minutage de l'original.
 - Contrôle après l'export : `python3 tools/cloner_reel.py <vidéo exportée> --style`, puis comparer
-  le rythme (plan le plus fréquent, coupes par tranche de 5 s) à celui de cette fiche. Un écart de
-  plus d'un quart : une règle a été oubliée, la retrouver avant de livrer.
+  ses `changementsParMinuteParBande` (shots.json) à ceux de l'original sur le tiers où vit le style :
+  {haut : y par minute}. Un écart de plus d'un quart : une règle a été oubliée, la retrouver avant
+  de livrer. Puis 3 ou 4 paires `cote-a-cote`
+  (accroche, chaque pièce signature, fin).
 - Source : `clones/{dossier}/` (images, rafales, style.json).
 ```
 

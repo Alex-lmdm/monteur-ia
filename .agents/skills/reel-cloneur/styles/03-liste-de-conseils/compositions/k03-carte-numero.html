@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°03 « LISTE DE CONSEILS » · PIÈCE : LA CARTE NUMÉROTÉE                 ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ Ce que c'est : le grand numéro « #1 » en contour (dégradé doré vers l'accent,  ║
+    ║ léger halo), posé sur la poitrine, puis le nom de l'entrée en capitales        ║
+    ║ serif italiques blanches qui s'écrivent mot par mot sur la voix.              ║
+    ║ Taille : 1080×1920, fond TRANSPARENT (posée sur la vidéo en plein visage).     ║
+    ║ Quand : au début de CHAQUE entrée de la liste (conseil 1, outil 2, étape 3),   ║
+    ║ sur un plan en plein visage : section « decor » de tools/sections.py, zoom     ║
+    ║ montage.decorTransform. 1,3 à 2,5 s, coupe sèche avant et après.              ║
+    ║ Pas de sous-titres pendant la carte : son id va dans --sans.                  ║
+    ║                                                                                ║
+    ║ À REMPLACER :                                                                  ║
+    ║  1. l'id « k03-carte-numero » PARTOUT (CSS, HTML, constante ID du script) par  ║
+    ║     l'id de la section (ex. s03-num1) ;                                        ║
+    ║  2. data-duration (racine + .carte) = durée de la section (tools/sections.py) ;║
+    ║  3. DONNEES dans le script : le numéro, puis le nom, une ou deux lignes, chaque║
+    ║     mot avec l'instant où la voix le dit (s, depuis le début de la section,   ║
+    ║     lu dans derush/<cut>_words.json). Le nom = les mots dits, jamais inventés. ║
+    ║ Police : la serif italique du style (Source Serif 4 Italic, OFL, livrée),     ║
+    ║ var(--brand-font-accent) ; repli sur                                          ║
+    ║ var(--brand-font-display).                                                     ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #k03-carte-numero { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      --k03-titre: var(--brand-font-accent), var(--brand-font-display), serif;
+      /* Doré : l'accent décalé vers le jaune et éclairci (aucune couleur en dur). */
+      --k03-clair: oklch(from var(--brand-accent) calc(l + 0.12) c calc(h + 30)); }
+    #k03-carte-numero * { box-sizing:border-box; }
+    #k03-carte-numero .carte { position:absolute; inset:0; }
+    /* Le numéro : sur la poitrine, centré, ~330 px de haut. */
+    #k03-carte-numero .numero-boite { position:absolute; left:0; top:1090px; width:1080px; height:400px; }
+    #k03-carte-numero .numero { position:absolute; left:0; top:0; width:1080px; height:400px; overflow:visible;
+      filter: drop-shadow(0 0 10px color-mix(in srgb, var(--brand-accent) 70%, transparent))
+              drop-shadow(0 0 2px color-mix(in srgb, var(--k03-clair) 80%, transparent)); }
+    #k03-carte-numero .numero text { font-family: var(--brand-font-accent); font-style: italic; font-weight: 600;
+      font-size: 330px; fill: none; stroke-width: 4.5px; paint-order: stroke; }
+    #k03-carte-numero .haut { stop-color: var(--k03-clair); }
+    #k03-carte-numero .bas { stop-color: var(--brand-accent); }
+    /* Le nom : capitales serif italiques blanches, sur le bas du numéro. */
+    #k03-carte-numero .nom { position:absolute; left:100px; right:100px; top:1385px; margin:0; text-align:center;
+      font-family: var(--brand-font-accent); font-style: italic; font-weight: 800; font-size: 82px; line-height: 1.06;
+      letter-spacing: -0.5px; text-transform: uppercase; color: var(--brand-surface);
+      text-shadow: 0 3px 16px color-mix(in srgb, var(--brand-text) 60%, transparent); }
+    #k03-carte-numero .ligne { display:block; white-space:nowrap; }
+    #k03-carte-numero .mot { display:inline-block; margin:0 0.12em; }
+  </style>
+</head>
+<body>
+  <div id="k03-carte-numero" data-composition-id="k03-carte-numero" data-start="0" data-duration="2"
+       data-fps="30" data-width="1080" data-height="1920">
+    <div id="k03-carte-numero-calque" class="carte clip" data-start="0" data-duration="2" data-track-index="0">
+      <div class="numero-boite" data-layout-allow-overlap><svg class="numero" viewBox="0 0 1080 400" aria-hidden="true">
+        <defs><linearGradient class="degrade" x1="0" y1="0" x2="0" y2="1">
+          <stop class="haut" offset="0"/><stop class="bas" offset="1"/></linearGradient></defs>
+        <text x="540" y="320" text-anchor="middle" data-layout-allow-overlap></text>
+      </svg></div>
+      <p class="nom" data-layout-allow-overlap></p>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'k03-carte-numero';
+      var scope = '#' + ID + ' ';
+      // >>> À REMPLACER : le numéro et le nom (mots + instant où la voix les dit, en s).
+      var DONNEES = {
+        numero: '#1',
+        lignes: [
+          [['PREMIER', 0.30], ['CONSEIL', 0.55]],
+          [['À', 0.90], ['RETENIR', 1.05]]
+        ]
+      };
+      var root = document.getElementById(ID);
+      // Dégradé : un id unique par section (au rendu, toutes les sections partagent un document).
+      var grad = root.querySelector('.degrade');
+      grad.setAttribute('id', ID + '-degrade');
+      var txt = root.querySelector('.numero text');
+      txt.textContent = DONNEES.numero;
+      txt.setAttribute('stroke', 'url(#' + ID + '-degrade)');
+      var nom = root.querySelector('.nom');
+      var mots = [];
+      DONNEES.lignes.forEach(function (ligne) {
+        // Superposition voulue (le nom passe sur le numéro) : signalée au contrôle de mise en page.
+        var l = document.createElement('span'); l.className = 'ligne'; l.setAttribute('data-layout-allow-overlap', '');
+        ligne.forEach(function (m) {
+          var s = document.createElement('span'); s.className = 'mot'; s.textContent = m[0];
+          s.setAttribute('data-layout-allow-overlap', '');
+          l.appendChild(s); mots.push([s, m[1]]);
+        });
+        nom.appendChild(l);
+      });
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      // Entrées en opacité + échelle + flou (jamais x/y). Coupe sèche à la fin : aucune sortie.
+      tl.fromTo(scope + '.numero-boite', { opacity: 0, scale: 1.06, filter: 'blur(14px)' },
+        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.35, ease: 'power2.out', transformOrigin: '50% 60%' }, 0.03);
+      mots.forEach(function (m, i) {
+        m[0].classList.add('m' + i);
+        tl.fromTo(scope + '.m' + i, { opacity: 0, scale: 1.08, filter: 'blur(10px)' },
+          { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.22, ease: 'power2.out' }, Math.max(0, m[1]));
+      });
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°04 « LE CLASSEMENT » · PIÈCE : L'APPEL À COMMENTER                     ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ CE QUE C'EST : le panneau du haut de la dernière phrase : une image plein cadre ║
+    ║   légèrement assombrie, et par-dessus le gros titre deux couleurs « COMMENTE »  ║
+    ║   (texte) + le mot à commenter (accent), contour épais. Il arrive par coupe     ║
+    ║   sèche sur le mot « commente » (ou son équivalent) et reste jusqu'à la fin.   ║
+    ║ TAILLE : 1080×920, section « split » (le visage est en bas).                   ║
+    ║ QUAND : la phrase d'appel à l'action, en dernier. PAS d'étiquette de rang.      ║
+    ║ À REMPLACER :                                                                  ║
+    ║   1. L'id « appel-commentaire » PARTOUT par l'id de la section.               ║
+    ║   2. data-duration de la racine et des clips ; data-start du .titre-cta = le mot ║
+    ║      « commente » (derush/<video>_words.json), posé sur une image (n/30 s).    ║
+    ║   3. EMPLACEMENT IMAGE : une image de la vidéo, ou celle de l'entrée gagnante.  ║
+    ║   4. Le mot à commenter, tel que la vidéo le dit (ou le mot-clé du client,      ║
+    ║      cta.defaultKeyword). Jamais « lien » : 🔗 à la place. 1 à 3 lignes, 880 px ║
+    ║      de large au plus (à 120 px, ~10 caractères par ligne).                   ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #appel-commentaire { position:absolute; inset:0; width:1080px; height:920px; overflow:hidden;
+      color:var(--brand-text); font-family:var(--brand-font-captions); }
+    #appel-commentaire * { box-sizing:border-box; margin:0; padding:0; }
+    #appel-commentaire .visuel { position:absolute; left:0; top:0; width:1080px; height:850px; overflow:hidden;
+      background:var(--brand-surface); }
+    #appel-commentaire .couvre { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    #appel-commentaire .voile { position:absolute; inset:0; background:var(--brand-bg); opacity:0.35; }
+    #appel-commentaire .repere { position:absolute; inset:0; }
+    #appel-commentaire .titre-cta { position:absolute; left:60px; right:60px; top:330px; display:flex;
+      flex-direction:column; align-items:center; text-align:center; text-transform:uppercase;
+      line-height:0.98; white-space:nowrap;
+      -webkit-text-stroke:12px var(--brand-stroke); paint-order:stroke fill; }
+    #appel-commentaire .blanc { color:var(--brand-text); font-size:128px; }
+    #appel-commentaire .jaune { color:var(--brand-accent); font-size:120px; }
+  </style>
+</head>
+<body>
+  <div id="appel-commentaire" data-composition-id="appel-commentaire" data-start="0" data-duration="3.5"
+       data-fps="30" data-width="1080" data-height="920">
+    <!-- IMAGE : EMPLACEMENT, remplace le repère svg par
+         <img class="couvre" src="assets/images/ton-image.jpg" alt=""> (le voile reste dessus). -->
+    <div id="appel-commentaire-image" class="visuel clip" data-start="0" data-duration="3.5" data-track-index="1">
+      <svg class="repere" viewBox="0 0 1080 850" preserveAspectRatio="xMidYMid slice">
+        <circle cx="300" cy="200" r="90" fill="var(--brand-accent)"/>
+        <path d="M0 850 L330 430 L560 690 L760 470 L1080 850 Z" fill="var(--brand-muted)"/>
+      </svg>
+      <div class="voile"></div>
+    </div>
+    <!-- TITRE : arrive par coupe sèche sur le mot « commente » (ici à 0,5 s). -->
+    <div id="appel-commentaire-titre" class="titre-cta clip" data-start="0.49967" data-duration="3" data-track-index="2">
+      <span class="blanc">COMMENTE</span>
+      <span class="jaune">« LISTE »</span>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'appel-commentaire';
+      window.__timelines = window.__timelines || {};
+      // Titre fixe à son arrivée (coupe sèche), comme l'original : rien à animer.
+      window.__timelines[ID] = gsap.timeline({ paused: true });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°07 « ANNONCE CHOC » · PIÈCE 2 : LES TUILES D'OUTILS                    ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ Ce que c'est : une ou deux tuiles façon icône d'appli (carré blanc arrondi,    ║
+    ║ ombre dure décalée), posées sur le mur, de part et d'autre de la tête. Chaque  ║
+    ║ tuile surgit (petit rebond) quand l'outil est NOMMÉ, puis reste épinglée       ║
+    ║ jusqu'au coup de zoom final. Ouvre, en option, sur la fin du flash chaud de    ║
+    ║ l'accroche.                                                                    ║
+    ║ Taille : section plein cadre 1080×1920, fond TRANSPARENT, format « decor ».    ║
+    ║ Tuiles 210×210, gauche à x=190, droite à x=675, haut à --k07-tuile-top.        ║
+    ║ Quand l'utiliser : toute section « decor » sans fenêtre de démonstration, dès  ║
+    ║ qu'un outil, une appli ou une marque est nommé. Deux tuiles au plus.           ║
+    ║ La section qui suit l'accroche garde le bloc « flash de sortie » ; les autres  ║
+    ║ le suppriment.                                                                 ║
+    ║                                                                                ║
+    ║ À REMPLACER :                                                                  ║
+    ║  1. L'id « tuiles-outils » (id et data-composition-id de la racine, constante  ║
+    ║     ID du script) par l'id de la section (tools/sections.py).                  ║
+    ║  2. data-duration de la racine et du panneau = durée de la section.            ║
+    ║  3. Chaque tuile : son contenu (le VRAI logo, skill thesvg, rangé dans         ║
+    ║     assets/logos/ du Reel ; sans logo trouvé : le nom en texte, .nom) et       ║
+    ║     data-apparait = l'instant (s, depuis le début de la section) où l'outil    ║
+    ║     est dit. Tuile déjà nommée dans une section d'avant : data-apparait="-1"   ║
+    ║     (visible dès la 1re image, sans rebond).                                   ║
+    ║  4. --k07-tuile-top : le bas des tuiles (top + 210) reste ~30 px au-dessus du  ║
+    ║     haut de la tête (style : haut de la tête vers 29 % de la hauteur, 555 px). ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #tuiles-outils { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      background:transparent; --k07-tuile-top:300px; }
+    #tuiles-outils * { box-sizing:border-box; }
+    #tuiles-outils .panneau { position:absolute; inset:0; background:transparent; }
+    /* Tuile façon icône d'appli : carré blanc arrondi + ombre dure décalée en bas à droite. */
+    #tuiles-outils .tuile { position:absolute; top:var(--k07-tuile-top); width:210px; height:210px;
+      border-radius:30px; background:var(--brand-text); display:flex; align-items:center; justify-content:center;
+      box-shadow: 7px 8px 0 color-mix(in srgb, var(--brand-bg) 82%, transparent),
+                  0 14px 30px color-mix(in srgb, var(--brand-bg) 35%, transparent); }
+    #tuiles-outils .tuile.gauche { left:190px; }
+    #tuiles-outils .tuile.droite { left:675px; }
+    #tuiles-outils .tuile img { width:146px; height:146px; object-fit:contain; display:block; }
+    /* Sans logo : le nom, gras, dans l'encre du style. */
+    #tuiles-outils .tuile .nom { font-family:var(--brand-font-body); font-weight:900; font-size:56px;
+      letter-spacing:-1.5px; color:var(--brand-bg); line-height:1; text-align:center; }
+    /* Flash de sortie (fin du flash chaud de l'accroche) : même voile que la pièce accroche-choc. */
+    #tuiles-outils .flash { position:absolute; inset:0; opacity:0; pointer-events:none;
+      background:linear-gradient(170deg, color-mix(in srgb, var(--brand-surface) 72%, var(--brand-negative)) 0%,
+        var(--brand-surface) 45%, color-mix(in srgb, var(--brand-surface) 78%, var(--brand-text)) 100%);
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  </style>
+</head>
+<body>
+  <div id="tuiles-outils" data-composition-id="tuiles-outils" data-start="0"
+       data-duration="5" data-fps="30" data-width="1080" data-height="1920">
+    <div id="tuiles-outils-panneau" class="panneau clip" data-start="0" data-duration="5" data-track-index="0">
+
+      <!-- TUILE GAUCHE : 1er outil nommé. EMPLACEMENT DU LOGO : remplace le <span class="nom"> par
+           <img src="assets/logos/<outil>.svg" alt="<Outil>"> (vrai logo, skill thesvg). -->
+      <div class="tuile gauche" data-apparait="0.6"><span class="nom">Outil</span></div>
+
+      <!-- TUILE DROITE : 2e outil nommé (supprimer la tuile s'il n'y en a qu'un). Même emplacement. -->
+      <div class="tuile droite" data-apparait="2.4"><span class="nom">Appli</span></div>
+
+      <!-- FLASH DE SORTIE : seulement dans la section qui suit l'accroche choc ; sinon, supprimer. -->
+      <div class="flash" data-sortie="0.2"></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'tuiles-outils'; // = id de la section (tools/sections.py)
+      var scope = '#' + ID + ' ';
+      var root = document.getElementById(ID);
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      root.querySelectorAll('.tuile').forEach(function (el, i) {
+        var cls = 't' + i; el.classList.add(cls);
+        var t = parseFloat(el.getAttribute('data-apparait'));
+        if (isNaN(t) || t < 0) { tl.set(scope + '.' + cls, { opacity: 1, scale: 1 }, 0); return; }
+        // Surgit d'un coup avec un petit rebond (opacity + scale seulement, jamais x/y).
+        tl.set(scope + '.' + cls, { opacity: 0 }, 0);
+        tl.fromTo(scope + '.' + cls, { opacity: 0, scale: 0.55 },
+          { opacity: 1, scale: 1, duration: 0.32, ease: 'back.out(2.2)' }, t);
+      });
+      var flash = root.querySelector('.flash');
+      if (flash) {
+        var d = parseFloat(flash.getAttribute('data-sortie')) || 0.2;
+        tl.fromTo(scope + '.flash', { opacity: 0.92 }, { opacity: 0, duration: d, ease: 'power2.out' }, 0);
+      }
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

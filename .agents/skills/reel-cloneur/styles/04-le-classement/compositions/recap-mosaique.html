@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°04 « LE CLASSEMENT » · PIÈCE : LE RÉCAP EN MOSAÏQUE                    ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ CE QUE C'EST : toutes les entrées du classement d'un coup d'œil, en vignettes  ║
+    ║   aux coins arrondis sur un fond flouté, chacune avec sa pastille « #N NOM »    ║
+    ║   en bas à gauche. Les vignettes surgissent l'une après l'autre (0,1 s).       ║
+    ║ TAILLE : 1080×920, section « split » (le visage est en bas).                   ║
+    ║ QUAND : la conclusion, juste avant l'appel à l'action (une phrase qui résume ou ║
+    ║   compare). PAS d'étiquette de rang ici.                                       ║
+    ║ À REMPLACER :                                                                  ║
+    ║   1. L'id « recap-mosaique » PARTOUT par l'id de la section.                  ║
+    ║   2. data-duration de la racine et de .fond = durée de la section.             ║
+    ║   3. Une vignette .m par entrée : 4 ici (2×2, 428×300). 6 entrées : 3×2 en     ║
+    ║      280×300 (left 100 / 400 / 700) ; 2 ou 3 : une rangée de 280×560.          ║
+    ║      Contenu de chaque vignette : EMPLACEMENT commenté (l'image ou le logo     ║
+    ║      déjà montré pendant cette entrée), et sa pastille avec le rang et le nom.  ║
+    ║   4. L'image floutée du fond (EMPLACEMENT .fond) : une image de la vidéo ou     ║
+    ║      d'une entrée ; sans image, le fond de surface suffit.                     ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #recap-mosaique { position:absolute; inset:0; width:1080px; height:920px; overflow:hidden;
+      color:var(--brand-text); font-family:var(--brand-font-captions); }
+    #recap-mosaique * { box-sizing:border-box; margin:0; padding:0; }
+    #recap-mosaique .fond { position:absolute; left:0; top:0; width:1080px; height:850px; overflow:hidden;
+      background:var(--brand-surface); }
+    #recap-mosaique .fond img { position:absolute; inset:-60px; width:calc(100% + 120px); height:calc(100% + 120px);
+      object-fit:cover; filter:blur(30px) brightness(0.62); }
+    #recap-mosaique .m { position:absolute; width:428px; height:300px; border-radius:26px; overflow:hidden;
+      background:var(--brand-bg); border:4px solid var(--brand-text); }
+    #recap-mosaique .m img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    #recap-mosaique .m svg { position:absolute; left:50%; top:46%; width:160px; height:118px; margin:-59px 0 0 -80px; }
+    /* Pastille : rang en texte, nom en accent, sur le fond de marque (comme les noms de l'original). */
+    #recap-mosaique .pastille { position:absolute; left:18px; bottom:16px; padding:6px 14px; border-radius:12px;
+      background:var(--brand-bg); font-size:30px; line-height:1; text-transform:uppercase; white-space:nowrap; }
+    #recap-mosaique .pastille b { font-weight:inherit; color:var(--brand-accent); }
+    #recap-mosaique .m1 { left:100px; top:170px; }
+    #recap-mosaique .m2 { left:552px; top:170px; }
+    #recap-mosaique .m3 { left:100px; top:494px; }
+    #recap-mosaique .m4 { left:552px; top:494px; }
+  </style>
+</head>
+<body>
+  <div id="recap-mosaique" data-composition-id="recap-mosaique" data-start="0" data-duration="3"
+       data-fps="30" data-width="1080" data-height="920">
+    <div id="recap-mosaique-fond" class="fond clip" data-start="0" data-duration="3" data-track-index="1">
+      <!-- EMPLACEMENT .fond : <img src="assets/images/une-image.jpg" alt=""> (floutée par le CSS) -->
+
+      <!-- VIGNETTE par entrée. EMPLACEMENT : <img src="assets/images/image-de-l-entree.jpg" alt="">
+           à la place du repère svg ; un logo : <img src="assets/logos/x.svg" style="object-fit:contain; inset:50px;" alt=""> -->
+      <div class="m m1"><svg viewBox="0 0 160 118"><rect x="5" y="5" width="150" height="108" rx="16" fill="none" stroke="var(--brand-text)" stroke-width="8"/><circle cx="50" cy="40" r="14" fill="var(--brand-accent)"/><path d="M14 106 L62 60 L92 88 L116 66 L148 106 Z" fill="var(--brand-muted)"/></svg>
+        <span class="pastille">#1 <b>PREMIER</b></span></div>
+      <div class="m m2"><svg viewBox="0 0 160 118"><rect x="5" y="5" width="150" height="108" rx="16" fill="none" stroke="var(--brand-text)" stroke-width="8"/><circle cx="110" cy="40" r="14" fill="var(--brand-accent)"/><path d="M14 106 L52 68 L80 92 L120 52 L148 106 Z" fill="var(--brand-muted)"/></svg>
+        <span class="pastille">#2 <b>DEUXIÈME</b></span></div>
+      <div class="m m3"><svg viewBox="0 0 160 118"><rect x="5" y="5" width="150" height="108" rx="16" fill="none" stroke="var(--brand-text)" stroke-width="8"/><circle cx="80" cy="38" r="14" fill="var(--brand-accent)"/><path d="M14 106 L70 62 L96 82 L124 64 L148 106 Z" fill="var(--brand-muted)"/></svg>
+        <span class="pastille">#3 <b>TROISIÈME</b></span></div>
+      <div class="m m4"><svg viewBox="0 0 160 118"><rect x="5" y="5" width="150" height="108" rx="16" fill="none" stroke="var(--brand-text)" stroke-width="8"/><circle cx="44" cy="44" r="14" fill="var(--brand-accent)"/><path d="M14 106 L58 70 L84 90 L126 56 L148 106 Z" fill="var(--brand-muted)"/></svg>
+        <span class="pastille">#4 <b>QUATRIÈME</b></span></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'recap-mosaique';
+      var s = '#' + ID + ' ';
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      // Les vignettes surgissent l'une après l'autre, dans l'ordre du classement (UN sélecteur par tween).
+      tl.fromTo(s + '.m1', {scale: .7, opacity: 0}, {scale: 1, opacity: 1, duration: .22, ease: 'back.out(1.6)'}, .06);
+      tl.fromTo(s + '.m2', {scale: .7, opacity: 0}, {scale: 1, opacity: 1, duration: .22, ease: 'back.out(1.6)'}, .16);
+      tl.fromTo(s + '.m3', {scale: .7, opacity: 0}, {scale: 1, opacity: 1, duration: .22, ease: 'back.out(1.6)'}, .26);
+      tl.fromTo(s + '.m4', {scale: .7, opacity: 0}, {scale: 1, opacity: 1, duration: .22, ease: 'back.out(1.6)'}, .36);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

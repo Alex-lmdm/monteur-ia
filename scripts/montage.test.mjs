@@ -448,3 +448,285 @@ test('reel.config.json cadre ce Reel et lui donne son propre style sans toucher 
   const ignore = (rel) => spawnSync('git', ['check-ignore', '-q', '--no-index', rel], { cwd: dir }).status;
   assert.deepEqual([ignore('reels/Proche · 2026-10-15/reel.config.json'), ignore('reels/Proche · 2026-10-15/exports/FINAL.mp4')], [1, 0]);
 });
+
+// ---------------------------------------------------------------------------
+// 5. Cartes sur le décor : la vidéo filmée reste plein cadre, les cartes se posent dessus
+// ---------------------------------------------------------------------------
+// Le format des Reels « cartes au-dessus de la tête » (style cloné ou style du catalogue) : jamais un
+// écran partagé sur un fond uni. Un Reel sans section « decor » garde exactement son montage d'avant.
+test('cadrage décor : la vidéo filmée passe sous les cartes, cadrée par reel.config.json ; sans décor, rien ne change', (t) => {
+  if (!outils(t, { pil: true, ffmpeg: true })) return;
+  const dir = maison(t);
+  const reel = nouveauReel(dir, 'Decor');
+  plan(reel, PRISES_HORS_IMAGES, { layout: LAYOUT_SPLIT_FULL_SPLIT });
+  python(reel, 'tools/build_master.py', '--write');
+  const avant = read(reel, 'index.html');
+  assert.doesNotMatch(avant, /<video id="decor/, 'sans section décor, aucun calque décor');
+
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
+    .replace(LAYOUT_SPLIT_FULL_SPLIT, '    ("s0", "split", [0]),\n    ("s1", "decor", [1, 2]),'));
+  // Visage trop haut pour laisser la place aux cartes : la vidéo agrandie depuis le haut le fait descendre.
+  // Le skin « ombre douce » et le texte secondaire (`muted`) sont des réglages valides d'un Reel.
+  write(reel, 'reel.config.json', { montage: { decorTransform: 'scale(1.5)' },
+    visual: { captionsSkin: 'soft', muted: '#555555' } });
+  const lu = (code) => JSON.parse(python(reel, '-c', `import json, sys; sys.path.insert(0, "tools"); ${code}`));
+  assert.equal(lu('from cadrage import crop_decor; from lieux import config; print(json.dumps(crop_decor(config()["montage"])))'),
+    '720:1280:180:0', 'scale(1.5) autour de « center top » : le haut du cadre, agrandi');
+  assert.deepEqual(lu('import brand_style; s = brand_style.style(); print(json.dumps([s.captions_skin, s.muted]))'), ['soft', '#555555']);
+
+  assert.match(python(reel, 'tools/build_faces.py'), /visage-decor\.mp4 : zone 720:1280:180:0 du rush, sous les cartes/);
+  assert.equal(execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height',
+    '-of', 'csv=p=0', path.join(reel, 'assets/video/visage-decor.mp4')], { encoding: 'utf8' }).trim(), '1080,1920');
+  python(reel, 'tools/build_master.py', '--write');
+  const master = read(reel, 'index.html');
+  // La vidéo filmée AVANT les sections (les cartes se peignent dessus), sur la fenêtre de la section,
+  // posée sans agrandissement ; la section est plein cadre, sur sa propre piste.
+  assert.ok(master.indexOf('<div class="face-decor">') < master.indexOf('===== SECTIONS ====='));
+  assert.match(master, /<video id="decor0" src="assets\/video\/visage-decor\.mp4"[^>]*data-start="2\.6\d+"/);
+  assert.match(master, /\.face-decor video \{[^}]*transform: none;/);
+  assert.match(master, /id="section-s1"[^>]*data-track-index="4" data-width="1080" data-height="1920"/);
+  fs.rmSync(path.join(reel, 'assets/video/visage-decor.mp4'));
+  python(reel, 'tools/build_master.py', '--write');
+  assert.match(read(reel, 'index.html'), /\.face-decor video \{[^}]*transform: scale\(1\.5\); transform-origin: center top;/,
+    'aperçu sans vidéo pré-cadrée : le cadrage du Reel');
+
+  // Les sous-titres de la section décor passent juste sous les cartes.
+  const { caps } = sousTitres(reel);
+  assert.deepEqual([...new Set(caps.map((c) => c.y))], [920, 760]);
+
+  // La synchro accepte ces réglages sans rien signaler et donne au Reel son skin.
+  const sortie = spawnSync(process.execPath, ['scripts/sync.mjs'], { cwd: dir, encoding: 'utf8' });
+  assert.doesNotMatch(sortie.stderr, /reel\.config\.json/);
+  const tokens = read(reel, 'brand/tokens.css');
+  assert.match(tokens, /skin CHOISI \(soft\)/);
+  assert.match(tokens, /--brand-muted: #555555;/);
+  assert.match(read(dir, 'brand/tokens.css'), /\.cap\.cap-skin-soft \{/, 'le skin reste disponible partout');
+});
+
+test('sous-titres mot à mot (--mots) : la voix telle que transcrite, ponctuation comprise ; sans l’option, le découpage écrit', (t) => {
+  if (!outils(t, { pil: true })) return;
+  const reel = nouveauReel(maison(t));
+  plan(reel, PRISES_HORS_IMAGES);
+  const ecrit = sousTitres(reel).caps;
+  assert.equal(ecrit.length, 7, 'le découpage MANUAL');
+  const { caps } = sousTitres(reel, '--mots', '1');
+  assert.equal(caps.length, 16, 'un sous-titre par mot dit');
+  assert.deepEqual(caps.slice(0, 4).map((c) => c.texte), ['DÉSOLÉ', 'POUR', 'LES', 'GRAPHISTES,']);
+  assert.equal(image(caps[1].start), image(0.28), 'chaque mot part sur sa voix');
+  assert.equal(sousTitres(reel, '--mots', '2').caps.length, 8, '6, 6 et 4 mots : 3 + 3 + 2');
+  // Un signe que Whisper rend seul suit son mot ; --sans laisse une section sans sous-titres.
+  const mots = JSON.parse(read(reel, 'derush/exemple_words.json'));
+  mots.splice(6, 0, { w: '?', start: 1.3, end: 1.35, take: 0 });
+  write(reel, 'derush/exemple_words.json', mots);
+  assert.deepEqual(sousTitres(reel, '--mots', '1').caps.slice(4, 6).map((c) => c.texte), ['MAIS', 'CLAUDE ?']);
+  mots.splice(7, 0, { w: '?', start: 2.69, end: 2.7, take: 1 });   // fin de la phrase d'avant, rendue au début de la suivante
+  write(reel, 'derush/exemple_words.json', mots);
+  assert.equal(sousTitres(reel, '--mots', '1').caps[6].texte, 'QUELQU’UN', 'jamais « ?QUELQU’UN »');
+  // Un mot horodaté un peu avant sa coupe (Whisper en avance) reste dans sa phrase, grâce à sa prise.
+  const avance = JSON.parse(read(reel, 'derush/exemple_words.json'));
+  avance.find((w) => w.w === 'Quelqu’un').start = 2.6;
+  write(reel, 'derush/exemple_words.json', avance);
+  assert.ok(sousTitres(reel, '--mots', '1').caps.some((c) => c.texte === 'QUELQU’UN'), 'le premier mot de la phrase n’est pas perdu');
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
+    .replace('    ("exemple-section", "split", [0, 1, 2]),', '    ("s0-hook", "split", [0]),\n    ("s1", "split", [1, 2]),'));
+  const sans = sousTitres(reel, '--mots', '1', '--sans', 's0-hook').caps;
+  assert.equal(sans.length, 10, 'les 6 mots de l’accroche sans sous-titre');
+  assert.ok(sans.every((c) => c.start >= 2.6));
+  // Une section --sans au milieu : aucun mot de la section d'avant n'y déborde.
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
+    .replace('    ("s0-hook", "split", [0]),\n    ("s1", "split", [1, 2]),', '    ("s0", "split", [0]),\n    ("s1-carte", "split", [1]),\n    ("s2", "split", [2]),'));
+  const milieu = sousTitres(reel, '--mots', '1', '--sans', 's1-carte').caps;
+  assert.ok(milieu.every((c) => c.start + c.dur <= 2.67 + 1e-3 || c.start >= 5.33), 'rien d’affiché sur la carte');
+  const refus = spawnSync('python3', ['tools/montage_captions.py', '--mots', '4'], { cwd: reel, encoding: 'utf8' });
+  assert.notEqual(refus.status, 0);
+  assert.match(refus.stderr, /--mots attend 1, 2 ou 3/);
+});
+
+// ---------------------------------------------------------------------------
+// 6. Reel Cloneur : le rythme qu'on voit (cartes comprises) et le contrôle côte à côte
+// ---------------------------------------------------------------------------
+// Une vidéo dont la carte du haut change à 1,5 s et 3 s sans coupe (le visage, en bas, ne bouge pas),
+// puis une vraie coupe à 4,5 s. L'ancien relevé ne voyait que la coupe : c'est le cas du Reel
+// « 10/10 Claude Skills » (8 coupes trouvées pour 16 changements d'image, essai du 21/10/2026).
+test('Reel Cloneur : un changement de carte sans coupe compte dans le rythme ; côte à côte, original et montage', (t) => {
+  if (!outils(t, { ffmpeg: true })) return;
+  const dir = maison(t);
+  const clone = path.join(dir, 'clones', 'essai');
+  fs.mkdirSync(clone, { recursive: true });
+  const carte = (x, quand) => `drawbox=x=${x}:y=70:w=120:h=60:color=0x202020@1:t=fill:enable='${quand}'`;
+  execFileSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'color=c=0x606060:s=360x640:r=30:d=6', '-vf',
+    ['drawbox=x=20:y=40:w=320:h=150:color=0xf0e8dc@1:t=fill', carte(40, 'lt(t,1.5)'), carte(200, 'between(t,1.5,3)'),
+      carte(120, 'gte(t,3)'), "drawbox=x=0:y=0:w=360:h=640:color=0x1060c0@1:t=fill:enable='gte(t,4.5)'"].join(','),
+    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', path.join(clone, 'media.mp4')]);
+  const [changements, coupes] = JSON.parse(python(path.join(dir, 'tools'), '-c', [
+    'import json, pathlib, sys', 'sys.argv = ["x"]', 'import cloner_reel as c',
+    `v = pathlib.Path(${JSON.stringify(path.join(clone, 'media.mp4'))})`,
+    'print(json.dumps([c.detecter_changements("ffmpeg", v, 6.0)[0], c.detecter_coupes("ffmpeg", v, 6.0)[0]]))'].join('\n')));
+  assert.deepEqual(changements.map((x) => Math.round(x * 10) / 10), [1.5, 3, 4.5]);
+  assert.ok(coupes.length < changements.length, 'les coupes franches seules ratent les cartes');
+
+  const sortie = python(dir, 'tools/cloner_reel.py', 'cote-a-cote', clone, path.join(clone, 'media.mp4'), '1.0', '2.0:5.0');
+  assert.match(sortie, /2 paires \(original à gauche, montage à droite\)/);
+  const paire = path.join(clone, 'kit/apercu/paire-002.00-005.00.jpg');
+  assert.equal(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'stream=width,height', '-of', 'csv=p=0', paire],
+    { encoding: 'utf8' }).trim(), '1080,960');
+});
+
+// ---------------------------------------------------------------------------
+// 7. Personne détourée devant les visuels (styles « Avis produit », « Mon histoire »)
+// ---------------------------------------------------------------------------
+// Le vrai détourage (hyperframes remove-background, modèle de 170 Mo) est remplacé ici par un faux qui
+// rend une vidéo transparente de même taille : on vérifie la place des couches, pas le modèle.
+test('cadrage détouré : la personne passe devant la section, détourée une fois ; l’ancien export refuse', (t) => {
+  if (!outils(t, { pil: true, ffmpeg: true })) return;
+  const dir = maison(t);
+  const reel = nouveauReel(dir, 'Detoure');
+  plan(reel, PRISES_HORS_IMAGES, { layout: '    ("s0", "split", [0]),\n    ("s1", "detoure", [1, 2]),' });
+  const faux = path.join(dir, 'faux-hyperframes.sh');
+  write(dir, 'faux-hyperframes.sh', '#!/bin/sh\n# remove-background <entree> -o <sortie> ...\n'
+    + 'ffmpeg -v error -y -i "$2" -c:v libvpx-vp9 -deadline realtime -cpu-used 8 -pix_fmt yuva420p -an "$4"\n');
+  const env = { ...process.env, MONTEUR_HYPERFRAMES: `sh ${faux}` };
+  const faces = () => execFileSync('python3', ['tools/build_faces.py'], { cwd: reel, encoding: 'utf8', env });
+  // Seul le passage montré est détouré (2,67 s à 8 s), pas toute la vidéo.
+  assert.match(faces(), /visage-detoure-0\.webm : 2\.67 s, 5\.33 s, zone 1080:1920:0:0 du rush, personne détourée/);
+  assert.match(faces(), /déjà détourée \(1 passage\(s\), même zone, même dérush\)/, 'pas le calcul à chaque fois');
+  const duree = Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0',
+    path.join(reel, 'assets/video/visage-detoure-0.webm')], { encoding: 'utf8' }));
+  assert.ok(Math.abs(duree - 5.33) < 0.1, `le passage seul : ${duree} s`);
+  assert.ok(!fs.existsSync(path.join(reel, 'work/visage-detoure-source.mp4')), 'le fichier de travail part');
+
+  python(reel, 'tools/build_master.py', '--write');
+  const master = read(reel, 'index.html');
+  const ordre = ['<div class="face-decor">', '===== SECTIONS =====', '<div class="face-detoure">', '<div class="face-full">']
+    .map((m) => master.indexOf(m));
+  assert.deepEqual([...ordre].sort((a, b) => a - b), ordre, 'la personne passe après les sections, avant le visage plein écran');
+  assert.match(master, /<video id="detoure0" src="assets\/video\/visage-detoure-0\.webm"[^>]*data-start="2\.6\d+" data-media-start="0"/);
+  // Rapetissée et déplacée sans perte de netteté : la place se règle dans reel.config.json.
+  write(reel, 'reel.config.json', { montage: { detourePlace: 'translate(220px, 300px) scale(0.6)' } });
+  python(reel, 'tools/build_master.py', '--write');
+  assert.match(read(reel, 'index.html'), /\.face-detoure \{[^}]*transform: translate\(220px, 300px\) scale\(0\.6\)/);
+  assert.match(master, /id="section-s1"[^>]*data-track-index="5" data-width="1080" data-height="1920"/);
+  assert.deepEqual([...new Set(sousTitres(reel).caps.map((c) => c.y))], [920, 1250]);
+
+  // Options du passage : la personne monte du bas, puis la vidéo filmée revient en fondu (style 9).
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
+    .replace('("s1", "detoure", [1, 2]),', '("s1", "detoure", [1, 2], {"entree": "monte", "visageRevient": 2}),'));
+  assert.match(faces(), /visage-plein\.mp4 : zone [\d:]+ du rush, visage plein écran/, 'le visage qui revient est préparé');
+  python(reel, 'tools/build_master.py', '--write');
+  const anime = read(reel, 'index.html');
+  assert.match(anime, /fromTo\("#detoure0", \{ y: 1920, filter: "blur\(18px\)" \}, \{ y: 0, filter: "blur\(0px\)", duration: 0\.4, ease: "power2\.out" \}, 2\.6\d+\);/);
+  assert.match(anime, /<video id="faceretour0" src="assets\/video\/visage-plein\.mp4"[^>]*data-start="4\.6\d+" data-media-start="4\.6\d+" data-duration="3\.3\d+"/);
+  assert.match(anime, /fromTo\("#faceretour0", \{ opacity: 0 \}, \{ opacity: 1, duration: 0\.4, ease: "none" \}, 4\.6\d+\);/);
+  assert.ok(anime.indexOf('id="faceretour0"') > anime.indexOf('<div class="face-full">'), 'le visage revient par-dessus la personne');
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('"visageRevient": 2', '"visageRevient": 9'));
+  assert.match(spawnSync('python3', ['tools/build_master.py'], { cwd: reel, encoding: 'utf8' }).stderr, /visageRevient \(9\.0 s\) après la fin/);
+
+  const ancien = spawnSync('python3', ['tools/build_final.py'], { cwd: reel, encoding: 'utf8' });
+  assert.notEqual(ancien.status, 0);
+  assert.match(ancien.stderr, /ne sait pas poser une personne detouree/);
+});
+
+test('zoom par section : une vidéo nette par niveau de zoom, la section serrée sur sa fenêtre ; sans zoom, rien ne change', (t) => {
+  if (!outils(t, { pil: true, ffmpeg: true })) return;
+  const reel = nouveauReel(maison(t), 'Zoom');
+  plan(reel, PRISES_HORS_IMAGES, { layout: '    ("s0", "face", [0]),\n    ("s1", "decor", [1]),\n    ("s2", "decor", [2]),' });
+  const sansZoom = (python(reel, 'tools/build_faces.py'), python(reel, 'tools/build_master.py', '--write'), read(reel, 'index.html'));
+  assert.doesNotMatch(sansZoom, /-zoom-/);
+  assert.match(sansZoom, /<video id="decor0" src="assets\/video\/visage-decor\.mp4"/);
+  assert.doesNotMatch(sansZoom, /id="decor1"/, 'deux sections décor contiguës sans zoom : une seule fenêtre');
+
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py')
+    .replace('("s2", "decor", [2]),', '("s2", "decor", [2], {"zoom": 1.25}),')
+    .replace('("s0", "face", [0]),', '("s0", "face", [0], {"zoom": 1.2, "zoomOrigin": "center 40%"}),'));
+  const lu = (code) => JSON.parse(python(reel, '-c', `import json, sys; sys.path.insert(0, "tools"); ${code}`));
+  // Les yeux (30 % du haut) restent à leur place : la zone se resserre autour d'eux.
+  assert.deepEqual(lu('from cadrage import zoom_crop; print(json.dumps(zoom_crop(None, 1.25)))'), ['864:1536:108:115', false]);
+  assert.deepEqual(lu('from cadrage import zoom_crop; print(json.dumps(zoom_crop(None, 0.8)))'), ['1080:1920:0:0', true],
+    'jamais plus que la vidéo filmée');
+  const sortie = python(reel, 'tools/build_faces.py');
+  assert.match(sortie, /visage-decor-zoom-0\.mp4 : zoom 1\.25 autour de « center 30% », zone 864:1536:108:115/);
+  assert.match(sortie, /visage-plein-zoom-0\.mp4 : zoom 1\.2 autour de « center 40% »/);
+  assert.equal(execFileSync('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height',
+    '-of', 'csv=p=0', path.join(reel, 'assets/video/visage-decor-zoom-0.mp4')], { encoding: 'utf8' }).trim(), '1080,1920');
+
+  python(reel, 'tools/build_master.py', '--write');
+  const master = read(reel, 'index.html');
+  // La section zoomée a sa propre fenêtre, posée sans agrandissement ; celle d'avant garde le cadrage du Reel.
+  assert.match(master, /<video id="decor0" src="assets\/video\/visage-decor\.mp4"[^>]*data-start="2\.6\d+"[^>]*data-duration="2\.6\d+"/);
+  assert.match(master, /<video id="decor1" src="assets\/video\/visage-decor-zoom-0\.mp4"[^>]*data-start="5\.3\d+" data-media-start="5\.3\d+"/);
+  assert.match(master, /<video id="facefull0" src="assets\/video\/visage-plein-zoom-0\.mp4"/);
+  assert.match(master, /\.face-decor video \{[^}]*transform: none;/);
+
+  // Zoom progressif : la vidéo de la section part resserrée et s'élargit en 0,8 s (timeline du master),
+  // sur la vidéo du Reel, sans nouvelle copie.
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('("s1", "decor", [1]),', '("s1", "decor", [1], {"zoom": [1.25, 1]}),'));
+  python(reel, 'tools/build_master.py', '--write');
+  assert.match(read(reel, 'index.html'),
+    /fromTo\("#decor0", \{ scale: 1\.25, transformOrigin: "center 30%" \}, \{ scale: 1, duration: 0\.8, ease: "power2\.out" \}, 2\.6\d+\);/);
+  assert.match(read(reel, 'index.html'), /<video id="decor0" src="assets\/video\/visage-decor\.mp4"/);
+  assert.match(read(reel, 'index.html'), /<video id="decor1" src="assets\/video\/visage-decor-zoom-0\.mp4"/);
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('{"zoom": [1.25, 1]}', '{"zoom": [2, 1]}'));
+  assert.match(spawnSync('python3', ['tools/build_master.py'], { cwd: reel, encoding: 'utf8' }).stderr, /1,3 fois d'écart au plus/);
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('("s1", "decor", [1], {"zoom": [2, 1]}),', '("s1", "decor", [1]),'));
+
+  // Zoom retiré : sa vidéo part au prochain passage.
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('("s2", "decor", [2], {"zoom": 1.25})', '("s2", "decor", [2])'));
+  python(reel, 'tools/build_faces.py');
+  assert.ok(!fs.existsSync(path.join(reel, 'assets/video/visage-decor-zoom-0.mp4')));
+
+  const ancien = spawnSync('python3', ['tools/build_final.py'], { cwd: reel, encoding: 'utf8' });
+  assert.notEqual(ancien.status, 0);
+  assert.match(ancien.stderr, /ne sait pas zoomer une section/);
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('{"zoom": 1.2, "zoomOrigin": "center 40%"}', '{"zoom": "fort"}'));
+  const invalide = spawnSync('python3', ['tools/build_master.py'], { cwd: reel, encoding: 'utf8' });
+  assert.match(invalide.stderr, /section s0 : zoom 'fort' invalide/);
+
+  // En écran partagé, le zoom est sec : le visage resserré garde sa place sous la jointure.
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('("s0", "face", [0], {"zoom": "fort"})', '("s0", "split", [0], {"zoom": 1.15})'));
+  assert.match(python(reel, 'tools/build_faces.py'), /visage-split-zoom-0\.mp4 : zoom 1\.15/);
+  python(reel, 'tools/build_master.py', '--write');
+  assert.match(read(reel, 'index.html'), /<video id="faceA" src="assets\/video\/visage-split-zoom-0\.mp4"/);
+  assert.ok(!fs.existsSync(path.join(reel, 'assets/video/visage-plein-zoom-0.mp4')), 'plus de section face zoomée');
+  write(reel, 'tools/sections.py', read(reel, 'tools/sections.py').replace('{"zoom": 1.15}', '{"zoom": [1.15, 1]}'));
+  assert.match(spawnSync('python3', ['tools/build_master.py'], { cwd: reel, encoding: 'utf8' }).stderr, /zoom progressif en écran partagé impossible/);
+});
+
+// ---------------------------------------------------------------------------
+// 8. Le catalogue de styles (skill reel-cloneur, styles/) : chaque kit tient debout tout seul
+// ---------------------------------------------------------------------------
+test('catalogue de styles : chaque kit a sa fiche, ses pièces, des réglages acceptés et des polices livrées', (t) => {
+  const dossier = path.join(root, '.claude/skills/reel-cloneur/styles');
+  const kits = fs.readdirSync(dossier).filter((d) => /^\d\d-/.test(d)).sort();
+  assert.ok(kits.length >= 11, `${kits.length} kits`);
+  const index = read(dossier, 'README.md');
+  const polices = JSON.parse(read(root, 'templates/style-presets.json')).fonts;
+  const connues = new Set([...Object.keys(config().visual), 'muted']);
+  for (const kit of kits) {
+    const n = Number(kit.slice(0, 2));
+    assert.match(read(path.join(dossier, kit), 'style.md'), new RegExp(`Style n°${kit.slice(0, 2)} · `), `${kit} : en-tête de la fiche`);
+    assert.match(index, new RegExp(`^\\| ${n} \\| `, 'm'), `${kit} : dans l'index`);
+    const visual = JSON.parse(read(path.join(dossier, kit), 'reel.config.json')).visual;
+    for (const [cle, val] of Object.entries(visual)) {
+      assert.ok(connues.has(cle), `${kit} : réglage inconnu ${cle}`);
+      if (/^font/.test(cle)) assert.ok(polices[val]?.faces, `${kit} : police ${val} absente de la table`);
+    }
+    for (const face of Object.entries(polices).filter(([nom]) => Object.values(visual).includes(nom)).flatMap(([, p]) => p.faces)) {
+      assert.ok(fs.existsSync(path.join(root, 'assets/fonts', face.file)), `${kit} : ${face.file} livrée`);
+    }
+    const pieces = fs.readdirSync(path.join(dossier, kit, 'compositions')).filter((f) => f.endsWith('.html'));
+    assert.ok(pieces.length >= 2, `${kit} : pièces`);
+    for (const piece of pieces) {
+      const html = read(path.join(dossier, kit, 'compositions'), piece);
+      assert.doesNotMatch(html, /@font-face|url\([^)]*(assets\/fonts|polices)\//, `${kit}/${piece} : les polices viennent de brand/fonts.css`);
+    }
+  }
+  if (!outils(t)) return;
+  // La synchro accepte les réglages de chaque kit sans en écarter aucun.
+  const dir = maison(t);
+  const reel = nouveauReel(dir, 'Catalogue');
+  for (const kit of kits) {
+    fs.copyFileSync(path.join(dossier, kit, 'reel.config.json'), path.join(reel, 'reel.config.json'));
+    const sortie = spawnSync(process.execPath, ['scripts/sync.mjs'], { cwd: dir, encoding: 'utf8' });
+    assert.doesNotMatch(sortie.stderr + sortie.stdout, /ignoré|absente de la table|manquant/, `${kit} : réglages refusés`);
+  }
+});

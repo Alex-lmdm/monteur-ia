@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    STYLE N°05 « MÉTHODE EN SCHÉMA » · PIÈCE 1/3 : LE SCHÉMA DE LA MÉTHODE
+    ─────────────────────────────────────────────────────────────────────────
+    CE QUE C'EST : la méthode du client en schéma, une ligne par étape. Le nom de l'étape (blanc,
+    très gras, aligné à droite, suivi de « : »), puis une ou deux barres de couleur qui se tracent
+    de gauche à droite, ou une boucle (flèche circulaire) pour une étape qui se répète. Les lignes
+    arrivent l'une après l'autre juste au-dessus de la tête et poussent les précédentes vers le
+    haut (la liste grandit vers le haut ; trop longue, ses premières lignes sortent par le haut).
+    TAILLE : section « decor » plein cadre 1080×1920, fond TRANSPARENT (posée sur la vidéo entière
+    du client, dans tools/sections.py : ("<id>", "decor", [prises])).
+    QUAND L'UTILISER : deux fois par vidéo, jamais au milieu.
+      - l'accroche : MODE = 'construction', une ligne toutes les ~0,8 s, comme un sommaire ;
+      - la dernière phrase : MODE = 'recap', tout revient en cascade, frise pleine (FRISE).
+    COMMENT LA POSER DANS UN REEL : copie ce fichier en compositions/<id de la section>.html, puis
+    remplace « m05-schema » PARTOUT par l'id de la section (CSS, HTML, constante ID), et les deux
+    data-duration par la durée de la section (derush/<vidéo>_cuts.json, via tools/sections.py).
+    À REMPLACER (bloc « RÉGLAGES » du script) :
+      - ETAPES : le nom court de chaque étape (1 à 2 mots, 12 caractères au plus), sa forme
+        ('barres' avec barres: 1 ou 2 = son poids ; 'boucle' = une étape qui se répète), et
+        appel: true sur la dernière si c'est l'appel à l'action (elle passe en vert).
+        Les étapes viennent de ce que dit la vidéo : jamais une étape inventée.
+      - TEMPS : l'instant d'apparition de chaque ligne (s depuis le début de la section) ; en
+        'recap', seul TEMPS[0] compte.
+      - MODE : 'construction' ou 'recap'.
+      - FRISE : null, ou { actuelle: <index de la dernière étape>, de: 1, a: 1, apparition: false }
+        en récapitulatif (apparition: true seulement si aucune section d'avant ne la montrait).
+      - DUREE : la durée de la section (la même que data-duration).
+    PLACE (bloc « PLACE » du script, le même dans toutes les sections du Reel) : haut (début de la
+    zone, ≥ 150 px, Instagram cache le haut), bas (le schéma ne descend jamais plus bas : au-dessus
+    du haut de la tête du client), friseY (≈ 100 px sous la ligne des sous-titres), voile (voile
+    sombre en haut, 0 à 0,6 : 0 sur un décor déjà sombre). Colonne des noms : --m05-col (CSS).
+    COULEURS : uniquement les tokens de marque. Les barres prennent une teinte par étape, tournée
+    autour de l'accent (1re rouge, 2e jaune, celles du milieu l'accent puis plus profondes,
+    l'appel à l'action vert) ; un moteur qui ne sait pas dériver une couleur retombe sur
+    --brand-negative, --brand-text et --brand-accent.
+    IMAGES : aucune. Ce style n'affiche ni logo ni capture : pas d'emplacement prévu.
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    /* Racine scopée, SANS fond (posée sur la vidéo) ; aucune règle sur html/body (render par couches). */
+    #m05-schema { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      color:var(--brand-text); font-family:var(--brand-font-body);
+      --m05-haut:210px; --m05-bas:700px; --m05-frise-y:1395px; --m05-col:330px; --m05-voile:0.45;
+      --m05-ombre:0 0 3px color-mix(in srgb, var(--brand-stroke) 60%, transparent), 0 2px 14px color-mix(in srgb, var(--brand-stroke) 60%, transparent);
+      --m05-c1:var(--brand-negative); --m05-c2:var(--brand-text); --m05-c3:var(--brand-accent);
+      --m05-c4:var(--brand-accent); --m05-c5:var(--brand-accent); --m05-cfin:var(--brand-accent);
+      --m05-fleche:var(--brand-accent); }
+    @supports (color: hsl(from red h s l)) {
+      #m05-schema {
+        --m05-c1:hsl(from var(--brand-accent) calc(h + 157) s l);
+        --m05-c2:hsl(from var(--brand-accent) calc(h - 156) s l);
+        --m05-c4:hsl(from var(--brand-accent) calc(h + 11) s calc(l - 4));
+        --m05-c5:hsl(from var(--brand-accent) calc(h + 30) s calc(l - 4));
+        --m05-cfin:hsl(from var(--brand-accent) calc(h - 79) s calc(l - 6));
+        --m05-fleche:hsl(from var(--brand-accent) calc(h + 40) s calc(l - 4)); }
+    }
+    #m05-schema * { box-sizing:border-box; }
+    #m05-schema .voile { position:absolute; left:0; right:0; top:0; height:1000px; opacity:var(--m05-voile);
+      background:linear-gradient(to bottom, var(--brand-stroke) 0%, color-mix(in srgb, var(--brand-stroke) 55%, transparent) 45%, transparent 100%); }
+    #m05-schema .zone { position:absolute; left:var(--brand-safe-x); right:var(--brand-safe-x); top:var(--m05-haut); }
+    #m05-schema .liste { position:relative; }
+    #m05-schema .ligne { position:relative; display:flex; align-items:flex-start; margin-bottom:30px; }
+    #m05-schema .ligne-b1 { height:30px; } #m05-schema .ligne-b2 { height:74px; } #m05-schema .ligne-boucle { height:112px; }
+    #m05-schema .libelle { flex:none; width:var(--m05-col); padding-right:20px; text-align:right; white-space:nowrap;
+      font-weight:900; font-size:54px; line-height:1; letter-spacing:-0.045em; margin-top:-12px;
+      text-shadow:var(--m05-ombre); transform-origin:right center; }
+    #m05-schema .ligne-boucle .libelle { margin-top:30px; }
+    #m05-schema .barres { flex:1; display:flex; flex-direction:column; gap:14px; }
+    #m05-schema .barre { display:block; height:30px; background:var(--c); transform-origin:left center; }
+    #m05-schema .boucle { width:112px; height:112px; overflow:visible; }
+    #m05-schema .boucle .arc { fill:none; stroke:var(--brand-text); stroke-width:11; stroke-linecap:round; }
+    #m05-schema .boucle .pointe { fill:none; stroke:var(--m05-fleche); stroke-width:10; stroke-linecap:square; }
+    #m05-schema .frise { position:absolute; left:var(--brand-safe-x); right:var(--brand-safe-x); top:var(--m05-frise-y); }
+    #m05-schema .piste, #m05-schema .rempli { position:absolute; left:0; right:0; top:0; height:6px; border-radius:3px; }
+    #m05-schema .piste { background:color-mix(in srgb, var(--brand-text) 35%, transparent); }
+    #m05-schema .rempli { background:var(--brand-text); transform-origin:left center; }
+    #m05-schema .pastilles { position:absolute; left:0; right:0; top:30px; display:flex; gap:16px; align-items:flex-start; }
+    #m05-schema .pastille { flex:1; display:flex; flex-direction:column; align-items:center; gap:10px; }
+    #m05-schema .pastille i { display:block; width:100%; height:14px; border-radius:7px; background:var(--brand-text); box-shadow:var(--m05-ombre); }
+    #m05-schema .pastille span { font-weight:700; font-size:30px; line-height:1; letter-spacing:-0.02em; white-space:nowrap; text-shadow:var(--m05-ombre); }
+    #m05-schema .anneau { flex:none; width:24px; height:24px; margin-top:-6px; border-radius:50%; border:5px solid var(--brand-text); }
+  </style>
+</head>
+<body>
+  <div id="m05-schema" data-composition-id="m05-schema" data-start="0" data-duration="6"
+       data-fps="30" data-width="1080" data-height="1920">
+    <div id="m05-schema-calque" class="clip" data-start="0" data-duration="6" data-track-index="0">
+      <div class="voile"></div>
+      <div class="zone"><div class="liste"></div></div>
+      <div class="frise"></div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'm05-schema';
+      var S = '#' + ID + ' ';
+      // >>> RÉGLAGES DE LA SECTION (à remplacer) -------------------------------------------
+      var ETAPES = [
+        { libelle: 'Idée',     forme: 'barres', barres: 2 },
+        { libelle: 'Script',   forme: 'barres', barres: 2 },
+        { libelle: 'Tournage', forme: 'boucle' },
+        { libelle: 'Montage',  forme: 'barres', barres: 2 },
+        { libelle: 'Commente', forme: 'barres', barres: 1, appel: true }
+      ];
+      var TEMPS = [0.3, 1.1, 1.9, 2.7, 3.5];
+      var MODE = 'construction';
+      var FRISE = null;
+      var DUREE = 6;
+      // <<< FIN DES RÉGLAGES ------------------------------------------------------------------
+      // >>> PLACE (la même dans toutes les sections du Reel : à caler une fois sur la vidéo) -----
+      //   haut : début de la zone des cartes (≥ 150) · bas : jamais plus bas (au-dessus du haut de
+      //   la tête) · friseY : ~100 px sous les sous-titres · voile : 0 à 0,6 (0 sur un décor sombre).
+      var PLACE = { haut: 210, bas: 700, friseY: 1395, voile: 0.45 };
+      // <<< FIN DE LA PLACE ----------------------------------------------------------------------
+      var root = document.getElementById(ID);
+      root.style.setProperty('--m05-haut', PLACE.haut + 'px');
+      root.style.setProperty('--m05-bas', PLACE.bas + 'px');
+      root.style.setProperty('--m05-frise-y', PLACE.friseY + 'px');
+      root.style.setProperty('--m05-voile', String(PLACE.voile));
+      var ZONE = PLACE.bas - PLACE.haut;
+      var H = { b1: 30 + 30, b2: 74 + 30, boucle: 112 + 30 };   // = hauteurs CSS + marge
+      var NBSP = ' ';
+      // Couleur des barres : 1re étape rouge, 2e jaune, milieu accent puis plus profond, appel vert.
+      function couleurs(etapes) {
+        var milieu = ['var(--m05-c3)', 'var(--m05-c4)', 'var(--m05-c5)'], m = 0, n = 0;
+        return etapes.map(function (e) {
+          if (e.forme !== 'barres') return null;
+          n++;
+          if (e.appel) return 'var(--m05-cfin)';
+          if (n === 1) return 'var(--m05-c1)';
+          if (n === 2) return 'var(--m05-c2)';
+          return milieu[Math.min(m++, milieu.length - 1)];
+        });
+      }
+      var BOUCLE = '<svg class="boucle" viewBox="0 0 112 112" aria-hidden="true">' +
+        '<path class="arc" pathLength="1" d="M56 10 A46 46 0 1 0 88.5 88.5"/>' +
+        '<path class="pointe" d="M80 78 L98 78 L98 96"/></svg>';
+      function ligne(e, i, c) {
+        var type = e.forme === 'boucle' ? 'boucle' : (e.barres === 1 ? 'b1' : 'b2');
+        var l = document.createElement('div');
+        l.className = 'ligne ligne-' + type + ' ligne-' + i;
+        if (c) l.style.setProperty('--c', c);
+        var lib = document.createElement('div');
+        lib.className = 'libelle'; lib.textContent = e.libelle + NBSP + ':';
+        l.appendChild(lib);
+        if (type === 'boucle') l.insertAdjacentHTML('beforeend', BOUCLE);
+        else {
+          var b = document.createElement('div'); b.className = 'barres';
+          for (var k = 0; k < (e.barres === 1 ? 1 : 2); k++) { var r = document.createElement('i'); r.className = 'barre'; b.appendChild(r); }
+          l.appendChild(b);
+        }
+        return { el: l, h: H[type] };
+      }
+      function frise(conteneur, etapes, actuelle) {
+        conteneur.innerHTML = '<div class="piste"></div><div class="rempli"></div><div class="pastilles"></div>';
+        var p = conteneur.querySelector('.pastilles');
+        etapes.forEach(function (e, i) {
+          if (i > actuelle) return;
+          if (e.forme === 'boucle') { p.insertAdjacentHTML('beforeend', '<div class="anneau frise-' + i + '"></div>'); return; }
+          p.insertAdjacentHTML('beforeend', '<div class="pastille frise-' + i + '"><i></i><span></span></div>');
+          p.querySelector('.frise-' + i + ' span').textContent = e.libelle;
+        });
+        // Les pastilles des étapes à venir gardent leur place (invisibles) : la frise ne bouge pas.
+        etapes.forEach(function (e, i) {
+          if (i <= actuelle) return;
+          p.insertAdjacentHTML('beforeend', e.forme === 'boucle' ? '<div class="anneau" style="visibility:hidden"></div>'
+            : '<div class="pastille" style="visibility:hidden"><i></i><span>&nbsp;</span></div>');
+        });
+      }
+      var liste = root.querySelector('.liste'), cols = couleurs(ETAPES), hauteurs = [];
+      ETAPES.forEach(function (e, i) { var L = ligne(e, i, cols[i]); liste.appendChild(L.el); hauteurs.push(L.h); });
+      if (FRISE) frise(root.querySelector('.frise'), ETAPES, FRISE.actuelle);
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      // Voile : il se fond à l'accroche ; en récapitulatif il est déjà là (section d'avant).
+      if (MODE !== 'recap') tl.fromTo(S + '.voile', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0);
+      // La liste grandit vers le HAUT depuis --m05-bas (juste au-dessus de la tête) : chaque
+      // nouvelle ligne arrive en bas et pousse les autres. Au-delà de --m05-haut, les premières
+      // lignes sortent par le haut, comme dans l'original. En récapitulatif, elle est en place.
+      var cumul = [], c0 = 0;
+      hauteurs.forEach(function (h) { c0 += h; cumul.push(c0 - 30); });
+      var yPour = function (i) { return ZONE - cumul[i]; };
+      tl.set(S + '.liste', { y: MODE === 'recap' ? yPour(ETAPES.length - 1) : yPour(0) }, 0);
+      ETAPES.forEach(function (e, i) {
+        var t = MODE === 'recap' ? TEMPS[0] + i * 0.12 : TEMPS[i];
+        if (MODE !== 'recap' && i > 0) tl.to(S + '.liste', { y: yPour(i), duration: 0.3, ease: 'power2.out' }, t);
+        var L = S + '.ligne-' + i;
+        tl.fromTo(L + ' .libelle', { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'expo.out' }, t);
+        if (e.forme === 'boucle') {
+          tl.fromTo(L + ' .arc', { strokeDasharray: 1, strokeDashoffset: 1 },
+            { strokeDashoffset: 0, duration: 0.55, ease: 'power3.out' }, t + 0.05);
+          tl.fromTo(L + ' .boucle', { rotation: -140 }, { rotation: 0, duration: 0.55, ease: 'power3.out' }, t + 0.05);
+          tl.fromTo(L + ' .pointe', { opacity: 0, scale: 0.4, transformOrigin: '100% 0%' },
+            { opacity: 1, scale: 1, duration: 0.2, ease: 'back.out(2)' }, t + 0.45);
+        } else {
+          tl.fromTo(L + ' .barre', { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: 'power3.out', stagger: 0.12 }, t + 0.05);
+        }
+      });
+      if (FRISE) {
+        if (FRISE.apparition) tl.fromTo(S + '.frise', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0);
+        tl.fromTo(S + '.rempli', { scaleX: FRISE.de }, { scaleX: FRISE.a, duration: DUREE, ease: 'none' }, 0);
+      }
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

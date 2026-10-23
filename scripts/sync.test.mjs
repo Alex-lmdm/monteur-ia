@@ -89,6 +89,9 @@ test('les préférences apprises au débrief arrivent dans les fichiers agent', 
   let claude = (sync(dir), read(dir, 'CLAUDE.md'));
   assert.match(claude, /première vidéo pas encore faite/);
   assert.match(claude, /Aucune pour l'instant/);
+  // Avant la première vidéo : la marche à suivre complète, avec la seule question permise (le style).
+  assert.match(claude, /Je la monte\s+comment \? 1\. Mes réglages de base \(par défaut\)/);
+  assert.match(claude, /Débrief repoussé/);
   const own = config();
   own.montage.preferences = ['Pas d\'animation par-dessus le visage', '  ', 'Sous-titres {{GRANDS}}\nen jaune'];
   own.setup.firstVideoDone = true;
@@ -97,6 +100,9 @@ test('les préférences apprises au débrief arrivent dans les fichiers agent', 
   for (const file of ['CLAUDE.md', 'AGENTS.md']) {
     const text = read(dir, file);
     assert.match(text, /première vidéo faite/);
+    // Après : une ligne au lieu de la marche à suivre, la place revient aux préférences.
+    assert.doesNotMatch(text, /Je la monte\s+comment|Monte d'une traite|Débrief repoussé|\{\{[#/]PREMIERE/);
+    assert.match(text, /questionnaire `\/setup` reste disponible/);
     assert.match(text, /^- Pas d'animation par-dessus le visage$/m);
     assert.match(text, /^- Sous-titres GRANDS en jaune$/m);
     assert.doesNotMatch(text, /Aucune pour l'instant|\{\{GRANDS/);

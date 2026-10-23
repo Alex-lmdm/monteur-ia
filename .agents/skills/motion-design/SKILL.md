@@ -473,8 +473,11 @@ animations (GSAP, CSS, Anime), prendre des images à des instants choisis (débu
 fin de chaque animation), puis les regarder réellement :
 
 ```bash
-npx hyperframes snapshot --at 0.3,1.2,2.5
+npx hyperframes snapshot --at 0.3,1.2,2.5 --describe false
 ```
+
+`--describe false` toujours : sans lui, une clé Gemini présente sur l'ordinateur (`GEMINI_API_KEY`)
+fait analyser chaque image par un service payant.
 
 - Chaque tween tombe sur le bon temps de la voix.
 - Un élément resté figé d'une image à l'autre = bug silencieux à corriger. La console du
@@ -506,7 +509,7 @@ calées sur les timestamps. **Corriger les mots propres à ta niche mal transcri
 jargon → cf. tes homophones connus).
 ✅ *Critère* : chaque section a un `start`/`end` en secondes issu des timestamps, la liste couvre 100 %
 de la durée sans trou ni chevauchement, et le format de chaque section est décidé (cadrage de départ =
-`montage.defaultLayout` — `"split"` ou `"faceplein"` —, le créateur écarte du défaut section par
+`montage.defaultLayout` — `"split"`, `"faceplein"` ou `"decor"` —, le créateur écarte du défaut section par
 section — `references/montage-talking-head.md`).
 
 **Étape 3 — Transcoder la vidéo → `assets/video/base.mp4`.**

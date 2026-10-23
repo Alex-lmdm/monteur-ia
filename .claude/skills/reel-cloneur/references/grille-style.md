@@ -20,11 +20,14 @@ estimée à l'œil porte « environ ».
 
 ## 1. Le rythme
 
-Source : `style.json` → `rythme` (coupes par tranche de 5 s, plan le plus fréquent), les planches.
+Source : `shots.json` → `changements` (mesurés), `style.json` → `rythme` (coupes par tranche de
+5 s, plan le plus fréquent), les planches.
 
 - **Changement d'image** : pas seulement les coupes franches. Un zoom, un texte qui arrive, une
-  illustration qui recouvre l'écran changent aussi l'image. Compte-les sur les planches : « une
-  coupe franche toutes les ~4 s, mais un changement d'image toutes les ~1,5 s ».
+  carte qui en remplace une autre au-dessus du visage changent aussi l'image. L'outil les mesure
+  (`changements`, `changementsParMinute`, `changementMedian` : un saut net du haut, du milieu ou du
+  bas de l'image) ; vérifie-les sur les planches : « une coupe franche toutes les ~4 s, mais un
+  changement d'image toutes les ~1,5 s ». C'est ce chiffre-là qu'on reproduit et qu'on contrôle.
 - **Accroche plus nerveuse** que la suite ? (coupes sur les 5 premières secondes contre la suite)
 - **Silences retirés** : la voix enchaîne sans respiration (montage « jump cut ») ou garde des
   pauses. Les phrases collées, les gestes qui sautent d'une image à l'autre trahissent des coupes
@@ -41,9 +44,17 @@ Source : `style.json` → `rythme` (coupes par tranche de 5 s, plan le plus fré
 
 Source : images une par une, planches.
 
-- **Visage plein écran**, **écran partagé** (visage en bas, image au-dessus), **visage en petit**
-  dans un coin, **pas de visage** (voix sur images). Et l'alternance : quand on passe de l'un à
-  l'autre (accroche plein écran puis partagé, retour plein écran sur l'appel à l'action…).
+- **Visage plein écran**, **écran partagé** (visage en bas, image au-dessus, le décor filmé
+  coupé), **cartes posées sur le décor** (la vidéo filmée reste entière, décor compris, et les
+  cartes ou titres se posent par-dessus, en haut), **personne détourée** (sans son décor, devant une
+  page, un aplat ou des objets, parfois un mot derrière la tête), **visage en petit** dans un coin, **pas de
+  visage** (voix sur images). Et l'alternance : quand on passe de l'un à l'autre (accroche plein
+  écran puis partagé, retour plein écran sur l'appel à l'action…).
+- **Écran partagé ou décor ?** Regarde ce qu'il y a derrière la carte : un aplat, un flou ou une
+  autre image → écran partagé ; la pièce filmée (mur, étagère, fenêtre) → cartes sur le décor. Ne
+  confonds jamais les deux : c'est ce qu'on reconnaît en premier.
+- **Hauteur de la tête** (en % de la hauteur de l'image : haut du crâne, menton) : elle dit où
+  les cartes trouvent leur place, et si la vidéo du client devra être recadrée pour faire pareil.
 - **Zooms** : deux images d'un même plan où le visage grossit. Sec (d'une image à l'autre, souvent
   sur un mot fort) ou progressif (lent, tout le plan). Combien, et sur quels mots.
 - **Hauteur des yeux** : vers le tiers supérieur, centrés, ou bas dans l'image.
@@ -113,9 +124,10 @@ Source : `style.json` → `couleurs`, outil `couleurs`, images.
 
 ## 8. Le son
 
-Source : **le client**. Tu ne l'entends pas, l'outil ne le mesure pas. `meta.json` → `musique`
-donne au mieux le son déclaré par la plateforme. Tu notes ce que le client répond à la question
-du §3 de `mode-style.md`.
+Source : **le client**. Tu ne l'entends pas, et aucune mesure du niveau sonore ne distingue une
+musique basse d'un bruit de pièce (essais des 16 et 22/10/2026 sur 21 Reels). `meta.json` →
+`musique` donne au mieux le son déclaré par la plateforme. Tu notes ce que le client répond à la
+question du §3 de `mode-style.md` ; s'il s'en remet à toi, c'est « aucune musique » (§3).
 
 ## 9. L'ouverture et la fin
 
@@ -131,9 +143,10 @@ du §3 de `mode-style.md`.
 | Piège | Pourquoi c'est faux |
 |---|---|
 | Recopier des moments au lieu de règles | la vidéo du client n'a pas les mêmes phrases : on applique la règle à ses moments à lui |
-| Faire plus que l'original | jamais plus de zooms, d'animations, de bruitages ni un visage plus gros que dans la vidéo : un style se reconnaît à sa retenue autant qu'à ses effets |
+| Faire plus que l'original | jamais plus de zooms, d'animations, de bruitages ni un visage plus gros que dans la vidéo : un style se reconnaît à sa retenue autant qu'à ses effets. Seule exception : le recadrage qui fait de la place aux cartes (mode-style.md §4), la place des cartes passe avant la taille du visage |
 | Mettre un fondu là où l'original coupe sec | les coupes sèches font partie du style |
 | Croire le rythme d'après les seules coupes franches | zooms, textes et illustrations changent l'image sans couper |
+| Prendre des cartes posées sur le décor pour un écran partagé | derrière la carte, la pièce filmée : sections « decor », jamais un aplat |
 | Nommer une police au jugé | « proche de Montserrat Black » vaut mieux qu'un faux nom ; le client peut donner la vraie |
 | Lire l'animation d'un sous-titre sur une image fixe | seule la rafale montre s'il arrive mot par mot |
 | Prendre la couleur du décor pour l'accent | vérifie sur l'image ce que la couleur habille |

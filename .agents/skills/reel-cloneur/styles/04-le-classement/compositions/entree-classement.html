@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°04 « LE CLASSEMENT » · PIÈCE : L'ENTRÉE DE CLASSEMENT                  ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ CE QUE C'EST : le panneau du haut de l'écran partagé. En haut (0 → 850 px), une ║
+    ║   image par idée, remplacée par COUPE SÈCHE toutes les ~2 s ; à la jointure    ║
+    ║   (850 → 920 px), l'étiquette « #N NOM » (#N en texte, nom en accent), fixe    ║
+    ║   pendant toute l'entrée.                                                      ║
+    ║ TAILLE : 1080×920, section « split » (le visage est en bas, calque du master). ║
+    ║ QUAND : chaque élément du classement (une section par entrée). Aussi l'intro   ║
+    ║   et la conclusion SANS étiquette (supprime le bloc .etiquette), et un élément ║
+    ║   présenté sans rang (supprime seulement le <span class="rang">).              ║
+    ║ À REMPLACER :                                                                  ║
+    ║   1. L'id « entree-classement » PARTOUT (CSS, HTML, constante ID du script)    ║
+    ║      par l'id de la section dans tools/sections.py (ex. s3-entree-1).          ║
+    ║   2. data-duration de la racine, de .etiquette et du dernier .visuel = durée de ║
+    ║      la section (derush/<video>_cuts.json, via tools/sections.py).             ║
+    ║   3. Les visuels : un .visuel par idée dite, 1,5 à 2,5 s chacun, data-start    ║
+    ║      calé sur le mot qui l'annonce (derush/<video>_words.json), posé sur une   ║
+    ║      image (n/30 s) : data-start = (n - 0,01)/30. Pistes 1 et 2 en alternance. ║
+    ║      Contenu : EMPLACEMENT commenté dans chaque .visuel (photo plein cadre,    ║
+    ║      carte sur fond flou, logo en tuile). Images gratuites et légales seulement ║
+    ║      (images de la vidéo, vrais logos theSVG, captures de sites publics,      ║
+    ║      dessins HTML/SVG), copiées dans assets/ du Reel. Jamais d'image générée.  ║
+    ║   4. Le rang (#1, #2…) et le NOM tels que la vidéo les dit. Aucun chiffre, note ║
+    ║      ou prix que la vidéo ne dit pas. Nom long : 56 px tiennent ~22 caractères. ║
+    ║ Invariants Monteur IA : CSS et GSAP scopés sous l'id, aucune règle sur          ║
+    ║ html/body, racine sans fond (le visage est dessous), timeline paused dans une   ║
+    ║ IIFE, entrées en opacity/scale seulement, couleurs et polices var(--brand-*).   ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    #entree-classement { position:absolute; inset:0; width:1080px; height:920px; overflow:hidden;
+      color:var(--brand-text); font-family:var(--brand-font-captions); }
+    #entree-classement * { box-sizing:border-box; margin:0; padding:0; }
+    /* Zone image : 0 → 850 px (44 % de l'écran, la jointure de l'original). Opaque : c'est l'image.
+       La bande 850 → 920 reste transparente : le fond de marque du master porte l'étiquette. */
+    #entree-classement .visuel { position:absolute; left:0; top:0; width:1080px; height:850px; overflow:hidden;
+      background:var(--brand-surface); }
+    /* Photo plein cadre */
+    #entree-classement .couvre { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    /* Image qui ne remplit pas la zone : copie floutée derrière + carte nette aux coins arrondis */
+    #entree-classement .flou { position:absolute; inset:-60px; width:calc(100% + 120px); height:calc(100% + 120px);
+      object-fit:cover; filter:blur(30px) brightness(0.62); }
+    #entree-classement .carte { position:absolute; border-radius:30px; overflow:hidden; border:5px solid var(--brand-text); }
+    #entree-classement .carte img { width:100%; height:100%; object-fit:cover; display:block; }
+    /* Logo en tuile (vrai logo theSVG, couleurs d'origine) */
+    #entree-classement .tuile { position:absolute; border-radius:44px; background:var(--brand-bg);
+      border:4px solid var(--brand-text); display:flex; align-items:center; justify-content:center; }
+    #entree-classement .tuile img { width:62%; height:62%; object-fit:contain; }
+    /* Repère d'emplacement (à supprimer quand le visuel est posé) */
+    #entree-classement .repere { position:absolute; left:100px; right:100px; top:190px; height:560px;
+      border-radius:40px; border:4px solid var(--brand-text); background:var(--brand-bg); }
+    #entree-classement .repere svg { position:absolute; left:50%; top:50%; width:300px; height:220px;
+      margin:-110px 0 0 -150px; }
+    /* Étiquette de rang : centrée dans la bande de jointure, même taille que les sous-titres. */
+    #entree-classement .etiquette { position:absolute; left:0; right:0; top:850px; height:70px; display:flex;
+      align-items:center; justify-content:center; gap:18px; font-size:56px; line-height:1;
+      text-transform:uppercase; white-space:nowrap;
+      -webkit-text-stroke:var(--brand-cap-stroke-width) var(--brand-stroke); paint-order:stroke fill; }
+    #entree-classement .etiquette .rang { color:var(--brand-text); }
+    #entree-classement .etiquette .nom { color:var(--brand-accent); }
+  </style>
+</head>
+<body>
+  <div id="entree-classement" data-composition-id="entree-classement" data-start="0" data-duration="6"
+       data-fps="30" data-width="1080" data-height="920">
+
+    <!-- VISUEL 1 : de 0 à 2 s. EMPLACEMENT, au choix :
+         <img class="couvre" src="assets/images/ton-image-1.jpg" alt="">
+         ou <img class="flou" src="assets/images/ton-image-1.jpg" alt="">
+            <div class="carte" style="left:100px; top:190px; width:880px; height:560px;"><img src="assets/images/ton-image-1.jpg" alt=""></div>
+         ou <div class="tuile" style="left:340px; top:225px; width:400px; height:400px;"><img src="assets/logos/ton-logo.svg" alt=""></div> -->
+    <div id="entree-classement-v1" class="visuel v1 clip" data-start="0" data-duration="2" data-track-index="1">
+      <div class="repere"><svg viewBox="0 0 300 220"><rect x="6" y="6" width="288" height="208" rx="26" fill="none" stroke="var(--brand-text)" stroke-width="10"/>
+        <circle cx="92" cy="74" r="26" fill="var(--brand-accent)"/><path d="M22 196 L112 108 L170 160 L214 122 L280 196 Z" fill="var(--brand-muted)"/></svg></div>
+    </div>
+
+    <!-- VISUEL 2 : de 2 à 4 s (data-start = (60 - 0,01)/30). Même EMPLACEMENT que le visuel 1. -->
+    <div id="entree-classement-v2" class="visuel v2 clip" data-start="1.99967" data-duration="2" data-track-index="2">
+      <div class="repere"><svg viewBox="0 0 300 220"><rect x="6" y="6" width="288" height="208" rx="26" fill="none" stroke="var(--brand-text)" stroke-width="10"/>
+        <circle cx="210" cy="74" r="26" fill="var(--brand-accent)"/><path d="M22 196 L96 124 L150 170 L222 98 L280 196 Z" fill="var(--brand-muted)"/></svg></div>
+    </div>
+
+    <!-- VISUEL 3 : de 4 s à la fin de la section. Même EMPLACEMENT. Ajoute ou retire des visuels
+         selon les idées dites (2 à 4 par entrée dans l'original). -->
+    <div id="entree-classement-v3" class="visuel v3 clip" data-start="3.99967" data-duration="2" data-track-index="1">
+      <div class="repere"><svg viewBox="0 0 300 220"><rect x="6" y="6" width="288" height="208" rx="26" fill="none" stroke="var(--brand-text)" stroke-width="10"/>
+        <circle cx="150" cy="70" r="26" fill="var(--brand-accent)"/><path d="M22 196 L130 112 L178 150 L230 116 L280 196 Z" fill="var(--brand-muted)"/></svg></div>
+    </div>
+
+    <!-- ÉTIQUETTE DE RANG : « #N » puis le NOM, tels que la vidéo les dit. Sans rang : retire le
+         span .rang. Intro / conclusion : retire tout ce bloc. -->
+    <div id="entree-classement-etiquette" class="etiquette clip" data-start="0" data-duration="6" data-track-index="3"><span class="rang">#1</span><span class="nom">LE NOM DE L'ENTRÉE</span></div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'entree-classement'; // à renommer avec le CSS et le HTML
+      var s = '#' + ID + ' ';
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      // Les visuels changent par COUPE SÈCHE (leurs data-start) : aucune transition à ajouter.
+      // Un élément DANS un visuel peut surgir sur le mot qui le nomme (opacity + scale, jamais x/y
+      // pour une entrée), temps en secondes de section, UN sélecteur par tween :
+      tl.fromTo(s + '.v1 .repere', {scale: .92}, {scale: 1, duration: .25, ease: 'back.out(1.6)'}, 0);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

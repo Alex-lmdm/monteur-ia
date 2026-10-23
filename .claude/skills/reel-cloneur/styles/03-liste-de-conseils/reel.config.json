@@ -1,0 +1,19 @@
+{
+  "visual": {
+    "bg": "#FBF0E4",
+    "surface": "#FFFFFF",
+    "text": "#0A0A0A",
+    "muted": "#C0603C",
+    "accent": "#F08A24",
+    "fontDisplay": "ArchivoBlack",
+    "fontBody": "Inter",
+    "fontCaptions": "ArchivoBlack",
+    "captionsSkin": "outline",
+    "captionsPosition": "au-dessus-de-la-tete",
+    "captionsLines": 1,
+    "captionsSize": 74,
+    "captionsCase": "asis",
+    "captionsWeight": "auto",
+    "fontAccent": "SourceSerif4"
+  }
+}

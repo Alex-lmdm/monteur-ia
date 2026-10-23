@@ -51,6 +51,17 @@ DURATION = round(image(CUTS["duration"]), 5)   # duree du montage : un nombre en
 #     face   -> VISAGE plein ecran, aucun motion (pas de compositions/<id>.html a creer).
 #               Sert a casser le rythme : on enleve tout le decor et on revient sur toi.
 #               Cadrage = brand.config.json -> montage.fullFaceTransform (calibre par /setup).
+#     decor  -> la VIDEO FILMEE plein ecran, decor compris, et la sous-composition PAR-DESSUS
+#               (fond transparent : cartes, titres, captures posees sur le decor, en haut). C'est
+#               le format des Reels « cartes au-dessus de la tete » : jamais un ecran partage.
+#               Cadrage = montage.decorTransform / decorOrigin (sans reglage : la video telle que
+#               filmee ; visage trop haut -> scale(1.5) autour de « center top » le fait descendre).
+#     detoure -> la PERSONNE DETOUREE (sans son decor) posee DEVANT la sous-composition : la
+#               section peint le fond (page web, aplat, objets), la personne passe par-dessus.
+#               tools/build_faces.py prepare visage-detoure.webm (detourage local, la premiere fois :
+#               modele de 170 Mo a telecharger). Cadrage = montage.detoureTransform / detoureOrigin.
+#               Options : {"entree": "monte"} (la personne monte du bas), {"visageRevient": 0.9}
+#               (la video filmee plein ecran revient en fondu a 0,9 s).
 #
 #   {"media": "fichier.mp4"} -> la section n'est PAS une sous-composition : c'est une <video>
 #   posee directement dans le master (couche video NATIVE, compositee ensuite par ffmpeg).
@@ -60,6 +71,13 @@ DURATION = round(image(CUTS["duration"]), 5)   # duree du montage : un nombre en
 #   figee au debut du reel, et mes autres sections sont noires ». En prime, passer un b-roll par
 #   le render HyperFrames le rasterise (perte de nettete) alors que ffmpeg le garde intact.
 #   Exemple :  ("s3-demo", "full", [3], {"media": "demo-broll-v1.mp4"}),
+#
+#   {"zoom": 1.25} -> (sections "decor", "face" et "split") la section se montre PLUS SERREE que le cadrage du
+#   Reel, d'un coup a la coupe (1.25 = un quart plus serre). {"zoomOrigin": "center 30%"} = le point
+#   qui reste fixe (les yeux, par defaut vers 30 % du haut). tools/build_faces.py prepare une video
+#   nette par niveau de zoom. Exemple :  ("s4-point-fort", "decor", [4], {"zoom": 1.25}),
+#   {"zoom": [1.25, 1], "zoomDuree": 0.8} -> zoom PROGRESSIF : de 1.25 au debut de la section a 1 en
+#   0,8 s (1,3 fois d'ecart au plus ; sections "decor" et "face" seulement).
 #   Les index pointent dans TAKES (0-based) et doivent couvrir TOUTES les prises, dans l'ordre,
 #   sans trou ni chevauchement (les asserts plus bas le verifient).
 #
@@ -83,6 +101,8 @@ Y_FACE = 1140    # visage plein ecran : un peu SOUS le centre, sinon le sous-tit
 Y_FULL = 1500    # sous la fenetre plein ecran (motion / images)
 Y_MEDIA = 1100   # b-roll plein ecran : juste SOUS le milieu. A 1500 le sous-titre tombe sur le
                  # bas de l'image (souvent la partie inutile : bureau, clavier, decor).
+Y_DECOR = 760    # cartes sur le decor : juste SOUS les cartes du haut, au-dessus de la tete.
+Y_DETOURE = 1250  # personne detouree devant les visuels : sur le buste, sous le visage.
 
 
 def sections():
@@ -97,6 +117,10 @@ def sections():
             y = Y_SPLIT
         elif fmt == "face":
             y = Y_FACE
+        elif fmt == "decor":
+            y = Y_DECOR
+        elif fmt == "detoure":
+            y = Y_DETOURE
         else:
             y = Y_MEDIA if media else Y_FULL
         out.append({"id": sid, "fmt": fmt, "takes": idx, "media": media,
@@ -136,6 +160,16 @@ def facefull_windows():
     return _merge_windows("face")
 
 
+def decor_windows():
+    """Fenetres video filmee plein ecran SOUS les cartes (sections 'decor'), contigues fusionnees."""
+    return _merge_windows("decor")
+
+
+def detoure_windows():
+    """Fenetres personne detouree DEVANT les visuels (sections 'detoure'), contigues fusionnees."""
+    return _merge_windows("detoure")
+
+
 if __name__ == "__main__":
     for s in sections():
         print(f'{s["id"]:<16} {s["fmt"]:<5} {s["start"]:6.3f} -> {s["end"]:6.3f}  '
@@ -147,4 +181,14 @@ if __name__ == "__main__":
     if ff:
         print("fenetres visage (plein ecran) :")
         for st, d in ff:
+            print(f"  {st:6.3f}  +{d:.3f}")
+    tt = detoure_windows()
+    if tt:
+        print("fenetres personne detouree (devant les visuels) :")
+        for st, d in tt:
+            print(f"  {st:6.3f}  +{d:.3f}")
+    dd = decor_windows()
+    if dd:
+        print("fenetres decor (video plein ecran sous les cartes) :")
+        for st, d in dd:
             print(f"  {st:6.3f}  +{d:.3f}")

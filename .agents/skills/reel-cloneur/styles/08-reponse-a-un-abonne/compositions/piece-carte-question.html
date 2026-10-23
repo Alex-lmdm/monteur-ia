@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°08 · PIÈCE « CARTE QUESTION D'UN ABONNÉ »                             ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ CE QUE C'EST : la carte « question » d'une story Instagram (bandeau sombre en  ║
+    ║ haut, corps clair), posée sous le visage ; la question de l'abonné s'y écrit   ║
+    ║ lettre à lettre, au rythme où le créateur la lit. Quand le texte dépasse la    ║
+    ║ carte, les premières lignes remontent et s'effacent.                           ║
+    ║ TAILLE : 1080×1920, fond TRANSPARENT, section « decor » de tools/sections.py   ║
+    ║ (la vidéo filmée reste entière dessous). Carte : 824×430 px, de y=1015 à 1445. ║
+    ║ QUAND : l'ouverture du Reel, le temps où la question est lue (une seule fois   ║
+    ║ par vidéo). Pas de sous-titres pendant ce temps : la carte EST le sous-titre   ║
+    ║ (tools/montage_captions.py --sans <id de la section>).                         ║
+    ║ CADRAGE : la tête doit finir au-dessus de y=1000 (menton à 52 % au plus) :     ║
+    ║ montage.decorTransform / decorOrigin (style.md, « règle de recadrage »).       ║
+    ║                                                                                ║
+    ║ À REMPLACER (rien d'autre à toucher) :                                         ║
+    ║  1. l'identifiant « piece-carte-question » PARTOUT (CSS, HTML, constante ID) : ║
+    ║     c'est le nom de la section (ex. s0-question), comme le nom du fichier ;    ║
+    ║  2. data-duration (racine ET .cq-scene) = durée de la section, lue dans        ║
+    ║     python3 tools/sections.py (jamais une valeur Whisper) ;                    ║
+    ║  3. le libellé du bandeau (.cq-entete), dans la langue du Reel ;               ║
+    ║  4. MORCEAUX (dans le script) : la question telle que le client l'a donnée,    ║
+    ║     découpée en morceaux calés sur la voix (secondes depuis le début de la     ║
+    ║     section, lues dans derush/<video>_words.json moins le début de section) ;  ║
+    ║  5. --cq-taille si besoin : 40 px pour une question courte (moins de 120       ║
+    ║     signes), 30 px pour un long message ; jamais sous 28 px.                   ║
+    ║ Couleurs et polices : uniquement var(--brand-*) (reel.config.json du style).   ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    /* Aucune règle sur html/body : au rendu, toutes les sections partagent UN document.
+       Tout est scopé sous la racine ; la racine n'a PAS de fond (elle est posée sur la vidéo). */
+    #piece-carte-question { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      font-family:var(--brand-font-body); color:var(--brand-text);
+      --cq-taille:40px; }
+    #piece-carte-question * { box-sizing:border-box; }
+    #piece-carte-question .cq-scene { position:absolute; inset:0; }
+    /* La carte : 824 px de large, centrée (à 128 px des bords, au-delà de la marge de 100 px),
+       sous le visage. Angles très arrondis, comme la carte d'une story. */
+    #piece-carte-question .cq-carte { position:absolute; left:128px; top:1015px; width:824px; height:430px;
+      border-radius:34px; overflow:hidden; background:var(--brand-bg);
+      transform-origin:50% 40%; }
+    /* Bandeau du haut : aplat sombre, libellé clair centré. */
+    #piece-carte-question .cq-entete { position:absolute; left:0; top:0; right:0; height:86px;
+      background:var(--brand-text); color:var(--brand-bg);
+      display:flex; align-items:center; justify-content:center;
+      font-size:40px; font-weight:600; letter-spacing:-0.5px; }
+    /* Fenêtre du texte : ancrée en bas une fois pleine (justify-content:flex-end + max-height),
+       si bien que les premières lignes remontent et sortent par le haut, en fondu. */
+    #piece-carte-question .cq-fenetre { position:absolute; left:84px; right:84px; top:122px;
+      max-height:264px; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end;
+      -webkit-mask-image:linear-gradient(to bottom, transparent 0, var(--brand-text) 30px);
+      mask-image:linear-gradient(to bottom, transparent 0, var(--brand-text) 30px); }
+    #piece-carte-question .cq-texte { margin:0; font-size:var(--cq-taille); line-height:1.3;
+      font-weight:500; letter-spacing:-0.3px; text-align:left; }
+    /* Un mot ne se coupe jamais ; chaque lettre apparaît seule (absente de la mise en page
+       tant qu'elle n'est pas tapée : la ligne suivante ne commence qu'au mot qui ne tient plus). */
+    #piece-carte-question .cq-mot { white-space:nowrap; }
+    #piece-carte-question .cq-l { display:none; transform-origin:0 85%; }
+  </style>
+</head>
+<body>
+  <!-- >>> data-duration = durée de la section (ici 4 s pour l'exemple). -->
+  <div id="piece-carte-question" data-composition-id="piece-carte-question" data-start="0" data-duration="4"
+       data-fps="30" data-width="1080" data-height="1920">
+    <div id="piece-carte-question-scene" class="cq-scene clip" data-start="0" data-duration="4" data-track-index="0">
+      <div class="cq-carte">
+        <!-- >>> Libellé de la carte, dans la langue du Reel (« Ask a question… » en anglais). -->
+        <div class="cq-entete">Pose-moi une question…</div>
+        <div class="cq-fenetre"><p class="cq-texte"></p></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'piece-carte-question'; // >>> à renommer avec le CSS et le HTML (nom de la section)
+      // >>> À REMPLACER : la question de l'abonné, telle que le client l'a donnée, en morceaux
+      //     calés sur la voix. de / a = secondes depuis le début de CETTE section : le morceau
+      //     s'écrit lettre à lettre entre les deux. Un morceau que la voix ne dit pas (un nom
+      //     ajouté, la ponctuation) se cale sur le mot dit le plus proche.
+      var MORCEAUX = [
+        { texte: "Salut ! Je démarre de zéro et je ne sais pas par où commencer.", de: 0.45, a: 2.30 },
+        { texte: " Tu ferais quoi à ma place ?", de: 2.40, a: 3.30 }
+      ];
+      var APPARITION = 0.10;   // la carte arrive (pop court), avant la première lettre
+      var SORTIE = 0;          // 0 = la carte part avec la section (coupe sèche, recadrage) ;
+                               // sinon durée d'un retrait en fondu à la fin (0,2 s)
+      var root = document.getElementById(ID);
+      var scope = '#' + ID + ' ';
+      // Durée lue sur la scène .clip : au rendu du montage, la racine de la section est remplacée par
+      // l'hôte du master et son data-duration n'est plus lisible ici (NaN = sortie posée à 0 s).
+      var duree = parseFloat(root.querySelector('.cq-scene').getAttribute('data-duration'));
+      var texte = root.querySelector('.cq-texte');
+
+      // Chaque lettre reçoit son heure ; les mots restent insécables, les espaces sont du texte.
+      var lettres = [];
+      var mot = null;
+      MORCEAUX.forEach(function (m) {
+        var n = m.texte.length;
+        for (var i = 0; i < n; i++) {
+          var c = m.texte.charAt(i);
+          var t = m.de + (m.a - m.de) * (n > 1 ? i / (n - 1) : 0);
+          if (c === ' ') { texte.appendChild(document.createTextNode(' ')); mot = null; continue; }
+          if (!mot) { mot = document.createElement('span'); mot.className = 'cq-mot'; texte.appendChild(mot); }
+          var l = document.createElement('span');
+          l.className = 'cq-l';
+          l.textContent = c;
+          mot.appendChild(l);
+          lettres.push({ el: l, t: t });
+        }
+      });
+
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+      // Entrée : opacity + scale seulement (jamais x/y), état de départ explicite (fromTo).
+      tl.fromTo(scope + '.cq-carte', { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.24, ease: 'back.out(1.6)' }, APPARITION);
+      // Frappe : la lettre entre dans la mise en page puis grandit depuis sa ligne de base.
+      lettres.forEach(function (x) {
+        tl.set(x.el, { display: 'inline-block' }, x.t);
+        tl.fromTo(x.el, { opacity: 0, scale: 0.45 }, { opacity: 1, scale: 1, duration: 0.09, ease: 'power2.out' }, x.t);
+      });
+      if (SORTIE > 0) {
+        tl.to(scope + '.cq-carte', { opacity: 0, scale: 0.96, duration: SORTIE, ease: 'power2.in' }, duree - SORTIE);
+      }
+      tl.set({}, {}, duree); // la timeline couvre toute la section
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

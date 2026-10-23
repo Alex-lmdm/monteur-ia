@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║ STYLE N°08 · PIÈCE « PHRASE CLÉ AU-DESSUS DE LA TÊTE »                         ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║ CE QUE C'EST : la phrase qui porte l'idée, écrite en grand, dans une police à  ║
+    ║ empattements douce, couleur claire (--brand-surface), posée sur le décor filmé ║
+    ║ au-dessus de la tête. Les mots arrivent un par un, au moment où ils sont dits  ║
+    ║ (flou → net). Un groupe de mots peut être souligné d'un trait d'accent tracé   ║
+    ║ de gauche à droite, ou posé sur une pastille d'accent. Deux images détourées   ║
+    ║ (« stickers ») peuvent l'encadrer.                                             ║
+    ║ TAILLE : 1080×1920, fond TRANSPARENT, section « decor » (la vidéo est recadrée ║
+    ║ plus bas pendant la section : montage.decorTransform). Le texte vit entre      ║
+    ║ y=165 et y=450 (sous la bande cachée par Instagram, au-dessus de la tête).     ║
+    ║ QUAND : 1 phrase clé toutes les 20 à 30 s environ (la thèse, la reformulation  ║
+    ║ de la question, un nom à retenir), 2 à 4 s chacune, sur la phrase qui la dit.  ║
+    ║                                                                                ║
+    ║ À REMPLACER :                                                                  ║
+    ║  1. l'identifiant « piece-phrase-cle » PARTOUT (CSS, HTML, constante ID) : le  ║
+    ║     nom de la section (ex. s2-titre), comme le nom du fichier ;               ║
+    ║  2. data-duration (racine ET .pc-scene) = durée de la section ;                ║
+    ║  3. les lignes .pc-ligne : un <span class="pc-mot" data-t="…"> par mot, data-t ║
+    ║     = seconde où le mot est dit, depuis le début de la section                 ║
+    ║     (derush/<video>_words.json moins le début de section) ; 1 à 3 lignes ;     ║
+    ║  4. --pc-taille : 104 px pour 2 lignes courtes (14 signes au plus par ligne),  ║
+    ║     72 à 80 px pour une phrase longue en 3 lignes. Aucune ligne au-delà de     ║
+    ║     880 px (vérifier sur un snapshot) ;                                        ║
+    ║  5. l'emphase, UNE par phrase : un groupe .pc-trait (souligné) OU un groupe    ║
+    ║     .pc-pastille (pastille d'accent) ; .pc-cle teinte un mot fort (facultatif) ;║
+    ║  6. les stickers : emplacements commentés plus bas (logo officiel d'un outil   ║
+    ║     nommé, via le skill thesvg, ou image détourée libre de droits), à copier   ║
+    ║     dans assets/ du Reel. Sans image : laisser les emplacements commentés.     ║
+    ║ Police des titres : Fraunces (OFL, livrée), var(--brand-font-accent).          ║
+    ║                                                                                ║
+    ║ Couleurs : uniquement var(--brand-*) (reel.config.json du style).              ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+  -->
+  <script src="assets/vendor/gsap.min.js"></script>
+  <link rel="stylesheet" href="brand/fonts.css">
+  <link rel="stylesheet" href="brand/tokens.css">
+  <style>
+    /* Aucune règle sur html/body ; tout est scopé ; la racine n'a pas de fond. */
+    #piece-phrase-cle { position:absolute; inset:0; width:1080px; height:1920px; overflow:hidden;
+      --brand-font-kit-titre:var(--brand-font-accent), var(--brand-font-display);
+      --pc-taille:104px; --pc-haut:170px; }
+    #piece-phrase-cle * { box-sizing:border-box; }
+    #piece-phrase-cle .pc-scene { position:absolute; inset:0; }
+    #piece-phrase-cle .pc-contenu { position:absolute; inset:0; }
+    #piece-phrase-cle .pc-bloc { position:absolute; left:100px; right:100px; top:var(--pc-haut);
+      text-align:center; font-family:var(--brand-font-accent); font-weight:700;
+      font-variation-settings:"SOFT" 100, "WONK" 0, "opsz" 96;
+      font-size:var(--pc-taille); line-height:1.02; letter-spacing:-0.035em;
+      color:var(--brand-surface);
+      /* Lisible sur un décor clair comme sombre : ombre douce de l'encre du style. */
+      text-shadow:0 3px 22px color-mix(in srgb, var(--brand-text) 42%, transparent),
+                  0 1px 3px color-mix(in srgb, var(--brand-text) 30%, transparent); }
+    #piece-phrase-cle .pc-ligne { display:block; white-space:nowrap; }
+    #piece-phrase-cle .pc-mot { display:inline-block; transform-origin:50% 70%; }
+    /* Mot fort (.pc-cle) : la même couleur, tirée vers le turquoise par un filtre posé dans le
+       script (saturate + hue-rotate), aucune couleur ajoutée. */
+    /* Groupe souligné : trait d'accent courbe, épais, tracé de gauche à droite. */
+    #piece-phrase-cle .pc-trait { position:relative; display:inline-block; }
+    #piece-phrase-cle .pc-trait-svg { position:absolute; left:-2%; width:104%; bottom:-0.2em; height:0.24em;
+      overflow:visible; }
+    #piece-phrase-cle .pc-trait-svg path { fill:none; stroke:var(--brand-accent); stroke-width:8;
+      stroke-linecap:round; } /* pas de vector-effect : il casse le tracé (pathLength) en pointillés */
+    /* Groupe sur pastille : aplat d'accent arrondi derrière les mots (placé avant eux dans le HTML :
+       l'ordre du DOM fait la superposition, jamais un z-index négatif), qui s'étire depuis la gauche. */
+    #piece-phrase-cle .pc-pastille { position:relative; display:inline-block; padding:0 0.12em; isolation:isolate; }
+    #piece-phrase-cle .pc-pastille-fond { position:absolute; left:0; right:0; top:0.14em; bottom:0.02em;
+      border-radius:0.22em; background:var(--brand-accent); transform-origin:0 50%; }
+    #piece-phrase-cle .pc-pastille .pc-mot { position:relative; }
+    /* Stickers : image détourée, bord clair, ombre, légèrement tournée. */
+    #piece-phrase-cle .pc-sticker { position:absolute; width:190px; height:190px; padding:26px;
+      border-radius:44px; background:var(--brand-bg); object-fit:contain;
+      box-shadow:0 10px 30px color-mix(in srgb, var(--brand-text) 35%, transparent); }
+    #piece-phrase-cle .pc-sticker-g { left:104px; top:150px; transform:rotate(-8deg); }
+    #piece-phrase-cle .pc-sticker-d { right:104px; top:150px; transform:rotate(7deg); }
+  </style>
+</head>
+<body>
+  <!-- >>> data-duration = durée de la section (ici 3,4 s pour l'exemple). -->
+  <div id="piece-phrase-cle" data-composition-id="piece-phrase-cle" data-start="0" data-duration="3.4"
+       data-fps="30" data-width="1080" data-height="1920">
+    <div id="piece-phrase-cle-scene" class="pc-scene clip" data-start="0" data-duration="3.4" data-track-index="0">
+      <!-- .pc-contenu porte la sortie floue : on n'anime pas l'élément .clip lui-même, dont la
+           visibilité appartient au framework. -->
+      <div class="pc-contenu">
+      <!-- >>> STICKERS (facultatifs) : décommenter, src = fichier copié dans assets/ du Reel,
+           data-t = seconde d'apparition (souvent le mot qui nomme l'outil). Avec stickers,
+           réduire --pc-taille et garder les deux premières lignes courtes (elles passent entre).
+      <img class="pc-sticker pc-sticker-g" data-t="0.2" src="assets/logos/outil-a.svg" alt="">
+      <img class="pc-sticker pc-sticker-d" data-t="0.5" src="assets/logos/outil-b.svg" alt="">
+      -->
+      <div class="pc-bloc">
+        <!-- >>> Les lignes de la phrase clé : un mot = un .pc-mot avec son data-t. -->
+        <span class="pc-ligne"><span class="pc-mot" data-t="0.20">le</span> <span class="pc-mot" data-t="0.34">plus</span> <span class="pc-mot pc-cle" data-t="0.55">dur,</span></span>
+        <span class="pc-ligne"><span class="pc-mot" data-t="0.95">c'est</span> <span class="pc-mot" data-t="1.10">de</span> <span class="pc-trait"><span class="pc-mot" data-t="1.25">commencer</span><svg class="pc-trait-svg" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><path d="M2 7 Q 50 1 98 6" pathLength="1"/></svg></span></span>
+        <!-- Variante pastille (à la place du souligné) :
+        <span class="pc-pastille"><span class="pc-pastille-fond"></span><span class="pc-mot" data-t="1.25">commencer</span></span> -->
+      </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var ID = 'piece-phrase-cle'; // >>> à renommer avec le CSS et le HTML (nom de la section)
+      var SORTIE = 0.2;            // flou de sortie juste avant la fin de la section (0 = coupe sèche)
+      var root = document.getElementById(ID);
+      var scope = '#' + ID + ' ';
+      // Durée lue sur la scène .clip : au rendu du montage, la racine de la section est remplacée par
+      // l'hôte du master et son data-duration n'est plus lisible ici (NaN = sortie posée à 0 s).
+      var duree = parseFloat(root.querySelector('.pc-scene').getAttribute('data-duration'));
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      // Les mots : flou → net, opacity + scale (jamais x/y), à l'instant où ils sont dits.
+      var fin = 0;
+      root.querySelectorAll('.pc-mot').forEach(function (m) {
+        var t = parseFloat(m.getAttribute('data-t')) || 0;
+        var teinte = m.classList.contains('pc-cle') ? ' saturate(1.7) hue-rotate(22deg)' : '';
+        fin = Math.max(fin, t);
+        tl.fromTo(m, { opacity: 0, scale: 1.08, filter: 'blur(14px)' + teinte },
+                     { opacity: 1, scale: 1, filter: 'blur(0px)' + teinte, duration: 0.28, ease: 'power2.out' }, t);
+      });
+      // Souligné : tracé de gauche à droite dès que son dernier mot est là.
+      root.querySelectorAll('.pc-trait').forEach(function (g) {
+        var ts = Array.prototype.map.call(g.querySelectorAll('.pc-mot'), function (m) { return parseFloat(m.getAttribute('data-t')) || 0; });
+        var p = g.querySelector('path');
+        var td = Math.max.apply(null, ts) + 0.2;
+        // Caché jusqu'au tracé : un tiret de longueur nulle garde son bout arrondi (un point rose).
+        tl.fromTo(p, { opacity: 0 }, { opacity: 1, duration: 0.01 }, td);
+        tl.fromTo(p, { strokeDasharray: '1 2', strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.38, ease: 'power2.inOut' }, td);
+      });
+      // Pastille : l'aplat s'étire depuis la gauche avec son premier mot.
+      root.querySelectorAll('.pc-pastille').forEach(function (g) {
+        var ts = Array.prototype.map.call(g.querySelectorAll('.pc-mot'), function (m) { return parseFloat(m.getAttribute('data-t')) || 0; });
+        tl.fromTo(g.querySelector('.pc-pastille-fond'), { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: 'power3.out' }, Math.min.apply(null, ts));
+      });
+      // Stickers : pop (scale + opacity), leur rotation reste celle du CSS.
+      root.querySelectorAll('.pc-sticker').forEach(function (s) {
+        var t = parseFloat(s.getAttribute('data-t')) || 0;
+        tl.fromTo(s, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.8)' }, t);
+      });
+      // Sortie : flou rapide juste avant la coupe (la vidéo reprend alors son plan proche).
+      if (SORTIE > 0) {
+        tl.to(scope + '.pc-contenu', { opacity: 0, filter: 'blur(12px)', duration: SORTIE, ease: 'power2.in' }, duree - SORTIE);
+      }
+      tl.set({}, {}, duree);
+      window.__timelines[ID] = tl;
+    })();
+  </script>
+</body>
+</html>

@@ -104,10 +104,18 @@ une sous-comp isolée : un dossier `probe/` avec `index.html` = copie de la comp
 `probe/assets` et un symlink `probe/brand`** (sans eux les chemins `assets/…` et `brand/…` partent en 404), puis **supprimer
 `probe/`** (deux compositions racines = erreur de lint).
 
+**Piège de plus : la durée d'une section ne se lit pas sur sa racine.**
+Montée dans le master, la racine d'une sous-comp (`<div id="<section>" data-duration=…>`) perd son
+`data-duration` quand le script tourne : `getAttribute('data-duration')` rend `null`, un tween
+calé sur « durée − x » part à 0 s et cache le contenu (titres invisibles dans le montage, justes en
+snapshot isolé), et `--zoom "#<section>"` ne trouve plus cet id (l'hôte `#section-<section>` le
+remplace). → Écris la durée en dur dans le script de la section, ou lis-la sur l'élément `.clip`
+de la scène (vu sur deux styles du catalogue, 22/10/2026).
+
 ## 1. La règle de format (le défaut vient de la config)
 
 Le cadrage de départ vient de `brand.config.json` → `montage.defaultLayout` (posé par le preset
-de style, ajustable au bloc F du setup). Deux valeurs :
+de style, ajustable au bloc F du setup). Trois valeurs :
 
 - **`"split"`** : chaque section démarre en **split-screen** —
   motion design en HAUT (**1080×920**), **visage en BAS**. Le cadrage du visage = `montage.splitTransform`.
@@ -115,10 +123,47 @@ de style, ajustable au bloc F du setup). Deux valeurs :
   cadrage = `montage.fullFaceTransform`), et le motion/les visuels se posent **PAR-DESSUS** le visage
   en **surimpression `background: transparent`** (jamais un panneau opaque qui coupe l'écran). On voit
   le créateur en continu ; les animations flottent près de sa tête.
+- **`"decor"`** : la **vidéo filmée reste entière**, décor compris, et les cartes, titres ou captures
+  se posent **par-dessus, en haut** : sections `decor` de `tools/sections.py` (sous-comp **1080×1920**
+  à fond **transparent**, posée sur la vidéo ; sous-titres juste sous les cartes, `Y_DECOR`). Cadrage =
+  `montage.decorTransform` / `decorOrigin` : sans réglage, la vidéo telle que filmée ; tête trop haute
+  pour laisser la place aux cartes → `"scale(1.5)"` autour de `"center top"` la fait descendre
+  (`tools/build_faces.py` prépare `visage-decor.mp4` en pleine résolution). C'est le format des Reels
+  « cartes au-dessus de la tête » (styles clonés, styles du catalogue) : jamais remplacé par un écran
+  partagé sur fond uni. C'est aussi la façon de poser des visuels sur la vidéo plein écran : une
+  section `face` n'a pas de sous-comp.
+
+**Zoom par section** (sections `decor`, `face` et `split`) : une section se montre plus serrée que le
+cadrage du Reel, d'un coup à la coupe : `("s4", "decor", [4], {"zoom": 1.25})` dans `LAYOUT`
+(1.25 = un quart plus serré ; `{"zoomOrigin": "center 30%"}` = le point qui reste fixe, les yeux par
+défaut). Zoom progressif : `{"zoom": [1.25, 1], "zoomDuree": 0.8}` part de 1,25 au début de la
+section et revient à 1 en 0,8 s (1,3 fois d'écart au plus ; `decor` et `face` seulement, l'écran partagé
+zoome sec). `tools/build_faces.py` prépare une vidéo nette par niveau (`visage-decor-zoom-<n>.mp4`,
+`visage-plein-zoom-<n>.mp4`, `visage-split-zoom-<n>.mp4`), le master les pose à
+l'échelle 1 et anime le zoom progressif dans sa timeline. Relancer `build_faces.py` après tout
+changement de zoom. Export par le bouton Export ou `npm run render` (l'ancien export refuse).
+
+Format de section en plus, choisi section par section (jamais un `defaultLayout`) :
+
+- **`detoure`** : la **personne détourée**, sans son décor, passe **devant** la section (sous-comp
+  **1080×1920** qui peint le fond : page web, aplat, objets, texte derrière la tête). `tools/build_faces.py`
+  détoure sur l'ordinateur les seuls passages montrés (`hyperframes remove-background`, modèle de
+  170 Mo téléchargé la première fois, environ 8 s de calcul par seconde détourée ; refait seulement si
+  la zone, le dérush ou les passages changent) et pose une `visage-detoure-<n>.webm` transparente par
+  passage. Cadrage : `montage.detoureTransform` / `detoureOrigin` pour zoomer (pré-cadré, net) ;
+  `montage.detourePlace` (CSS, ex. `"translate(220px, 300px) scale(0.6)"`) pour rapetisser ou déplacer
+  la personne dans l'image, sans perte de netteté. Un texte posé exprès derrière la personne porte
+  `data-layout-allow-occlusion` (sur le texte lui-même) : sinon `npm run check` le signale caché.
+  Sous-titres sur le buste (`Y_DETOURE`). Options d'un passage, dans `LAYOUT` :
+  `{"entree": "monte"}` (la personne monte du bas en 0,4 s, floue au départ) et
+  `{"visageRevient": 0.9}` (à 0,9 s, la vidéo filmée plein écran revient par-dessus en fondu de 0,4 s ;
+  `detoureTransform` / `detoureOrigin` = ceux du plein écran pour un raccord sans saut). Export par
+  le bouton Export ou `npm run render` : l'ancien export ffmpeg ne sait pas poser la personne devant
+  les visuels.
 
 **Dans les deux cas, le créateur dirige section par section** — il peut passer n'importe quelle
 section en : visage plein écran seul, visuel/motion plein écran seul (recouvre le visage), ou split.
-Formats techniques de section : `1080×920` (split) ou `1080×1920` (full). On commence TOUT sur le
+Formats techniques de section : `1080×920` (split) ou `1080×1920` (full, decor, detoure). On commence TOUT sur le
 `defaultLayout` choisi, puis on ajuste au fil des retours.
 
 > Ancien nom : `montage.splitByDefault` (booléen) a été remplacé par `montage.defaultLayout`. Si tu

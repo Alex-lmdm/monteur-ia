@@ -714,14 +714,16 @@ test('un client de la version d’avant reçoit le mode YouTube sans que ses Ree
 });
 
 // L'extension Reel Cloneur™ telle que son INSTALL.md l'installait (dépôt Alex-lmdm/reel-cloneur, dernière
-// version publiée, 618df6c) : reconstituée depuis le moteur, qui l'a reprise avec deux retouches.
+// version publiée, 618df6c) : reconstituée depuis le moteur au commit qui l'a intégrée (avec deux
+// retouches), jamais depuis le moteur actuel, qui continue d'évoluer.
+const INTEGRATION_CLONEUR = '48848c4';
 function installerAncienneExtension(dir) {
-  fs.cpSync(path.join(root, '.claude/skills/reel-cloneur'), path.join(dir, '.claude/skills/reel-cloneur'), { recursive: true });
+  execFileSync('tar', ['-x', '-C', dir], { input: execFileSync('git', ['archive', '--format=tar', INTEGRATION_CLONEUR,
+    '.claude/skills/reel-cloneur', 'tools/cloner_reel.py'], { cwd: root, maxBuffer: 1 << 28 }) });
   fs.rmSync(path.join(dir, '.claude/skills/reel-cloneur/CREDITS.md'));
   edit(dir, '.claude/skills/reel-cloneur/references/grille-analyse.md', '`CREDITS.md` de ce skill)', '`CREDITS.md` de l\'extension)');
   edit(dir, '.claude/skills/reel-cloneur/SKILL.md', /- \*\*« Le téléchargeur n'est pas installé »\*\* \(premier lien[\s\S]*?n'en a pas\n  besoin\./,
     '- **« Le téléchargeur n\'est pas installé »** : lance `python3 tools/cloner_reel.py installer`, puis\n  recommence.');
-  fs.copyFileSync(path.join(root, 'tools/cloner_reel.py'), path.join(dir, 'tools/cloner_reel.py'));
   fs.appendFileSync(path.join(dir, 'templates/AGENT.md.tpl'), '\n\n<!-- BEGIN EXTENSION: reel-cloneur (ajouté par l\'installation de Reel'
     + ' Cloneur ; ne pas dupliquer) -->\n\n## 🟠 Extension installée : Reel Cloneur™\n\nCharge le skill **`reel-cloneur`**.\n\n'
     + '<!-- END EXTENSION: reel-cloneur -->\n');
@@ -763,7 +765,10 @@ test('Reel Cloneur™ installé comme extension : il passe dans le moteur, sans 
   const action = (rel) => plan.moteur.find((m) => m.rel === rel)?.action;
   assert.equal(action('.claude/skills/reel-cloneur/SKILL.md'), 'remplace', 'fichier de l’extension remplacé, pas une retouche');
   assert.equal(action('.claude/skills/reel-cloneur/CREDITS.md'), 'ajout');
-  assert.equal(action('tools/cloner_reel.py'), undefined, 'déjà identique');
+  const objet = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+  const pareil = (rel) => objet('hash-object', rel) === objet('rev-parse', `${INTEGRATION_CLONEUR}:${rel}`);
+  assert.equal(action('tools/cloner_reel.py'), pareil('tools/cloner_reel.py') ? undefined : 'remplace',
+    'déjà identique, ou remplacé par sa version du moteur (jamais une retouche)');
   assert.equal(action('templates/AGENT.md.tpl'), 'modele');
   assert.deepEqual(plan.moteur.filter((m) => m.retouche || m.action === 'remplace-modifie'), [], 'rien de retouché chez ce client');
   const texte = decrire(plan);
