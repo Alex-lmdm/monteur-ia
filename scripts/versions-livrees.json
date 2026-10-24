@@ -1,6 +1,6 @@
 {
   "ref": "HEAD",
-  "versions": 87,
+  "versions": 89,
   "fichiers": {
     ".agents/skills/animejs/SKILL.md": ["9eeea2bf2176"],
     ".agents/skills/contribute-catalog/SKILL.md": ["db570cff8234"],
@@ -395,7 +395,7 @@
     ".agents/skills/motion-design/references/remotion.md": ["969f609f5012","f72fc1717e6c"],
     ".agents/skills/motion-design/references/sfx-musique.md": ["0cefdc65960a","17d99960d52d","270b4dc15fa9","44261de3ea2a","5123ceea05cd","560f4dd0bb6b","569c5cc4e930","969d516f3b71","c9af110636f2","f880f3f9f31b"],
     ".agents/skills/motion-design/references/sous-titres.md": ["05a431d3a0e9","21ca61d8bac1","345a0bc92755","5ef6d255711f","91703183422a","9a04b14a5bf5","c65b23528a19","d712be3f3e4d","dacb91a060f6"],
-    ".agents/skills/motion-design/references/styles-sous-titres.md": ["36ad388c78bc"],
+    ".agents/skills/motion-design/references/styles-sous-titres.md": ["0556a6c877ed","36ad388c78bc"],
     ".agents/skills/motion-design/references/transcodage-video.md": ["872b2b5d35e4","8cb75209d751","c3e9adc4e124"],
     ".agents/skills/motion-design/references/visage-carre-noir.md": ["35c143ef1f5a"],
     ".agents/skills/motion-doctrine/SKILL.md": ["b1c1ecdd9ccf"],
@@ -1064,7 +1064,7 @@
     ".claude/skills/motion-design/references/remotion.md": ["381f3ab067ab","969f609f5012","f72fc1717e6c"],
     ".claude/skills/motion-design/references/sfx-musique.md": ["0cefdc65960a","17d99960d52d","270b4dc15fa9","44261de3ea2a","5123ceea05cd","560f4dd0bb6b","569c5cc4e930","969d516f3b71","c9af110636f2","eff46fd46dd9","f880f3f9f31b"],
     ".claude/skills/motion-design/references/sous-titres.md": ["05a431d3a0e9","21ca61d8bac1","345a0bc92755","5ef6d255711f","6b13cd1f271a","91703183422a","9a04b14a5bf5","c65b23528a19","d712be3f3e4d","dacb91a060f6"],
-    ".claude/skills/motion-design/references/styles-sous-titres.md": ["36ad388c78bc"],
+    ".claude/skills/motion-design/references/styles-sous-titres.md": ["0556a6c877ed","36ad388c78bc"],
     ".claude/skills/motion-design/references/transcodage-video.md": ["215e4edbf52f","872b2b5d35e4","8cb75209d751","c3e9adc4e124"],
     ".claude/skills/motion-design/references/visage-carre-noir.md": ["35c143ef1f5a","641c091f18f7"],
     ".claude/skills/motion-doctrine/SKILL.md": ["b1c1ecdd9ccf"],
@@ -1483,11 +1483,11 @@
     "scripts/gen-starter-sfx.sh": ["cb7a87f4d373"],
     "scripts/mettre-a-jour.mjs": ["0efcd305440c","1b5510ab8cf5","2ac3ae86834f","3574adae9fcf","7d705d865496","af76bc45b6d7","c75a4cfe6a7f","d50724749649","db3a57dc976b","f0d919fff9ba"],
     "scripts/mettre-a-jour.test.mjs": ["04ca1598a8f9","3668caf8a95a","36ea3f3411d6","44dc5ef30184","4886de7ca429","48d17b20a999","5dae90c04ea6","96156130b32d","e02617cfb93f","e2519b5d5b57"],
-    "scripts/montage.test.mjs": ["431ab90d2bda","4f3edfbd771a","54dd5b85744d","67e78281ab36","ea5f742429d0"],
+    "scripts/montage.test.mjs": ["431ab90d2bda","4f3edfbd771a","54dd5b85744d","67e78281ab36","783c1640eacb","ea5f742429d0"],
     "scripts/sync.mjs": ["08ca8034890e","486753cd73b1","69176765b8d3","6dd742256c86","7c5929776dcd","84c7f475c03e","8abe2d81de6f","a9770c844b5f","b4dc87086d75","e1869bfe7fe4","e1a7a4e72f78","e4c98903a3fc","f0ac613ea182"],
     "scripts/sync.test.mjs": ["0cca296bd0f3","1195775c84d2","19e9bc51e23c","3714605bf58f","7a499d37c8d5","9bf09dfbd255","a14413a122c3","b25201408ee5","b530d100072e","c2a6ea5127c9","e0e84d3c6491","e15232732627"],
     "scripts/versions-extensions-integrees.json": ["9b2d42ee2334"],
-    "scripts/versions-livrees.json": ["206e72951694","27a590b7a987","28e78ad4987d","2d1889dd6b27","2eaaf17a2f93","378e69dceeac","3e5da667a59d","41a69f7e5f6c","4385858a7f94","51e67b5acb32","5f1ba9de2169","7987b66bf4c0","900dcdca8fb9","b8cf0b655296","cd12029b39d6","d77c91c604bc","d9984994226a","db3a58aefa98","e1735ae0760e","e43f6e79b115","e922bd5bbde7","fe3528e3daa5"],
+    "scripts/versions-livrees.json": ["10897717a83b","206e72951694","27a590b7a987","28e78ad4987d","2d1889dd6b27","2eaaf17a2f93","378e69dceeac","3e5da667a59d","41a69f7e5f6c","4385858a7f94","51e67b5acb32","5f1ba9de2169","7987b66bf4c0","900dcdca8fb9","b8cf0b655296","cd12029b39d6","d77c91c604bc","d9984994226a","db3a58aefa98","e1735ae0760e","e43f6e79b115","e922bd5bbde7","fe3528e3daa5"],
     "scripts/youtube.test.mjs": ["2de06b1ddaf1"],
     "skills-lock.json": ["1b0fa11ae201","5d823121aa7c"],
     "templates/AGENT.md.tpl": ["22dc08e0ee17","27a1fe639339","2f104e753b8b","2f320ddf31a3","3f041fe6c0f7","41f8facfc192","44fb8e8e2462","4553eb124ee3","483d22a6dd55","606bcf31e87e","63597ef13cb8","7a4b2f7c6062","7aa3459eb982","861f1b2db5d0","8bf27d7418ae","8cce5cfbdd63","9a4d6acdc142","aa026ac17c59","b4aa8ae7e8e5","b7444dabf16f","b9e6f403e0f2","bb5c0048157f","d90f5069842b","e868ffae7b21","ebd79407e42d","f3e6362790b7","f44cf8d6753c","f6116008f451","f73040b77cba"],
@@ -1552,7 +1552,7 @@
     "tools/ranger_reel.py": ["2f44765e0db2","3e749c87f576"],
     "tools/sections.py": ["0ed8f2b59816","2e59e0c1cbe4","61e9822452f5","623d7860d1dd","7c4ac8ee974b","9d2475882705","e772399c858f"],
     "tools/sons.py": ["2e2b1d4b8935","61031244e59f","bcb285aa96ac","f89321855168"],
-    "tools/sous_titres.py": ["faa9089c55a7"],
+    "tools/sous_titres.py": ["225b51f6d418","faa9089c55a7"],
     "work/.gitkeep": ["e69de29bb2d1"]
   }
 }
