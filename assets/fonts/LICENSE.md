@@ -26,6 +26,21 @@ de licence `OFL-<police>.txt` dans ce dossier (SIL OFL 1.1, dépôt github.com/g
 | Montserrat (ttf variable) | 11 Mon histoire | © The Montserrat.Git Project Authors | `OFL-Montserrat.txt` |
 | Newsreader (ttf variable) | 11 Mon histoire | © The Newsreader Project Authors | `OFL-Newsreader.txt` |
 
+Polices des styles de sous-titres (`templates/styles-sous-titres.json`), même provenance
+(dépôt github.com/google/fonts), chacune avec son texte de licence dans ce dossier :
+
+| Police | Styles de sous-titres | Copyright | Licence |
+|--------|-----------------------|-----------|---------|
+| Bangers (ttf) | 5 Bande dessinée | © Vernon Adams | `OFL-Bangers.txt` |
+| Bebas Neue (ttf) | 9 Rétro, 15 Bandeau noir | © Dharma Type | `OFL-BebasNeue.txt` |
+| Bungee (ttf) | 7 Bloc 3D | © David Jonathan Ross | `OFL-Bungee.txt` |
+| DynaPuff (ttf variable) | 4 Bulle rose | © The DynaPuff Project Authors | `OFL-DynaPuff.txt` |
+| Gabarito (ttf variable) | 22 Montée douce | © The Gabarito Project Authors | `OFL-Gabarito.txt` |
+| Londrina Solid Black (ttf) | 10 Feutre | © Marcelo Magalhães | `OFL-LondrinaSolid.txt` |
+| Luckiest Guy (ttf) | 6 Cartoon violet | © Astigmatic | Apache 2.0, `LICENSE-LuckiestGuy.txt` |
+| Poetsen One (ttf) | 21 Mot cyan | © Pablo Impallari | `OFL-PoetsenOne.txt` |
+| Racing Sans One (ttf) | 8 Course | © Pablo Impallari | `OFL-RacingSansOne.txt` |
+
 Texte intégral de la licence : https://openfontlicense.org/open-font-license-official-text/
 
 ## Mettre TA police

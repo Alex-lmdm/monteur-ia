@@ -1,0 +1,228 @@
+{
+  "_comment": [
+    "Catalogue des STYLES DE SOUS-TITRES, appliqués par tools/sous_titres.py (index lisible : skill",
+    "motion-design, references/styles-sous-titres.md). Un style est un look de sous-titres seul : il se",
+    "pose sur n'importe quel montage, à la hauteur que le montage donne aux sous-titres.",
+    "visual : les réglages qu'il pose (police, taille, casse…), mêmes clés que brand.config.json ;",
+    "polices livrées dans assets/fonts/ et déclarées dans templates/style-presets.json.",
+    "look : mode (bloc | karaoke | mot-a-mot | un-mot), entree (aucune | pop | rebond | glisse | fondu |",
+    "flou | zoom | machine), couleur, contour (« 6px #000000 »), ombre (dure | douce | lueur <couleur>),",
+    "plaque (le bandeau : fond, arrondi en px, marge CSS, par « bloc » ou « ligne »), allume (le mot dit :",
+    "type couleur | boite | grossit, couleur, fond, tour = une couleur par sous-titre, garde = reste allumé),",
+    "fort (le mot fort : type couleur | boite | police | grossit, couleur, tour, echelle, pop, lueur),",
+    "lignes (1 ou 2), espacement (em). Un style ajouté = une entrée ici, le numéro suivant, et son",
+    "aperçu dans la formation. Les numéros ne changent jamais."
+  ],
+  "styles": [
+    {
+      "n": 1, "slug": "karaoke-jaune", "nom": "Karaoké jaune", "famille": "Le mot dit s'allume",
+      "voit": "Capitales très grasses, blanc cerclé de noir ; le mot dit s'allume en jaune, chaque sous-titre surgit.",
+      "visual": { "fontCaptions": "Montserrat", "captionsSize": 66, "captionsCase": "upper", "captionsWeight": 900, "captionsLineHeight": 1.15, "captionsSkin": "outline" },
+      "look": { "mode": "karaoke", "entree": "pop", "couleur": "#ffffff", "contour": "7px #000000", "ombre": "douce",
+        "allume": { "type": "couleur", "couleur": "#ffe600" } }
+    },
+    {
+      "n": 2, "slug": "karaoke-vert", "nom": "Karaoké vert", "famille": "Le mot dit s'allume",
+      "voit": "Capitales hautes et serrées ; le mot dit passe au vert et grossit un instant.",
+      "visual": { "fontCaptions": "Anton", "captionsSize": 80, "captionsCase": "upper", "captionsWeight": "auto", "captionsLineHeight": 1.1, "captionsSkin": "outline" },
+      "look": { "mode": "karaoke", "entree": "aucune", "couleur": "#ffffff", "contour": "6px #000000", "ombre": "douce",
+        "allume": { "type": "grossit", "couleur": "#2bf82a", "echelle": 1.07 } }
+    },
+    {
+      "n": 3, "slug": "trois-couleurs", "nom": "Trois couleurs", "famille": "Le mot dit s'allume",
+      "voit": "Deux lignes en capitales cerclées de noir ; le mot dit s'allume en jaune, vert ou rouge, une couleur par sous-titre.",
+      "visual": { "fontCaptions": "Montserrat", "captionsSize": 62, "captionsCase": "upper", "captionsWeight": 900, "captionsLineHeight": 1.1, "captionsSkin": "outline" },
+      "look": { "mode": "karaoke", "entree": "aucune", "couleur": "#ffffff", "contour": "6px #000000", "ombre": "douce", "lignes": 2,
+        "allume": { "type": "couleur", "tour": ["#ffe600", "#3cf830", "#ff3b30"] } }
+    },
+    {
+      "n": 4, "slug": "bulle-rose", "nom": "Bulle rose", "famille": "Le mot dit s'allume",
+      "voit": "Lettres rondes et gonflées, contour prune et halo rose ; le mot dit passe au rose, chaque sous-titre rebondit.",
+      "visual": { "fontCaptions": "DynaPuff", "captionsSize": 68, "captionsCase": "asis", "captionsWeight": 700, "captionsLineHeight": 1.15, "captionsSkin": "outline" },
+      "look": { "mode": "karaoke", "entree": "rebond", "couleur": "#ffffff", "contour": "5px #6b1a45", "ombre": "lueur #ff2d95",
+        "allume": { "type": "couleur", "couleur": "#ff8ccf" } }
+    },
+    {
+      "n": 5, "slug": "bande-dessinee", "nom": "Bande dessinée", "famille": "Le mot dit s'allume",
+      "voit": "Lettrage de BD, contour noir et ombre dure ; le mot dit change de couleur, chaque sous-titre surgit.",
+      "visual": { "fontCaptions": "Bangers", "captionsSize": 86, "captionsCase": "upper", "captionsWeight": "auto", "captionsLineHeight": 1.05, "captionsSkin": "outline" },
+      "look": { "mode": "karaoke", "entree": "pop", "couleur": "#ffffff", "contour": "7px #000000", "ombre": "dure #000000", "espacement": 0.02,
+        "allume": { "type": "couleur", "tour": ["#ffe600", "#3cf830", "#ff3b30"] } }
+    },
+    {
+      "n": 6, "slug": "cartoon-violet", "nom": "Cartoon violet", "famille": "Le mot dit s'allume",
+      "voit": "Grosses lettres de dessin animé, contour et ombre dure ; le mot dit passe au violet.",
+      "visual": { "fontCaptions": "LuckiestGuy", "captionsSize": 68, "captionsCase": "upper", "captionsWeight": "auto", "captionsLineHeight": 1.15, "captionsSkin": "outline" },
+      "look": { "mode": "karaoke", "entree": "pop", "couleur": "#ffffff", "contour": "5px #000000", "ombre": "dure #000000",
+        "allume": { "type": "couleur", "couleur": "#8b6cff" } }
+    },
+    {
+      "n": 7, "slug": "bloc-3d", "nom": "Bloc 3D", "famille": "Le mot dit s'allume",
+      "voit": "Lettres carrées en relief ; le mot dit passe au bleu, chaque sous-titre glisse vers le haut.",
+      "visual": { "fontCaptions": "Bungee", "captionsSize": 56, "captionsCase": "upper", "captionsWeight": "auto", "captionsLineHeight": 1.2, "captionsSkin": "outline" },
+      "look": { "mode": "karaoke", "entree": "glisse", "couleur": "#e4f9ff", "contour": "2px #000000", "ombre": "dure #000000",
+        "allume": { "type": "couleur", "couleur": "#00c4ff" } }
+    },
+    {
+      "n": 8, "slug": "course", "nom": "Course", "famille": "Le mot dit s'allume",
+      "voit": "Italique de course, ombre dure ; le mot dit passe au vert fluo, chaque sous-titre glisse.",
+      "visual": { "fontCaptions": "RacingSansOne", "captionsSize": 74, "captionsCase": "asis", "captionsWeight": "auto", "captionsLineHeight": 1.1, "captionsSkin": "outline" },
+      "look": { "mode": "karaoke", "entree": "glisse", "couleur": "#ffffff", "contour": "3px #000000", "ombre": "dure #000000",
+        "allume": { "type": "couleur", "couleur": "#8dfc50" } }
+    },
+    {
+      "n": 9, "slug": "retro", "nom": "Rétro", "famille": "Le mot dit s'allume",
+      "voit": "Capitales étroites façon affiche, ombre dure ; le mot dit passe au jaune pâle.",
+      "visual": { "fontCaptions": "BebasNeue", "captionsSize": 94, "captionsCase": "upper", "captionsWeight": "auto", "captionsLineHeight": 1.0, "captionsSkin": "outline" },
+      "look": { "mode": "karaoke", "entree": "fondu", "couleur": "#ffffff", "contour": "2px #000000", "ombre": "dure #000000", "espacement": 0.02,
+        "allume": { "type": "couleur", "couleur": "#fff27a" } }
+    },
+    {
+      "n": 10, "slug": "feutre", "nom": "Feutre", "famille": "Le mot dit s'allume",
+      "voit": "Lettres dessinées au gros feutre, cerclées de noir ; le mot dit passe au vert tendre.",
+      "visual": { "fontCaptions": "LondrinaSolid", "captionsSize": 80, "captionsCase": "asis", "captionsWeight": "auto", "captionsLineHeight": 1.1, "captionsSkin": "outline" },
+      "look": { "mode": "karaoke", "entree": "pop", "couleur": "#ffffff", "contour": "5px #000000", "ombre": "douce",
+        "allume": { "type": "couleur", "couleur": "#b4f57a" } }
+    },
+    {
+      "n": 11, "slug": "surligneur-rouge", "nom": "Surligneur rouge", "famille": "Une boîte derrière le mot",
+      "voit": "Capitales blanches ; une boîte rouge se pose derrière le mot dit, comme sur TikTok.",
+      "visual": { "fontCaptions": "Montserrat", "captionsSize": 60, "captionsCase": "upper", "captionsWeight": 800, "captionsLineHeight": 1.25, "captionsSkin": "soft" },
+      "look": { "mode": "karaoke", "entree": "pop", "couleur": "#ffffff", "ombre": "douce",
+        "allume": { "type": "boite", "couleur": "#ffffff", "fond": "#e8173c", "arrondi": 12 } }
+    },
+    {
+      "n": 12, "slug": "boite-orange", "nom": "Boîte orange", "famille": "Une boîte derrière le mot",
+      "voit": "Deux lignes en capitales cerclées de noir ; le mot dit se pose sur une boîte orange.",
+      "visual": { "fontCaptions": "Montserrat", "captionsSize": 58, "captionsCase": "upper", "captionsWeight": 900, "captionsLineHeight": 1.2, "captionsSkin": "outline" },
+      "look": { "mode": "karaoke", "entree": "aucune", "couleur": "#ffffff", "contour": "4px #000000", "lignes": 2,
+        "allume": { "type": "boite", "couleur": "#ffffff", "fond": "#ff5a00", "arrondi": 6, "contour": true } }
+    },
+    {
+      "n": 13, "slug": "marqueur-fluo", "nom": "Marqueur fluo", "famille": "Une boîte derrière le mot",
+      "voit": "Une serif noire sur une carte blanche ; le mot dit passe au surligneur jaune fluo.",
+      "visual": { "fontCaptions": "Newsreader", "captionsSize": 58, "captionsCase": "asis", "captionsWeight": 600, "captionsLineHeight": 1.25, "captionsSkin": "card" },
+      "look": { "mode": "karaoke", "entree": "fondu", "couleur": "#1c1e1d",
+        "plaque": { "fond": "#ffffff", "arrondi": 10, "marge": "0.12em 0.4em" },
+        "allume": { "type": "boite", "couleur": "#1c1e1d", "fond": "#dcf531", "arrondi": 4 } }
+    },
+    {
+      "n": 14, "slug": "lignes-en-boites", "nom": "Lignes en boîtes", "famille": "Une boîte derrière le mot",
+      "voit": "Chaque ligne dans sa boîte noire ; le mot dit passe sur une boîte verte.",
+      "visual": { "fontCaptions": "Montserrat", "captionsSize": 54, "captionsCase": "asis", "captionsWeight": 700, "captionsLineHeight": 1.42, "captionsSkin": "block" },
+      "look": { "mode": "karaoke", "entree": "aucune", "couleur": "#ffffff", "lignes": 2,
+        "plaque": { "fond": "#000000", "arrondi": 8, "marge": "0.07em 0.14em", "par": "ligne" },
+        "allume": { "type": "boite", "couleur": "#0b0b0b", "fond": "#35e035", "arrondi": 6 } }
+    },
+    {
+      "n": 15, "slug": "bandeau-noir", "nom": "Bandeau noir", "famille": "Sur un bandeau",
+      "voit": "Capitales étroites blanches sur un bandeau noir : sobre, lisible sur n'importe quelle image.",
+      "visual": { "fontCaptions": "BebasNeue", "captionsSize": 76, "captionsCase": "upper", "captionsWeight": "auto", "captionsLineHeight": 1.05, "captionsSkin": "block" },
+      "look": { "mode": "bloc", "entree": "fondu", "couleur": "#ffffff", "espacement": 0.02,
+        "plaque": { "fond": "#000000", "arrondi": 4, "marge": "0.06em 0.28em" } }
+    },
+    {
+      "n": 16, "slug": "etiquette-jaune", "nom": "Étiquette jaune", "famille": "Sur un bandeau",
+      "voit": "Capitales noires sur une étiquette jaune vif, qui surgit à chaque sous-titre.",
+      "visual": { "fontCaptions": "Anton", "captionsSize": 72, "captionsCase": "upper", "captionsWeight": "auto", "captionsLineHeight": 1.1, "captionsSkin": "block" },
+      "look": { "mode": "bloc", "entree": "pop", "couleur": "#141414",
+        "plaque": { "fond": "#fdfd00", "arrondi": 10, "marge": "0.06em 0.3em" } }
+    },
+    {
+      "n": 17, "slug": "pilule-claire", "nom": "Pilule claire", "famille": "Sur un bandeau",
+      "voit": "Une pilule gris clair ; les mots passent du gris au noir à mesure qu'ils sont dits.",
+      "visual": { "fontCaptions": "Poppins", "captionsSize": 52, "captionsCase": "asis", "captionsWeight": 700, "captionsLineHeight": 1.2, "captionsSkin": "card" },
+      "look": { "mode": "karaoke", "entree": "pop", "couleur": "#8f8f8f",
+        "plaque": { "fond": "#ececec", "arrondi": 40, "marge": "0.25em 0.75em" },
+        "allume": { "type": "couleur", "couleur": "#161616", "garde": true } }
+    },
+    {
+      "n": 18, "slug": "pilule-sombre", "nom": "Pilule sombre", "famille": "Sur un bandeau",
+      "voit": "Capitales blanches dans une pilule sombre ; le mot dit passe au rose.",
+      "visual": { "fontCaptions": "Inter", "captionsSize": 50, "captionsCase": "upper", "captionsWeight": 700, "captionsLineHeight": 1.2, "captionsSkin": "plate" },
+      "look": { "mode": "karaoke", "entree": "pop", "couleur": "#ffffff",
+        "plaque": { "fond": "#161618e6", "arrondi": 40, "marge": "0.3em 0.8em" },
+        "allume": { "type": "couleur", "couleur": "#ff7ad9" } }
+    },
+    {
+      "n": 19, "slug": "marine-elegant", "nom": "Marine élégant", "famille": "Sur un bandeau",
+      "voit": "Une serif crème sur un bandeau bleu marine ; le mot dit passe au doré.",
+      "visual": { "fontCaptions": "Newsreader", "captionsSize": 60, "captionsCase": "asis", "captionsWeight": 500, "captionsLineHeight": 1.2, "captionsSkin": "plate" },
+      "look": { "mode": "karaoke", "entree": "fondu", "couleur": "#f6f2ee",
+        "plaque": { "fond": "#18384b", "arrondi": 6, "marge": "0.1em 0.4em" },
+        "allume": { "type": "couleur", "couleur": "#d9bc85" } }
+    },
+    {
+      "n": 20, "slug": "un-mot-geant", "nom": "Un mot géant", "famille": "Mot à mot",
+      "voit": "Un seul mot à la fois, en capitales géantes qui claquent ; le mot fort en jaune.",
+      "visual": { "fontCaptions": "Anton", "captionsSize": 124, "captionsCase": "upper", "captionsWeight": "auto", "captionsLineHeight": 1.0, "captionsSkin": "outline" },
+      "look": { "mode": "un-mot", "entree": "pop", "couleur": "#ffffff", "contour": "8px #000000", "ombre": "douce",
+        "fort": { "type": "couleur", "couleur": "#ffe600" } }
+    },
+    {
+      "n": 21, "slug": "mot-cyan", "nom": "Mot cyan", "famille": "Mot à mot",
+      "voit": "Un mot à la fois, cyan cerclé de noir, qui rebondit à chaque mot.",
+      "visual": { "fontCaptions": "PoetsenOne", "captionsSize": 96, "captionsCase": "asis", "captionsWeight": "auto", "captionsLineHeight": 1.0, "captionsSkin": "outline" },
+      "look": { "mode": "un-mot", "entree": "rebond", "couleur": "#59f1ff", "contour": "6px #000000", "ombre": "dure #000000" }
+    },
+    {
+      "n": 22, "slug": "montee-douce", "nom": "Montée douce", "famille": "Mot à mot",
+      "voit": "Petites capitales espacées ; chaque mot monte doucement au moment où il est dit.",
+      "visual": { "fontCaptions": "Gabarito", "captionsSize": 52, "captionsCase": "upper", "captionsWeight": 700, "captionsLineHeight": 1.25, "captionsSkin": "soft" },
+      "look": { "mode": "mot-a-mot", "entree": "glisse", "couleur": "#ffffff", "ombre": "douce", "espacement": 0.05 }
+    },
+    {
+      "n": 23, "slug": "net-en-douceur", "nom": "Net en douceur", "famille": "Mot à mot",
+      "voit": "Chaque mot sort du flou au moment où il est dit, en blanc simple.",
+      "visual": { "fontCaptions": "Inter", "captionsSize": 58, "captionsCase": "asis", "captionsWeight": 700, "captionsLineHeight": 1.2, "captionsSkin": "soft" },
+      "look": { "mode": "mot-a-mot", "entree": "flou", "couleur": "#ffffff", "ombre": "douce" }
+    },
+    {
+      "n": 24, "slug": "machine-a-ecrire", "nom": "Machine à écrire", "famille": "Mot à mot",
+      "voit": "Lettres de machine à écrire, tapées une à une sur une bande de papier crème.",
+      "visual": { "fontCaptions": "CourierPrime", "captionsSize": 54, "captionsCase": "asis", "captionsWeight": 700, "captionsLineHeight": 1.2, "captionsSkin": "card" },
+      "look": { "mode": "bloc", "entree": "machine", "couleur": "#111111",
+        "plaque": { "fond": "#f4f1e8", "arrondi": 4, "marge": "0.15em 0.45em" } }
+    },
+    {
+      "n": 25, "slug": "mots-forts", "nom": "Mots forts", "famille": "Le mot fort ressort",
+      "voit": "Capitales blanches ; le mot fort de chaque sous-titre en vert, rouge ou jaune, avec un petit saut.",
+      "visual": { "fontCaptions": "Montserrat", "captionsSize": 62, "captionsCase": "upper", "captionsWeight": 900, "captionsLineHeight": 1.15, "captionsSkin": "outline" },
+      "look": { "mode": "bloc", "entree": "pop", "couleur": "#ffffff", "contour": "3px #000000", "ombre": "douce",
+        "fort": { "type": "couleur", "tour": ["#3cf830", "#ff3b30", "#ffe600"], "pop": true } }
+    },
+    {
+      "n": 26, "slug": "editorial", "nom": "Éditorial", "famille": "Le mot fort ressort",
+      "voit": "Texte simple qui arrive mot à mot, et le mot fort en grande serif italique crème.",
+      "visual": { "fontCaptions": "Inter", "fontAccent": "DMSerifDisplay", "captionsSize": 52, "captionsCase": "asis", "captionsWeight": 600, "captionsLineHeight": 1.15, "captionsSkin": "soft" },
+      "look": { "mode": "mot-a-mot", "entree": "fondu", "couleur": "#ffffff", "ombre": "douce",
+        "fort": { "type": "police", "style": "italic", "echelle": 1.45, "couleur": "#f6e7c8" } }
+    },
+    {
+      "n": 27, "slug": "signature", "nom": "Signature", "famille": "Le mot fort ressort",
+      "voit": "Texte simple, et le mot fort écrit à la main, comme une signature.",
+      "visual": { "fontCaptions": "Inter", "fontAccent": "MrDafoe", "captionsSize": 54, "captionsCase": "asis", "captionsWeight": 600, "captionsLineHeight": 1.2, "captionsSkin": "soft" },
+      "look": { "mode": "bloc", "entree": "fondu", "couleur": "#ffffff", "ombre": "douce",
+        "fort": { "type": "police", "echelle": 1.75, "couleur": "#ffffff" } }
+    },
+    {
+      "n": 28, "slug": "neon", "nom": "Néon", "famille": "Le mot fort ressort",
+      "voit": "Texte blanc lumineux ; le mot fort s'allume en néon vert, rose ou bleu.",
+      "visual": { "fontCaptions": "Inter", "captionsSize": 58, "captionsCase": "asis", "captionsWeight": 700, "captionsLineHeight": 1.2, "captionsSkin": "soft" },
+      "look": { "mode": "bloc", "entree": "fondu", "couleur": "#ffffff", "ombre": "lueur #ffffff59",
+        "fort": { "type": "couleur", "tour": ["#39ff14", "#ff4fd8", "#22d3ee"], "lueur": true } }
+    },
+    {
+      "n": 29, "slug": "lueur-doree", "nom": "Lueur dorée", "famille": "Doux et sobre",
+      "voit": "Une serif dorée qui brille doucement ; chaque sous-titre sort du flou.",
+      "visual": { "fontCaptions": "Newsreader", "captionsSize": 64, "captionsCase": "asis", "captionsWeight": 600, "captionsLineHeight": 1.15, "captionsSkin": "soft" },
+      "look": { "mode": "bloc", "entree": "flou", "couleur": "#ffc21a", "ombre": "lueur #ff8a0099" }
+    },
+    {
+      "n": 30, "slug": "sobre", "nom": "Sobre", "famille": "Doux et sobre",
+      "voit": "Texte blanc simple avec une ombre douce : discret, il va sur tout.",
+      "visual": { "fontCaptions": "Inter", "captionsSize": 52, "captionsCase": "asis", "captionsWeight": 600, "captionsLineHeight": 1.2, "captionsSkin": "soft" },
+      "look": { "mode": "bloc", "entree": "fondu", "couleur": "#ffffff", "ombre": "douce" }
+    }
+  ]
+}

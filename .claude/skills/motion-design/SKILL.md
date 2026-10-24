@@ -37,6 +37,7 @@ sombre ni jaune.
 | Panneau visage NOIR dans le studio | `references/visage-carre-noir.md` |
 | Vidéo source HDR (`color_transfer` = `arib-std-b67` ou `smpte2084`) | `references/transcodage-video.md` |
 | Sous-titres à produire | `references/sous-titres.md` |
+| Un style de sous-titres de la formation (« sous-titres style 12 », « sous-titres Néon ») | `references/styles-sous-titres.md` |
 | SFX / musique (UNIQUEMENT après validation du montage par le créateur ; première vidéo : d'une traite) | `references/sfx-musique.md` |
 | Section CTA « commente un mot-clé », ou image qui zoome (Ken Burns) | `references/patterns.md` |
 | Police display statique de la marque | `references/coluna-statique.md` |

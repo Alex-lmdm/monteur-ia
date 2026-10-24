@@ -776,3 +776,93 @@ test('catalogue de styles : chaque kit a sa fiche, ses pièces, des réglages ac
     assert.doesNotMatch(sortie.stderr + sortie.stdout, /ignoré|absente de la table|manquant/, `${kit} : réglages refusés`);
   }
 });
+
+// ---------------------------------------------------------------------------
+// 9. Styles de sous-titres (templates/styles-sous-titres.json, tools/sous_titres.py)
+// ---------------------------------------------------------------------------
+const catalogueSousTitres = () => JSON.parse(read(root, 'templates/styles-sous-titres.json')).styles;
+
+test('styles de sous-titres : catalogue numéroté, indexé pour l’IA, réglages acceptés et polices livrées', () => {
+  const styles = catalogueSousTitres();
+  assert.deepEqual(styles.map((s) => s.n), styles.map((_, i) => i + 1), 'numéros 1, 2, 3… sans trou');
+  assert.equal(new Set(styles.map((s) => s.slug)).size, styles.length, 'slugs uniques');
+  const index = read(root, '.claude/skills/motion-design/references/styles-sous-titres.md');
+  const polices = JSON.parse(read(root, 'templates/style-presets.json')).fonts;
+  const connues = new Set(Object.keys(config().visual));
+  for (const s of styles) {
+    assert.ok(index.includes(`| ${s.n} | ${s.nom} | ${s.famille} | ${s.voit} |`), `${s.n} : ligne de l'index identique au catalogue`);
+    for (const [cle, val] of Object.entries(s.visual)) {
+      assert.ok(connues.has(cle), `${s.n} : réglage inconnu ${cle}`);
+      if (/^font/.test(cle)) {
+        assert.ok(polices[val]?.faces, `${s.n} : police ${val} absente de la table`);
+        for (const face of polices[val].faces) assert.ok(fs.existsSync(path.join(root, 'assets/fonts', face.file)), `${s.n} : ${face.file} livrée`);
+      }
+    }
+    assert.ok(polices[s.visual.fontCaptions].measureFile, `${s.n} : police de sous-titres mesurable (measureFile)`);
+    assert.ok(['bloc', 'karaoke', 'mot-a-mot', 'un-mot'].includes(s.look.mode), `${s.n} : mode`);
+    assert.ok(['aucune', 'pop', 'rebond', 'glisse', 'fondu', 'flou', 'zoom', 'machine'].includes(s.look.entree), `${s.n} : entrée`);
+    assert.doesNotMatch(JSON.stringify(s), /—/, `${s.n} : pas de tiret long`);
+  }
+});
+
+test('styles de sous-titres : choisir, appliquer sur la voix, relancer, retoucher, retirer', (t) => {
+  if (!outils(t, { pil: true })) return;
+  const dir = maison(t);
+  sync(dir);
+  const reel = nouveauReel(dir, 'Sous-titres');
+  plan(reel, [[0, 2.6, [['On', 0.1], ['garde', 0.4], ['tes', 1.2], ['mots', 1.5]], ['on garde', 'tes *mots*']],
+    [2.6, 5.3, [['on', 2.7], ['coupe', 3.0], ['les', 3.6], ['silences.', 3.9]], ['on coupe', 'les silences']],
+    [5.3, 8.0, [['ça', 5.4], ['marche', 5.7]], ['ça marche']]]);
+  const outil = (...a) => spawnSync('python3', ['tools/sous_titres.py', ...a], { cwd: reel, encoding: 'utf8' });
+  const caps = () => read(reel, 'compositions/captions.html');
+
+  // Sans style choisi : rien ne change.
+  python(reel, 'tools/montage_captions.py', '--write');
+  const origine = caps();
+  assert.match(outil().stdout, /rien à faire/);
+  assert.equal(caps(), origine);
+
+  // Style 1 (karaoké) pour ce Reel : réglages écrits et acceptés par la synchro, police du style.
+  assert.equal(outil('--choisir', '1').status, 0);
+  const reglages = JSON.parse(read(reel, 'reel.config.json')).visual;
+  assert.equal(reglages.captionsStyle, 1);
+  assert.equal(reglages.fontCaptions, 'Montserrat');
+  assert.doesNotMatch(spawnSync(process.execPath, ['scripts/sync.mjs'], { cwd: dir, encoding: 'utf8' }).stderr, /ignoré/);
+  assert.match(read(reel, 'brand/tokens.css'), /--brand-font-captions: Montserrat/);
+  python(reel, 'tools/montage_captions.py', '--write');
+  const apres = outil();
+  assert.equal(apres.status, 0, apres.stderr);
+  const html = caps();
+  assert.match(html, /data-sous-titres="1"/);
+  assert.match(html, /<span class="w w1"><span class="b"[^>]*>MOTS<\/span><span class="h"[^>]*>MOTS<\/span><\/span>/, 'astérisques retirés à l’affichage');
+  assert.match(html, /tl\.fromTo\('#captions #cap-1 \.w1 \.h', \{opacity: 0\}, \{opacity: 1[^)]*\}, 1\.500\);/, 'le mot s’allume quand il est dit');
+  assert.match(html, /--st-allume-0: #ffe600/);
+  assert.doesNotMatch(html, /<div class="cap clip" /, 'tous les sous-titres portent le style');
+
+  // Relancé : même résultat ; la sortie de montage_captions.py est gardée.
+  outil();
+  assert.equal(caps(), html, 'relançable à l’identique');
+  assert.match(read(reel, 'work/captions.origine.html'), /<div class="cap clip" id="cap-0"/);
+  assert.doesNotMatch(read(reel, 'work/captions.origine.html'), /data-sous-titres/);
+
+  // Retouche : le mot dit en bleu ; une retouche absurde est refusée.
+  assert.equal(outil('--retouche', 'allume=#3aa0ff').status, 0);
+  outil();
+  assert.match(caps(), /--st-allume-0: #3aa0ff/);
+  assert.notEqual(outil('--retouche', 'allume=bleu').status, 0);
+
+  // Un mot à la fois (style 20) : un sous-titre par mot, calé sur les images de la voix.
+  outil('--choisir', '20');
+  python(reel, 'tools/montage_captions.py', '--write', '--mots', '1');
+  outil();
+  const mots = [...caps().matchAll(/class="cap clip st[^"]*"[^>]*data-start="([\d.]+)"/g)].map(([, s]) => Number(s));
+  assert.equal(mots.length, 10, 'dix mots, dix sous-titres');
+  for (const s of mots) assert.ok(Math.abs((s + 0.01 / 30) * 30 - Math.round((s + 0.01 / 30) * 30)) < 1e-3 || s === 0, `${s} sur une image`);
+  assert.doesNotMatch(read(reel, 'reel.config.json'), /captionsLook/, 'un nouveau choix efface les retouches du précédent');
+
+  // Retiré : les sous-titres reviennent exactement à la sortie de montage_captions.py.
+  assert.equal(outil('--sans').status, 0);
+  outil();
+  assert.doesNotMatch(caps(), /data-sous-titres/);
+  assert.equal(caps(), read(reel, 'work/captions.origine.html'));
+});

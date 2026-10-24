@@ -124,6 +124,7 @@ complet, puis un **débrief** où il dit ce qu'il aurait fait autrement, et tu r
    donne son numéro · 3. Comme un Reel que tu aimes : colle son lien. » Sans réponse claire : 1.
    Choix 2 : skill `reel-cloneur`, `styles/README.md` ; choix 3 : `reel-cloneur`, mode style ; le
    style remplace les réglages de base pour cette vidéo, le reste de cette section s'applique.
+   Un style de sous-titres nommé (« sous-titres 12 ») s'ajoute au choix, sans autre question.
    Annonce une fois (un style choisi : « dans le style … » au lieu des réglages et de l'habillage) :
    > « Je m'occupe de tout le montage avec les réglages de base, sans te poser de questions :
    > coupes, sous-titres, animations, bruitages. {{HABILLAGE_PREMIERE}}, ta vidéo reste en
@@ -170,6 +171,8 @@ préférences apprises (section suivante) appliquées d'office.
 À appliquer d'office à chaque vidéo. Elles priment sur les réglages par défaut, jamais sur une
 demande explicite du moment. Si le client change d'avis, mets à jour `montage.preferences`
 (après son OK sur la nouvelle formulation) puis `node {{MAISON}}scripts/sync.mjs`.
+Un des 30 styles de sous-titres de la formation (« sous-titres style 12 », « les sous-titres Néon ») :
+`tools/sous_titres.py`, skill `motion-design`, `references/styles-sous-titres.md`, sur tout montage.
 Hors réglages (sous-titres mot par mot, autre style…) : fabrique-le pour cette vidéo
 (`reel.config.json`), puis demande s'il le garde par défaut.
 

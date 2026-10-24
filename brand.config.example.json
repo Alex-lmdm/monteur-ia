@@ -1,7 +1,7 @@
 {
   "_comment": "Copié en brand.config.json au premier /setup. Les valeurs à null = pas encore réglées : le monteur retombe alors sur le preset de style (templates/style-presets.json). Toute valeur renseignée ici gagne sur le preset.",
   "brand": { "name": null, "handle": null, "firstName": null, "niche": null, "language": "fr" },
-  "visual": { "stylePreset": null, "bg": null, "accent": null, "surface": null, "text": null, "fontDisplay": null, "fontBody": null, "fontCaptions": null, "fontAccent": null, "captionsSkin": null, "captionsPosition": null, "captionsLines": null, "captionsSize": null, "captionsCase": null, "captionsLineHeight": null, "captionsWeight": null, "captionsPadding": null, "captionsInk": null },
+  "visual": { "stylePreset": null, "bg": null, "accent": null, "surface": null, "text": null, "fontDisplay": null, "fontBody": null, "fontCaptions": null, "fontAccent": null, "captionsSkin": null, "captionsPosition": null, "captionsLines": null, "captionsSize": null, "captionsCase": null, "captionsLineHeight": null, "captionsWeight": null, "captionsPadding": null, "captionsInk": null, "captionsStyle": null, "captionsLook": null },
   "cta": { "types": ["keyword-dm"], "style": null, "dmTool": null, "defaultKeyword": null, "linkEmoji": "🔗" },
   "audio": { "musicFile": null, "musicDb": -26.5 },
   "derush": { "padStart": 0.04, "padEnd": 0.02, "silenceDb": -40, "islandDuration": 0.18, "camera": null, "whisperLanguage": null },

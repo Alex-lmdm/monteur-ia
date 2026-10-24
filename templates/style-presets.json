@@ -160,7 +160,8 @@
       "découpage ne peut plus garantir une seule ligne. Obligatoire pour une police de sous-titres.",
       "Une police absente de cette table = l'utilisateur fournit ses fichiers, /setup les ajoute ici",
       "et les dépose dans assets/fonts/. JAMAIS de Google Fonts en ligne (rendu non déterministe).",
-      "Polices des styles du catalogue (skill reel-cloneur, styles/) : licence SIL OFL, texte dans assets/fonts/OFL-<police>.txt."
+      "Polices des styles du catalogue (skill reel-cloneur, styles/) : licence SIL OFL, texte dans assets/fonts/OFL-<police>.txt.",
+      "Polices des styles de sous-titres (templates/styles-sous-titres.json) : SIL OFL aussi, sauf Luckiest Guy (Apache 2.0, assets/fonts/LICENSE-LuckiestGuy.txt)."
     ],
     "Inter": {
       "measureFile": "Inter-900.ttf",
@@ -217,6 +218,42 @@
     "Newsreader": {
       "measureFile": "Newsreader-VF.ttf",
       "faces": [{ "weight": "200 800", "style": "normal", "file": "Newsreader-VF.ttf", "format": "truetype" }]
+    },
+    "Bangers": {
+      "measureFile": "Bangers-Regular.ttf",
+      "faces": [{ "weight": 400, "style": "normal", "file": "Bangers-Regular.ttf", "format": "truetype" }]
+    },
+    "BebasNeue": {
+      "measureFile": "BebasNeue-Regular.ttf",
+      "faces": [{ "weight": 400, "style": "normal", "file": "BebasNeue-Regular.ttf", "format": "truetype" }]
+    },
+    "Bungee": {
+      "measureFile": "Bungee-Regular.ttf",
+      "faces": [{ "weight": 400, "style": "normal", "file": "Bungee-Regular.ttf", "format": "truetype" }]
+    },
+    "DynaPuff": {
+      "measureFile": "DynaPuff-VF.ttf",
+      "faces": [{ "weight": "400 700", "style": "normal", "file": "DynaPuff-VF.ttf", "format": "truetype" }]
+    },
+    "Gabarito": {
+      "measureFile": "Gabarito-VF.ttf",
+      "faces": [{ "weight": "400 900", "style": "normal", "file": "Gabarito-VF.ttf", "format": "truetype" }]
+    },
+    "LondrinaSolid": {
+      "measureFile": "LondrinaSolid-Black.ttf",
+      "faces": [{ "weight": 900, "style": "normal", "file": "LondrinaSolid-Black.ttf", "format": "truetype" }]
+    },
+    "LuckiestGuy": {
+      "measureFile": "LuckiestGuy-Regular.ttf",
+      "faces": [{ "weight": 400, "style": "normal", "file": "LuckiestGuy-Regular.ttf", "format": "truetype" }]
+    },
+    "PoetsenOne": {
+      "measureFile": "PoetsenOne-Regular.ttf",
+      "faces": [{ "weight": 400, "style": "normal", "file": "PoetsenOne-Regular.ttf", "format": "truetype" }]
+    },
+    "RacingSansOne": {
+      "measureFile": "RacingSansOne-Regular.ttf",
+      "faces": [{ "weight": 400, "style": "normal", "file": "RacingSansOne-Regular.ttf", "format": "truetype" }]
     }
   }
 }
