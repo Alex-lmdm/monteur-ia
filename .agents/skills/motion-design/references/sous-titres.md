@@ -14,7 +14,7 @@ chaque sous-titre arrive d'un bloc.
   `block` (fond plein dans l'accent), `outline` (contour, sans fond), `plate` (plaque arrondie),
   `shadow` (ombre portée), `underline` (souligné), `soft` (texte blanc, ombre douce), `card` (plaque blanche, texte sombre). Description de
   chacun dans `captionSkins` de `templates/style-presets.json`.
-- **Un style de sous-titres du catalogue** (30 looks numérotés, montrés dans la formation, module
+- **Un style de sous-titres du catalogue** (looks numérotés, montrés dans la formation, module
   « Templates » : karaoké, boîte derrière le mot, bandeau, mot à mot, mot fort…) se pose par
   `tools/sous_titres.py`, jamais à la main : `references/styles-sous-titres.md`.
 - **Un Reel monté dans un style cloné ou un style du catalogue** suit la règle de sa fiche, même

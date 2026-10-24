@@ -49,11 +49,11 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from lieux import MAISON, REEL, REGLAGES_REEL, config  # noqa: E402
+from sous_titres_effets import (EMOJI, ENTREES, REVELES, apparition, css_couleur, css_du_look,  # noqa: E402
+                               entree_du, mots_html, particules, repartir_lignes, sortie)
 
 CATALOGUE = MAISON / "templates/styles-sous-titres.json"
-MODES = ("bloc", "karaoke", "mot-a-mot", "un-mot")
-ENTREES = ("aucune", "pop", "rebond", "glisse", "fondu", "flou", "zoom", "machine")
-MARQUES = ("couleur", "boite", "grossit", "police")
+MODES = ("bloc", "karaoke", "mot-a-mot", "un-mot", "ligne")
 # Réglages du `visual` qu'un style pose (police, taille, casse…) : les autres restent ceux du client.
 CLES_STYLE = ("fontCaptions", "fontAccent", "captionsSkin", "captionsSize", "captionsCase", "captionsWeight",
               "captionsLineHeight", "captionsPadding", "captionsInk")
@@ -186,7 +186,7 @@ def retouche_valide(cle: str, val: str):
     if cle == "mode":
         return val if val in MODES else None
     if cle == "entree":
-        return val if val in ENTREES else None
+        return val if val in ENTREES + REVELES else None
     if cle == "lignes":
         return int(val) if str(val) in ("1", "2") else None
     if cle == "taille":
@@ -275,6 +275,8 @@ def look_du_style(s: dict, retouches: dict) -> dict:
             continue
         if cle in ("couleur", "contour", "ombre", "mode", "entree", "lignes"):
             look[cle] = None if str(val) in ("aucun", "aucune") else val
+            if cle == "ombre":
+                look.pop("ombres", None)
         elif cle == "allume":
             look["allume"] = {**(look["allume"] or {"type": "couleur"}), "couleur": val, "tour": None}
         elif cle == "boite":
@@ -284,98 +286,13 @@ def look_du_style(s: dict, retouches: dict) -> dict:
         elif cle == "fort":
             look["fort"] = {**(look["fort"] or {"type": "couleur"}), "couleur": val, "tour": None}
     look["mode"] = look.get("mode") if look.get("mode") in MODES else "bloc"
-    look["entree"] = look.get("entree") if look.get("entree") in ENTREES else "aucune"
+    e = look.get("entree")
+    valides = ENTREES + REVELES
+    if isinstance(e, list):
+        look["entree"] = [x for x in e if x in valides] or "aucune"
+    else:
+        look["entree"] = e if e in valides else "aucune"
     return look
-
-
-def css_couleur(v) -> str:
-    v = str(v)
-    return COULEURS_NOMMEES.get(v.lower(), v)
-
-
-def css_ombre(ombre, taille: float) -> str:
-    if not ombre:
-        return "none"
-    mot, _, couleur = str(ombre).partition(" ")
-    c = css_couleur(couleur) if couleur else "#000000"
-    if mot == "dure":
-        d = max(2, round(taille * 0.06))
-        return f"{d}px {d}px 0 {c}"
-    if mot == "lueur":
-        return f"0 0 {round(taille * 0.18)}px {c}, 0 0 {round(taille * 0.42)}px {c}"
-    if mot == "douce":
-        return "0 3px 14px rgba(0, 0, 0, 0.55), 0 0 4px rgba(0, 0, 0, 0.45)"
-    return "none"
-
-
-def css_du_look(s: dict, look: dict, taille: float) -> str:
-    """Les règles du style, scopées sous #captions .cap.st : elles passent devant le skin de tokens.css."""
-    var = {"--st-couleur": css_couleur(look.get("couleur") or "#ffffff")}
-    allume, fort, plaque = look.get("allume"), look.get("fort"), look.get("plaque")
-    for i, c in enumerate((allume or {}).get("tour") or [(allume or {}).get("couleur") or "#ffe600"]):
-        var[f"--st-allume-{i}"] = css_couleur(c)
-    if allume and allume.get("fond"):
-        var["--st-boite"] = css_couleur(allume["fond"])
-    for i, c in enumerate((fort or {}).get("tour") or [(fort or {}).get("couleur") or "#ffe600"]):
-        var[f"--st-fort-{i}"] = css_couleur(c)
-    if fort and fort.get("fond"):
-        var["--st-fort-boite"] = css_couleur(fort["fond"])
-    if plaque:
-        var["--st-plaque"] = css_couleur(plaque.get("fond") or "#000000")
-    contour = look.get("contour")
-    trait = ""
-    if contour:
-        ep, _, c = str(contour).partition(" ")
-        trait = f"  -webkit-text-stroke: {ep} {css_couleur(c or '#000000')};\n  paint-order: stroke fill;\n"
-    ombre = css_ombre(look.get("ombre"), taille)
-    esp = look.get("espacement") or 0
-    lignes = [
-        f"/* Style de sous-titres n°{s['n']} « {s['nom']} » : écrit par tools/sous_titres.py depuis le catalogue et",
-        "   les réglages (visual.captionsStyle, visual.captionsLook). Ne pas retoucher ici : relancer l'outil. */",
-        "#captions { " + " ".join(f"{k}: {v};" for k, v in var.items()) + " }",
-        "#captions .cap.st { background: none; padding: 0; border: 0; border-radius: 0; box-shadow: none;\n"
-        f"  -webkit-text-stroke: 0; color: var(--st-couleur); text-shadow: {ombre}; letter-spacing: {esp}em; text-align: center; }}",
-        "#captions .cap.st .in { display: inline-block; transform-origin: 50% 60%; }",
-        "#captions .cap.st .w { position: relative; display: inline-block; transform-origin: 50% 60%; }",
-        "#captions .cap.st .b, #captions .cap.st .h {\n" + (trait or "  -webkit-text-stroke: 0;\n") + "}",
-    ]
-    if plaque:
-        bord = f"border-radius: {plaque.get('arrondi', 12)}px; padding: {plaque.get('marge', '0.1em 0.35em')};"
-        if plaque.get("par") == "ligne":
-            lignes.append("#captions .cap.st .t { background: var(--st-plaque); " + bord
-                          + " -webkit-box-decoration-break: clone; box-decoration-break: clone; }")
-        else:
-            lignes.append("#captions .cap.st .in { background: var(--st-plaque); " + bord + " }")
-    if allume:
-        lignes.append("#captions .cap.st .w .h { position: absolute; left: 0; top: 0; opacity: 0; white-space: nowrap; }")
-        for i in range(len((allume.get("tour") or [None]))):
-            lignes.append(f"#captions .cap.st.a{i} .w .h {{ color: var(--st-allume-{i}); }}")
-        if allume.get("type") == "boite":
-            # Boîte centrée sur le mot, à la hauteur du texte (pas de l'interligne) : le mot ne bouge pas.
-            lignes.append("#captions .cap.st .w .h { left: -0.14em; top: 50%; transform: translateY(-50%); line-height: 1.2;"
-                          " padding: 0.07em 0.14em;"
-                          f" border-radius: {allume.get('arrondi', 10)}px; background: var(--st-boite);"
-                          f" color: {css_couleur(allume.get('couleur') or '#ffffff')};"
-                          + (" -webkit-text-stroke: 0; text-shadow: none;" if not allume.get("contour") else "") + " }")
-    if fort:
-        for i in range(len((fort.get("tour") or [None]))):
-            lignes.append(f"#captions .cap.st.f{i} .w.k .b {{ color: var(--st-fort-{i}); }}")
-        t = fort.get("type")
-        if t == "boite":
-            lignes.append("#captions .cap.st .w.k .b { background: var(--st-fort-boite); padding: 0 0.12em; margin: 0 -0.06em;"
-                          f" border-radius: {fort.get('arrondi', 8)}px; -webkit-text-stroke: 0; text-shadow: none; }}")
-        elif t == "police":
-            st = fort.get("style") or "normal"
-            lignes.append("#captions .cap.st .w.k .b { font-family: var(--brand-font-accent); font-style: " + st
-                          + f"; font-weight: {fort.get('graisse', 400)}; font-size: {fort.get('echelle', 1.3)}em;"
-                          " text-transform: none; letter-spacing: 0; line-height: 1; }")
-        elif t == "grossit":
-            lignes.append(f"#captions .cap.st .w.k {{ transform: scale({fort.get('echelle', 1.18)}); margin: 0 0.1em; }}")
-        if fort.get("lueur"):
-            lignes.append("#captions .cap.st .w.k .b { text-shadow: 0 0 0.16em currentColor, 0 0 0.42em currentColor; }")
-    if look["entree"] == "machine":
-        lignes.append("#captions .cap.st .c { display: inline; }")
-    return "\n".join("      " + l.replace("\n", "\n      ") for l in lignes) + "\n"
 
 
 # ---------------------------------------------------------------------------------------------
@@ -428,6 +345,23 @@ def mot_fort(toks) -> int | None:
     return max(pleins)[1] if pleins else None
 
 
+def mots_forts(toks, fort: dict | None) -> list[int]:
+    """Les mots forts d'un sous-titre : un seul par défaut (le marqué, sinon le chiffre ou le plus
+    long) ; `nombre` en demande plus (« tous » : chaque mot plein), les marqués d'abord."""
+    if not fort:
+        return []
+    nombre = fort.get("nombre", 1)
+    if nombre == 1:
+        i = mot_fort(toks)
+        return [] if i is None else [i]
+    marques = [i for i, t in enumerate(toks) if t.startswith("*") and t.endswith("*") and len(t) > 2]
+    pleins = [i for i, t in enumerate(toks) if normaliser(t) not in FAIBLES and len(normaliser(t)) >= 3]
+    if nombre == "tous":
+        return sorted(set(marques) | set(pleins))
+    choisis = marques or sorted(pleins, key=lambda i: -len(normaliser(toks[i])))
+    return sorted(choisis[:int(nombre)])
+
+
 LARGEUR_MAX = 940   # px : la largeur de l'image (1080) moins les marges de côté des zones sûres
 
 
@@ -456,45 +390,6 @@ def mesureur():
         return lambda texte: police.getlength(texte.upper() if haut else texte)
     except Exception:   # mesure de confort : sans elle, la taille du style reste telle quelle
         return None
-
-
-def repartir_lignes(n: int, lignes: int, texte: str) -> list[int]:
-    if lignes < 2 or n <= 2 or len(texte) <= 11:
-        return [n]
-    return [(n + 1) // 2, n // 2]
-
-
-def apparition(sel: str, entree: str, t: float, dispo: float, n_car: int = 0) -> list[str]:
-    """Les réglages GSAP de l'arrivée de `sel` à l'instant t, jamais plus longue que sa fenêtre."""
-    def d(base):
-        return round(min(base, max(0.05, dispo * 0.7)), 3)
-    a = {
-        "pop": ("{scale: 0.55, opacity: 0}", "{scale: 1, opacity: 1, duration: %s, ease: 'back.out(2.6)'}" % d(0.18)),
-        "rebond": ("{y: 46, scale: 0.86, opacity: 0}", "{y: 0, scale: 1, opacity: 1, duration: %s, ease: 'back.out(3.2)'}" % d(0.3)),
-        "glisse": ("{y: 34, opacity: 0}", "{y: 0, opacity: 1, duration: %s, ease: 'power3.out'}" % d(0.22)),
-        "fondu": ("{opacity: 0}", "{opacity: 1, duration: %s, ease: 'power1.out'}" % d(0.2)),
-        "flou": ("{opacity: 0, filter: 'blur(16px)'}", "{opacity: 1, filter: 'blur(0px)', duration: %s, ease: 'power2.out'}" % d(0.26)),
-        "zoom": ("{scale: 1.4, opacity: 0}", "{scale: 1, opacity: 1, duration: %s, ease: 'power3.out'}" % d(0.2)),
-        "aucune": ("{opacity: 0}", "{opacity: 1, duration: 0.001}"),
-    }
-    if entree == "machine" and n_car:
-        pas = round(min(0.05, dispo * 0.75 / n_car), 4)
-        return [f"tl.fromTo('{sel} .c', {{opacity: 0}}, {{opacity: 1, duration: 0.001, stagger: {pas}}}, {t:.3f});"]
-    de, vers = a.get(entree, a["aucune"])
-    return [f"tl.fromTo('{sel}', {de}, {vers}, {t:.3f});"]
-
-
-def mots_html(toks, fort_i, avec_h, machine):
-    out = []
-    for q, t in enumerate(toks):
-        nu = t[1:-1] if t.startswith("*") and t.endswith("*") and len(t) > 2 else t
-        w = html.escape(nu)
-        b = "".join(f'<span class="c">{html.escape(c)}</span>' for c in nu) if machine else w
-        # La version allumée recouvre le mot (et sa boîte déborde un peu) : voulu, dit au contrôle.
-        h = f'<span class="h" data-layout-allow-overlap data-layout-allow-overflow>{w}</span>' if avec_h else ""
-        dessous = " data-layout-allow-occlusion" if avec_h else ""
-        out.append(f'<span class="w w{q}{" k" if q == fort_i else ""}"><span class="b"{dessous}>{b}</span>{h}</span>')
-    return out
 
 
 def appliquer(s: dict, look: dict) -> None:
@@ -528,24 +423,31 @@ def appliquer(s: dict, look: dict) -> None:
         print(f"  ⚠ {mots_f.name} absent : mots répartis à parts égales (lance tools/build_words.py pour les caler sur la voix).")
 
     mesure = mesureur()
-    mode, entree = look["mode"], look["entree"]
-    allume, fort = look.get("allume"), look.get("fort")
-    machine = entree == "machine" and mode in ("bloc", "karaoke")
+    mode = look["mode"]
+    allume, fort, plaque, ligne = look.get("allume"), look.get("fort"), look.get("plaque"), look.get("ligne")
     n_allume = len((allume or {}).get("tour") or [None])
     n_fort = len((fort or {}).get("tour") or [None])
     lignes_voulues = int(look.get("lignes") or 1)
+    coupe = int(look.get("coupe") or 11)
+    lignes_par_t = bool(plaque and plaque.get("par") == "ligne" and plaque.get("lignes"))
+    lignes_l = mode == "ligne" or bool(look.get("lignes_couleurs"))
+    inclinaisons = look.get("inclinaisons") or []
+    karaoke_h = bool(allume) and allume.get("type") != "opacite"
 
     sorties, tweens, j = [], [], 0
     for m in rows:
         indent, idx, top, st, du, piste, inner = m.groups()
         debut, fin = float(st), float(st) + float(du)
         texte = html.unescape(inner)
+        emojis = "".join(EMOJI.findall(texte)) if look.get("emoji") else ""
+        if look.get("emoji"):
+            texte = EMOJI.sub(" ", texte)
         toks = [t for t in (x.strip(".,;:!?«»\"") for x in texte.split()) if t]
         if not toks:
             continue
         temps = temps_des_mots(toks, debut, fin, mots) if mots else \
             [debut + (fin - debut) * q / len(toks) for q in range(len(toks))]
-        fort_i = mot_fort(toks) if fort else None
+        forts = mots_forts(toks, fort)
         if mode == "un-mot":
             morceaux = []
             for q, (tok, tm) in enumerate(zip(toks, temps)):
@@ -553,50 +455,71 @@ def appliquer(s: dict, look: dict) -> None:
                 b = round((temps[q + 1] if q + 1 < len(toks) else fin) * fps)
                 if b - a < 2 and q + 1 < len(toks):
                     continue
-                morceaux.append(([tok], [a / fps], a, max(b, a + 2), q == fort_i))
+                morceaux.append(([tok], [a / fps], a, max(b, a + 2), q in forts, emojis if q + 1 == len(toks) else ""))
         else:
             a, b = round(debut * fps), round(fin * fps)
-            morceaux = [(toks, temps, a, b, None)]
-        for mtoks, mtemps, a, b, est_fort in morceaux:
+            morceaux = [(toks, temps, a, b, None, emojis)]
+        for mtoks, mtemps, a, b, est_fort, memo in morceaux:
             cid = f"cap-{idx}" if len(morceaux) == 1 else f"cap-{idx}-{len(sorties)}"
             t0 = a / fps
             dispo = (b - a) / fps
-            fi = (0 if est_fort else None) if mode == "un-mot" else fort_i
-            reparti = repartir_lignes(len(mtoks), lignes_voulues, " ".join(mtoks))
-            avec_h = bool(allume) and mode in ("karaoke", "mot-a-mot")
-            spans = mots_html(mtoks, fi, avec_h, machine)
+            fis = ([0] if est_fort else []) if mode == "un-mot" else forts
+            fi = fis[0] if fis else None
+            entree = entree_du(look, j)
+            reparti = repartir_lignes(len(mtoks), lignes_voulues, " ".join(mtoks), coupe, look.get("coupure"))
+            avec_h = karaoke_h and mode in ("karaoke", "mot-a-mot")
+            spans = mots_html(mtoks, fis if len(fis) != 1 else fi, avec_h, entree == "machine" and mode in ("bloc", "karaoke"),
+                              flash=entree == "flash", particules_cfg=(fort or {}).get("particules"),
+                              cycle_fort=bool((fort or {}).get("par_mot")))
             parts, pos = [], 0
-            for n in reparti:
-                parts.append(" ".join(spans[pos:pos + n]))
+            for i, n in enumerate(reparti):
+                part = " ".join(spans[pos:pos + n])
+                if lignes_l:
+                    couleur = ""
+                    fixes = look.get("lignes_couleurs") or []
+                    if fixes and fixes[j % len(fixes)][0] == i:
+                        couleur = f' style="color:{css_couleur(fixes[j % len(fixes)][1])}"'
+                    part = f'<span class="l l{i}"{couleur}>{part}</span>'
+                if lignes_par_t:
+                    part = f'<span class="t t{i}">{part}</span>'
+                parts.append(part)
                 pos += n
             y = int(top) + (round(taille * interligne / 2) if len(reparti) == 2 else 0)
             classes = f"cap clip st a{j % n_allume} f{j % n_fort}"
             depart = "0" if a == 0 else f"{(a - 0.01) / fps:.5f}"
             # Un mot géant ou une ligne plus large que l'image (marges comprises) : la taille baisse pour ce sous-titre.
-            reduit = ""
+            echelle = float(look.get("un_mot_echelle") or 1) if len(mtoks) == 1 and mode != "un-mot" else 1
+            reduit = f" font-size:{taille * echelle:.1f}px;" if echelle != 1 else ""
             if mesure:
                 largeurs, pos = [], 0
                 for n in reparti:
                     morceau = [x.strip("*") for x in mtoks[pos:pos + n]]
                     w = mesure(" ".join(morceau)) * (1 + (look.get("espacement") or 0) * 0.6)
-                    if fi is not None and pos <= fi < pos + n and fort.get("type") in ("police", "grossit"):
-                        w += mesure(mtoks[fi].strip("*")) * (float(fort.get("echelle", 1.3)) - 1)
-                    largeurs.append(w + (taille * 0.8 if look.get("plaque") else 0))
+                    for f in fis:
+                        if pos <= f < pos + n and fort.get("type") in ("police", "grossit", "agrandi"):
+                            w += mesure(mtoks[f].strip("*")) * (float(fort.get("echelle", 1.3)) - 1)
+                    largeurs.append(w * echelle + (taille * 0.8 if plaque else 0))
                     pos += n
                 if max(largeurs) > LARGEUR_MAX:
-                    reduit = f" font-size:{taille * LARGEUR_MAX / max(largeurs):.1f}px;"
+                    reduit = f" font-size:{taille * echelle * LARGEUR_MAX / max(largeurs):.1f}px;"
+            penche = f' style="rotate:{inclinaisons[j % len(inclinaisons)]}deg"' if inclinaisons and inclinaisons[j % len(inclinaisons)] else ""
+            corps = "<br>".join(parts) if lignes_par_t else '<span class="t">' + "<br>".join(parts) + "</span>"
+            emo = f'<span class="emo" data-layout-allow-overflow>{html.escape(memo)}</span>' if memo else ""
             sorties.append(
                 f'{indent}<div class="{classes}" id="{cid}" style="top:{y}px;{reduit}" data-texte="{html.escape(" ".join(mtoks), quote=True)}" '
                 f'data-start="{depart}" data-duration="{(b - a) / fps:.5f}" data-track-index="{piste}">'
-                f'<span class="in"><span class="t">' + "<br>".join(parts) + "</span></span></div>")
+                f'<span class="in"{penche}>' + corps + emo + "</span></div>")
             sel = f"#captions #{cid}"
-            if mode in ("bloc", "karaoke", "un-mot"):
+            n_car = sum(len(t) for t in mtoks)
+            if mode in ("bloc", "karaoke", "un-mot", "ligne"):
                 if entree != "aucune":
-                    tweens += apparition(f"{sel} .in", entree, t0, dispo, sum(len(t) for t in mtoks))
+                    tweens += apparition(f"{sel} .in", entree, t0, dispo, n_car, look, j, len(mtoks))
             else:  # mot-a-mot : chaque mot arrive quand il est dit et reste
+                if look.get("bloc"):
+                    tweens += apparition(f"{sel} .in", look["bloc"], t0, dispo, n_car, look, j, len(mtoks))
                 for q, t in enumerate(mtemps):
                     fen = (mtemps[q + 1] if q + 1 < len(mtemps) else b / fps) - t
-                    tweens += apparition(f"{sel} .w{q}", entree if entree != "machine" else "fondu", max(t, t0), fen)
+                    tweens += apparition(f"{sel} .w{q}", entree if entree != "machine" else "fondu", max(t, t0), fen, look=look)
             if avec_h:
                 garde = bool(allume.get("garde"))
                 for q, t in enumerate(mtemps):
@@ -609,6 +532,9 @@ def appliquer(s: dict, look: dict) -> None:
                         tweens.append(f"tl.set('{sel} .w{q} .h', {{opacity: 0}}, {off:.3f});")
                         if allume.get("type") == "grossit":
                             tweens.append(f"tl.to('{sel} .w{q}', {{scale: 1, duration: 0.08, ease: 'power2.out'}}, {off:.3f});")
+            if allume and allume.get("type") == "opacite" and mode in ("karaoke", "mot-a-mot"):
+                for q, t in enumerate(mtemps):
+                    tweens.append(f"tl.to('{sel} .w{q} .b', {{opacity: 1, duration: {allume.get('duree', 0.1)}, ease: 'power1.out'}}, {max(t, t0):.3f});")
             # Petit saut du mot fort quand il est dit : seulement d'un bloc (ailleurs, le mot a déjà son arrivée).
             if fi is not None and fort and fort.get("pop") and mode == "bloc" and fort.get("type") != "grossit":
                 t_fort = max(mtemps[fi], t0 + 0.2)
@@ -616,6 +542,16 @@ def appliquer(s: dict, look: dict) -> None:
                     saut = round(taille * 0.16)
                     tweens.append(f"tl.to('{sel} .w{fi}', {{keyframes: [{{y: -{saut}, scale: 1.05, duration: 0.1, ease: 'power2.out'}}, "
                                   f"{{y: 0, scale: 1, duration: 0.16, ease: 'power2.in'}}]}}, {t_fort:.3f});")
+            if fort and fort.get("particules"):
+                for f in fis:
+                    tweens += particules(f"{sel} .w{f}", max(mtemps[f], t0) + 0.02, fort, taille)
+            if mode == "ligne" and ligne:
+                tweens += lignes_actives(sel, reparti, mtemps, t0, b / fps, ligne, j, look.get("couleur") or "#ffffff")
+            if memo:
+                tweens.append(f"tl.fromTo('{sel} .emo', {{scale: 0, opacity: 0}}, {{scale: 1, opacity: 1, duration: {min(0.2, dispo * 0.6):.3f}, "
+                              f"ease: 'back.out(2.5)'}}, {t0 + min(0.06, dispo * 0.2):.3f});")
+            if look.get("sortie") and dispo > 0.4:
+                tweens += sortie(f"{sel} .in", look["sortie"], b / fps, look)
             j += 1
 
     out = src[:rows[0].start()] + "\n".join(sorties) + src[rows[-1].end():]
@@ -632,8 +568,40 @@ def appliquer(s: dict, look: dict) -> None:
     if n != 1:
         sys.exit("ERREUR : timeline des sous-titres introuvable dans compositions/captions.html.")
     caps_f.write_text(out, encoding="utf-8")
-    print(f"Sous-titres n°{s['n']} « {s['nom']} » ({mode}, entrée {entree}) : {len(sorties)} sous-titres, "
+    nom_entree = "/".join(look["entree"]) if isinstance(look["entree"], list) else look["entree"]
+    print(f"Sous-titres n°{s['n']} « {s['nom']} » ({mode}, entrée {nom_entree}) : {len(sorties)} sous-titres, "
           f"{len(tweens)} réglages d'animation -> compositions/captions.html")
+
+
+def lignes_actives(sel: str, reparti: list[int], mtemps: list[float], t0: float, fin: float, ligne: dict, j: int,
+                   base: str) -> list[str]:
+    """Karaoké par ligne : la ligne en cours de lecture prend sa couleur (à tour de rôle d'un
+    sous-titre à l'autre), sa graisse et grossit un peu ; elle reprend son allure à la suivante."""
+    tour = ligne.get("tour") or [ligne.get("active") or "#ffffff"]
+    active = css_couleur(tour[j % len(tour)])
+    repos = css_couleur(ligne.get("inactive") or base)
+    duree = float(ligne.get("transition", 0))
+    out, pos, debuts = [], 0, []
+    for n in reparti:
+        debuts.append(max(mtemps[pos], t0))
+        pos += n
+    debuts[0] = t0
+    for i, on in enumerate(debuts):
+        off = debuts[i + 1] if i + 1 < len(debuts) else None
+        vers = f"color: '{active}', scale: {ligne.get('echelle', 1)}"
+        repli = f"color: '{repos}', scale: 1"
+        if ligne.get("graisse_active"):
+            vers += f", fontWeight: {ligne['graisse_active']}"
+            repli += f", fontWeight: {ligne.get('graisse_inactive', 400)}"
+        if duree:
+            out.append(f"tl.to('{sel} .l{i}', {{{vers}, duration: {duree}}}, {on:.3f});")
+            if off is not None and off < fin - 0.01:
+                out.append(f"tl.to('{sel} .l{i}', {{{repli}, duration: {duree}}}, {off:.3f});")
+        else:
+            out.append(f"tl.set('{sel} .l{i}', {{{vers}}}, {on:.3f});")
+            if off is not None and off < fin - 0.01:
+                out.append(f"tl.set('{sel} .l{i}', {{{repli}}}, {off:.3f});")
+    return out
 
 
 def restaurer() -> None:

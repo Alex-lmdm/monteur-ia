@@ -782,8 +782,11 @@ test('catalogue de styles : chaque kit a sa fiche, ses pièces, des réglages ac
 // ---------------------------------------------------------------------------
 const catalogueSousTitres = () => JSON.parse(read(root, 'templates/styles-sous-titres.json')).styles;
 
-test('styles de sous-titres : catalogue numéroté, indexé pour l’IA, réglages acceptés et polices livrées', () => {
+test('styles de sous-titres : catalogue numéroté, indexé pour l’IA, réglages acceptés et polices livrées', (t) => {
+  if (!outils(t)) return;
   const styles = catalogueSousTitres();
+  const programmes = JSON.parse(python(path.join(root, 'tools'), '-c',
+    'import json; from sous_titres_effets import ENTREES, REVELES; print(json.dumps(ENTREES + REVELES))'));
   assert.deepEqual(styles.map((s) => s.n), styles.map((_, i) => i + 1), 'numéros 1, 2, 3… sans trou');
   assert.equal(new Set(styles.map((s) => s.slug)).size, styles.length, 'slugs uniques');
   const index = read(root, '.claude/skills/motion-design/references/styles-sous-titres.md');
@@ -799,8 +802,8 @@ test('styles de sous-titres : catalogue numéroté, indexé pour l’IA, réglag
       }
     }
     assert.ok(polices[s.visual.fontCaptions].measureFile, `${s.n} : police de sous-titres mesurable (measureFile)`);
-    assert.ok(['bloc', 'karaoke', 'mot-a-mot', 'un-mot'].includes(s.look.mode), `${s.n} : mode`);
-    assert.ok(['aucune', 'pop', 'rebond', 'glisse', 'fondu', 'flou', 'zoom', 'machine'].includes(s.look.entree), `${s.n} : entrée`);
+    assert.ok(['bloc', 'karaoke', 'mot-a-mot', 'un-mot', 'ligne'].includes(s.look.mode), `${s.n} : mode`);
+    for (const e of [s.look.entree, s.look.bloc].flat().filter(Boolean)) assert.ok(programmes.includes(e), `${s.n} : programme ${e}`);
     assert.doesNotMatch(JSON.stringify(s), /—/, `${s.n} : pas de tiret long`);
   }
 });
@@ -911,4 +914,62 @@ test('style de sous-titres gardé pour toutes ses vidéos : la maison ne garde q
   assert.equal(visual(path.join(dir, 'brand.config.json')).captionsLook.taille, 96);
   assert.equal(visual(path.join(reel, 'reel.config.json')).captionsSize, 96);
   assert.equal(read(dir, 'brand/tokens.css'), tokensMaison);
+});
+
+
+test('styles de sous-titres : lignes, roue d’arrivées, emoji, mots forts, bandeaux par ligne, inclinaison, particules ; les 84 passent', (t) => {
+  if (!outils(t, { pil: true })) return;
+  const dir = maison(t);
+  sync(dir);
+  const reel = nouveauReel(dir, 'Effets');
+  plan(reel, [[0, 3.0, [['Tu', 0.1], ['montes', 0.3], ['tes', 0.8], ['vidéos', 1.0], ['en', 1.6], ['dix', 1.8], ['minutes', 2.1]],
+    ['tu montes tes *vidéos* 🎬', 'en dix minutes']],
+  [3.0, 5.4, [['avec', 3.1], ['ton', 3.3], ['IA', 3.5], ['sans', 4.2], ['toucher', 4.5]], ['avec ton IA', 'sans toucher']],
+  [5.4, 8.0, [['au', 5.5], ['montage', 5.7], ['qui', 6.4], ['prend', 6.6], ['tout', 7.0]], ['au montage', 'qui prend tout']]]);
+  const outil = (...a) => spawnSync('python3', ['tools/sous_titres.py', ...a], { cwd: reel, encoding: 'utf8' });
+  const poser = (n) => {
+    assert.equal(outil('--choisir', String(n)).status, 0, `${n} : choisir`);
+    python(reel, 'tools/montage_captions.py', '--write');
+    const r = outil();
+    assert.equal(r.status, 0, `${n} : ${r.stderr}`);
+    return read(reel, 'compositions/captions.html');
+  };
+  const cap0 = (html) => /<div class="cap clip st[^"]*" id="cap-0"[^>]*>(.*?)<\/div>/.exec(html)[1];
+
+  // Ligne par ligne (55) : deux lignes, la seconde s'allume quand son premier mot est dit.
+  let html = poser(55);
+  assert.match(cap0(html), /<span class="l l0">.*<\/span><br><span class="l l1">/);
+  assert.match(html, /tl\.set\('#captions #cap-0 \.l1', \{color: '#2BF82A'|tl\.set\('#captions #cap-0 \.l1', \{color: '#FDFA14'/);
+  assert.match(cap0(html), /<span class="emo"[^>]*>🎬<\/span>/, 'l’emoji sort du texte et se pose à part');
+  assert.doesNotMatch(cap0(html).replace(/<span class="emo".*?<\/span>/, ''), /🎬/);
+
+  // Roue d'arrivées (62) : un programme par sous-titre, à tour de rôle.
+  html = poser(62);
+  assert.match(html, /tl\.to\('#captions #cap-0 \.in', \{keyframes:/, '1er : jaillit');
+  assert.match(html, /tl\.fromTo\('#captions #cap-1 \.in', \{y: 34, opacity: 0\}/, '2e : glisse');
+  assert.match(html, /tl\.fromTo\('#captions #cap-4 \.in \.w', \{opacity: 0\}, \{opacity: 1, duration: 0\.001, stagger:/, '5e : mots tapés');
+
+  // Chaque mot plein est fort, couleur par mot (71).
+  html = poser(71);
+  assert.match(cap0(html), /class="w w1 k k0"[\s\S]*class="w w3 k k1"/);
+
+  // Bandeau par ligne avec une allure par ligne, le dernier mot seul à la ligne (46).
+  write(reel, 'tools/montage_captions.py', read(reel, 'tools/montage_captions.py').replace('tu montes tes *vidéos* 🎬', 'tu montes tes vidéos'));
+  html = poser(46);
+  assert.match(cap0(html), /<span class="t t0">.*<\/span><br><span class="t t1"><span class="w w3/);
+  assert.match(html, /\.t\.t1 \{ display: inline-block; background: #13FD00; color: #000000; rotate: -1deg;/);
+
+  // Inclinaison du 4e sous-titre (59) et gerbe de points du mot fort (74).
+  html = poser(59);
+  assert.match(html, /id="cap-3"[^>]*><span class="in" style="rotate:-8deg">/);
+  html = poser(74);
+  assert.match(html, /<span class="pt pt0" style="background:#ffd23f"/);
+  assert.match(html, /tl\.fromTo\('#captions #cap-\d+ \.w\d+ \.pt11', \{x: 0, y: 0/);
+
+  // Tous les styles du catalogue se posent sur le même Reel, sans réglage refusé par la synchro.
+  for (const s of catalogueSousTitres()) {
+    poser(s.n);
+    const sortie = spawnSync(process.execPath, ['scripts/sync.mjs'], { cwd: dir, encoding: 'utf8' });
+    assert.doesNotMatch(sortie.stdout + sortie.stderr, /ignoré|absente de la table|manquant/, `${s.n} : réglages refusés`);
+  }
 });

@@ -40,6 +40,18 @@ Polices des styles de sous-titres (`templates/styles-sous-titres.json`), même p
 | Luckiest Guy (ttf) | 6 Cartoon violet | © Astigmatic | Apache 2.0, `LICENSE-LuckiestGuy.txt` |
 | Poetsen One (ttf) | 21 Mot cyan | © Pablo Impallari | `OFL-PoetsenOne.txt` |
 | Racing Sans One (ttf) | 8 Course | © Pablo Impallari | `OFL-RacingSansOne.txt` |
+| Roboto Condensed (ttf variable) | 31, 37, 60, 63, 83 | © The Roboto Condensed Project Authors | `OFL-RobotoCondensed.txt` |
+| Barlow Black (ttf) | 36 Impact orange | © The Barlow Project Authors | `OFL-Barlow.txt` |
+| Funnel Sans (ttf variable) | 39 Mot sur vert | © The Funnel Project Authors | `OFL-FunnelSans.txt` |
+| Outfit (ttf variable) | 76 Néon vacillant, 81 Minimal turquoise | © The Outfit Project Authors | `OFL-Outfit.txt` |
+| Averia Libre Bold (ttf) | 35 Ludique | © Dan Sayers | `OFL-AveriaLibre.txt` |
+| Monda (ttf variable) | 79 Professionnel | © The Monda Project Authors | `OFL-Monda.txt` |
+| Playfair Display (ttf variable) | 77 Élégant noir | © The Playfair Project Authors | `OFL-PlayfairDisplay.txt` |
+| IM Fell English (ttf) | 48 Ancien | © Igino Marini | `OFL-IMFellEnglish.txt` |
+| DM Sans Italic (ttf variable) | 69 Italique bleu, 82 Or italique | © The DM Sans Project Authors | `OFL-DMSans.txt` |
+| Gochi Hand (ttf) | 68 Manuscrit rouge | © Huerta Tipográfica | `OFL-GochiHand.txt` |
+| Rubik (ttf variable) | 41 Pilule noire, 59 Ressort | © The Rubik Project Authors | `OFL-Rubik.txt` |
+| Alef Bold (ttf) | 45 Lignes blanches | © Hagilda, Mushon Zer-Aviv | `OFL-Alef.txt` |
 
 Texte intégral de la licence : https://openfontlicense.org/open-font-license-official-text/
 

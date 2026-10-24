@@ -202,6 +202,7 @@
       "faces": [{ "weight": "100 900", "style": "normal", "file": "Fraunces-VF.ttf", "format": "truetype" }]
     },
     "AbrilFatface": {
+      "measureFile": "AbrilFatface-Regular.ttf",
       "faces": [{ "weight": 400, "style": "normal", "file": "AbrilFatface-Regular.ttf", "format": "truetype" }]
     },
     "CourierPrime": {
@@ -254,6 +255,54 @@
     "RacingSansOne": {
       "measureFile": "RacingSansOne-Regular.ttf",
       "faces": [{ "weight": 400, "style": "normal", "file": "RacingSansOne-Regular.ttf", "format": "truetype" }]
+    },
+    "RobotoCondensed": {
+      "measureFile": "RobotoCondensed-VF.ttf",
+      "faces": [{ "weight": "100 900", "style": "normal", "file": "RobotoCondensed-VF.ttf", "format": "truetype" }]
+    },
+    "Barlow": {
+      "measureFile": "Barlow-Black.ttf",
+      "faces": [{ "weight": 900, "style": "normal", "file": "Barlow-Black.ttf", "format": "truetype" }]
+    },
+    "FunnelSans": {
+      "measureFile": "FunnelSans-VF.ttf",
+      "faces": [{ "weight": "300 800", "style": "normal", "file": "FunnelSans-VF.ttf", "format": "truetype" }]
+    },
+    "Outfit": {
+      "measureFile": "Outfit-VF.ttf",
+      "faces": [{ "weight": "100 900", "style": "normal", "file": "Outfit-VF.ttf", "format": "truetype" }]
+    },
+    "AveriaLibre": {
+      "measureFile": "AveriaLibre-Bold.ttf",
+      "faces": [{ "weight": 700, "style": "normal", "file": "AveriaLibre-Bold.ttf", "format": "truetype" }]
+    },
+    "Monda": {
+      "measureFile": "Monda-VF.ttf",
+      "faces": [{ "weight": "400 700", "style": "normal", "file": "Monda-VF.ttf", "format": "truetype" }]
+    },
+    "PlayfairDisplay": {
+      "measureFile": "PlayfairDisplay-VF.ttf",
+      "faces": [{ "weight": "400 900", "style": "normal", "file": "PlayfairDisplay-VF.ttf", "format": "truetype" }]
+    },
+    "IMFellEnglish": {
+      "measureFile": "IMFellEnglish-Regular.ttf",
+      "faces": [{ "weight": 400, "style": "normal", "file": "IMFellEnglish-Regular.ttf", "format": "truetype" }]
+    },
+    "DMSans": {
+      "measureFile": "DMSans-Italic-VF.ttf",
+      "faces": [{ "weight": "100 1000", "style": "italic", "file": "DMSans-Italic-VF.ttf", "format": "truetype" }]
+    },
+    "GochiHand": {
+      "measureFile": "GochiHand-Regular.ttf",
+      "faces": [{ "weight": 400, "style": "normal", "file": "GochiHand-Regular.ttf", "format": "truetype" }]
+    },
+    "Rubik": {
+      "measureFile": "Rubik-VF.ttf",
+      "faces": [{ "weight": "300 900", "style": "normal", "file": "Rubik-VF.ttf", "format": "truetype" }]
+    },
+    "Alef": {
+      "measureFile": "Alef-Bold.ttf",
+      "faces": [{ "weight": 700, "style": "normal", "file": "Alef-Bold.ttf", "format": "truetype" }]
     }
   }
 }

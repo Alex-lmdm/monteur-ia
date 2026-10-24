@@ -135,7 +135,7 @@ préférences apprises (section suivante) appliquées d'office.
 À appliquer d'office à chaque vidéo. Elles priment sur les réglages par défaut, jamais sur une
 demande explicite du moment. Si le client change d'avis, mets à jour `montage.preferences`
 (après son OK sur la nouvelle formulation) puis `node scripts/sync.mjs`.
-Un des 30 styles de sous-titres de la formation (« sous-titres style 12 », « les sous-titres Néon ») :
+Un style de sous-titres de la formation (« sous-titres style 12 », « les sous-titres Néon ») :
 `tools/sous_titres.py`, skill `motion-design`, `references/styles-sous-titres.md`, sur tout montage.
 Hors réglages (sous-titres mot par mot, autre style…) : fabrique-le pour cette vidéo
 (`reel.config.json`), puis demande s'il le garde par défaut.
