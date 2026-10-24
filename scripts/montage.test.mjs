@@ -828,7 +828,7 @@ test('styles de sous-titres : choisir, appliquer sur la voix, relancer, retouche
   // Style 1 (karaoké) pour ce Reel : réglages écrits et acceptés par la synchro, police du style.
   assert.equal(outil('--choisir', '1').status, 0);
   const reglages = JSON.parse(read(reel, 'reel.config.json')).visual;
-  assert.equal(reglages.captionsStyle, 1);
+  assert.equal(reglages.captionsStyle, 'karaoke-jaune', 'le slug, pas le numéro : la galerie peut se renuméroter');
   assert.equal(reglages.fontCaptions, 'Montserrat');
   assert.doesNotMatch(spawnSync(process.execPath, ['scripts/sync.mjs'], { cwd: dir, encoding: 'utf8' }).stderr, /ignoré/);
   assert.match(read(reel, 'brand/tokens.css'), /--brand-font-captions: Montserrat/);
@@ -855,13 +855,20 @@ test('styles de sous-titres : choisir, appliquer sur la voix, relancer, retouche
   assert.notEqual(outil('--retouche', 'allume=bleu').status, 0);
 
   // Un mot à la fois (style 20) : un sous-titre par mot, calé sur les images de la voix.
-  outil('--choisir', '20');
+  outil('--choisir', '36');
   python(reel, 'tools/montage_captions.py', '--write', '--mots', '1');
   outil();
   const mots = [...caps().matchAll(/class="cap clip st[^"]*"[^>]*data-start="([\d.]+)"/g)].map(([, s]) => Number(s));
   assert.equal(mots.length, 10, 'dix mots, dix sous-titres');
   for (const s of mots) assert.ok(Math.abs((s + 0.01 / 30) * 30 - Math.round((s + 0.01 / 30) * 30)) < 1e-3 || s === 0, `${s} sur une image`);
   assert.doesNotMatch(read(reel, 'reel.config.json'), /captionsLook/, 'un nouveau choix efface les retouches du précédent');
+
+  // Un numéro gardé avant la renumérotation (12 = Boîte orange) se relit par `avant` : même style, nouveau numéro.
+  write(reel, 'reel.config.json', { visual: { ...JSON.parse(read(reel, 'reel.config.json')).visual, captionsStyle: 12 } });
+  python(reel, 'tools/montage_captions.py', '--write');
+  assert.equal(outil().status, 0);
+  assert.match(caps(), /data-sous-titres="18"/);
+  assert.match(caps(), /« Boîte orange »/);
 
   // Retiré : les sous-titres reviennent exactement à la sortie de montage_captions.py.
   assert.equal(outil('--sans').status, 0);
@@ -870,7 +877,7 @@ test('styles de sous-titres : choisir, appliquer sur la voix, relancer, retouche
   assert.equal(caps(), read(reel, 'work/captions.origine.html'));
 });
 
-test('style de sous-titres gardé pour toutes ses vidéos : la maison ne garde que le numéro, chaque Reel reçoit le style', (t) => {
+test('style de sous-titres gardé pour toutes ses vidéos : la maison ne garde que le style, chaque Reel reçoit ses réglages', (t) => {
   if (!outils(t, { pil: true })) return;
   const dir = maison(t);
   sync(dir);
@@ -882,9 +889,9 @@ test('style de sous-titres gardé pour toutes ses vidéos : la maison ne garde q
   const reel = nouveauReel(dir, 'Courant');
   plan(reel, voix);
 
-  assert.equal(outil(reel, '--choisir', '20', '--maison').status, 0);
+  assert.equal(outil(reel, '--choisir', '36', '--maison').status, 0);
   const maisonV = visual(path.join(dir, 'brand.config.json'));
-  assert.equal(maisonV.captionsStyle, 20);
+  assert.equal(maisonV.captionsStyle, 'un-mot-geant');
   assert.equal(maisonV.captionsSize ?? null, null, 'la taille du style reste hors des réglages de la maison');
   assert.equal(maisonV.fontCaptions ?? null, null, 'sa police aussi');
   assert.equal(read(dir, 'brand/tokens.css'), tokensMaison, 'YouTube et stories gardent leurs textes');
@@ -897,15 +904,15 @@ test('style de sous-titres gardé pour toutes ses vidéos : la maison ne garde q
   const premier = outil(suivant);
   assert.notEqual(premier.status, 0);
   assert.match(premier.stderr, /posé sur ce Reel/);
-  assert.equal(visual(path.join(suivant, 'reel.config.json')).captionsStyle, 20);
+  assert.equal(visual(path.join(suivant, 'reel.config.json')).captionsStyle, 'un-mot-geant');
   python(suivant, 'tools/montage_captions.py', '--write', '--mots', '1');
   assert.equal(outil(suivant).status, 0);
-  assert.match(read(suivant, 'compositions/captions.html'), /data-sous-titres="20"/);
+  assert.match(read(suivant, 'compositions/captions.html'), /data-sous-titres="36"/);
 
   // Ce Reel seul s'en écarte, la maison garde son style.
   assert.equal(outil(suivant, '--sans').status, 0);
   assert.equal(visual(path.join(suivant, 'reel.config.json')).captionsStyle, 'aucun');
-  assert.equal(visual(path.join(dir, 'brand.config.json')).captionsStyle, 20);
+  assert.equal(visual(path.join(dir, 'brand.config.json')).captionsStyle, 'un-mot-geant');
   outil(suivant);
   assert.doesNotMatch(read(suivant, 'compositions/captions.html'), /data-sous-titres/);
 
@@ -936,33 +943,33 @@ test('styles de sous-titres : lignes, roue d’arrivées, emoji, mots forts, ban
   };
   const cap0 = (html) => /<div class="cap clip st[^"]*" id="cap-0"[^>]*>(.*?)<\/div>/.exec(html)[1];
 
-  // Ligne par ligne (55) : deux lignes, la seconde s'allume quand son premier mot est dit.
-  let html = poser(55);
+  // Ligne par ligne (49) : deux lignes, la seconde s'allume quand son premier mot est dit.
+  let html = poser(49);
   assert.match(cap0(html), /<span class="l l0">.*<\/span><br><span class="l l1">/);
   assert.match(html, /tl\.set\('#captions #cap-0 \.l1', \{color: '#2BF82A'|tl\.set\('#captions #cap-0 \.l1', \{color: '#FDFA14'/);
   assert.match(cap0(html), /<span class="emo"[^>]*>🎬<\/span>/, 'l’emoji sort du texte et se pose à part');
   assert.doesNotMatch(cap0(html).replace(/<span class="emo".*?<\/span>/, ''), /🎬/);
 
-  // Roue d'arrivées (62) : un programme par sous-titre, à tour de rôle.
-  html = poser(62);
+  // Roue d'arrivées (60) : un programme par sous-titre, à tour de rôle.
+  html = poser(60);
   assert.match(html, /tl\.to\('#captions #cap-0 \.in', \{keyframes:/, '1er : jaillit');
   assert.match(html, /tl\.fromTo\('#captions #cap-1 \.in', \{y: 34, opacity: 0\}/, '2e : glisse');
   assert.match(html, /tl\.fromTo\('#captions #cap-4 \.in \.w', \{opacity: 0\}, \{opacity: 1, duration: 0\.001, stagger:/, '5e : mots tapés');
 
-  // Chaque mot plein est fort, couleur par mot (71).
-  html = poser(71);
+  // Chaque mot plein est fort, couleur par mot (69).
+  html = poser(69);
   assert.match(cap0(html), /class="w w1 k k0"[\s\S]*class="w w3 k k1"/);
 
-  // Bandeau par ligne avec une allure par ligne, le dernier mot seul à la ligne (46).
+  // Bandeau par ligne avec une allure par ligne, le dernier mot seul à la ligne (35).
   write(reel, 'tools/montage_captions.py', read(reel, 'tools/montage_captions.py').replace('tu montes tes *vidéos* 🎬', 'tu montes tes vidéos'));
-  html = poser(46);
+  html = poser(35);
   assert.match(cap0(html), /<span class="t t0">.*<\/span><br><span class="t t1"><span class="w w3/);
   assert.match(html, /\.t\.t1 \{ display: inline-block; background: #13FD00; color: #000000; rotate: -1deg;/);
 
-  // Inclinaison du 4e sous-titre (59) et gerbe de points du mot fort (74).
-  html = poser(59);
+  // Inclinaison du 4e sous-titre (53) et gerbe de points du mot fort (72).
+  html = poser(53);
   assert.match(html, /id="cap-3"[^>]*><span class="in" style="rotate:-8deg">/);
-  html = poser(74);
+  html = poser(72);
   assert.match(html, /<span class="pt pt0" style="background:#ffd23f"/);
   assert.match(html, /tl\.fromTo\('#captions #cap-\d+ \.w\d+ \.pt11', \{x: 0, y: 0/);
 

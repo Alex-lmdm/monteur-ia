@@ -69,14 +69,25 @@ def catalogue() -> list[dict]:
 
 
 def style_numero(n) -> dict:
-    try:
-        n = int(n)
-    except (TypeError, ValueError):
-        sys.exit(f"ERREUR : « {n} » n'est pas un numéro de style de sous-titres (--liste pour les voir).")
+    """Le style que le client demande : son numéro dans la galerie (ou son slug)."""
     for s in catalogue():
-        if s["n"] == n:
+        if str(n).strip() in (str(s["n"]), s["slug"]):
             return s
-    sys.exit(f"ERREUR : pas de style de sous-titres n°{n} (--liste pour les voir).")
+    sys.exit(f"ERREUR : pas de style de sous-titres « {n} » (--liste pour les voir).")
+
+
+def style_reglage(v) -> dict | None:
+    """Le style gardé dans des réglages (visual.captionsStyle) : son slug ; un numéro écrit avant la
+    renumérotation du 24/10/2026 (galerie rangée par famille) se relit par `avant`, puis par `n`."""
+    if v in (None, "", "aucun"):
+        return None
+    styles = catalogue()
+    s = next((x for x in styles if x["slug"] == str(v)), None)
+    if s is None and str(v).isdigit():
+        s = next((x for x in styles if x.get("avant") == int(v)), None) or next((x for x in styles if x["n"] == int(v)), None)
+    if s is None:
+        sys.exit(f"ERREUR : style de sous-titres « {v} » inconnu dans les réglages (--liste pour les voir).")
+    return s
 
 
 # ---------------------------------------------------------------------------------------------
@@ -135,11 +146,10 @@ def synchro() -> None:
             print(f"  ⚠ {l.strip()}")
 
 
-def materialiser(n, look: dict) -> None:
+def materialiser(s: dict, look: dict) -> None:
     """Les réglages du style n°n (police, taille, casse…) dans le reel.config.json du Reel, avec ses
     retouches de taille et de police. Les réglages de sous-titres d'avant tombent ; la police d'accent
     du client reste, sauf si c'est celle d'un style de sous-titres d'avant."""
-    s = style_numero(n)
     f = fichier_reel()
     base = {k: s["visual"][k] for k in CLES_STYLE if k in s["visual"]}
     if look.get("taille"):
@@ -149,10 +159,10 @@ def materialiser(n, look: dict) -> None:
     retire = [k for k in CLES_STYLE if k not in base and k != "fontAccent"]
     avant = visual_de(f)
     if "fontAccent" not in base and avant.get("captionsStyle") not in (None, "", "aucun"):
-        ancien = next((x for x in catalogue() if str(x["n"]) == str(avant["captionsStyle"])), None)
+        ancien = style_reglage(avant["captionsStyle"])
         if ancien and ancien["visual"].get("fontAccent") == avant.get("fontAccent"):
             retire.append("fontAccent")
-    ecrire_visual(f, {**base, "captionsStyle": s["n"]}, retire)
+    ecrire_visual(f, {**base, "captionsStyle": s["slug"]}, retire)
 
 
 def polices_livrees() -> dict:
@@ -198,19 +208,20 @@ def retouche_valide(cle: str, val: str):
 
 def choisir(n, maison: bool) -> None:
     if n is None:
-        n = visual_de(fichier_maison()).get("captionsStyle")
-        if n in (None, "", "aucun"):
+        s = style_reglage(visual_de(fichier_maison()).get("captionsStyle"))
+        if s is None:
             sys.exit("ERREUR : aucun style de sous-titres gardé pour toutes ses vidéos : donne un numéro (--choisir 7).")
-    s = style_numero(n)
+    else:
+        s = style_numero(n)
     look_maison = visual_de(fichier_maison()).get("captionsLook") or {}
     if maison:
-        ecrire_visual(fichier_maison(), {"captionsStyle": s["n"]}, retire=["captionsLook"])
+        ecrire_visual(fichier_maison(), {"captionsStyle": s["slug"]}, retire=["captionsLook"])
         look_maison = {}
     if REEL is not None:
         # Un choix pour ce Reel seul masque les retouches de la maison (faites pour un autre style).
         reel_look = {} if (maison or not look_maison) else {"captionsLook": {}}
         ecrire_visual(fichier_reel(), reel_look, retire=["captionsLook"])
-        materialiser(s["n"], {} if not maison else look_maison)
+        materialiser(s, {} if not maison else look_maison)
     synchro()
     ou = "toutes ses vidéos (brand.config.json)" if maison else "ce Reel (reel.config.json)"
     print(f"Style de sous-titres n°{s['n']} « {s['nom']} » choisi pour {ou}.")
@@ -231,9 +242,9 @@ def retoucher(paires: list[str], maison: bool) -> None:
     ecrire_visual(f, {"captionsLook": look})
     # Taille ou police : elles vont dans les réglages du Reel, la largeur se remesure.
     if REEL is not None and {"taille", "police"} & {p.partition("=")[0].strip() for p in paires}:
-        n = (config().get("visual") or {}).get("captionsStyle")
-        if n not in (None, "", "aucun"):
-            materialiser(n, (config().get("visual") or {}).get("captionsLook") or {})
+        s = style_reglage((config().get("visual") or {}).get("captionsStyle"))
+        if s is not None:
+            materialiser(s, (config().get("visual") or {}).get("captionsLook") or {})
             print("Taille ou police changée : relance python3 tools/montage_captions.py --write, puis ce script.")
     synchro()
     print(f"Retouche gardée dans {f.name} : " + ", ".join(f"{k}={v}" for k, v in look.items()))
@@ -247,7 +258,7 @@ def retirer(maison: bool) -> None:
         avant = visual_de(f)
         # Les réglages posés par le style partent avec lui ; ceux qui viennent d'ailleurs (un style de
         # montage, une retouche) restent.
-        s = next((x for x in catalogue() if str(x["n"]) == str(avant.get("captionsStyle"))), None)
+        s = style_reglage(avant.get("captionsStyle")) if avant.get("captionsStyle") != "aucun" else None
         retire = ["captionsStyle", "captionsLook"] + [k for k in CLES_STYLE if s and avant.get(k) == s["visual"].get(k)]
         # La maison garde un style : ce Reel s'en écarte explicitement.
         reste = {"captionsStyle": "aucun"} if visual_de(fichier_maison()).get("captionsStyle") not in (None, "", "aucun") and not maison else {}
@@ -633,16 +644,16 @@ def main() -> None:
     if REEL is None:
         sys.exit("ERREUR : lance l'application du style depuis le dossier du Reel (reels/<nom>/tools/…).")
     v = config().get("visual") or {}
-    if v.get("captionsStyle") in (None, "", "aucun"):
+    s = style_reglage(v.get("captionsStyle"))
+    if s is None:
         return restaurer()
     if visual_de(fichier_reel()).get("captionsStyle") in (None, ""):
         # Style gardé pour toutes ses vidéos, pas encore posé sur ce Reel (nouveau Reel, ou réglages
         # d'un style de montage copiés par-dessus) : sa police et sa taille d'abord, puis le découpage.
-        materialiser(v["captionsStyle"], v.get("captionsLook") or {})
+        materialiser(s, v.get("captionsLook") or {})
         synchro()
-        sys.exit(f"Style de sous-titres n°{v['captionsStyle']} (gardé pour toutes ses vidéos) posé sur ce Reel. "
+        sys.exit(f"Style de sous-titres n°{s['n']} « {s['nom']} » (gardé pour toutes ses vidéos) posé sur ce Reel. "
                  "Relance python3 tools/montage_captions.py --write, puis ce script.")
-    s = style_numero(v["captionsStyle"])
     appliquer(s, look_du_style(s, v.get("captionsLook") or {}))
 
 
