@@ -866,3 +866,49 @@ test('styles de sous-titres : choisir, appliquer sur la voix, relancer, retouche
   assert.doesNotMatch(caps(), /data-sous-titres/);
   assert.equal(caps(), read(reel, 'work/captions.origine.html'));
 });
+
+test('style de sous-titres gardé pour toutes ses vidéos : la maison ne garde que le numéro, chaque Reel reçoit le style', (t) => {
+  if (!outils(t, { pil: true })) return;
+  const dir = maison(t);
+  sync(dir);
+  const tokensMaison = read(dir, 'brand/tokens.css');
+  const voix = [[0, 2.6, [['On', 0.1], ['garde', 0.4], ['tes', 1.2], ['mots', 1.5]], ['on garde', 'tes mots']],
+    [2.6, 5.3, [['on', 2.7], ['coupe', 3.0]], ['on coupe']], [5.3, 8.0, [['ça', 5.4], ['marche', 5.7]], ['ça marche']]];
+  const outil = (cwd, ...a) => spawnSync('python3', ['tools/sous_titres.py', ...a], { cwd, encoding: 'utf8' });
+  const visual = (f) => JSON.parse(fs.readFileSync(f, 'utf8')).visual;
+  const reel = nouveauReel(dir, 'Courant');
+  plan(reel, voix);
+
+  assert.equal(outil(reel, '--choisir', '20', '--maison').status, 0);
+  const maisonV = visual(path.join(dir, 'brand.config.json'));
+  assert.equal(maisonV.captionsStyle, 20);
+  assert.equal(maisonV.captionsSize ?? null, null, 'la taille du style reste hors des réglages de la maison');
+  assert.equal(maisonV.fontCaptions ?? null, null, 'sa police aussi');
+  assert.equal(read(dir, 'brand/tokens.css'), tokensMaison, 'YouTube et stories gardent leurs textes');
+  assert.equal(visual(path.join(reel, 'reel.config.json')).captionsSize, 124, 'le Reel en cours suit le style');
+
+  // Un nouveau Reel : le style s'y pose au premier passage, qui fait remesurer le découpage.
+  const suivant = nouveauReel(dir, 'Suivant');
+  plan(suivant, voix);
+  python(suivant, 'tools/montage_captions.py', '--write');
+  const premier = outil(suivant);
+  assert.notEqual(premier.status, 0);
+  assert.match(premier.stderr, /posé sur ce Reel/);
+  assert.equal(visual(path.join(suivant, 'reel.config.json')).captionsStyle, 20);
+  python(suivant, 'tools/montage_captions.py', '--write', '--mots', '1');
+  assert.equal(outil(suivant).status, 0);
+  assert.match(read(suivant, 'compositions/captions.html'), /data-sous-titres="20"/);
+
+  // Ce Reel seul s'en écarte, la maison garde son style.
+  assert.equal(outil(suivant, '--sans').status, 0);
+  assert.equal(visual(path.join(suivant, 'reel.config.json')).captionsStyle, 'aucun');
+  assert.equal(visual(path.join(dir, 'brand.config.json')).captionsStyle, 20);
+  outil(suivant);
+  assert.doesNotMatch(read(suivant, 'compositions/captions.html'), /data-sous-titres/);
+
+  // Plus gros pour toutes ses vidéos : gardé dans la maison, posé sur le Reel en cours.
+  assert.equal(outil(reel, '--retouche', 'taille=96', '--maison').status, 0);
+  assert.equal(visual(path.join(dir, 'brand.config.json')).captionsLook.taille, 96);
+  assert.equal(visual(path.join(reel, 'reel.config.json')).captionsSize, 96);
+  assert.equal(read(dir, 'brand/tokens.css'), tokensMaison);
+});

@@ -58,6 +58,9 @@ Depuis le dossier du Reel, à l'étape des sous-titres :
 
 1. `python3 tools/sous_titres.py --choisir N` : écrit le style dans `reel.config.json` (police,
    taille, casse, et `visual.captionsStyle`) puis lance la synchro. Pour CE Reel seulement.
+   Il garde un style pour toutes ses vidéos (`visual.captionsStyle` dans `brand.config.json`) :
+   `--choisir` sans numéro le pose sur le Reel. Oublié, le point 3 le pose et s'arrête pour que tu
+   relances le point 2.
 2. `python3 tools/montage_captions.py --write` (styles 20 et 21, un mot à la fois : `--mots 1`),
    puis le découpage final par unité grammaticale comme d'habitude (`references/sous-titres.md`).
    Styles à mot fort (20, 25 à 28) : entoure le mot fort d'astérisques dans `MANUAL`
@@ -88,12 +91,13 @@ puis le point 3 (ou 2 et 3 si la taille ou la police change).
 | « mot par mot », « un mot à la fois », « d'un bloc » | `--retouche mode=mot-a-mot` (`un-mot`, `bloc`, `karaoke`) |
 | « qu'ils rebondissent », « sans animation » | `--retouche entree=rebond` (`pop`, `glisse`, `fondu`, `flou`, `zoom`, `machine`, `aucune`) |
 | « sur deux lignes » | `--retouche lignes=2` |
-| « plus gros », « plus petit » | `visual.captionsSize` dans `reel.config.json`, synchro, points 2 et 3 |
-| « avec ma police » | `visual.fontCaptions` (police livrée ou la sienne, `/setup visuel`), synchro, points 2 et 3 |
+| « plus gros », « plus petit » | `--retouche taille=80` (px), puis points 2 et 3 |
+| « avec ma police » | `--retouche police=<nom>` (une police de `templates/style-presets.json` ; la sienne s'y ajoute par `/setup visuel`), puis points 2 et 3 |
 
 Montre, ajuste. Une fois validé, demande s'il le garde pour ses prochaines vidéos ; oui :
-`python3 tools/sous_titres.py --choisir N --maison`, puis ses retouches avec `--maison`
-(`brand.config.json`). Il vaut ensuite pour toutes ses vidéos, quel que soit le montage.
+`python3 tools/sous_titres.py --choisir N --maison`, puis ses retouches avec `--maison`. La maison
+ne garde que le numéro et les retouches (`brand.config.json`) : ses vidéos YouTube et ses stories
+gardent leurs propres textes. Il vaut ensuite pour tous ses Reels, quel que soit le montage.
 
-Revenir aux sous-titres de base : `python3 tools/sous_titres.py --sans` (ce Reel) ou
-`--sans --maison` (toutes ses vidéos), puis le point 3.
+Revenir aux sous-titres de base : `python3 tools/sous_titres.py --sans` (ce Reel, même quand la
+maison garde un style) ou `--sans --maison` (toutes ses vidéos), puis les points 2 et 3.
