@@ -211,7 +211,7 @@ l'app sortirait sans sons).
 
 Relance enfin le plan à blanc : plus aucune extension « à mettre à jour ensuite ».
 
-### 7. L'app HyperFrames (Mac, Linux)
+### 7. L'app HyperFrames (Mac, Windows, Linux)
 
 - Pas encore installée (`etat`) : https://hyperframes.dev/studio. Au premier lancement (même
   installée mais jamais ouverte), elle demande « Continue with HeyGen » : une connexion gratuite,
@@ -220,14 +220,14 @@ Relance enfin le plan à blanc : plus aucune extension « à mettre à jour ensu
   ou `Accueil Monteur IA` pour un dossier au nom par défaut), puis le Reel déplacé s'il y en a un, avec
   leur chemin complet entre guillemets :
   `node scripts/app-hyperframes.mjs ouvrir "<CLIENT>/Accueil · <nom>"`. Sans l'app ou si la
-  commande échoue, il glisse ce dossier sur l'icône de l'app.
+  commande échoue, il glisse ce dossier dans la liste de gauche de l'app (ou Fichier > Ouvrir un dossier).
 - Au premier message dans l'app, elle propose de connecter Claude Code (Codex : Settings > Agent).
 - Son ancien dossier Monteur IA était ouvert dans l'app ? Il archive cette tuile (menu de la tuile
   > Archive) : ce dossier n'est plus un projet, ses Reels le sont.
 - Pour une variante d'un Reel, c'est à toi de la créer (`tools/nouveau_reel.py --depuis`) : le
   bouton Duplicate de l'app copie le Reel hors du dossier Monteur IA, sans ses réglages ni ses sons.
-- Windows : pas encore d'app. Tout marche comme avant dans Claude Code ou Codex, chaque Reel dans
-  son dossier `reels/`.
+- Windows sur processeur Arm : pas encore d'app. Tout marche comme avant dans Claude Code ou Codex,
+  chaque Reel dans son dossier `reels/`.
 
 ### 8. Conclure
 

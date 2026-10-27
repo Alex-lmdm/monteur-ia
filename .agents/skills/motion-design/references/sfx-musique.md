@@ -16,7 +16,7 @@ traite ; les SFX sont posés après tes propres contrôles, sans attendre de val
    transition », « mouse click », « cash register »). Elle n'a pas tout : rien de propre pour un
    déclencheur photo ou un feutre, et « ding » et « succès » renvoient la même notification. Pour
    ces moments, ou si rien ne colle, les sons de départ (`assets/sfx/starter/sounds.md`).
-3. **Hors de l'app** (Claude Code, Codex, Windows) : les sons de départ, et le pack s'il est là.
+3. **Hors de l'app** (Claude Code, Codex) : les sons de départ, et le pack s'il est là.
 
 **Sons et musique trouvés dans l'app** (`find_sound_effect`, `find_music` ; absents hors de l'app).
 Le fichier arrive dans `assets/` du Reel avec sa durée, et pour un bruitage son `peakOffset`

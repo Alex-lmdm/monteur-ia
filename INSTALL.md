@@ -26,9 +26,9 @@ Tu lui dis ensuite ce que tu aurais fait autrement, et elle retient ton style po
 
 **Pas encore d'agent installé ?** Commence par [Installer l'agent IA](#installer-lagent-ia-avant-tout).
 
-**L'app HyperFrames (Mac, Linux) vient ensuite.** L'installation se fait ici, dans Claude Code ou
+**L'app HyperFrames (Mac, Windows, Linux) vient ensuite.** L'installation se fait ici, dans Claude Code ou
 Codex ; elle branche aussi ton monteur sur l'app. Tu ouvres ensuite l'accueil de Monteur IA dans
-l'app pour monter avec une timeline (voir le [README](README.md#monter-et-retoucher-dans-lapp-hyperframes-mac-linux)).
+l'app pour monter avec une timeline (voir le [README](README.md#monter-et-retoucher-dans-lapp-hyperframes-mac-windows-linux)).
 
 **Pas encore le dossier ?** Dans ton dossier Vidéos, demande à ton agent :
 « Télécharge https://github.com/Alex-lmdm/monteur-ia ici, puis lis son INSTALL.md et aide-moi à l'installer. »
@@ -207,7 +207,7 @@ Après réussite seulement :
 >
 > C'est une vidéo YouTube (format horizontal) ? Écris plutôt “monte ma vidéo YouTube”.
 >
-> Sur Mac et Linux, si tu veux voir ton montage sur une timeline, l'app gratuite HyperFrames est en option :
+> Si tu veux voir ton montage sur une timeline, l'app gratuite HyperFrames est en option :
 > ouvre-y le dossier « Accueil » de ton dossier Monteur IA et glisse-y ta vidéo.
 
 Si une vidéo est déjà fournie, commence la première vidéo sans la redemander (fichier agent,

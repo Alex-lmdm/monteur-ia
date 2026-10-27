@@ -23,7 +23,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 export const VARIABLE = "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD";
@@ -132,10 +132,23 @@ export function readCodex(dir) {
   return { installe: true, branche: Boolean(ligne) && Number(ligne.split("=")[1].replace(/#.*/, "").trim()) >= CODEX_LIMITE };
 }
 
-/** Chemin de l'app installée, ou null. Sur Linux, l'emplacement varie : on n'en cherche pas. */
-export function findApp({ platform = process.platform, home = os.homedir(), exists = fs.existsSync } = {}) {
+/** Chemin de l'app installée, ou null. Windows : là où son installateur la pose (le même chemin
+ *  que la CLI HyperFrames). Sur Linux, l'emplacement varie : on n'en cherche pas. */
+export function findApp({ platform = process.platform, home = os.homedir(), env = process.env, exists = fs.existsSync } = {}) {
+  if (platform === "win32") {
+    if (!env.LOCALAPPDATA) return null;
+    const exe = path.win32.join(env.LOCALAPPDATA, "Programs", "HyperFrames", "HyperFrames.exe");
+    return exists(exe) ? exe : null;
+  }
   if (platform !== "darwin") return null;
   return ["/Applications/HyperFrames.app", path.join(home, "Applications", "HyperFrames.app")].find(exists) ?? null;
+}
+
+/** Lance l'app Windows sur un dossier sans l'attendre : déjà ouverte, elle reçoit le dossier. */
+function lancer(exe, args) {
+  const child = spawn(exe, args, { detached: true, stdio: "ignore" });
+  child.on("error", () => {});
+  child.unref();
 }
 
 /** Vrai si l'app reconnaît ce dossier comme un projet. */
@@ -151,9 +164,10 @@ export function localCli({ platform = process.platform, exists = fs.existsSync }
   return exists(bin) ? bin : null;
 }
 
-/** Ouvre un projet dans l'app (Mac, Linux). Ailleurs, explique le geste à faire à la main. */
+/** Ouvre un projet dans l'app (Mac, Windows, Linux). Sinon, explique le geste à faire à la main. */
 export function ouvrir(dir, {
   platform = process.platform, app = findApp({ platform }), cli = localCli({ platform }), run = execFileSync,
+  launch = lancer,
 } = {}) {
   const target = path.resolve(dir);
   if (!isProject(target))
@@ -162,15 +176,16 @@ export function ouvrir(dir, {
     run("open", ["-b", APP_ID, target]);
     return { opened: true, target };
   }
+  if (platform === "win32" && app) {
+    launch(app, [target]);
+    return { opened: true, target };
+  }
   if (platform === "linux" && cli) {
     run(cli, ["open", target]);
     return { opened: true, target };
   }
-  const how =
-    platform === "win32"
-      ? "L'app HyperFrames n'existe pas encore sous Windows : continue dans Claude Code ou Codex."
-      : `Dans l'app HyperFrames, menu Fichier > Ouvrir un dossier, puis choisis ${target}.` +
-        (platform === "darwin" ? ` (App introuvable : télécharge-la sur ${DOWNLOAD_URL}.)` : "");
+  const how = `Dans l'app HyperFrames, menu Fichier > Ouvrir un dossier (${platform === "darwin" ? "Cmd" : "Ctrl"} + O), puis choisis ${target}.` +
+    (platform === "linux" ? "" : ` (App introuvable : télécharge-la sur ${DOWNLOAD_URL}.)`);
   return { opened: false, target, how };
 }
 
@@ -185,8 +200,7 @@ function describe(env = process.env) {
   if (!codex.installe) lines.push("Config Codex : Codex n'est pas installé, rien à brancher.");
   else lines.push(codex.branche ? "Config Codex : lit les instructions de Monteur IA en entier."
     : "Config Codex : à brancher (node scripts/app-hyperframes.mjs brancher).");
-  if (process.platform === "win32") lines.push("App HyperFrames : pas encore disponible sous Windows.");
-  else if (process.platform !== "darwin") lines.push("App HyperFrames : à ouvrir depuis le menu de ton système (Linux).");
+  if (process.platform === "linux") lines.push("App HyperFrames : à ouvrir depuis le menu de ton système (Linux).");
   else lines.push(app ? `App HyperFrames : installée (${app}).` : `App HyperFrames : pas installée (${DOWNLOAD_URL}).`);
   return { state, codex, app, text: lines.join("\n") };
 }

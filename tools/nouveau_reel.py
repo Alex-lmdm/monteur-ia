@@ -164,7 +164,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Crée le dossier d'un nouveau Reel.")
     parser.add_argument("sujet", help="Le sujet du Reel, en quelques mots (ex. « Méliès »).")
     parser.add_argument("--date", default=datetime.date.today().isoformat(), help="AAAA-MM-JJ (défaut : aujourd'hui)")
-    parser.add_argument("--ouvrir", action="store_true", help="Ouvre le Reel dans l'app HyperFrames (Mac).")
+    parser.add_argument("--ouvrir", action="store_true", help="Ouvre le Reel dans l'app HyperFrames.")
     parser.add_argument("--depuis", type=Path, help="Dossier d'un Reel existant : le nouveau en est une copie.")
     parser.add_argument("--video", type=Path, help="La vidéo brute du Reel (ex. celle glissée dans l'accueil).")
     parser.add_argument("--brief", help="La demande du client (script à écrire, idées, liens), notée dans work/brief.md.")

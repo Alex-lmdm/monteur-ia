@@ -87,8 +87,14 @@ test('seul un vrai projet HyperFrames s’ouvre dans l’app', (t) => {
   assert.deepEqual(calls, [['open', ['-b', APP_ID, dir]]]);
 
   const noApp = ouvrir(dir, { platform: 'darwin', app: null, cli: null, run: () => assert.fail('rien à lancer') });
-  assert.match(noApp.how, /Ouvrir un dossier.*hyperframes\.dev\/studio/);
-  assert.match(ouvrir(dir, { platform: 'win32', app: null, cli: null }).how, /pas encore sous Windows/);
+  assert.match(noApp.how, /Ouvrir un dossier \(Cmd \+ O\).*hyperframes\.dev\/studio/);
+  // Windows : l'app reçoit le dossier sur sa ligne de commande, lancée sans être attendue.
+  const exe = 'C:\\Users\\a\\AppData\\Local\\Programs\\HyperFrames\\HyperFrames.exe';
+  const win = [];
+  assert.equal(ouvrir(dir, { platform: 'win32', app: exe, run: () => assert.fail('pas d\'appel bloquant'),
+    launch: (...a) => win.push(a) }).opened, true);
+  assert.deepEqual(win, [[exe, [dir]]]);
+  assert.match(ouvrir(dir, { platform: 'win32', app: null, cli: null }).how, /Ouvrir un dossier \(Ctrl \+ O\).*hyperframes\.dev\/studio/);
   // Linux : la CLI HyperFrames du dossier Monteur IA ouvre le projet dans l'app.
   const linux = [];
   assert.equal(ouvrir(dir, { platform: 'linux', app: null, cli: '/m/node_modules/.bin/hyperframes', run: (...a) => linux.push(a) }).opened, true);
@@ -96,12 +102,18 @@ test('seul un vrai projet HyperFrames s’ouvre dans l’app', (t) => {
   assert.match(ouvrir(dir, { platform: 'linux', app: null, cli: null }).how, /Ouvrir un dossier/);
 });
 
-test('l’app est cherchée dans les deux dossiers Applications du Mac seulement', () => {
+test('l’app est cherchée dans les dossiers Applications du Mac et dans celui de Windows', () => {
   const seen = (paths) => (p) => paths.includes(p);
   assert.equal(findApp({ platform: 'darwin', home: '/Users/a', exists: seen(['/Users/a/Applications/HyperFrames.app']) }),
     '/Users/a/Applications/HyperFrames.app');
   assert.equal(findApp({ platform: 'darwin', home: '/Users/a', exists: seen([]) }), null);
   assert.equal(findApp({ platform: 'linux', exists: () => true }), null);
+  // Windows : le dossier d'installation de l'app, dans LOCALAPPDATA.
+  const local = 'C:\\Users\\a\\AppData\\Local';
+  assert.equal(findApp({ platform: 'win32', env: { LOCALAPPDATA: local }, exists: seen([`${local}\\Programs\\HyperFrames\\HyperFrames.exe`]) }),
+    `${local}\\Programs\\HyperFrames\\HyperFrames.exe`);
+  assert.equal(findApp({ platform: 'win32', env: { LOCALAPPDATA: local }, exists: seen([]) }), null);
+  assert.equal(findApp({ platform: 'win32', env: {}, exists: () => true }), null);
 });
 
 test('brancher relève la limite de lecture de Codex, sans toucher au reste de sa config', (t) => {

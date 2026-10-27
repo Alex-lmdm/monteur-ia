@@ -43,7 +43,7 @@ transitions, couleurs), ou les deux. Ta propre vidéo marche aussi : il reprend 
 prochaines vidéos.
 
 Le montage se pilote en conversation. Tu ne touches pas une ligne de code : tu écris ce que tu veux,
-l'IA le fait, tu valides ou tu corriges. Sur Mac et Linux, l'**app HyperFrames** (gratuite) te montre
+l'IA le fait, tu valides ou tu corriges. Sur Mac, Windows et Linux, l'**app HyperFrames** (gratuite) te montre
 en plus ton montage sur une timeline, comme un logiciel de montage : tu le regardes, tu retouches à
 la souris si tu veux, et tu exportes d'un clic.
 
@@ -118,7 +118,7 @@ n'importe lequel, et un nouveau Reel ne touche jamais aux précédents.
 
 ---
 
-## Monter et retoucher dans l'app HyperFrames (Mac, Linux)
+## Monter et retoucher dans l'app HyperFrames (Mac, Windows, Linux)
 
 L'app HyperFrames Studio utilise ton abonnement Claude ou ChatGPT : c'est le même monteur, avec une
 timeline en plus. Rien d'obligatoire, tout reste faisable dans Claude Code ou Codex.
@@ -127,9 +127,9 @@ timeline en plus. Rien d'obligatoire, tout reste faisable dans Claude Code ou Co
    « Continue with HeyGen » pour te connecter.
 2. **Branche ton monteur** (une fois par ordinateur) : l'installation de Monteur IA s'en charge.
    Sinon, demande à ton IA « branche Monteur IA sur l'app HyperFrames ».
-3. **Ouvre l'accueil** : glisse le dossier « Accueil … » de ton dossier Monteur IA sur l'icône de
-   l'app (ou Fichier > Ouvrir un dossier). Au premier message, l'app te propose de connecter
-   Claude Code (pour Codex : Settings > Agent).
+3. **Ouvre l'accueil** : glisse le dossier « Accueil … » de ton dossier Monteur IA dans la liste de
+   gauche de l'app (ou Fichier > Ouvrir un dossier). Au premier message, l'app te propose de
+   connecter Claude Code (pour Codex : Settings > Agent).
 4. **Nouvelle vidéo** : dans l'accueil, glisse ta vidéo brute et écris « On monte celle-ci ». Le
    monteur crée le Reel et l'ouvre dans l'app. Il montre d'abord un modèle : ta vidéo y entre au dérush.
    Écris-lui la même phrase dans ce Reel.
@@ -173,8 +173,8 @@ Le petit outil qui télécharge les vidéos s'installe tout seul au premier lien
 Non. Tu parles à ton IA en français. Elle écrit le code, toi tu regardes le résultat et tu donnes ton avis.
 
 **Ça marche sur Windows ?**
-Oui, Windows 10/11 64-bit, dans Claude Code ou Codex. L'app HyperFrames n'existe pas encore sous
-Windows : tu montes et tu exportes depuis la conversation. INSTALL.md couvre les deux systèmes.
+Oui, Windows 10/11 64-bit, dans Claude Code ou Codex, et dans l'app HyperFrames sur un PC Intel ou
+AMD (pas encore sur un PC à processeur Arm). INSTALL.md couvre les deux systèmes.
 
 **Combien ça coûte ?**
 Le repo est gratuit, l'app HyperFrames aussi. Il te faut un abonnement IA : Claude Pro ou ChatGPT

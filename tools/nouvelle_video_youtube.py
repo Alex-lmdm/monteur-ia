@@ -131,7 +131,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Crée le dossier d'une nouvelle vidéo YouTube.")
     parser.add_argument("sujet", help="Le sujet de la vidéo, en quelques mots.")
     parser.add_argument("--date", default=datetime.date.today().isoformat(), help="AAAA-MM-JJ (défaut : aujourd'hui)")
-    parser.add_argument("--ouvrir", action="store_true", help="Ouvre la vidéo dans l'app HyperFrames (Mac).")
+    parser.add_argument("--ouvrir", action="store_true", help="Ouvre la vidéo dans l'app HyperFrames.")
     parser.add_argument("--depuis", type=Path, help="Dossier d'une vidéo YouTube existante : la nouvelle en est une copie.")
     parser.add_argument("--video", type=Path, help="La vidéo brute (ex. celle glissée dans l'accueil).")
     parser.add_argument("--brief", help="La demande du client (script à écrire, idées, liens), notée dans work/brief.md.")
