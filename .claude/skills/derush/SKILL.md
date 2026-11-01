@@ -60,43 +60,9 @@ Tous les binaires et le modèle Whisper se lisent dans `brand.config.json` → `
 Travailler dans le dossier de travail du projet **`work/`** (cross-platform) puis copier les livrables
 dans `<projet>/derush/`.
 
-### 1. Inspecter + extraire l'audio
+### 1-3. Inspecter, silences, transcription
 
-```bash
-ffprobe -v error -show_entries format=duration:stream=codec_type,codec_name,width,height,r_frame_rate -of default=noprint_wrappers=1 "$SRC"
-ffmpeg -y -i "$SRC" -ar 16000 -ac 1 -c:a pcm_s16le work/d_audio.wav
-```
-Note (conditionnelle sur `brand.config.json` → `derush.camera`) : certaines caméras (ex. **DJI**)
-exposent un **2ᵉ flux vidéo mjpeg** (vignette) → au montage, mapper explicitement `[0:v:0]` (le h264)
-et `[0:a:0]`. Si `derush.camera` n'est pas une caméra à double flux, ignorer.
-
-### 2. Détecter les silences (points de coupe réels)
-
-```bash
-ffmpeg -i work/d_audio.wav -af silencedetect=noise=-32dB:d=0.3 -f null - 2>&1 | grep silence_
-```
-⚠️ **JAMAIS `-v error` avec `silencedetect`** : ce filtre logue au niveau *info*, donc `-v error`
-renvoie **zéro ligne** et on conclut à tort « aucun silence détecté ». Même piège avec
-`volumedetect`. (`ffprobe -v error` reste correct : c'est `ffmpeg` + filtre de mesure qui pose problème.)
-→ donne la liste `silence_start` / `silence_end`. Les **îlots de parole** = le complément
-(entre `silence_end[i]` et `silence_start[i+1]`). Chaque îlot = une prise candidate.
-
-### 3. Transcrire (segment-level, FIABLE)
-
-```bash
-ffmpeg -y -i work/d_audio.wav -af "loudnorm=I=-16:TP=-1.5" -ar 16000 -ac 1 work/d_norm.wav
-whisper-cli -m $MODEL -l <LANG> -oj -of work/d_seg work/d_norm.wav
-```
-⚠️ **NE PAS utiliser `-ml 1 -sow` sur le fichier complet** → ça fait halluciner Whisper sur cet audio
-(sortie de bruit / phrases parasites). La segmentation normale transcrit proprement. `loudnorm`
-(pré-pass) ne change pas le timing, juste les niveaux → timestamps valides sur la timeline d'origine.
-
-Parser les segments (`offsets.from/to` en ms + `text`) :
-```python
-import json
-for s in json.load(open('work/d_seg.json'))['transcription']:
-    o=s['offsets']; print(f"{o['from']/1000:6.2f}-{o['to']/1000:6.2f}  {s['text'].strip()}")
-```
+`tools/prises.py` (étape 4) les fait. Repli si l'outil échoue : `references/derush-manuel.md` (dont `silencedetect` jamais avec `-v error`, et jamais `-ml 1 -sow` sur le fichier entier).
 
 ### 4. Sélection des prises (le raisonnement)
 
@@ -124,10 +90,9 @@ Les règles, qu'il applique et que tu vérifies, en s'appuyant sur le **script c
 
 ### 5. Construire le montage
 
-Utiliser `references/build_derush_template.py` : y coller la liste `ISLANDS` (start, end, texte) des
-prises gardées. Il génère le `filter_complex` (trim/atrim + `concat`, **sans réduction**) et encode.
-**Copier le script paramétré (avec ses `ISLANDS` finaux) dans `<projet>/derush/build_derush.py`** :
-c'est la trace du montage et il est réutilisable au prochain rebuild.
+`tools/prises.py --ecrire` a écrit `derush/build_derush.py` (gabarit `references/build_derush_template.py`,
+`trim`/`concat` sans réduction) : corrige ses `ISLANDS` après relecture du tableau, puis
+`python3 derush/build_derush.py`. Ce fichier est la trace du montage, réutilisée à chaque rebuild.
 
 **Raccord** (changer de cadre sur un mot au montage, sans coupe) : partager une prise en deux îlots
 qui se **touchent** après les marges (fin du premier + `PAD_END` = début du second - `PAD_START`),
@@ -148,7 +113,7 @@ Pour un Reel :
     les fins de voix qui baissent → mots tronqués), ni -45 dB (trop larges : ~0,07 s de marge muette
     de chaque côté → ça traîne).
   - `PAD_START = <derush.padStart>` (défaut **0.04**), `PAD_END = <derush.padEnd>` (défaut **0.02**),
-    **asymétrique**. Retour terrain : « le début est parfait, c'est la fin des cuts qui traîne » → on
+    **asymétrique**. Retour terrain (14/07/2026) : « le début est parfait, c'est la fin des cuts qui traîne » → on
     resserre côté FIN, jamais côté début.
   - ⚠️ Attaques en **voyelle** (« Et », « Mais », « En »…) fragiles : un `PAD_START` négatif bouffe le
     début du mot. Le garder **positif**.
@@ -157,7 +122,7 @@ Pour un Reel :
   - **Ne fusionne jamais deux îlots séparés par un blanc pour en faire une prise.** Un îlot très
     court en tête ou en queue (souffle, clic de langue : moins de 0,25 s, sans mot) se retire : la
     prise commence à l'attaque de la parole et finit sur la dernière syllabe. Sinon on entend
-    souffle + blanc à la coupe (mesuré : 0,59 s au lieu de 0,07 s).
+    souffle + blanc à la coupe (mesuré le 06/10/2026 : 0,59 s au lieu de 0,07 s).
   - Cible mesurée : moy ≈ 0,10 s, max ≈ 0,14 s (mesurer les vrais écarts inter-cut en excluant les
     pauses internes aux phrases, qui sont naturelles et à garder).
 - Sortie **en pleine résolution** (celle du rush, ex. 1728×3072 pour une DJI), `libx264 -preset veryfast -crf 14` (fichier intermédiaire : deux fois plus rapide, même image),
@@ -225,7 +190,7 @@ navigateur, tu fais tout le reste.
 > ffmpeg -y -i <projet>/derush/<cut>.mp4 -map 0:v:0 -map 0:a:0 -c:v copy -af loudnorm=I=-24:TP=-1.5:LRA=11 -ar 48000 -c:a aac -b:a 256k <projet>/derush/<cut>_enhanced.mp4
 > ```
 > ⚠️ **Jamais `-shortest` ici** : `loudnorm` garde ~0,1 s de son en réserve et `-shortest` la jette
-> en arrêtant la sortie avec l'image : le dernier mot de la vidéo était coupé (« dès ton ach »).
+> en arrêtant la sortie avec l'image : le dernier mot de la vidéo était coupé (« dès ton ach », 15/10/2026).
 > Le nettoyage Adobe est proposé au débrief, qui remplace alors l'audio sans toucher à la vidéo ni
 > aux coupes. Dès la deuxième vidéo, cette étape redevient systématique.
 
@@ -238,8 +203,8 @@ ffmpeg -y -i <projet>/derush/<cut>.mp4 -vn -c:a libmp3lame -b:a 320k <projet>/de
    - Windows : `explorer /select,"<projet>\derush\<cut>_voice.mp3"`
 3. Lui donner **exactement** ces trois consignes, en un seul message, puis attendre :
    > « Ouvre https://podcast.adobe.com/enhance (connecté à ton compte Adobe), glisse le fichier
-   > `<cut>_voice.mp3` que je viens de te montrer sur la zone « Optimiser », attends la fin du
-   > traitement, clique « Télécharger », puis dis-moi "c'est téléchargé". »
+   > `<cut>_voice.mp3` que je viens de te montrer sur la page, attends la fin du
+   > traitement, télécharge le résultat, puis dis-moi "c'est téléchargé". »
    ⚠️ **Tu ne peux pas faire l'upload à sa place** : le sélecteur de fichiers ouvre la fenêtre
    native de l'OS, hors de portée de n'importe quel agent. N'essaie pas, ne le contourne pas.
 4. Quand il dit que c'est téléchargé : récupérer le fichier le plus récent du dossier de

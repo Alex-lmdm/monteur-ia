@@ -192,7 +192,7 @@ jamais un style pour une question de sujet.
 5. **Les pièces signature** (§2, le kit) : s'il y a un kit, copie ses `compositions/` dans le Reel
    et remplis-les. Sinon, construis chaque pièce une fois, compare-la à l'original avant de la
    remplir (`python3 tools/cloner_reel.py cote-a-cote clones/<dossier> <rendu ou snapshot.png>
-   <t original>[:<t rendu>] …` ; un `npx hyperframes snapshot` de la pièce suffit : place, taille,
+   <t original>[:<t rendu>] …` ; un `npx hyperframes snapshot --describe false` de la pièce suffit : place, taille,
    police, couleurs ; deux allers-retours au plus), puis range-la dans
    `clones/<dossier>/kit/compositions/` avec le `reel.config.json` du Reel.
 6. **Ce que l'original affiche et que sa vidéo ne dit pas** (un prix, un chiffre, un nom sur une

@@ -122,8 +122,9 @@ Windows : `python` au lieu de `python3`. Compte 15 à 60 secondes. Annonce-le en
 - **« Le téléchargeur n'est pas installé »** (premier lien sur cet ordinateur) : dis-le en une ligne
   (« Première fois : j'installe le petit outil qui télécharge les vidéos, une minute. »), lance
   `python3 tools/cloner_reel.py installer`, puis recommence. S'il demande un Python 3.10 ou plus
-  récent : sur Mac `brew install python@3.12`, sur Windows `winget install -e --id
-  Python.Python.3.12` (puis rouvre l'agent), et relance `installer`. Un fichier glissé n'en a pas
+  récent : dis-le en une phrase et propose de l'installer (Mac `brew install python@3.12`, Windows
+  `winget install -e --id Python.Python.3.12`) ; lance-le après son « ok », puis rouvre l'agent et
+  relance `installer`. Un fichier glissé n'en a pas
   besoin.
 - Langue mal détectée : relance avec `--langue en` (ou `fr`, `es`…).
 

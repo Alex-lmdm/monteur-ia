@@ -40,8 +40,6 @@ sombre ni jaune.
 | Un style de sous-titres de la formation (« sous-titres style 12 », « sous-titres Néon ») | `references/styles-sous-titres.md` |
 | SFX / musique (UNIQUEMENT après validation du montage par le créateur ; première vidéo : d'une traite) | `references/sfx-musique.md` |
 | Section CTA « commente un mot-clé », ou image qui zoome (Ken Burns) | `references/patterns.md` |
-| Police display statique de la marque | `references/coluna-statique.md` |
-| Projet Remotion (legacy) | `references/remotion.md` |
 
 ---
 
@@ -73,9 +71,7 @@ motion design doit **ajouter** une couche d'info, pas redire.
 ### Conséquence pour les polices
 
 - **Une seule famille body partout** (`visual.fontBody`) pour les labels du motion.
-- **Pas de police display en motion.** Le body porte tout, hooks compris (en graisse Black). La
-  police display (`visual.fontDisplay`) est réservée aux formats statiques
-  (`references/coluna-statique.md`) : en vidéo, elle n'a aucune utilité (pas de gros pavé de texte).
+- **Pas de police display en motion.** Le body porte tout, hooks compris (en graisse Black).
 - **Mono** : seulement pour des prompts/terminaux/code affichés.
 
 ---
@@ -120,7 +116,7 @@ l'accent (ratios WCAG) : ne jamais les demander à l'utilisateur, ni les écrire
   un résultat surprenant, un CTA. Si tu colories une phrase entière en accent, tu as raté la hiérarchie.
 - **Maximum un accent par "moment visuel"** (un plan, un slide, un titre).
 - L'accent est **plat, mat, brut** : aplat pur, jamais de gradient.
-- L'accent s'applique **en texte brut sur fond sombre** : pas de pills translucides à bord, pas de
+- L'accent s'applique **en texte brut sur le fond** : pas de pills translucides à bord, pas de
   cards à bord accent pour des labels.
 - **Le fond est toujours `var(--brand-bg)`.** Le contour de titre passe par `var(--brand-stroke)`,
   jamais par un noir écrit en dur (il devient illisible sur un style à fond clair).
@@ -147,12 +143,11 @@ Mono     → var(--brand-font-mono)  (Courier New / ui-monospace — technique, 
 ```
 
 **Le body (`visual.fontBody`) est la seule police du motion.** Pas de police display en vidéo : un
-hook géant, c'est le body en graisse Black. (La display `visual.fontDisplay` reste réservée aux
-formats STATIQUES : sa spéc est dans `references/coluna-statique.md`, ne l'utilise pas en motion.)
+hook géant, c'est le body en graisse Black.
 
 ### Le body — le corps
 
-- **Body par défaut** : Regular (400). **Pas Light** (trop fin sur fond sombre).
+- **Body par défaut** : Regular (400). **Pas Light** (trop fin à l'écran).
 - **Emphase forte** : Black (900), dans la même phrase. Outil principal pour donner des ancres à l'œil.
 - **Emphase douce** : Regular Italic. Pour parenthèses, apartés, nuances.
 - **Sous-titres / section titles** : Black, 10-20 px au-dessus du corps.
@@ -163,12 +158,11 @@ formats STATIQUES : sa spéc est dans `references/coluna-statique.md`, ne l'util
 
 | Élément                          | Graisse        | Taille (1080×1350)         | Couleur          |
 |----------------------------------|----------------|----------------------------|------------------|
-| Hook géant / mot cinématique     | Black 900      | 90–150 px (line-height 0.9)| Blanc + accent   |
-| Sous-titre / section title       | Black 900      | 50 px (line-height 62)     | Blanc            |
-| Body paragraphe                  | Regular 400    | 40 px (line-height 55)     | Blanc            |
-| Body emphase forte (1-3 mots)    | Black 900      | 40 px                      | Blanc ou accent  |
-| Body emphase douce               | Regular italic | 40 px                      | Blanc            |
-| Métadonnée / numérotation        | SemiBold 600   | 20 px                      | Blanc            |
+| Sous-titre / section title       | Black 900      | 50 px (line-height 62)     | `--brand-text`   |
+| Body paragraphe                  | Regular 400    | 40 px (line-height 55)     | `--brand-text`   |
+| Body emphase forte (1-3 mots)    | Black 900      | 40 px                      | `--brand-text` ou accent |
+| Body emphase douce               | Regular italic | 40 px                      | `--brand-text`   |
+| Métadonnée / numérotation        | SemiBold 600   | 20 px                      | `--brand-text`   |
 | Ghost number (déco)              | Bold 700       | 180 px                     | Blanc 10% op.    |
 
 **Adaptation aux formats vidéo** :
@@ -206,18 +200,17 @@ formats STATIQUES : sa spéc est dans `references/coluna-statique.md`, ne l'util
 ### Transitions
 - **Cut sec** (par défaut), **slide rapide** (200-300 ms), **fade très court** : les trois de base.
 - Le client en veut une autre (flash, zoom brusque, flou, whip), ou son style cloné en a une : tu
-  la construis (registre HyperFrames : `whip-pan-cut`, `zoom-through-transition`…), pour ce Reel,
+  la construis (registre HyperFrames : cherche-la avec `npx hyperframes catalog`), pour ce Reel,
   puis il dit s'il la garde par défaut.
 
 ### Apparition de texte
 - **Par mot ou par bloc**, jamais lettre par lettre.
 - Exception : effet "machine à écrire" pour un prompt mono (terminal).
 
-### Easing et durées — source unique = le JSON de tokens (§8)
+### Easing et durées — source unique = `brand/motion.js`
 
-Les valeurs canoniques vivent dans `motion.easing` (`inOut`, `outExpo`) et `motion.duration`
-(`appearMs`, `holdHookMs`, `holdWordMs`, `slideTransitionMs`) du §8, exprimées en **ms**.
-Conversions : **secondes (HyperFrames) = ms ÷ 1000** · **frames @30 fps = ms × 30 ÷ 1000**.
+Les courbes (`BRAND.ease.inOut`, `BRAND.ease.outExpo`) et les durées (`BRAND.dur.appear`,
+`holdHook`, `holdWord`…) vivent dans `brand/motion.js`, en **secondes** (frames @30 fps = s × 30).
 
 Plages et règles d'usage (ne figurent pas dans le JSON) :
 - **Apparition d'un élément** : 250-400 ms.
@@ -227,7 +220,6 @@ Plages et règles d'usage (ne figurent pas dans le JSON) :
   d'accent — l'accent arrive en dernier, comme une révélation.
 - **Frame budget (à 30 fps)** : 250 ms = **7-8 frames** · 400 ms = **12 frames** · 1,2 s = **36
   frames** · calcul précis `duration_ms * fps / 1000`.
-- Springs Remotion : `references/remotion.md`.
 
 ---
 
@@ -320,100 +312,16 @@ Réflexe à chaque média d'une compo : « est-ce que ça remplit toute la zone 
 
 ---
 
-## 7. Anti-slop pour les textes à l'écran
+## 7. Anti-slop des textes à l'écran
 
-Détail complet dans `design-system/writing-anti-slop.md`. Les overlays texte tombent souvent dans le
-slop IA. À éviter :
-
-### Mots à blacklister dans tout overlay
-crucial · fondamental · indéniablement · incontournable · primordial · révolutionnaire · fascinant · remarquable · formidable · considérablement · significativement · effectivement · notamment · ainsi (début de phrase) · en effet · certes · davantage · pléthore · paradigme · synergie · holistique · robuste · levier (abstrait) · optimiser (sauf technique) · catalyseur.
-
-### Expressions à bannir
-- "Dans le monde de..." / "Dans un monde où..." / "À l'ère de..."
-- "Il est important de noter que..."
-- "Ce n'est pas X. C'est Y." (formule IA surutilisée — montre le contraste autrement)
-- "La vraie question, c'est..."
-- "Saviez-vous que..." / "Vous êtes-vous déjà demandé..."
-- Hooks vagues (→ un chiffre, un nom propre, un contraste concret).
-- Règles de 3 forcées ("Plus rapide, plus simple, plus efficace").
-- Slogans corporate ("Libérez votre potentiel", "Transformez votre business").
-- Voiceover qui résume le visuel ("Comme vous pouvez le voir...").
-
-### Règles d'écriture pour overlays
-1. **Spécifique uniquement.** Chiffres précis, noms propres. Pas de couverture.
-2. **Zéro hedging.** Bannir : "pourrait", "potentiellement", "éventuellement", "peut-être".
-3. **Accents propres partout** (selon `brand.language`). Pas de "methode", "deja", "idee".
-4. **Pas de tirets longs (—)** dans les overlays. Virgules ou phrases courtes.
-5. **Tutoiement** par défaut.
-
----
-
-## 8. Tokens techniques (à exporter dans chaque projet)
-
-**Schéma** des tokens, pas des valeurs : les couleurs et polices réelles se lisent dans
-`brand/tokens.css` (généré). Les seules valeurs en dur ci-dessous sont la **typographie** et le
-**motion** — elles relèvent de la méthode, pas de l'identité, et sont identiques pour tout le monde.
-
-```json
-{
-  "colors": {
-    "background": "<visual.bg>",
-    "surface": "<visual.surface>",
-    "surfaceContrast": "<dérivée>",
-    "text": "<visual.text>",
-    "muted": "<dérivée>",
-    "accent": "<visual.accent>",
-    "contrast": "<dérivée — à poser SUR l'accent>",
-    "stroke": "<dérivée — contour de lisibilité>"
-  },
-  "fonts": {
-    "body": "<visual.fontBody>, system-ui, sans-serif",
-    "captions": "<visual.fontCaptions>, sans-serif",
-    "mono": "Courier New, ui-monospace, monospace"
-  },
-  "typography": {
-    "cover":      { "family": "body", "weight": 900, "sizeMin": 90, "sizeMax": 150, "lineHeight": 0.9 },
-    "body":       { "family": "body", "weight": 400, "size": 40, "lineHeight": 55 },
-    "bodyStrong": { "family": "body", "weight": 900 },
-    "bodyItalic": { "family": "body", "weight": 400, "style": "italic" },
-    "subtitle":   { "family": "body", "weight": 900, "size": 50, "lineHeight": 62 }
-  },
-  "motion": {
-    "easing": {
-      "inOut":  "cubic-bezier(0.65, 0, 0.35, 1)",
-      "outExpo":"cubic-bezier(0.16, 1, 0.3, 1)"
-    },
-    "duration": {
-      "appearMs": 300,
-      "holdHookMs": 1200,
-      "holdWordMs": 400,
-      "slideTransitionMs": 250
-    }
-  },
-  "profile": {
-    "name": "<brand.firstName>",
-    "handle": "<brand.handle>"
-  }
-}
-```
-
----
-
-## 9. Formats vidéo de référence
-
-| Format               | Dimensions  | Usage                              |
-|----------------------|-------------|------------------------------------|
-| Reel / Story / TikTok | 1080×1920  | Vertical, plein écran mobile       |
-| Square (clips intégrables) | 1080×1080 | Inserts dans un montage existant |
-| YouTube / horizontal | 1920×1080  | Vidéos longues, podcasts vidéo     |
-| Carrousel (référence statique) | 1080×1350 | Hors scope ce skill          |
+`design-system/writing-anti-slop.md` (mots et formules à bannir, règles d'écriture des overlays).
 
 ---
 
 ## 10. Checklist anti-slop avant export motion
 
 - [ ] Le premier plan accroche en moins de **1,5 s** (chiffre, nom propre, contraste, ou question concrète).
-- [ ] Aucun mot/expression de la blacklist (§7) dans les overlays.
+- [ ] Aucun mot ni expression bannis par `design-system/writing-anti-slop.md` dans les overlays.
 - [ ] Accents propres partout (selon `brand.language`).
 - [ ] Pas de tirets longs (—) dans les overlays texte.
 - [ ] L'accent `var(--brand-accent)` est utilisé sur **1 mot/chiffre maximum par plan**.
@@ -425,7 +333,7 @@ crucial · fondamental · indéniablement · incontournable · primordial · ré
 - [ ] L'identité (handle, avatar) est visible **au moins une fois** dans la vidéo finale. Si
   `brand.handle` et l'avatar (`assets/images/avatar.png` du dossier Monteur IA) n'existent pas (cas d'une première vidéo), on saute
   ce point : ne jamais afficher un marqueur `{{...}}` ni inventer un nom.
-- [ ] Easing utilisé est conforme (§4 / §8).
+- [ ] Easing conforme (§4, `brand/motion.js`).
 
 ---
 
@@ -448,15 +356,15 @@ branche via 4 fichiers dans **`brand/`** :
 Brancher dans une composition :
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/CustomEase.min.js"></script>
+<script src="assets/vendor/gsap.min.js"></script>
+<script src="assets/vendor/CustomEase.min.js"></script>
 <link rel="stylesheet" href="brand/fonts.css" />
 <link rel="stylesheet" href="brand/tokens.css" />
 <!-- ... <script src="brand/motion.js"></script> avant la timeline -->
 ```
 
 Easings : `BRAND.ease.outExpo` pour les entrées, `BRAND.ease.inOut` pour le standard. Durées :
-`BRAND.dur.appear` (0.3s), `BRAND.dur.slide` (0.25s), etc. — valeurs canoniques dans le JSON §8.
+`BRAND.dur.appear` (0.3s), `BRAND.dur.slide` (0.25s), etc. — valeurs canoniques dans `brand/motion.js`.
 
 Règles HyperFrames à respecter : tout élément timé porte `class="clip"` +
 `data-start`/`data-duration`/`data-track-index` ; une seule `gsap.timeline({paused:true})` enregistrée
@@ -502,12 +410,12 @@ Les 7 étapes, dans l'ordre. Chaque étape n'est finie que quand son **critère*
 `ffprobe -v error -select_streams v:0 -show_entries stream=color_transfer,color_primaries,width,height,bit_rate -of default=noprint_wrappers=1 SRC` : dims, durée, audio, **espace couleur**.
 ✅ *Critère* : les 5 valeurs (largeur, hauteur, durée, présence audio, `color_transfer`) sont connues et notées.
 
-**Étape 2 — Transcrire et découper en sections.**
-`whisper-cli --model <env.whisperModel> --language <derush.whisperLanguage>` (défaut modèle :
-`ggml-large-v3-turbo` ; défaut langue : celle de `brand.language`). Découper en sections par **sujet**,
-calées sur les timestamps. **Corriger les mots propres à ta niche mal transcrits** (noms de produits,
-jargon → cf. tes homophones connus).
-✅ *Critère* : chaque section a un `start`/`end` en secondes issu des timestamps, la liste couvre 100 %
+**Étape 2 — Découper en sections, sur les vraies coupes.**
+Le texte vient des mots horodatés (`python3 tools/build_words.py` → `derush/<cut>_words.json`) ; les
+bornes viennent de **`derush/<cut>_cuts.json`**, jamais des timestamps Whisper
+(`references/montage-talking-head.md` §0). Regrouper des prises entières par **sujet** dans `LAYOUT`
+de `tools/sections.py`. Corriger les mots de la niche mal transcrits (noms de produits, jargon).
+✅ *Critère* : chaque section a un `start`/`end` issu de `<cut>_cuts.json`, la liste couvre 100 %
 de la durée sans trou ni chevauchement, et le format de chaque section est décidé (cadrage de départ =
 `montage.defaultLayout` — `"split"`, `"faceplein"` ou `"decor"` —, le créateur écarte du défaut section par
 section — `references/montage-talking-head.md`).
@@ -534,7 +442,7 @@ freeze pas (keyframes denses).
 ✅ *Critère* : **CHAQUE section du découpage (étape 2) a sa compo**, elle passe la **checklist §10**
 ligne à ligne, elle respecte les safe areas (§5), et `npm run check` est vert.
 
-**Étape 5 — Logos (§12.1) et médias.**
+**Étape 5 — Logos et médias.**
 Toute marque, tout produit ou outil **nommé dans la voix** (CapCut, Claude, ChatGPT, Instagram…) se
 montre avec son **vrai logo** (skill `thesvg`, couleurs d'origine), au moins à sa première
 apparition : jamais une icône inventée à sa place, un logo officiel rassure. Absent de theSVG
@@ -573,39 +481,6 @@ revue. Tu valides toi-même chaque section sur snapshots, et tu découpes les so
    HyperFrames, ou `npm run render`. Visages pré-cadrés (`tools/build_faces.py`) : visage net.
    Puis `python3 tools/finaliser.py` : son à -16 LUFS, contrôle, vidéo à poster.
 
-### 12.1 Logos → skill theSVG
-
-Le skill `thesvg` est livré avec Monteur IA (rien à installer). CDN : `https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/{slug}/{variant}.svg` ; registre des slugs : `.../src/data/icons.json`. **Toujours les couleurs d'origine** (pas de recolorage mono). **Vendre en local** (`assets/logos/` du Reel), jamais de CDN au rendu (déterminisme). Sur fond sombre, marques monochromes (GitHub…) → variant `dark` (= logo blanc).
-
-### 12.2 Fluidité : faire vite, sans re-travail
-
-Version complète des réflexes résumés dans le fichier agent (section « Fluidité »).
-
-> Constat d'audit : le **compute réel** (ffmpeg/whisper/render) pèse à peine **~2-3 %** du temps.
-> Le temps part dans les **itérations** (assets refaits 4-6×) et le **volume de sortie**
-> (réécritures HTML entières, longs messages), jamais dans la machine.
-
-1. **Une session par grosse étape.** Ne pas enchaîner script → dérush → montage → SFX → publication
-   dans un seul contexte (contexte saturé → auto-compaction en plein montage). `/clear` entre les
-   étapes lourdes. Première vidéo : pas de `/clear` demandé au client, la continuité passe par
-   `work/premiere-video.md`.
-2. **Cadrer AVANT de produire l'asset** (dérush, b-roll, écran plein) : demander la cible précise
-   **une seule fois** au lieu de deviner par itérations. Dérush → appliquer d'emblée les valeurs du
-   bloc `derush` de `brand.config.json` (`padStart`, `padEnd`, `silenceDb`, `islandDuration`), pas
-   de re-tune au jugé.
-3. **Valider le CONCEPT motion sur 1 snapshot** d'une section-témoin **avant** de décliner toutes
-   les sections → évite les refontes « c'est moche ».
-4. **Un seul contrôle visuel : `hyperframes snapshot`** (déterministe, zéro cache navigateur). Le
-   navigateur sert **uniquement au visionnage de la vidéo finale**. **Versionner les assets dès le
-   départ** (`hook-broll-v2.mp4`…) pour ne jamais se battre avec le cache studio.
-5. **Serveur preview vivant toute la session** (`npm run dev` en arrière-plan, lancé une fois) : ne
-   pas le tuer ni le relancer.
-6. **Éditer, pas réécrire** : `Edit` ciblé plutôt que `Write` d'un HTML entier (chaque réécriture
-   coûte 9-23 s). Réponses de review courtes. Peu de délibération sur le rote (lint, transcode,
-   remux).
-7. **hyperframes en local** (`npm i -D hyperframes`) plutôt que `npx --yes hyperframes@version`
-   (re-résolution réseau à chaque appel).
-
 ### 12.3 Ranger le Reel (étape 8, après publication)
 
 Un Reel = un projet : chaque Reel a son dossier `reels/<nom>/` dans le dossier Monteur IA, créé
@@ -619,7 +494,8 @@ depuis son dossier (l'en-tête du script fait foi).
   au moment du post, et prouve que la première vidéo est passée.
 - Pose la note « débrief à faire » dans `work/premiere-video.md` **du dossier Monteur IA** si le
   débrief de la première vidéo n'a pas eu lieu.
-- `--alleger` efface en plus les médias du dérush, les fichiers de travail et les rendus
-  intermédiaires ; le montage, ses vidéos et les vidéos finales restent.
+- `--alleger`, seulement si le client le demande : efface **définitivement** les médias du dérush
+  (dont la vidéo brute glissée dans l'app, seule copie dans le Reel), les fichiers de travail et les
+  rendus intermédiaires ; avant, vérifie que la vidéo finale est bien copiée dans `reels-publies/`.
 - Le dossier du Reel reste en place : il se rouvre d'un clic dans l'app pour une retouche ou une
   nouvelle version. **Jamais deux Reels dans un même dossier** : un nouveau Reel = un nouveau dossier.

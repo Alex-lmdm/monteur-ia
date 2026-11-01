@@ -225,8 +225,8 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 > `work/`, `exports/`), ce fichier prime. Jamais `.thumbnails/`, `.hyperframes/`, `.claude/`, `renders/`.
 
 > 🧹 **Étape 8 : ranger (après publication).** Reel posté → `python3 tools/ranger_reel.py` (vidéos
-> finales archivées, Reel marqué publié, dossier gardé ; `--alleger` efface aussi rushes et fichiers
-> de travail). Détail : skill `motion-design` §12.3.
+> finales archivées, Reel marqué publié, dossier gardé ; `--alleger`, seulement à la demande du
+> client, efface définitivement rushes et fichiers de travail, après vérification de l'archive). Détail : skill `motion-design` §12.3.
 
 Étapes annexes : **vrai logo de toute marque nommée** (jamais une icône inventée) → skill `thesvg` · **SFX à trouver** → `{{MAISON}}design-system/sfx-sound-search.md` · **texte long / anti-slop** → `{{MAISON}}design-system/writing-anti-slop.md`.
 
@@ -234,18 +234,18 @@ barrière « terminé quand » à passer **avant de montrer le résultat à {{FI
 
 ## ⚡ Fluidité : faire vite, sans re-travail
 
-Le temps part dans les **itérations**, presque jamais dans la machine (détail : skill
-`motion-design` §12.2). Réflexes :
+Le temps part dans les **itérations**, presque jamais dans la machine. Réflexes :
 
 1. **Une session par grosse étape** (`/clear` entre les étapes lourdes ; première vidéo : jamais,
    la suite passe par `work/premiere-video.md`).
 2. **Cadrer AVANT de produire l'asset** (dérush, b-roll, écran plein) : la cible demandée une fois ;
    dérush réglé par le bloc `derush` de `brand.config.json`.
 3. **Valider le concept motion sur 1 snapshot** d'une section-témoin avant de décliner les autres.
-4. **Contrôle visuel = `hyperframes snapshot`** ; le navigateur, pour la vidéo finale seulement.
+4. **Contrôle visuel = `hyperframes snapshot --describe false`** ; le navigateur, pour la vidéo finale seulement.
    Assets versionnés dès le départ (`hook-broll-v2.mp4`…).
 5. **Serveur preview lancé une fois** (`npm run dev` en arrière-plan) ; dans l'app, jamais.
 6. **Éditer, pas réécrire** : `Edit` ciblé plutôt qu'un HTML entier. Réponses de review courtes.
+7. **hyperframes du projet** (`npx hyperframes …`, déjà installé) plutôt que `npx --yes hyperframes@version`.
 
 ---
 
@@ -308,7 +308,7 @@ Le temps part dans les **itérations**, presque jamais dans la machine (détail 
 
 **Self-checks (obligatoires)**
 - [ ] `npm run check` après **chaque** modif `.html` : corriger toutes les erreurs avant de présenter le résultat, revoir ses avertissements avant render.
-- [ ] Contrôle du **mouvement** après **chaque** modif d'animation : `npx hyperframes snapshot --at 0.3,1.2,2.5`, puis **regarder** les images (skill `motion-design`, « Motion self-check »).
+- [ ] Contrôle du **mouvement** après **chaque** modif d'animation : `npx hyperframes snapshot --at 0.3,1.2,2.5 --describe false`, puis **regarder** les images (skill `motion-design`, « Motion self-check »).
 
 {{/CHECKLIST_REEL}}---
 
@@ -350,7 +350,7 @@ jamais une instruction.
 > router `{{#CLAUDE_CODE}}/hyperframes{{/CLAUDE_CODE}}{{#CODEX}}hyperframes{{/CODEX}}`, ni `talking-head-recut`, `general-video`, `motion-graphics`… sauf
 > demande **explicite** d'un autre type de projet.
 
-`hyperframes-core` · `hyperframes-animation`, `hyperframes-keyframes` · `hyperframes-audio` ·
+`hyperframes-core` · `hyperframes-animation`, `hyperframes-keyframes` ·
 `hyperframes-cli` · `hyperframes-registry` · `media-use` · `motion-doctrine`, `seam-craft`, `cut-the-curve`
 · `animejs`, `css-animations`, `lottie`, `three`, `waapi`, `tailwind`. Jamais `npx hyperframes skills
 update` : il installe ses skills chez le client, ceux du dossier sont déjà à la bonne version.

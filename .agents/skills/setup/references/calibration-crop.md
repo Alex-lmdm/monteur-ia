@@ -52,7 +52,7 @@ Poser cette valeur dans `montage.splitTransform`, générer le master avec
 `base.mp4` ; l'`index.html` livré n'est qu'un aperçu sans visage), puis un contrôle visuel
 **déterministe** :
 ```bash
-npx hyperframes snapshot   # (+ --selector / --shot selon l'outil) — jamais le navigateur ici
+npx hyperframes snapshot --describe false   # (+ --selector / --shot selon l'outil) — jamais le navigateur ici
 ```
 Montrer l'image à l'utilisateur.
 

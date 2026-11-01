@@ -13,9 +13,8 @@ description: >-
 
 # L'Empreinte — onboarding de personnalisation
 
-> **Ce n'est pas configurer un logiciel. C'est transférer ton goût à une IA, une seule fois.**
-> À la fin, ton monteur écrit dans TA voix, monte à TES couleurs, cadre TON visage et parle à TON
-> audience. Tu ne referas jamais ce réglage (sauf si tu changes de style : `/setup <bloc>`).
+> Ton monteur apprend ta voix, tes couleurs, ton cadrage et ton audience. Chaque bloc se refait quand
+> tu veux : `/setup <bloc>`.
 
 Ce skill pilote un questionnaire chaleureux en **6 blocs (A → F)**, un bloc à la fois. Chaque
 réponse va dans un seul fichier de vérité — `brand.config.json` à la racine du projet — puis on
@@ -250,7 +249,7 @@ Si le preset lui va tel quel, **passer**. Sinon :
 ### D3 — Les sous-titres (le marqueur d'identité le plus visible)
 
 Deux réglages, deux phrases :
-- **La police** (`visual.fontCaptions`) : Inter, Anton ou Archivo Black sont livrées. **Si tu as la
+- **La police** (`visual.fontCaptions`) : Les polices livrées sont dans la table `fonts` de `templates/style-presets.json`. **Si tu as la
   tienne, c'est mieux** — c'est ce qui te distingue le plus vite. Fichiers `.woff2`/`.ttf` dans
   `assets/fonts/`, déclarés dans la table `fonts` de `templates/style-presets.json`.
   ⚠️ Une police de sous-titres a besoin d'un **`.ttf` de mesure** (`measureFile`) : PIL ne lit pas
@@ -271,7 +270,7 @@ Deux réglages, deux phrases :
 
 - `cta.style` : les options sont dans `ctaStyles` de `templates/style-presets.json`. Le preset en a
   déjà posé un.
-- `montage.defaultLayout` : `split` ou `faceplein`. **Détail complet au bloc F3** (avec la
+- `montage.defaultLayout` : `split`, `faceplein` ou `decor` (cartes posées sur la vidéo filmée). **Détail complet au bloc F3** (avec la
   calibration du cadrage) — ici on ne fait que confirmer celui du preset.
 - **Logo / avatar** (optionnel) : si fourni → le déposer dans `assets/images/` du dossier Monteur IA
   (partagé : chaque Reel copie ce qu'il utilise dans ses propres `assets/images/`).
@@ -330,7 +329,7 @@ snapshot visuel.
    Poser le décor d'abord, sans jargon : « Quand ton monteur assemble une vidéo, il lui faut un point
    de départ visuel — à quoi ressemble une section “normale” chez toi. **C'est juste le DÉFAUT** :
    après, à chaque vidéo, tu lui diras section par section (“là je veux juste ma tête en grand”, “là
-   cette image en plein écran”…). Mais au départ, il part sur quoi ? » Deux choix :
+   cette image en plein écran”…). Mais au départ, il part sur quoi ? » Trois choix :
 
    - **1) Écran coupé en deux (split-screen)** — Ta tête occupe la **moitié basse** de l'écran, et la
      **moitié haute** affiche les animations, les images, le motion design. On te voit tout le temps,
@@ -339,6 +338,8 @@ snapshot visuel.
    - **2) Ta tête en plein écran, animations par-dessus** — on te voit **en grand sur tout l'écran**
      en continu, et les animations/illustrations viennent **se poser par-dessus toi** (fond
      transparent, près de ta tête), sans couper l'écran en deux. → `montage.defaultLayout = "faceplein"`.
+   - **3) La vidéo filmée entière, cartes posées par-dessus** — ta vidéo reste telle que filmée, décor
+     compris, et les cartes, titres ou captures se posent **en haut, par-dessus**. → `montage.defaultLayout = "decor"`.
 
    **Toujours rappeler** : quel que soit le choix, il garde la main à 100 % — n'importe quelle section
    pourra devenir sa tête seule en grand, ou un visuel/une vidéo qui prend tout l'écran. Ce réglage ne
@@ -352,7 +353,7 @@ snapshot visuel.
    - Si `defaultLayout = "faceplein"` → itérer le `montage.fullFaceTransform` (visage cadré plein
      écran, tête assez haute pour laisser la place aux overlays et aux sous-titres), puis dériver
      `montage.fullFaceCrop`.
-   `npx hyperframes snapshot` → montrer à l'utilisateur et **itérer** (« ton visage est-il bien cadré ?
+   `npx hyperframes snapshot --describe false` → montrer à l'utilisateur et **itérer** (« ton visage est-il bien cadré ?
    trop zoomé ? ») en ajustant `translate`/`scale`. L'autre cadrage (celui qui n'est pas le défaut)
    peut rester à l'exemple par défaut : on le calibrera à la première section qui l'utilise.
 

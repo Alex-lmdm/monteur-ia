@@ -97,18 +97,7 @@ au client ses retours **avec l'horodatage** (« à 3:12, je veux… »), pas sec
 
 ## 3. Tournage (si le client demande comment filmer)
 
-- **À l'horizontale**, 4K et 30 im/s si possible (Réglages > Appareil photo > Enregistrer une vidéo
-  sur iPhone), mode couleur normal (pas de HDR, pas de Log). La 4K permet des cadres serrés nets.
-- Cadre : yeux vers le tiers haut, de l'espace au-dessus de la tête et sur les côtés. Le cadre
-  serré est découpé dans l'image : ne te cadre pas trop serré au tournage.
-- Prompteur, phrase par phrase ; on refait une phrase ratée sans s'arrêter : le dérush garde la
-  dernière bonne prise.
-- Le son compte plus que l'image : micro-cravate ou micro proche, pièce calme.
-- Transfert en résolution maximale (AirDrop ou câble), jamais par messagerie.
-
-Rush vertical (téléphone tenu droit) : il passe, mais le cadre large est une bande agrandie, moins
-nette, et le cadre serré l'est encore plus. Dis-le simplement, et conseille l'horizontale pour la
-prochaine.
+À l'horizontale, 4K, 30 im/s, pas de HDR ni de Log ; transfert en résolution maximale.
 
 ## 4. Dérush : le skill `derush`, avec ces différences
 
@@ -147,7 +136,7 @@ Charge le skill `derush` et suis-le, sauf :
       `python3 tools/sections.py` affiche les alertes de rythme : les traiter.
 - [ ] **Zoom avec parcimonie** : plan large par défaut, serré seulement sur ce qui compte (une
       chute, un mot clé, de préférence en raccord pile sur le mot), très serré rare. Un zoom /
-      dézoom toutes les quelques secondes fatigue (retour client).
+      dézoom toutes les quelques secondes fatigue (retour client, 15/10/2026).
 - [ ] **Début jamais vide** : dès la première phrase, une incrustation légère (logo d'une marque
       citée, une étiquette) ; pas de plein écran sur le hook ni sur une phrase personnelle ; **2 s
       de visage** au moins entre deux plans plein écran ; un plein écran motion sur chaque temps fort.
@@ -162,7 +151,7 @@ Charge le skill `derush` et suis-le, sauf :
       chacun ≥ 10 s.
 - [ ] **Couleurs et polices** : toujours `var(--brand-*)` (le style de la marque, le même que ses
       Reels), jamais un hex en dur.
-- [ ] `npm run check` après chaque modif `.html`, `npx hyperframes snapshot --at …` après chaque
+- [ ] `npm run check` après chaque modif `.html`, `npx hyperframes snapshot --at … --describe false` après chaque
       animation, et **regarder** les images.
 - [ ] **Export** : après le bouton Export, **toujours** `python3 tools/finaliser.py` (son à -14 LUFS,
       contrôle du visage et du format, copie à téléverser dans Téléchargements).

@@ -68,7 +68,7 @@ Black, lignes 36 à 44 px, détail 26 à 30 px minimum. Un B-roll (`{"media": "x
 dans une composition : il est posé par le master (vidéo 16:9 pré-cadrée dans `assets/video/`).
 
 Contrôle d'une composition seule : un dossier `probe/` (copie de la compo en `index.html`, liens
-symboliques `assets` et `brand`), `npx hyperframes snapshot probe --at …`, puis supprimer `probe/`.
+symboliques `assets` et `brand`), `npx hyperframes snapshot probe --at … --describe false`, puis supprimer `probe/`.
 
 ## 4. Textes d'appui, master, contrôles
 
@@ -76,7 +76,7 @@ symboliques `assets` et `brand`), `npx hyperframes snapshot probe --at …`, pui
 python3 tools/build_emphases.py --write   # compositions/emphases.html + exports/sous-titres.srt
 python3 tools/build_master.py --write     # index.html : visages, glissements, sections, textes
 npm run check                             # 0 erreur avant de montrer
-npx hyperframes snapshot --at 12,47.5,95  # instants choisis : une entrée de panneau, un plein écran, un texte
+npx hyperframes snapshot --at 12,47.5,95 --describe false  # instants choisis : une entrée de panneau, un plein écran, un texte
 ```
 
 - **Regarde** chaque snapshot : visage net et entier, panneau lisible, rien sur la bouche, rien
