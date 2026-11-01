@@ -1,6 +1,6 @@
 {
   "ref": "HEAD",
-  "versions": 98,
+  "versions": 100,
   "fichiers": {
     ".agents/skills/animejs/SKILL.md": ["9eeea2bf2176"],
     ".agents/skills/contribute-catalog/SKILL.md": ["db570cff8234"],
@@ -1513,7 +1513,7 @@
     "scripts/sync.mjs": ["08ca8034890e","486753cd73b1","69176765b8d3","6dd742256c86","7c5929776dcd","84c7f475c03e","8abe2d81de6f","a9770c844b5f","b4dc87086d75","e1869bfe7fe4","e1a7a4e72f78","e4c98903a3fc","f0ac613ea182"],
     "scripts/sync.test.mjs": ["0cca296bd0f3","1195775c84d2","19e9bc51e23c","3714605bf58f","7a499d37c8d5","9bf09dfbd255","a14413a122c3","b25201408ee5","b530d100072e","c2a6ea5127c9","e0e84d3c6491","e15232732627"],
     "scripts/versions-extensions-integrees.json": ["9b2d42ee2334"],
-    "scripts/versions-livrees.json": ["10897717a83b","206e72951694","27a590b7a987","28e78ad4987d","2d1889dd6b27","2eaaf17a2f93","378e69dceeac","3e5da667a59d","41a69f7e5f6c","4385858a7f94","51e67b5acb32","5f1ba9de2169","6bbd3d05e152","7987b66bf4c0","8743364bf513","900dcdca8fb9","95d6e11ba0c6","b8cf0b655296","cd12029b39d6","d77c91c604bc","d9984994226a","db3a58aefa98","e1735ae0760e","e43f6e79b115","e922bd5bbde7","e96793d8c95d","fe3528e3daa5"],
+    "scripts/versions-livrees.json": ["10897717a83b","15bb475d7a93","206e72951694","27a590b7a987","28e78ad4987d","2d1889dd6b27","2eaaf17a2f93","378e69dceeac","3e5da667a59d","41a69f7e5f6c","4385858a7f94","51e67b5acb32","5f1ba9de2169","6bbd3d05e152","7987b66bf4c0","8743364bf513","900dcdca8fb9","95d6e11ba0c6","b8cf0b655296","cd12029b39d6","d77c91c604bc","d9984994226a","db3a58aefa98","e1735ae0760e","e43f6e79b115","e922bd5bbde7","e96793d8c95d","fe3528e3daa5"],
     "scripts/youtube.test.mjs": ["2de06b1ddaf1"],
     "skills-lock.json": ["1b0fa11ae201","5d823121aa7c"],
     "templates/AGENT.md.tpl": ["22dc08e0ee17","27a1fe639339","2f104e753b8b","2f320ddf31a3","3f041fe6c0f7","41f8facfc192","44fb8e8e2462","4553eb124ee3","483d22a6dd55","580eb9a74c55","606bcf31e87e","63597ef13cb8","7a4b2f7c6062","7aa3459eb982","861f1b2db5d0","8bf27d7418ae","8cce5cfbdd63","9a4d6acdc142","a51761382b90","aa026ac17c59","b4aa8ae7e8e5","b7444dabf16f","b9e6f403e0f2","bb5c0048157f","d90f5069842b","e868ffae7b21","ebd79407e42d","f3e6362790b7","f44cf8d6753c","f6116008f451","f73040b77cba"],
@@ -1562,7 +1562,7 @@
     "tools/build_words.py": ["3300e1e9426f","36c0bb2a1a6a","5992e41d004a","6cc1de720cc5","786e349e0387","f1659025cd5f"],
     "tools/cadrage.py": ["1d0cf804072e","283b2261da9c","4c91a3d5dc83"],
     "tools/check-opaque-over-face.sh": ["3e1d6422b87e","63fed87dffe1"],
-    "tools/check_export.py": ["19476ae28c19","1d461433dc89","2abeced9c95d","4a06c332cedb","bc545635edfc","c7b33940403c","e27cd879c820","e69144aaf247"],
+    "tools/check_export.py": ["19476ae28c19","1d461433dc89","2abeced9c95d","32725e36164a","4a06c332cedb","bc545635edfc","c7b33940403c","e27cd879c820","e69144aaf247"],
     "tools/cloner_reel.py": ["2d9b11c803a4","a2060db7f5fe"],
     "tools/close_reel.py": ["1d028df3ddbb","292d58399bd6","5c1d321d32e6","ae5dc892d4ea","c0ca5ad93c60"],
     "tools/cut_boundaries.py": ["2009d2012545","44ec339cabf3","8d3ba806b44a","9913d8871134","d3c52e32c574","e7ce02c96601","fe1a1e510395"],
