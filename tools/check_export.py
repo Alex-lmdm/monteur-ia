@@ -14,7 +14,8 @@ Export natif (la video finale elle-meme) :
   V) visage present et NON agrandi : la zone visage de chaque fenetre ressemble a la meme image des
      visages pre-cadres (tools/build_faces.py) ; s'ils manquent, le visage vient de base.mp4
      agrandie (moins net) -> signale ;
-  T) les timelines tournent (meme principe que B ci-dessous, sur la video finale) ;
+  T) les timelines tournent : chaque plein ecran motion doit bouger entre son debut et sa fin, la
+     zone de son sous-titre exclue (meme garde que B ci-dessous, sur la video finale) ;
   S) le son est la : volume integre au-dessus de -35 LUFS ; sur la video finalisee
      (tools/finaliser.py), -16 LUFS a 1 LU pres et crete vraie sous -1 dBTP. Un export brut sort au
      niveau de la voix (vers -24 LUFS) : signale, sans bloquer, que le niveau final reste a poser.
@@ -23,8 +24,8 @@ Ancien export (--calque) : gardes A et B sur le calque, decrites ci-dessous.
 
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║ Ces deux gardes sont GENERIQUES (elles valent pour tout Reel). Le seuil de la  ║
-║ garde B (zone echantillonnee) peut demander un petit ajustement selon ton      ║
-║ motion : il est documente ci-dessous.                                          ║
+║ garde B (SEUIL_MOUVEMENT : part de l'image qui doit bouger) est documente      ║
+║ pres de sa constante.                                                          ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 `npm run check` valide la STRUCTURE, pas le calque REELLEMENT rendu. Or le rendu peut diverger
@@ -42,10 +43,13 @@ D'ou ce test sur le .mov, la seule verite.
 
   A) plein ecran -> le calque doit etre OPAQUE partout (sinon le visage transparait dessous)
      split       -> la moitie BASSE doit etre transparente (le visage passe dessous)
-  B) au DEBUT d'une section plein ecran, les elements que GSAP pose a opacity:0 (leur etat de
-     depart) NE doivent PAS etre visibles. S'ils apparaissent d'emblee => le JS n'a pas tourne
-     (scripts non montes, bug 2 ci-dessus). On echantillonne une bande centrale peu apres le
-     debut de section et on verifie qu'elle est quasi vide.
+  B) une section plein ecran dont le JS n'a pas tourne (scripts non montes, bug 2 ci-dessus) reste
+     FIGEE a l'etat CSS de bout en bout. On compare quatre images de la section (debut, 1/3, 2/3,
+     fin) : si rien ne bouge => JS muet. La bande du sous-titre de la section (son y dans
+     tools/sections.py) est exclue : les sous-titres s'affichent sans le JS des sections, et en
+     plein ecran ils passent SOUS le visuel, souvent en plein milieu de l'image (y 920 a 1300).
+     (L'ancienne garde exigeait une bande centrale vide peu apres le debut : elle criait « JS MUET »
+     des qu'un sous-titre ou un visuel deja pose y tombait, alors que tout tournait.)
 """
 import io
 import json
@@ -55,7 +59,7 @@ import sys
 import warnings
 
 warnings.filterwarnings("ignore")
-from PIL import Image
+from PIL import Image, ImageChops
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import sections
@@ -80,6 +84,13 @@ VISAGES = {"split": ROOT / "assets/video/visage-split.mp4", "face": ROOT / "asse
 ZONES = {"split": [(0, 1100, 1080, 1920)], "face": [(0, 0, 1080, 1050)],
          "decor": [(0, 700, 1080, 1300), (0, 1100, 1080, 1920)]}
 TOLERANCE_LUFS = 1.0
+# Gardes T et B : le y d'un sous-titre est le CENTRE de son bandeau (.cap, translate -50 %) ;
+# 90 px de part et d'autre couvrent le bandeau (≈75 px de haut a 50 px de police) avec de la marge.
+MARGE_SOUS_TITRE = 90
+# Part de l'image qui doit changer (plus de 24 niveaux de gris) : 0,1 % ≈ un carre de 45 px. Une
+# image figee re-encodee ne bouge que de quelques niveaux (0 pixel au-dessus de 24, mesure le 26/10) ;
+# un plein ecran qui tourne en change de 2 a 18 %.
+SEUIL_MOUVEMENT = 0.001
 # Zoom par section ({"zoom": ...} dans LAYOUT) : la section montre la video pre-cadree de son niveau de
 # zoom, pas celle du Reel ; comparee a la video du Reel, une section resserree passait pour un visage
 # absent (« KO ») et la video n'etait pas livree.
@@ -132,6 +143,24 @@ def grab(src, t, mode="RGBA"):
 
 def frame(t):
     return grab(MOV, t)
+
+
+def mouvement(src, s):
+    """Part de l'image d'une section plein ecran qui change entre quatre instants (debut, 1/3, 2/3,
+    fin), la bande de son sous-titre exclue : 0 si la section reste figee (JS muet)."""
+    y = s.get("y", getattr(sections, "Y_FULL", 1500))
+    bande = (0, max(0, y - MARGE_SOUS_TITRE), 1080, min(1920, y + MARGE_SOUS_TITRE))
+    images = []
+    for t in (s["start"] + 2 / 30, s["start"] + s["dur"] / 3, s["start"] + s["dur"] * 2 / 3, s["end"] - 2 / 30):
+        im = grab(src, round(t, 3), "L")
+        im.paste(0, bande)
+        images.append(im)
+    part = 0.0
+    for i, a in enumerate(images):
+        for b in images[i + 1:]:
+            change = ImageChops.difference(a, b).point(lambda p: 255 if p > 24 else 0)
+            part = max(part, change.histogram()[255] / (change.width * change.height))
+    return part
 
 
 def ssim(a, b):
@@ -197,25 +226,15 @@ def verifier_final(mp4, finalise=False):
         print("   !! visage decale d'une image sur la voix : relance python3 tools/build_faces.py puis python3 "
               "tools/build_master.py --write, puis exporte a nouveau ; si ca persiste, signale-le au support")
 
-    print("T) les timelines des sections tournent")
+    print("T) les timelines des sections tournent (le plein ecran bouge, sous-titre exclu)")
     fulls = [s for s in sections.sections() if s["fmt"] == "full" and not s.get("media")]
     if not fulls:
         print("   (aucune section 'full' dans LAYOUT : garde sans objet pour ce Reel)")
     for s in fulls:
-        band = grab(mp4, round(s["start"] + 0.20, 2), "L").crop((200, 900, 900, 1200))
-        px = list(band.getdata())
-        moy = sum(px) / len(px)
-        ecart = (sum((p - moy) ** 2 for p in px) / len(px)) ** 0.5
-        # Une section qui s'ouvre deja pleine (un style qui coupe directement sur un ecran) : ses timelines
-        # tournent si la bande bouge ensuite. Une section figee de bout en bout reste signalee.
-        bouge = 0.0
-        if ecart >= 12:
-            plus_tard = grab(mp4, round(s["start"] + min(0.9, s["dur"] * 0.6), 2), "L").crop((200, 900, 900, 1200))
-            bouge = sum(abs(a - b) for a, b in zip(px, plus_tard.getdata())) / len(px)
-        ok = ecart < 12 or bouge >= 2
+        part = mouvement(mp4, s)
+        ok = part >= SEUIL_MOUVEMENT
         ko += not ok
-        detail = f"bande centrale ecart-type {ecart:5.1f}" + (f", mouvement {bouge:4.1f}" if ecart >= 12 else "")
-        print(f"   {s['id']:<16} {detail}  {'OK' if ok else '!! JS MUET (elements visibles des le debut, rien ne bouge)'}")
+        print(f"   {s['id']:<16} {part*100:5.2f}% de l'image bouge  {'OK' if ok else '!! JS MUET (image figee de bout en bout)'}")
 
     lufs, crete = niveau_sonore(mp4)
     lufs = -99.0 if lufs is None else lufs
@@ -269,22 +288,16 @@ def verifier_calque():
         ko += not ok
         print(f"   {s['id']:<16} haut={top:3} bas={bot:3}  {'OK' if ok else '!! KO (calque rogne / non opaque)'}")
 
-    print("\nB) les timelines des sections tournent (elements a opacity:0 caches au debut d'un plein ecran)")
-    # Les sections MEDIA n'ont aucune animation a verifier (leur 1er quart de seconde est deja
-    # l'image, souvent claire) -> sans cette exclusion le test criait « JS MUET » sur chaque b-roll.
+    print("\nB) les timelines des sections tournent (le plein ecran bouge, sous-titre exclu)")
+    # Les sections MEDIA n'ont aucune animation a verifier : le b-roll ne passe pas par le calque.
     fulls = [s for s in sections.sections() if s["fmt"] == "full" and not s.get("media")]
     if not fulls:
         print("   (aucune section 'full' dans LAYOUT : garde B sans objet pour ce Reel)")
     for s in fulls:
-        # Bande centrale, 0.20 s apres le debut : a cet instant les entrees GSAP ne sont pas encore
-        # jouees, donc l'element pose a opacity:0 doit laisser la zone quasi vide.
-        # Seuil a ajuster si ton motion remplit deja cette zone a t+0.20 (fond plein, gros titre fixe).
-        im = frame(round(s["start"] + 0.20, 2)).convert("L").crop((200, 900, 900, 1200))
-        px = list(im.getdata())
-        clair = sum(1 for p in px if p > 150) / len(px)
-        ok = clair < 0.02
+        part = mouvement(MOV, s)
+        ok = part >= SEUIL_MOUVEMENT
         ko += not ok
-        print(f"   {s['id']:<16} {clair*100:5.1f}% de pixels clairs  {'OK' if ok else '!! JS MUET (scripts non montes)'}")
+        print(f"   {s['id']:<16} {part*100:5.2f}% de l'image bouge  {'OK' if ok else '!! JS MUET (scripts non montes)'}")
     return ko
 
 
