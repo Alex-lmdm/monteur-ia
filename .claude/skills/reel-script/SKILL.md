@@ -1,11 +1,12 @@
 ---
 name: reel-script
 description: >-
-  Écrit le script parlé d'un Reel dans la voix du créateur,
-  prêt à lire au prompteur (langue parlée, face caméra). Use whenever the user wants a short-form
-  script in their voice: turning a reference transcript into "leur version", turning rough ideas or
-  links into a finished script, or rewriting a draft so it sounds like them. Sujet typique : la
-  niche du créateur. Produit du texte, pas d'image : le visuel relève de motion-design.
+  Écrit le script parlé d'un Reel (30 à 45 s, vertical) dans la voix du créateur, prêt au prompteur.
+  Use when the user says « on brainstorm un script », « écris ma version », « voici mon script »,
+  « passe-le à ma sauce », « fais-en ma version » à partir d'idées, d'un brouillon, d'un article ou
+  d'un transcript. Pas pour : un lien de Reel, TikTok ou Short à cloner (skill reel-cloneur, qui
+  rappelle ce skill), un script YouTube (skill youtube), un script de story (skill story-script s'il
+  est installé). Produit du texte, pas d'image : le visuel relève de motion-design.
 ---
 
 # Script de Reel (voix du créateur, prêt prompteur)

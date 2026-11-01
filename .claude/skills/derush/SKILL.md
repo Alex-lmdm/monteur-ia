@@ -1,11 +1,12 @@
 ---
 name: derush
 description: >-
-  Dérush d'un rush brut face-cam lu au prompteur : garde la meilleure prise de chaque phrase, coupe
+  Dérush d'un rush brut face caméra lu au prompteur : garde la meilleure prise de chaque phrase, coupe
   les blancs et les ratés, nettoie la voix. Use when the user hands a raw talking-head video and
-  wants it rough-cut ("dérush", "monte la vidéo brute", "coupe les blancs") or its audio cleaned
-  ("améliore l'audio", "le son grésille"). Entrée : un rush brut. Sortie : un MP4 serré en pleine
-  résolution + une timeline.json, consommée ensuite par le skill motion-design.
+  wants it rough-cut (« dérush », « monte la vidéo brute », « coupe les blancs ») or its audio cleaned
+  (« améliore l'audio », « le son grésille »). Entrée : un rush vidéo face caméra (un audio seul pour
+  un double IA : skill double-ia). Sortie : derush/<cut>_enhanced.mp4 en pleine résolution et
+  derush/<cut>_cuts.json, les vraies coupes que lit motion-design.
 ---
 
 # Dérush automatique d'une vidéo brute

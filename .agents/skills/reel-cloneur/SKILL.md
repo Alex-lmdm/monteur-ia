@@ -1,19 +1,13 @@
 ---
 name: reel-cloneur
 description: >-
-  Reel Cloneur™ : décortique un Reel Instagram, un TikTok ou un YouTube Short (lien collé ou fichier
-  glissé) et clone, au choix, son SCRIPT (le script personnalisé du client, même mécanique, dans sa
-  voix) ou son STYLE DE MONTAGE (rythme, cadrage, zooms, sous-titres, animations, transitions,
-  couleurs, sons : une fiche appliquée à ses prochaines vidéos), ou les deux. Use when the user pastes
-  a Reel / TikTok / Short link or drops a video and says « clone ce Reel », « clone son style de
-  montage », « clone mon style », « monte comme cette vidéo », « analyse ce Reel », « pourquoi ça a
-  marché », « fais-moi la même chose », « garde le style cloné », « clona este Reel ». Aussi les
-  styles prêts du catalogue : « monte ma vidéo dans le style 4 », « le style Hors cadre », « quels
-  styles de montage ? » (styles/README.md). Sortie :
-  clones/<date>-<slug>/ ; script : analyse.md puis script.md (3 accroches, corps calqué, appel à
-  l'action, choix de montage) ; style : style.md, enregistré dans ses réglages s'il le garde. On
-  reprend la mécanique, les faits et la manière de monter, jamais les phrases, le vécu ni la
-  signature de l'auteur.
+  Reel Cloneur™ : décortique un Reel, un TikTok ou un Short (lien collé ou vidéo glissée) et clone son
+  SCRIPT (même mécanique, dans la voix du client), son STYLE DE MONTAGE, ou les deux ; applique aussi
+  un des 11 styles du catalogue. Use when the user pastes such a link or says « clone ce Reel »,
+  « clone son style de montage », « clone mon style », « monte comme cette vidéo », « analyse ce
+  Reel », « pourquoi ça a marché », « monte ma vidéo dans le style 4 », « quels styles de montage ? »,
+  « clona este Reel ». Pas pour un script écrit à partir d'idées, d'un brouillon ou d'un article
+  (skill reel-script).
 ---
 <!-- Copie générée — éditer .claude/skills/reel-cloneur/ puis npm run sync -->
 

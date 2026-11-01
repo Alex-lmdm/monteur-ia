@@ -1,12 +1,13 @@
 ---
 name: motion-design
 description: >-
-  Motion design et montage vidéo pour la marque du créateur (Reels, Stories,
-  TikTok ; une vidéo YouTube 16:9 se monte avec le skill youtube, qui s'appuie sur celui-ci) :
-  design system de marque + workflow HyperFrames. Use when: creating a
-  composition, a clip or a motion graphic for the brand; monter une vidéo talking-head (split-screen,
-  sections, export final ffmpeg); générer les sous-titres; poser les SFX et la musique. Entrée : un
-  cut validé et la timeline.json produite par le skill derush.
+  Montage d'un Reel talking-head après le dérush (étapes 4 à 6 du fichier agent) : sections et
+  motion design aux couleurs de la marque, split-screen, plein visage ou cartes sur la vidéo,
+  sous-titres, SFX et musique (skill pack-sfx s'il est installé), export. Use when the user says
+  « passe au montage », « mets le motion / les split-screens / les sous-titres », « là je veux plutôt
+  ça », « ça en plein écran », « exporte ». Entrée : derush/<cut>_enhanced.mp4 et <cut>_cuts.json.
+  Pas pour une vidéo YouTube (skill youtube), une story (skill story s'il est installé), ni pour le
+  routeur hyperframes, general-video ou motion-graphics.
 ---
 
 # Motion Design System (marque du créateur)
