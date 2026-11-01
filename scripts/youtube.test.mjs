@@ -119,6 +119,17 @@ test('la synchro garde les outils propres à la vidéo, rafraîchit les autres, 
   // Même nom, deux finalisations : -16 LUFS pour le Reel, -14 LUFS pour la vidéo, jamais échangées.
   assert.equal(read(reel, 'tools/finaliser.py'), read(dir, 'tools/finaliser.py'));
   assert.equal(read(video, 'tools/finaliser.py'), read(dir, 'templates/youtube/tools/finaliser.py'));
+  // L'outil à soi (tools/apres_rangement.py, jamais livré) suit la maison dans la vidéo et le Reel,
+  // et le rangement de la vidéo l'appelle.
+  write(dir, 'tools/apres_rangement.py', 'import pathlib\n\n\ndef apres_rangement(dossier):\n'
+    + '    (pathlib.Path.home() / "crochet.txt").write_text(dossier.name)\n');
+  sync(dir);
+  assert.equal(read(video, 'tools/apres_rangement.py'), read(dir, 'tools/apres_rangement.py'));
+  assert.equal(read(reel, 'tools/apres_rangement.py'), read(dir, 'tools/apres_rangement.py'));
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-home-'));
+  t.after(() => fs.rmSync(home, { recursive: true, force: true }));
+  execFileSync('python3', ['tools/ranger.py'], { cwd: video, env: { ...process.env, HOME: home, USERPROFILE: home }, stdio: 'pipe' });
+  assert.equal(read(home, 'crochet.txt'), path.basename(video));
   // Une vidéo publiée garde le style qu'elle avait.
   const meta = JSON.parse(read(video, 'meta.json'));
   write(video, 'meta.json', { ...meta, monteurIa: { ...meta.monteurIa, etat: 'publie' } });

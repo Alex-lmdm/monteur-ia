@@ -9,6 +9,8 @@ Usage (depuis le dossier de la vidéo) :
   sous-titres exports/sous-titres.srt et la fiche publication.md ;
 - marque la vidéo publiée (meta.json : monteurIa.etat = "publie") : elle garde le style qu'elle
   avait au moment de la publication ;
+- tools/apres_rangement.py, s'il existe (un outil à soi, copié depuis le dossier Monteur IA) : sa
+  fonction apres_rangement(dossier) passe juste avant --alleger, comme pour un Reel ;
 - --alleger : efface en plus ce qui pèse et se refait (médias du dérush, fichiers de travail,
   rendus intermédiaires). Le montage et les vidéos finales restent.
 
@@ -25,7 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lieux import reel as projet_courant  # noqa: E402
-from ranger_reel import VIDEOS_DIR, alleger, export_app, finales  # noqa: E402
+from ranger_reel import VIDEOS_DIR, alleger, apres_rangement, export_app, finales  # noqa: E402
 
 ARCHIVE_BASE = Path.home() / VIDEOS_DIR / "youtube-publiees"
 
@@ -56,6 +58,7 @@ def main() -> None:
     meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("• vidéo marquée publiée")
 
+    apres_rangement(video)
     if args.alleger:
         alleger(video, app)
     print(f"✅ Vidéo « {video.name} » rangée. Son dossier reste dans youtube/ (et dans l'app HyperFrames).")

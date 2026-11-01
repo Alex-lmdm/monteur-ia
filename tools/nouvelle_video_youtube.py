@@ -47,6 +47,8 @@ OUTILS_MAISON = ["lieux.py", "brand_style.py", "sons.py", "niveau_final.py", "ec
 # scripts/sync.mjs). Plus ancien, les sons se posent par tools/build_sfx.py de la vidéo.
 OUTILS_EXTENSIONS = ["sfx.py", "sfx_mix.py"]
 PACK_SFX_YOUTUBE = (1, 2, 0)
+# Outil à soi, jamais livré : copié s'il existe (tools/ranger.py l'appelle après le rangement).
+OUTILS_A_SOI = ["apres_rangement.py"]
 
 
 def version_pack_sfx() -> str | None:
@@ -94,7 +96,7 @@ def creer(sujet: str, date: str, depuis: Path | None = None) -> Path:
             shutil.copy2(outil, video / "tools" / outil.name)
         for nom in OUTILS_MAISON:
             shutil.copy2(MAISON / "tools" / nom, video / "tools" / nom)
-        for nom in OUTILS_EXTENSIONS if pack_sfx_pour_youtube() else []:
+        for nom in OUTILS_A_SOI + (OUTILS_EXTENSIONS if pack_sfx_pour_youtube() else []):
             if (MAISON / "tools" / nom).is_file():
                 shutil.copy2(MAISON / "tools" / nom, video / "tools" / nom)
     for d in DOSSIERS:

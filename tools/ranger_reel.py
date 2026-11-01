@@ -12,6 +12,9 @@ Usage (depuis le dossier du Reel) :
   au moment du post et prouve que la première vidéo est derrière nous ;
 - si le débrief de la première vidéo n'a pas eu lieu, pose la note « débrief à faire » dans le
   dossier Monteur IA (work/premiere-video.md) : elle est reproposée au Reel suivant ;
+- tools/apres_rangement.py, s'il existe : un outil à soi (Monteur IA n'en livre pas, une mise à
+  jour n'y touche donc jamais), dont la fonction apres_rangement(dossier) passe juste avant
+  --alleger, la vidéo encore là ; son erreur n'annule pas le rangement ;
 - --alleger : efface en plus ce qui pèse et se refait (médias du dérush, fichiers de travail,
   rendus intermédiaires, snapshots). Le montage, ses vidéos et les vidéos finales restent.
 
@@ -108,6 +111,17 @@ def alleger(reel: Path, app: Path | None = None) -> None:
           f"{rendus} rendu(s) intermédiaire(s) supprimés ; montage et vidéos finales gardés")
 
 
+def apres_rangement(dossier: Path) -> None:
+    """Passe la main à tools/apres_rangement.py, s'il existe (aussi pour une vidéo YouTube)."""
+    if not (Path(__file__).resolve().parent / "apres_rangement.py").is_file():
+        return
+    try:
+        import apres_rangement as crochet
+        crochet.apres_rangement(dossier)
+    except (Exception, SystemExit) as erreur:
+        print(f"• tools/apres_rangement.py n'a pas abouti ({erreur}) : le rangement, lui, est fait")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Range un Reel publié.")
     parser.add_argument("--alleger", action="store_true",
@@ -144,6 +158,7 @@ def main() -> None:
     meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print("• Reel marqué publié")
 
+    apres_rangement(reel)
     if args.alleger:
         alleger(reel, app)
     print(f"✅ Reel « {reel.name} » rangé. Son dossier reste dans reels/ (et dans l'app HyperFrames, si tu l'utilises).")

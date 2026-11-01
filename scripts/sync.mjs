@@ -744,11 +744,11 @@ function refreshLieux(config, presetsFile) {
 
 // Outils de la maison copiés tels quels dans une vidéo YouTube : ils ne dépendent pas du format.
 // sfx.py et sfx_mix.py : ceux du Pack SFX, s'il est installé en 1.2.0 ou plus (le mirroir ne copie que
-// l'existant).
+// l'existant). apres_rangement.py : l'outil à soi que tools/ranger.py appelle, s'il existe (jamais livré).
 // Ceux du dérush adaptés à chaque vidéo (cut_boundaries, build_words) n'y sont copiés qu'à sa
 // création (tools/nouvelle_video_youtube.py, liste OUTILS_MAISON).
 const OUTILS_COMMUNS_YOUTUBE = new Set(["lieux.py", "brand_style.py", "sons.py", "niveau_final.py", "ecarts_derush.py",
-  "ranger_reel.py", "prises.py", "sfx.py", "sfx_mix.py"]);
+  "ranger_reel.py", "prises.py", "sfx.py", "sfx_mix.py", "apres_rangement.py"]);
 const isPerVideoTool = (file) => /^║.*A CHAQUE VIDEO/m.test(fs.readFileSync(file, "utf8"));
 
 // Le Pack SFX ne sonorise une vidéo YouTube qu'à partir de sa version 1.2.0 (musique et repères du

@@ -491,7 +491,15 @@ test('ranger un Reel garde ses vidéos finales, le marque publié et ne vide rie
   assert.match(read(dir, 'work/premiere-video.md'), /débrief à faire[\s\S]*Premier Reel/);
   for (const file of Object.keys(files)) assert.ok(fs.existsSync(path.join(reel, file)), `${file} effacé sans --alleger`);
 
+  // L'outil à soi (tools/apres_rangement.py, jamais livré) : son erreur n'annule pas le rangement, et il
+  // passe avant --alleger, la vidéo encore là.
+  write(reel, 'tools/apres_rangement.py', 'def apres_rangement(dossier):\n    raise RuntimeError("boum")\n');
+  assert.match(ranger(), /apres_rangement\.py n'a pas abouti \(boum\)[\s\S]*✅ Reel « Premier Reel/);
+  write(reel, 'tools/apres_rangement.py', 'import pathlib\n\n\ndef apres_rangement(dossier):\n'
+    + '    rush = (dossier / "derush" / "mon-reel_cut.mp4").is_file()\n'
+    + '    (pathlib.Path.home() / "crochet.txt").write_text(f"{dossier.name} {rush}")\n');
   ranger('--alleger');
+  assert.equal(read(home, 'crochet.txt'), `${path.basename(reel)} True`);
   for (const file of ['derush/mon-reel_cut.mp4', 'renders/overlay.mov', 'work/premiere-video.md', 'snapshots/frame.png']) {
     assert.ok(!fs.existsSync(path.join(reel, file)), `${file} aurait dû être effacé`);
   }
