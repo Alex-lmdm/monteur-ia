@@ -658,8 +658,10 @@ test('les sons sont posés dans le montage, survivent au master et ne sont jamai
   let master = read(reel, 'index.html');
   assert.match(master, /<hf-audio-group id="mixage"[^>]*limiter/, 'plafond du mixage manquant');
   assert.match(master, /<audio id="vo"[^>]*data-audio-group="mixage"/, 'la voix doit passer par le plafond');
-  assert.match(master, /<audio id="musique" src="assets\/sons\/musique-fond\.mp3"[^>]*data-volume="0\.0473"/);
-  assert.match(master, /<audio id="sfx-01" src="assets\/sons\/starter-[^"]+"[^>]*data-volume="0\.1"[^>]*data-automation=/);
+  // Un son à fondus : data-volume="1", le niveau vit dans l'enveloppe (l'app 0.8.230 multiplie l'un par
+  // l'autre : -26,5 dB posés aux deux endroits donnaient -53 dB, une musique inaudible).
+  assert.match(master, /<audio id="musique" src="assets\/sons\/musique-fond\.mp3"[^>]*data-volume="1"[^>]*&quot;v&quot;:0\.0473/);
+  assert.match(master, /<audio id="sfx-01" src="assets\/sons\/starter-[^"]+"[^>]*data-volume="1"[^>]*data-automation="[^"]*&quot;v&quot;:0\.1[,}]/);
   assert.ok(fs.existsSync(path.join(reel, 'assets/sons/musique-fond.mp3')), 'le Reel doit rester autonome');
   // Le master régénéré garde les sons tels quels.
   run('tools/build_master.py', '--write');
@@ -683,7 +685,7 @@ test('les sons sont posés dans le montage, survivent au master et ne sont jamai
     .replace('events.sort(key=lambda e: e[1])', 'events.append(("assets/Whoosh Transition.mp3", 0.8, -18, None))\nevents.sort(key=lambda e: e[1])'));
   run('tools/build_sfx.py');
   master = read(reel, 'index.html');
-  assert.match(master, /<audio id="musique" src="assets\/Calm Piano\.mp3"[^>]*data-volume="0\.0631"/, 'musique du Reel, sur place');
+  assert.match(master, /<audio id="musique" src="assets\/Calm Piano\.mp3"[^>]*data-volume="1"[^>]*&quot;v&quot;:0\.0631/, 'musique du Reel, sur place');
   assert.match(master, /<audio id="sfx-01" src="assets\/Whoosh Transition\.mp3" data-start="0\.800"/, 'son de l’app, sur place');
   assert.match(master, /src="assets\/sons\/starter-/, 'la bibliothèque reste copiée dans assets/sons/');
   for (const nom of ['Whoosh Transition.mp3', 'Calm Piano.mp3', 'musique-Calm Piano.mp3']) {
@@ -743,7 +745,7 @@ test("le niveau final se pose après l'export : -16 LUFS, crêtes sous -1 dBTP, 
   assert.ok(-16 - niveau > -1.5 - crete, 'la marge de crête doit borner le gain (sinon le test ne prouve rien)');
   assert.equal(gain, Math.floor((-1.5 - crete) * 10) / 10);
   assert.deepEqual(chaine().map((n) => [n.type, Object.values(n.params)[0]]), [['gain', gain], ['limiter', -1.5]]);
-  assert.match(read(reel, 'index.html'), /<audio id="musique"[^>]*data-volume="0\.0473"/, 'volumes inchangés entre eux');
+  assert.match(read(reel, 'index.html'), /<audio id="musique"[^>]*data-volume="1"[^>]*&quot;v&quot;:0\.0473/, 'volumes inchangés entre eux');
 
   // Ancien export (--ffmpeg) : pas de rendu pour baisser le son, le gain va jusqu'à -16 LUFS sous un plafond
   // de crête vraie ; la finalisation prend l'export le plus récent.

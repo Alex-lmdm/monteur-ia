@@ -18,8 +18,11 @@ HyperFrames, lancé au milieu d'un fichier (data-media-start), en perd les premi
 (28 ms mesurées sur un bruit de verre de l'app rogné à 0,35 s, l'attaque du son).
 
 Réglages repris de l'ancien mixage ffmpeg, mesurés à 0,3 dB près sur un vrai Reel :
-volume en dB -> data-volume ; fondus en enveloppe data-automation (une enveloppe REMPLACE
-data-volume, elle porte donc le niveau réel) ; voix, sons et musique sur le bus « mixage » (gain,
+volume en dB -> data-volume ; un son à fondus porte son niveau réel dans son enveloppe
+data-automation, avec data-volume="1" : l'app 0.8.155 faisait REMPLACER data-volume par
+l'enveloppe, l'app 0.8.230 la MULTIPLIE (hyperframes docs audio) ; à 1, les deux versions donnent
+le même niveau. (02/11/2026 : musique à -26,5 dB appliquée deux fois, soit -53 dB, inaudible dans
+l'app ; les sons rognés avec fondu sortaient eux aussi bien trop bas.) ; voix, sons et musique sur le bus « mixage » (gain,
 puis plafond à -1,5 dB).
 
 Niveau : le rendu de l'app HyperFrames ne garde un gain que dans la marge de crête du mixage. Dès
@@ -309,7 +312,7 @@ def lignes(reel: Path, evenements, musique: Path | None, musique_db: float, tota
                {"t": round(total - sortie, 3), "v": v}, {"t": round(total, 3), "v": 0}]
         chemin = _preparer_musique(musique, dossier, total, reel)
         out.append(f'<audio id="musique" src="{_src(chemin)}" '
-                   f'data-start="0" data-duration="{round(total, 3)}" data-media-start="0" data-volume="{v}" '
+                   f'data-start="0" data-duration="{round(total, 3)}" data-media-start="0" data-volume="1" '
                    f'data-track-index="19" data-audio-group="mixage" data-automation="{_enveloppe(pts)}"></audio>')
         pistes.append({"src": reel / chemin, "start": 0.0, "duree": total, "media_start": 0.0, "volume": v,
                        "fondu_entree": entree, "fondu_sortie": sortie})
@@ -354,6 +357,7 @@ def lignes(reel: Path, evenements, musique: Path | None, musique_db: float, tota
             if fs:
                 pts.append({"t": round(max(garde - fs, 0), 3), "v": v})
                 pts.append({"t": garde, "v": 0})
+            ligne = ligne.replace(f'data-volume="{v}"', 'data-volume="1"')   # l'enveloppe porte le niveau
             ligne += f' data-automation="{_enveloppe(pts)}"'
         out.append(ligne + "></audio>")
         pistes.append({"src": reel / chemin, "start": start, "duree": garde, "media_start": debut, "volume": v,
