@@ -17,13 +17,17 @@ Hors du catalogue (sfx_dir), un son rogné au début est lui aussi préparé en 
 HyperFrames, lancé au milieu d'un fichier (data-media-start), en perd les premières millisecondes
 (28 ms mesurées sur un bruit de verre de l'app rogné à 0,35 s, l'attaque du son).
 
+Prises : un son du catalogue à plusieurs prises (`segments` de assets/sfx/catalog.json, posé par le
+Pack SFX) porte le `trim` de l'une d'elles. Sans lui, toutes ses prises joueraient à la suite, sous
+les sections suivantes : la pose est refusée avant toute écriture (verifier_prises).
+
 Réglages repris de l'ancien mixage ffmpeg, mesurés à 0,3 dB près sur un vrai Reel :
 volume en dB -> data-volume ; un son à fondus porte son niveau réel dans son enveloppe
 data-automation, avec data-volume="1" : l'app 0.8.155 faisait REMPLACER data-volume par
 l'enveloppe, l'app 0.8.230 la MULTIPLIE (hyperframes docs audio) ; à 1, les deux versions donnent
 le même niveau. (02/11/2026 : musique à -26,5 dB appliquée deux fois, soit -53 dB, inaudible dans
-l'app ; les sons rognés avec fondu sortaient eux aussi bien trop bas.) ; voix, sons et musique sur le bus « mixage » (gain,
-puis plafond à -1,5 dB).
+l'app ; les sons rognés avec fondu sortaient eux aussi bien trop bas.) ; voix, sons et musique
+sur le bus « mixage » (gain, puis plafond à -1,5 dB).
 
 Niveau : le rendu de l'app HyperFrames ne garde un gain que dans la marge de crête du mixage. Dès
 qu'une crête vraie dépasse -1 dBTP après l'encodage, il baisse tout le son jusqu'au niveau que
@@ -270,6 +274,46 @@ def _du_catalogue(src: Path, sfx_dir: Path | None) -> bool:
     return True
 
 
+def catalogue_sfx(sfx_dir: Path | None) -> list[dict]:
+    """Les fiches du catalogue de sons (assets/sfx/catalog.json, posé par le Pack SFX), ou rien s'il
+    n'est pas là."""
+    if sfx_dir is None:
+        return []
+    try:
+        return json.loads((Path(sfx_dir) / "catalog.json").read_text(encoding="utf-8")).get("sounds") or []
+    except (OSError, ValueError, AttributeError):
+        return []
+
+
+def prises_oubliees(evenements, catalogue: list[dict], sfx_dir: Path) -> list[str]:
+    """Les sons du catalogue à plusieurs prises posés sans `trim` : toutes leurs prises joueraient à
+    la suite, sous les sections suivantes (16 traits de feutre sur 11 s au lieu d'un seul, entendus
+    « en fond partout » dans une pub du 28/10/2026). Un message par son fautif, avec ses premières
+    prises à choisir. Même règle que la commande `sons` de Publicitaire IA."""
+    par_fichier = {(Path(sfx_dir) / s["file"]).resolve(): s for s in catalogue if s.get("file")}
+    fautifs = []
+    for e in evenements:
+        s = par_fichier.get(Path(e["src"]).resolve())
+        prises = (s or {}).get("segments") or []
+        if len(prises) > 1 and not e.get("trim"):
+            exemples = " ; ".join(f"prise {n} : [{float(t0):g}, {float(t1):g}]"
+                                  for n, (t0, t1) in enumerate(prises[:3], 1))
+            fautifs.append(f"{s['id']} (posé à {float(e.get('start') or 0):.2f} s) contient {len(prises)} prises à la "
+                           f"suite ({float(s.get('duration') or 0):.1f} s) : choisis-en une avec \"trim\" ({exemples}"
+                           + (" ; les autres dans assets/sfx/catalog.json" if len(prises) > 3 else "")
+                           + f"), ou {s['id']}:N avec le Pack SFX")
+    return fautifs
+
+
+def verifier_prises(evenements, sfx_dir: Path | None) -> None:
+    """Lève Erreur, avant toute écriture, si un son du catalogue à plusieurs prises est posé sans trim."""
+    fautifs = prises_oubliees(evenements, catalogue_sfx(sfx_dir), sfx_dir) if sfx_dir else []
+    if fautifs:
+        combien = "un son contient" if len(fautifs) == 1 else f"{len(fautifs)} sons contiennent"
+        raise Erreur(f"rien n'est posé : {combien} plusieurs prises sans \"trim\", elles joueraient toutes à la "
+                     "suite sous les sections suivantes.\n" + "\n".join(f"- {f}" for f in fautifs))
+
+
 def _preparer_rognage(src: Path, t0: float, t1: float, dossier: Path) -> str:
     """Le segment [t0, t1] d'un son, découpé à l'échantillon près par ffmpeg, en WAV (cadence et
     canaux de la source) : posé depuis le début du fichier, il garde son attaque. -> nom du fichier."""
@@ -379,8 +423,10 @@ def lignes(reel: Path, evenements, musique: Path | None, musique_db: float, tota
 
 def poser(reel: Path, evenements, musique: Path | None = None, musique_db: float = -26.5,
           total: float | None = None, sfx_dir: Path | None = None, ecraser: bool = False) -> dict:
-    """Écrit le bloc SONS dans reel/index.html. Lève Erreur si le bloc a été retouché (sauf ecraser).
+    """Écrit le bloc SONS dans reel/index.html. Lève Erreur si le bloc a été retouché (sauf ecraser),
+    ou si un son du catalogue à plusieurs prises est posé sans trim (verifier_prises).
     Rend le rapport lu par resume_niveau : mesure du mixage, gain posé sur le bus, cible finale."""
+    verifier_prises(evenements, sfx_dir)
     index = reel / "index.html"
     if not index.exists():
         raise Erreur("index.html manquant : génère d'abord le master (python3 tools/build_master.py --write).")

@@ -92,6 +92,9 @@ if not available:
 #   start_s : debut du son. Son trouve dans l'app : instant vise MOINS son peakOffset.
 #   volume_dB : un son de l'app n'est pas calibre, mesure-le (references/sfx-musique.md).
 #   trim : None, une duree (on garde 0 -> trim), ou un tuple (t0, t1) (on garde t0 -> t1).
+#          Son du Pack SFX a PLUSIEURS PRISES (segments de assets/sfx/catalog.json, ex.
+#          pack/paper/paper-marker-stroke.mp3 = 16 traits de feutre) : TOUJOURS le trim d'UNE prise.
+#          Sans trim, toutes ses prises jouent a la suite sous les sections suivantes : refuse.
 # Ci-dessous : un EXEMPLE generique — un SFX de transition sur chaque debut de section
 # (sauf la premiere). On alterne les SFX disponibles pour ne jamais jouer 2x le meme d'affilee.
 # =============================================================================
@@ -136,19 +139,24 @@ def trim_bounds(trim):
     return (float(trim[0]), float(trim[1])) if isinstance(trim, (tuple, list)) else (0.0, float(trim))
 
 
-# =============================================================================
-# POSE NATIVE (defaut) : bloc SONS dans index.html, par le module partage tools/sons.py
-# =============================================================================
-def poser():
-    import sons
+def evenements_sons():
+    """EVENTS au format de tools/sons.py : chemin du son, trim en bornes (t0, t1)."""
     evs = []
     for f, start, vol, trim in events:
         bornes = trim_bounds(trim)
         evs.append({"src": sfx_path(f), "start": start, "vol": vol, "trim": bornes,
                     "fondu_sortie": FONDU_COUPE if bornes else 0})
+    return evs
+
+
+# =============================================================================
+# POSE NATIVE (defaut) : bloc SONS dans index.html, par le module partage tools/sons.py
+# =============================================================================
+def poser():
+    import sons
     try:
-        rapport = sons.poser(ROOT, evs, musique=MUSIC, musique_db=music_db, total=DUR, sfx_dir=SFX_DIR,
-                             ecraser="--ecraser" in sys.argv)
+        rapport = sons.poser(ROOT, evenements_sons(), musique=MUSIC, musique_db=music_db, total=DUR,
+                             sfx_dir=SFX_DIR, ecraser="--ecraser" in sys.argv)
     except sons.Erreur as e:
         die(str(e))
     print(f"{len(events)} SFX + " + (f"musique ({music_file} @ {music_db} dB)" if MUSIC else "sans musique")
@@ -197,6 +205,11 @@ def ffmpeg_ou_probe():
     #     l'erreur de quantification de la voix (~-6 dB), tres au-dessus des SFX -> inexploitable ;
     #   - mesurer en 16 kHz : coupe au-dessus de 8 kHz et sous-estime massivement risers et clics
     #     (qui vivent dans les aigus) -> on croit un SFX absent alors qu'il est bien la.
+    import sons
+    try:
+        sons.verifier_prises(evenements_sons(), SFX_DIR)   # meme refus que la pose : prises sans trim
+    except sons.Erreur as e:
+        die(str(e))
     if "--probe" in sys.argv:
         inputs, filters, mixin = filtres_sfx_musique(0)
         filters.append(f"{''.join(mixin)}amix=inputs={len(mixin)}:normalize=0:dropout_transition=0[aout]")
@@ -213,7 +226,6 @@ def ffmpeg_ou_probe():
 
     if not SRC.exists():
         die(f"{SRC.relative_to(ROOT)} manquant : rends d'abord la video finale (python3 tools/build_final.py).")
-    import sons
     inputs, filters, mixin = filtres_sfx_musique(1)
     mix = f"[0:a]{''.join(mixin)}amix=inputs={len(mixin) + 1}:normalize=0:dropout_transition=0"
     # Ici, pas de rendu HyperFrames pour baisser le son : le mixage est mesure, un gain l'amene a -16 LUFS

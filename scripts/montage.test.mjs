@@ -300,6 +300,54 @@ test('rendu : le son hors catalogue rogné au début part à l’instant posé, 
 });
 
 // ---------------------------------------------------------------------------
+// 4 bis. Son du Pack SFX à plusieurs prises : sans trim, toutes ses prises joueraient à la suite
+// ---------------------------------------------------------------------------
+// Le 28/10/2026, 16 traits de feutre posés sans trim s'entendaient « en fond partout » sous une pub.
+test('un son du catalogue à plusieurs prises sans trim est refusé (pose, mixage, probe) ; avec le trim d’une prise, posé', (t) => {
+  if (!outils(t, { ffmpeg: true })) return;
+  const dir = maison(t);
+  const reel = nouveauReel(dir);
+  python(reel, 'tools/build_master.py', '--write');
+  // Le catalogue que pose le Pack SFX : ses prises telles qu'il les décrit (16 traits de feutre, le
+  // cha-ching de départ en 3 prises) ; le trait de feutre est ici un son de départ recopié.
+  fs.mkdirSync(path.join(dir, 'assets/sfx/pack/paper'), { recursive: true });
+  fs.copyFileSync(path.join(dir, 'assets/sfx/starter/keyboard.mp3'), path.join(dir, 'assets/sfx/pack/paper/paper-marker-stroke.mp3'));
+  write(dir, 'assets/sfx/catalog.json', { sounds: [
+    { id: 'paper-marker-stroke', file: 'pack/paper/paper-marker-stroke.mp3', duration: 11.625, segments: [[0.0, 0.37],
+      [0.61, 0.94], [1.13, 2.34], [2.9, 3.28], [3.54, 3.62], [3.89, 4.17], [4.34, 4.79], [5.01, 5.17], [5.34, 6.62],
+      [6.78, 7.45], [8.0, 8.38], [8.64, 8.72], [9.0, 9.27], [9.44, 9.9], [10.11, 10.27], [10.44, 11.59]] },
+    { id: 'starter-cha-ching', file: 'starter/cha-ching.mp3', duration: 3.358, segments: [[0.0, 0.23], [0.42, 2.52], [2.85, 3.25]] },
+    { id: 'starter-pop', file: 'starter/pop.mp3', duration: 0.208, segments: null },
+  ] });
+  const modele = read(reel, 'tools/build_sfx.py');
+  const sons = (evenements, ...args) => {
+    write(reel, 'tools/build_sfx.py', modele.replace('events.sort(key=lambda e: e[1])',
+      `events = [${evenements}]\nevents.sort(key=lambda e: e[1])`));
+    return spawnSync('python3', ['tools/build_sfx.py', ...args], { cwd: reel, encoding: 'utf8' });
+  };
+  const master = read(reel, 'index.html');
+  // Deux oublis ; la prise choisie, le son à une seule prise et le son du Reel passent.
+  const oublis = '("starter/cha-ching.mp3", 1.0, -20, None), ("pack/paper/paper-marker-stroke.mp3", 2.5, -18, None), '
+    + '("starter/cha-ching.mp3", 4.0, -20, (0.42, 2.52)), ("starter/pop.mp3", 5.0, -14, None), ("assets/Mon son.mp3", 6.0, -14, None)';
+  for (const mode of [[], ['--ffmpeg'], ['--probe']]) {
+    const r = sons(oublis, ...mode);
+    assert.equal(r.status, 1, `${mode[0] ?? 'pose'} : refusée`);
+    assert.match(r.stdout, /ERREUR : rien n'est posé : 2 sons contiennent plusieurs prises sans "trim"/);
+    assert.match(r.stdout, /\n- starter-cha-ching \(posé à 1\.00 s\) contient 3 prises à la suite \(3\.4 s\) : choisis-en une avec "trim" \(prise 1 : \[0, 0\.23\] ; prise 2 : \[0\.42, 2\.52\] ; prise 3 : \[2\.85, 3\.25\]\), ou starter-cha-ching:N avec le Pack SFX\n/);
+    assert.match(r.stdout, /\n- paper-marker-stroke \(posé à 2\.50 s\) contient 16 prises à la suite \(11\.6 s\) : [^\n]*prise 3 : \[1\.13, 2\.34\] ; les autres dans assets\/sfx\/catalog\.json\)/);
+    assert.equal(r.stdout.match(/^- /gm).length, 2, `${mode[0] ?? 'pose'} : seuls les deux oublis`);
+  }
+  assert.equal(read(reel, 'index.html'), master, 'rien n’est posé');
+  for (const f of ['work/sfx-only.wav', 'exports/FINAL_SFX_MUSIC.mp4']) assert.ok(!fs.existsSync(path.join(reel, f)), `${f} écrit`);
+  // Une prise chacun : posés, à partir de leur prise.
+  const pose = sons('("starter/cha-ching.mp3", 1.0, -20, (0.42, 2.52)), ("pack/paper/paper-marker-stroke.mp3", 2.5, -18, (0.61, 0.94))');
+  assert.equal(pose.status, 0, pose.stdout + pose.stderr);
+  const apres = read(reel, 'index.html');
+  assert.match(apres, /src="assets\/sons\/starter-cha-ching\.mp3" data-start="1\.000" data-duration="2\.100" data-media-start="0\.420"/);
+  assert.match(apres, /src="assets\/sons\/pack-paper-paper-marker-stroke\.mp3" data-start="2\.500" data-duration="0\.330" data-media-start="0\.610"/);
+});
+
+// ---------------------------------------------------------------------------
 // 5. Allure des sous-titres : casse, interligne, graisse, marge, encre (réglages de visual)
 // ---------------------------------------------------------------------------
 const regleCap = (css) => /\n\.cap \{\n  position: absolute;[\s\S]*?\n\}/.exec(css)[0];

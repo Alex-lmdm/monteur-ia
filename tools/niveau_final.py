@@ -10,7 +10,9 @@ contrôle (le check_export.py du projet).
    sons.plafond_ffmpeg). Le gain se règle par essais, puis se vérifie sur la vidéo encodée (à 0,15 LU). L'image est copiée telle
    quelle, seul le son est réencodé (AAC 48 kHz, sans PNS : le bruit qu'il synthétise au décodage
    fait des crêtes que le limiteur n'a pas vues). La crête vraie se vérifie sur le fichier encodé :
-   si l'AAC l'a remontée au-dessus de -1 dBTP, le plafond est abaissé d'autant et la vidéo refaite.
+   si l'AAC l'a remontée au-dessus de -1 dBTP, le plafond est abaissé d'autant et la vidéo refaite
+   (il remonte de moitié quand un essai garde de la marge). La vidéo livrée est le meilleur des
+   essais, jamais simplement le dernier.
    Une voix absente (export sous -35 LUFS) n'est jamais remontée à l'aveugle.
    Pourquoi après l'export : le rendu de l'app HyperFrames ne garde pas un gain au-delà de la marge
    de crête du mixage (il baisse tout dès qu'une crête vraie dépasse -1 dBTP après l'encodage) ; le
@@ -77,27 +79,58 @@ def ecrire(src: pathlib.Path, sortie: pathlib.Path, gain: float, plafond: float,
     os.replace(tmp, sortie)
 
 
+def plafond_suivant(plafond: float, crete: float) -> float:
+    """Le plafond (dB) de l'essai suivant : décalé de ce qui sépare la crête vraie de l'essai de
+    CRETE_MAX_DBTP - 0,1 dB, dans les deux sens. Une crête remontée par l'AAC l'abaisse d'autant. Sur
+    des clics très secs, l'AAC déborde au hasard d'un essai à l'autre : un plafond qui ne faisait que
+    descendre gardait, après un débordement passager, des crêtes écrasées sans raison (même correction
+    que la commande `mastering` de Publicitaire IA, le 28/10/2026). Il remonte donc dès qu'un essai
+    montre de la marge, de la moitié seulement (remonter d'un coup ferait osciller les essais d'un
+    débordement à l'autre), jamais au-dessus de PLAFOND_DB."""
+    ecart = CRETE_MAX_DBTP - 0.1 - crete
+    if ecart > 0:
+        ecart /= 2
+    return round(min(PLAFOND_DB, max(-20.0, plafond + ecart)), 2)
+
+
+def rang_essai(apres: float, crete_apres: float, cible: float) -> tuple[float, float]:
+    """Pour garder le meilleur essai : d'abord la crête vraie sous CRETE_MAX_DBTP, puis le niveau le
+    plus proche de la cible."""
+    return max(0.0, crete_apres - CRETE_MAX_DBTP), abs(apres - cible)
+
+
 def finaliser_son(src: pathlib.Path, sortie: pathlib.Path, cible: float, debit: str) -> dict:
     """Écrit `sortie` au niveau final, vérifié sur la vidéo encodée. Si l'AAC a remonté la crête vraie
-    au-dessus de CRETE_MAX_DBTP, le plafond est abaissé d'autant ; s'il a décalé le niveau de plus de
-    ECART_FINAL, le gain vise d'autant plus loin. Un essai de plus suffit d'ordinaire."""
+    au-dessus de CRETE_MAX_DBTP, le plafond est abaissé d'autant (plafond_suivant) ; s'il a décalé le
+    niveau de plus de ECART_FINAL, le gain vise d'autant plus loin. Un essai de plus suffit d'ordinaire.
+    La vidéo livrée est le meilleur essai (rang_essai), jamais simplement le dernier : un essai juste
+    suivi de deux débordements finissait refusé au contrôle."""
     niveau, crete = mesurer(src)
     if niveau < SON_MIN_LUFS:
         sys.exit(f"ERREUR : son de l'export trop faible ({niveau:.1f} LUFS) : voix absente ou coupée dans le "
                  "montage ? Vérifie-le, puis exporte à nouveau.")
-    plafond, vise = PLAFOND_DB, cible
-    for essai in range(ESSAIS_CRETE):
-        gain = regler(src, niveau, vise, plafond)
-        ecrire(src, sortie, gain, plafond, debit)
-        apres, crete_apres = mesurer(sortie)
-        crete_ok, niveau_ok = crete_apres <= CRETE_MAX_DBTP, abs(apres - cible) <= ECART_FINAL
-        if (crete_ok and niveau_ok) or essai == ESSAIS_CRETE - 1:
-            break
-        if not crete_ok:
-            plafond = round(plafond - (crete_apres - CRETE_MAX_DBTP) - 0.1, 2)
-        if not niveau_ok:
-            vise += cible - apres
-    return {"niveau": niveau, "crete": crete, "gain": gain, "plafond": plafond, "apres": apres, "crete_apres": crete_apres}
+    # Jamais « FINAL » dans son nom : ranger_reel.py prendrait un essai resté là pour une vidéo finale.
+    essai_mp4 = sortie.with_name(f".finalisation-essai{sortie.suffix}")
+    plafond, vise, meilleur, rang_meilleur = PLAFOND_DB, cible, None, None
+    try:
+        for _ in range(ESSAIS_CRETE):
+            gain = regler(src, niveau, vise, plafond)
+            ecrire(src, essai_mp4, gain, plafond, debit)
+            apres, crete_apres = mesurer(essai_mp4)
+            rang = rang_essai(apres, crete_apres, cible)
+            if rang_meilleur is None or rang < rang_meilleur:
+                os.replace(essai_mp4, sortie)
+                rang_meilleur = rang
+                meilleur = {"gain": gain, "plafond": plafond, "apres": apres, "crete_apres": crete_apres}
+            niveau_ok = abs(apres - cible) <= ECART_FINAL
+            if crete_apres <= CRETE_MAX_DBTP and niveau_ok:
+                break
+            plafond = plafond_suivant(plafond, crete_apres)
+            if not niveau_ok:
+                vise += cible - apres
+    finally:
+        essai_mp4.unlink(missing_ok=True)
+    return {"niveau": niveau, "crete": crete, **meilleur}
 
 
 def empreinte(p: pathlib.Path) -> str:

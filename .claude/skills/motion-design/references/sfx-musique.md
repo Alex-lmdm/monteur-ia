@@ -60,9 +60,18 @@ référer aux fichiers réellement présents.**
 7. **Notification / signal** : `ding` (chaleureux) ou `notification` (cristallin).
 8. **Texte qui se tape** (ex. mot-clé du CTA) : `keyboard`, durée adaptée (quelques lettres → rogner
    court ; longue phrase → laisser courir).
-9. **Argent** (vente, gain, prix) : `cha-ching`.
+9. **Argent** (vente, gain, prix) : `cha-ching`, rogné à une seule prise (règle suivante).
 10. **Surlignage** : `felt pen` **si disponible** dans la biblio (bruit de marqueur), rogné à la durée
     du surlignage (~0.45-0.55s) avec `afade` out. Sinon, rien.
+
+**Un son à plusieurs prises se pose toujours avec le `trim` d'une seule.** Certains fichiers
+enchaînent plusieurs prises : `starter/cha-ching.mp3` en a 3, `(0.0, 0.23)`, `(0.42, 2.52)` (l'impact)
+et `(2.85, 3.25)`, un second coup aussi fort. Posé sans `trim`, un tel fichier joue toutes ses prises
+à la suite, sous les sections suivantes (16 traits de feutre entendus « en fond partout » sous une
+pub, le 28/10/2026). Avec le Pack SFX, les prises de chaque son (traits de feutre, claviers,
+`hit-bass-boom`…) sont les `segments` de `assets/sfx/catalog.json` (`python3 tools/sfx.py info <id>`),
+la référence `id:N` en désigne une, et `tools/build_sfx.py` refuse de poser comme de mixer un tel son
+sans `trim` : son message cite les prises à choisir.
 
 **Volume — RÉÉQUILIBRER par niveau perçu** (les fichiers n'ont PAS la même intensité à dB égal ;
 mesurer avec `ffmpeg -i F -af volumedetect -f null /dev/null`). Niveaux de référence (exemples, à

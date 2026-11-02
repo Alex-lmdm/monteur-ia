@@ -56,7 +56,9 @@ available = sorted(p.relative_to(SFX_DIR).as_posix() for p in SFX_DIR.rglob("*")
 # EVENTS = (fichier_sfx, start_s, volume_dB, trim|None) :
 #   start_s : l'instant du geste (début d'une section, d'un tween), lu dans sections.py ou la compo ;
 #   volume_dB : rééquilibré par niveau PERÇU (references/sfx-musique.md du skill motion-design) ;
-#   trim : None, une durée (on garde 0 -> trim), ou (t0, t1).
+#   trim : None, une durée (on garde 0 -> trim), ou (t0, t1). Son du Pack SFX à PLUSIEURS PRISES
+#     (segments de assets/sfx/catalog.json, ex. pack/paper/paper-marker-stroke.mp3 = 16 traits de
+#     feutre) : TOUJOURS le trim d'UNE prise. Sans trim, toutes ses prises jouent à la suite : refusé.
 # Ci-dessous : un EXEMPLE, un son discret à l'entrée de chaque panneau et de chaque plein écran.
 # =============================================================================
 MUSIQUE_VIDEO = None
@@ -93,16 +95,21 @@ def trim_bounds(trim):
     return (float(trim[0]), float(trim[1])) if isinstance(trim, (tuple, list)) else (0.0, float(trim))
 
 
-def poser():
-    import sons
+def evenements_sons():
+    """EVENTS au format de tools/sons.py : chemin du son, trim en bornes (t0, t1)."""
     evs = []
     for f, start, vol, trim in events:
         bornes = trim_bounds(trim)
         evs.append({"src": sfx_path(f), "start": start, "vol": vol, "trim": bornes,
                     "fondu_sortie": FONDU_COUPE if bornes else 0})
+    return evs
+
+
+def poser():
+    import sons
     try:
-        rapport = sons.poser(ROOT, evs, musique=MUSIC, musique_db=music_db, total=DUR, sfx_dir=SFX_DIR,
-                             ecraser="--ecraser" in sys.argv)
+        rapport = sons.poser(ROOT, evenements_sons(), musique=MUSIC, musique_db=music_db, total=DUR,
+                             sfx_dir=SFX_DIR, ecraser="--ecraser" in sys.argv)
     except sons.Erreur as e:
         die(str(e))
     print(f"{len(events)} SFX + " + (f"musique ({music_file} @ {music_db} dB)" if MUSIC else "sans musique")
@@ -116,6 +123,11 @@ def poser():
 def probe():
     """Piste SFX + musique SEULE, en WAV 48 kHz : vérifier le placement sans écouter (pic de chaque
     son au moins 4 dB au-dessus de la musique). Jamais en 16 kHz : les aigus des sons disparaissent."""
+    import sons
+    try:
+        sons.verifier_prises(evenements_sons(), SFX_DIR)   # même refus que la pose : prises sans trim
+    except sons.Erreur as e:
+        die(str(e))
     inputs, filters, mixin = [], [], []
     for i, (f, start, vol, trim) in enumerate(events):
         inputs += ["-i", str(sfx_path(f))]

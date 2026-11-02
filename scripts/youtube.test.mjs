@@ -224,6 +224,22 @@ test("une vidéo YouTube coupe au rythme des Reels (respiration en option) et po
   assert.equal(read(reel, 'tools/niveau_final.py'), read(dir, 'tools/niveau_final.py'));
 });
 
+test('un son du catalogue à plusieurs prises sans trim est refusé dans une vidéo YouTube, pose et probe', (t) => {
+  if (!outils(t)) return;
+  const dir = maison(t);
+  const video = nouvelle(dir);
+  write(dir, 'assets/sfx/catalog.json', { sounds: [
+    { id: 'starter-cha-ching', file: 'starter/cha-ching.mp3', duration: 3.358, segments: [[0.0, 0.23], [0.42, 2.52], [2.85, 3.25]] }] });
+  write(video, 'tools/build_sfx.py', read(video, 'tools/build_sfx.py').replace('events.sort(key=lambda e: e[1])',
+    'events = [("starter/cha-ching.mp3", 2.0, -20, None)]\nevents.sort(key=lambda e: e[1])'));
+  for (const mode of [[], ['--probe']]) {
+    const r = spawnSync('python3', ['tools/build_sfx.py', ...mode], { cwd: video, encoding: 'utf8' });
+    assert.equal(r.status, 1, `${mode[0] ?? 'pose'} : refusée`);
+    assert.match(r.stdout, /rien n'est posé : un son contient plusieurs prises sans "trim"[^\n]*\n- starter-cha-ching \(posé à 2\.00 s\) contient 3 prises/);
+  }
+  assert.ok(!fs.existsSync(path.join(video, 'work/sfx-only.wav')));
+});
+
 test('les cadres alternent, le glissement part du large, les alertes de rythme parlent', (t) => {
   if (!outils(t)) return;
   const dir = maison(t);

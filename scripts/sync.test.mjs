@@ -822,42 +822,68 @@ test("le niveau final se pose après l'export : -16 LUFS, crêtes sous -1 dBTP, 
 
 // L'encodage AAC remonte parfois la crête vraie d'un son plafonné : la finalisation (tools/niveau_final.py,
 // le cœur commun des Reels et des vidéos YouTube) abaisse alors le plafond d'autant et refait la vidéo,
-// au lieu de la refuser au contrôle. Encodage simulé : le cas se rejoue à l'identique, sans dépendre d'un
-// bruit ni de la version d'ffmpeg.
-test("finalisation : une crête remontée par l'AAC abaisse le plafond, puis la vidéo est refaite", (t) => {
+// au lieu de la refuser au contrôle ; un essai qui garde de la marge le fait remonter de moitié, et la
+// vidéo livrée est le meilleur essai, jamais simplement le dernier. Encodage simulé : le cas se rejoue à
+// l'identique, sans dépendre d'un bruit ni de la version d'ffmpeg.
+test("finalisation : une crête remontée par l'AAC abaisse le plafond, la vidéo est refaite, le meilleur essai livré", (t) => {
   const python = pythonOrSkip(t);
   if (!python) return;
   const dir = maison(t);
   execFileSync(python, ['tools/nouveau_reel.py', 'Crete', '--date', '2026-10-15'], { cwd: dir, encoding: 'utf8' });
   const reel = path.join(dir, 'reels', `Crete · 2026-10-15 · ${path.basename(dir)}`);
-  const essai = (cretes) => execFileSync(python, ['-c', [
-    'import pathlib, sys; sys.path.insert(0, "tools")',
+  // mesures : [niveau, crête vraie] lus sur chaque essai encodé, dans l'ordre. Chaque essai écrit son
+  // numéro dans son fichier : la vidéo livrée dit lequel elle est.
+  const essai = (mesures) => JSON.parse(execFileSync(python, ['-c', [
+    'import json, pathlib, sys; sys.path.insert(0, "tools")',
     'import niveau_final as n',
-    `ecrits, cretes = [], iter(${JSON.stringify(cretes)})`,
-    'sortie = pathlib.Path("exports/FINAL-REEL.mp4")',
+    `ecrits, mesures = [], iter(${JSON.stringify(mesures)})`,
+    'source, sortie = pathlib.Path("exports/FINAL.mp4"), pathlib.Path("exports/FINAL-REEL.mp4")',
     'n.plafond_ffmpeg = lambda plafond, gain: f"plafond {plafond}"',
-    'n.ecrire = lambda src, dest, gain, plafond, debit: ecrits.append(plafond)',
-    // Export à -24 LUFS ; le gain réglé atteint la cible ; la crête lue sur le fichier encodé suit la liste.
-    'n.mesurer = lambda src, filtre="": (-16.0, -1.5) if filtre else (-16.0, next(cretes)) if src == sortie else (-24.0, -5.0)',
-    'r = n.finaliser_son(pathlib.Path("exports/FINAL.mp4"), sortie, -16.0, "320k")',
-    'print(ecrits, r["plafond"], r["crete_apres"])'].join('\n')], { cwd: reel, encoding: 'utf8' }).trim();
-  assert.equal(essai([-1.2]), '[-1.5] -1.5 -1.2', 'crête sous -1 dBTP : un seul encodage');
-  assert.equal(essai([-0.6, -1.3]), '[-1.5, -2.0] -2.0 -1.3', 'remontée de 0,4 dB : plafond abaissé de 0,5 dB');
-  assert.equal(essai([-0.2, -0.7, -0.9]), '[-1.5, -2.4, -2.8] -2.8 -0.9', 'au plus trois encodages, le contrôle tranche');
+    'def ecrire(src, dest, gain, plafond, debit):',
+    '    ecrits.append(plafond)',
+    '    dest.write_text(str(len(ecrits)))',
+    'n.ecrire = ecrire',
+    // Export à -24 LUFS ; le gain réglé atteint la cible avant l'encodage.
+    'n.mesurer = lambda src, filtre="": (-16.0, -1.5) if filtre else (-24.0, -5.0) if src == source else tuple(next(mesures))',
+    'r = n.finaliser_son(source, sortie, -16.0, "320k")',
+    'print(json.dumps({"plafonds": ecrits, "livre": int(sortie.read_text()), "plafond": r["plafond"], "niveau": r["apres"],',
+    '                  "crete": r["crete_apres"], "fichiers": sorted(p.name for p in sortie.parent.iterdir())}))',
+  ].join('\n')], { cwd: reel, encoding: 'utf8' }));
+  const juste = (crete) => [-16.0, crete];
+  assert.deepEqual(essai([juste(-1.2)]), { plafonds: [-1.5], livre: 1, plafond: -1.5, niveau: -16, crete: -1.2,
+    fichiers: ['FINAL-REEL.mp4'] }, 'crête sous -1 dBTP : un seul encodage');
+  const remontee = essai([juste(-0.6), juste(-1.3)]);
+  assert.deepEqual([remontee.plafonds, remontee.livre, remontee.crete], [[-1.5, -2.0], 2, -1.3],
+    'remontée de 0,4 dB : plafond abaissé de 0,5 dB');
+  const trois = essai([juste(-0.2), juste(-0.7), juste(-0.9)]);
+  assert.deepEqual([trois.plafonds, trois.livre, trois.plafond, trois.crete], [[-1.5, -2.4, -2.8], 3, -2.8, -0.9],
+    'au plus trois encodages, le contrôle tranche sur le moins débordant');
+  // Un essai juste (niveau à 0,3 LU, accepté au contrôle), puis deux débordements : le juste est livré.
+  // Avant, le dernier l'était, et le contrôle refusait la vidéo.
+  const juste1 = essai([[-16.3, -1.2], juste(-0.5), [-16.1, -0.8]]);
+  assert.deepEqual([juste1.plafonds, juste1.livre, juste1.niveau, juste1.crete, juste1.fichiers],
+    [[-1.5, -1.5, -2.1], 1, -16.3, -1.2, ['FINAL-REEL.mp4']], 'le meilleur essai, pas le dernier ; aucun essai laissé');
+  // Un débordement passager (+0,8 dBTP) abaisse le plafond de 1,9 dB ; l'essai suivant garde 1,9 dB de marge
+  // (niveau à revoir) : le plafond remonte de la moitié, au lieu de rester écrasé.
+  const marge = essai([juste(0.8), [-16.4, -3.0], juste(-1.6)]);
+  assert.deepEqual([marge.plafonds, marge.livre, marge.plafond], [[-1.5, -3.4, -2.45], 3, -2.45]);
+  // Bornes : jamais au-dessus du plafond de départ (-1,5 dB), jamais sous -20 dB.
+  assert.equal(execFileSync(python, ['-c', 'import sys; sys.path.insert(0, "tools"); import niveau_final as n; '
+    + 'print(n.plafond_suivant(-1.5, -40.0), n.plafond_suivant(-3.0, 40.0))'], { cwd: reel, encoding: 'utf8' }).trim(), '-1.5 -20.0');
   // L'encodage décale le niveau de 0,3 LU : le gain vise d'autant plus loin, au deuxième encodage.
   const niveau = execFileSync(python, ['-c', [
     'import pathlib, sys; sys.path.insert(0, "tools")',
     'import niveau_final as n',
     'vises, apres = [], iter([-16.3, -16.05])',
-    'sortie = pathlib.Path("exports/FINAL-REEL.mp4")',
+    'source, sortie = pathlib.Path("exports/FINAL.mp4"), pathlib.Path("exports/FINAL-REEL.mp4")',
     'n.plafond_ffmpeg = lambda plafond, gain: f"gain {gain}"',
-    'n.ecrire = lambda src, dest, gain, plafond, debit: None',
+    'n.ecrire = lambda src, dest, gain, plafond, debit: dest.write_text("")',
     'def regler(src, niveau, vise, plafond):',
     '    vises.append(round(vise, 2))',
     '    return vise - niveau',
     'n.regler = regler',
-    'n.mesurer = lambda src, filtre="": (next(apres), -1.5) if src == sortie else (-24.0, -5.0)',
-    'r = n.finaliser_son(pathlib.Path("exports/FINAL.mp4"), sortie, -16.0, "320k")',
+    'n.mesurer = lambda src, filtre="": (-24.0, -5.0) if src == source else (next(apres), -1.5)',
+    'r = n.finaliser_son(source, sortie, -16.0, "320k")',
     'print(vises, r["apres"])'].join('\n')], { cwd: reel, encoding: 'utf8' }).trim();
   assert.equal(niveau, '[-16.0, -15.7] -16.05');
 });
