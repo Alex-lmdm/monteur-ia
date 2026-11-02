@@ -175,6 +175,9 @@ la version HyperFrames épinglée dans ce projet pendant l'installation.
    à l'app HyperFrames de lire les consignes du monteur (réglage de Claude Code) et à Codex de les
    lire en entier (limite de lecture relevée). Il écrit dans la configuration personnelle de
    Claude Code et de Codex, avec une sauvegarde : l'annoncer dans le plan, avant le « go ».
+   Sous Windows, si `node scripts/app-hyperframes.mjs etat` dit « téléchargée, pas encore rangée »
+   (l'app arrive en ZIP depuis le 2 novembre 2026) : `node scripts/app-hyperframes.mjs installer`
+   d'abord, qui la range et l'ajoute au menu Démarrer.
 
 ### 4. Vérifier avant d'annoncer la réussite
 

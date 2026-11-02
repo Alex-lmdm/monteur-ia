@@ -213,7 +213,9 @@ Relance enfin le plan à blanc : plus aucune extension « à mettre à jour ensu
 
 ### 7. L'app HyperFrames (Mac, Windows, Linux)
 
-- Pas encore installée (`etat`) : https://hyperframes.dev/studio. Au premier lancement (même
+- Pas encore installée (`etat`) : https://hyperframes.dev/studio. Sous Windows, « téléchargée, pas
+  encore rangée » (un ZIP, depuis le 2 novembre 2026) : `node scripts/app-hyperframes.mjs installer`,
+  qui la range et l'ajoute au menu Démarrer. Au premier lancement (même
   installée mais jamais ouverte), elle demande « Continue with HeyGen » : une connexion gratuite,
   rien à payer.
 - Ouvre-lui l'accueil (le dossier de `CLIENT` dont le nom commence par `Accueil` : `Accueil · <nom>`,

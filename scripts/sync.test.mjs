@@ -124,6 +124,8 @@ test('AGENTS.md et CLAUDE.md tiennent dans la limite de lecture de Codex', (t) =
   for (const file of ['AGENTS.md', 'CLAUDE.md', `${accueil}/AGENTS.md`, `${accueil}/CLAUDE.md`]) {
     assert.ok(size(file) <= LIMIT - MARGIN,
       `${file} livré : ${size(file)} octets, max ${LIMIT - MARGIN}. Déplacer du détail de templates/AGENT.md.tpl vers un skill.`);
+    // Windows depuis le 02/11/2026 : l'app arrive en ZIP, l'IA la range avant de brancher.
+    assert.match(fs.readFileSync(path.join(dir, file), 'utf8'), /app-hyperframes\.mjs installer .*ZIP.*avant brancher/, `${file} : installer`);
   }
   const own = config();
   own.brand = { ...own.brand, name: 'Une marque au nom assez long', handle: '@une.marque.au.nom.long', firstName: 'Prénom' };

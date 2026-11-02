@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
   VARIABLE, APP_ID, brancher, readBranchement, settingsPath, claudeHome, findApp, isProject, ouvrir,
-  brancherCodex, CODEX_LIMITE,
+  brancherCodex, CODEX_LIMITE, sourceWindows, installerWindows, DOSSIER_WIN,
 } from './app-hyperframes.mjs';
 
 const script = path.join(path.dirname(fileURLToPath(import.meta.url)), 'app-hyperframes.mjs');
@@ -156,4 +156,67 @@ test('une config Claude Code illisible ne bloque pas le branchement de Codex', (
   assert.equal(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8'), '{ "model": ', 'jamais écrasée');
   assert.match(fs.readFileSync(path.join(dir, 'codex', 'config.toml'), 'utf8'), new RegExp(`project_doc_max_bytes = ${CODEX_LIMITE}`));
   assert.match(r.stdout, /Codex lira les instructions de Monteur IA en entier/);
+});
+
+// Windows depuis le 02/11/2026 : l'app arrive en ZIP (HyperFrames-win-x64.zip → HyperFrames-win32-x64\HyperFrames.exe).
+// Les chemins POSIX d'un dossier temporaire tiennent lieu de ceux de Windows ; `tar` décompresse le ZIP comme sous Windows.
+function fauxWindows(t) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'monteur-win-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const env = { USERPROFILE: path.join(dir, 'user'), LOCALAPPDATA: path.join(dir, 'local'), APPDATA: path.join(dir, 'roaming') };
+  fs.mkdirSync(path.join(env.USERPROFILE, 'Downloads'), { recursive: true });
+  const app = path.join(dir, 'zip', DOSSIER_WIN);
+  fs.mkdirSync(path.join(app, 'resources'), { recursive: true });
+  fs.writeFileSync(path.join(app, 'HyperFrames.exe'), 'exe');
+  fs.writeFileSync(path.join(app, 'resources', 'app.asar'), 'asar');
+  return { dir, env, app, downloads: path.join(env.USERPROFILE, 'Downloads') };
+}
+const avecTar = (calls) => (cmd, args) => { calls.push(cmd); return cmd === 'tar' ? execFileSync(cmd, args) : ''; };
+
+test('Windows : le ZIP téléchargé est rangé là où findApp la cherche, et mis au menu Démarrer', (t) => {
+  const { env, downloads } = fauxWindows(t);
+  execFileSync('tar', ['-a', '-cf', path.join(downloads, 'HyperFrames-win-x64.zip'), DOSSIER_WIN], { cwd: path.join(path.dirname(downloads), '..', 'zip') });
+  assert.deepEqual(sourceWindows(downloads, { p: path }), { zip: path.join(downloads, 'HyperFrames-win-x64.zip') });
+  const calls = [];
+  const res = installerWindows({ env, p: path, run: avecTar(calls) });
+  assert.equal(res.exe, path.join(env.LOCALAPPDATA, 'Programs', 'HyperFrames', 'HyperFrames.exe'));
+  assert.ok(fs.existsSync(res.exe));
+  assert.ok(fs.existsSync(path.join(env.LOCALAPPDATA, 'Programs', 'HyperFrames', 'resources', 'app.asar')));
+  assert.ok(!fs.existsSync(path.join(env.LOCALAPPDATA, 'Programs', 'HyperFrames.nouvelle')), 'rien de provisoire ne reste');
+  assert.deepEqual(calls, ['tar', 'powershell']);
+  assert.match(res.raccourci, /Start Menu[\\/]Programs[\\/]HyperFrames\.lnk$/);
+  // Refaire remplace l'app rangée, sans doublon.
+  installerWindows({ env, p: path, run: avecTar([]) });
+  assert.deepEqual(fs.readdirSync(path.join(env.LOCALAPPDATA, 'Programs')), ['HyperFrames']);
+});
+
+test('Windows : un dossier déjà décompressé par « Extraire tout » est pris tel quel', (t) => {
+  const { env, app, downloads } = fauxWindows(t);
+  fs.cpSync(app, path.join(downloads, 'HyperFrames-win-x64', DOSSIER_WIN), { recursive: true });
+  assert.deepEqual(sourceWindows(downloads, { p: path }), { dossier: path.join(downloads, 'HyperFrames-win-x64', DOSSIER_WIN) });
+  const calls = [];
+  const res = installerWindows({ env, p: path, run: avecTar(calls) });
+  assert.ok(fs.existsSync(res.exe));
+  assert.deepEqual(calls, ['powershell'], 'rien à décompresser');
+  assert.ok(fs.existsSync(path.join(downloads, 'HyperFrames-win-x64', DOSSIER_WIN, 'HyperFrames.exe')), 'Téléchargements reste intact');
+});
+
+test('Windows : rien de téléchargé, ou un raccourci impossible, se dit sans casser', (t) => {
+  const { env } = fauxWindows(t);
+  assert.throws(() => installerWindows({ env, p: path, run: () => '' }), /aucun HyperFrames-win-x64\.zip/);
+  assert.throws(() => installerWindows({ env: {}, p: path }), /LOCALAPPDATA/);
+  const { env: env2, app, downloads } = fauxWindows(t);
+  fs.cpSync(app, path.join(downloads, DOSSIER_WIN), { recursive: true });
+  const res = installerWindows({ env: env2, p: path, run: (cmd) => { if (cmd === 'powershell') throw new Error('pas de COM'); return ''; } });
+  assert.ok(fs.existsSync(res.exe));
+  assert.equal(res.raccourci, null);
+});
+
+test('Windows : un ZIP sans l’app est refusé, rien n’est rangé', (t) => {
+  const { dir, env, downloads } = fauxWindows(t);
+  fs.writeFileSync(path.join(dir, 'autre.txt'), 'x');
+  execFileSync('tar', ['-a', '-cf', path.join(downloads, 'HyperFrames-win-x64.zip'), 'autre.txt'], { cwd: dir });
+  assert.throws(() => installerWindows({ env, p: path, run: avecTar([]) }), /ne contient pas HyperFrames-win32-x64\\HyperFrames\.exe/);
+  assert.ok(!fs.existsSync(path.join(env.LOCALAPPDATA, 'Programs', 'HyperFrames')));
+  assert.ok(!fs.existsSync(path.join(env.LOCALAPPDATA, 'Programs', 'HyperFrames.nouvelle')));
 });

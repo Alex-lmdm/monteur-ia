@@ -124,7 +124,9 @@ L'app HyperFrames Studio utilise ton abonnement Claude ou ChatGPT : c'est le mê
 timeline en plus. Rien d'obligatoire, tout reste faisable dans Claude Code ou Codex.
 
 1. **Installe l'app** depuis [hyperframes.dev/studio](https://hyperframes.dev/studio), puis
-   « Continue with HeyGen » pour te connecter.
+   « Continue with HeyGen » pour te connecter. Sous Windows, elle arrive en ZIP : ne l'ouvre pas,
+   demande à ton IA « j'ai téléchargé l'app HyperFrames : installe-la », elle la range et l'ajoute
+   au menu Démarrer.
 2. **Branche ton monteur** (une fois par ordinateur) : l'installation de Monteur IA s'en charge.
    Sinon, demande à ton IA « branche Monteur IA sur l'app HyperFrames ».
 3. **Ouvre l'accueil** : glisse le dossier « Accueil … » de ton dossier Monteur IA dans la liste de

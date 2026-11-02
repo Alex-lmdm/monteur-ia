@@ -362,6 +362,7 @@ npm run dev          # serveur de preview (long-running : le garder vivant en ba
 npm run check        # hyperframes check : lint, exécution, mise en page, mouvement, contraste
 npm run render       # export final natif -> exports/FINAL.mp4 (dans l'app : bouton Export)
 node {{MAISON}}scripts/sync.mjs   # régénère style, CLAUDE.md / AGENTS.md (maison, accueil, Reels) + skills
+node {{MAISON}}scripts/app-hyperframes.mjs installer  # Windows, l'app téléchargée (un ZIP) : la range, avant brancher
 node {{MAISON}}scripts/app-hyperframes.mjs brancher   # une fois par ordinateur : l'app lit ces consignes
 ```
 
